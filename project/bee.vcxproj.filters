@@ -19,6 +19,9 @@
     <Filter Include="bee\registry">
       <UniqueIdentifier>{320fcbac-33a2-45b9-bf37-73ee502df548}</UniqueIdentifier>
     </Filter>
+    <Filter Include="bee\lua">
+      <UniqueIdentifier>{67c6b0db-6490-41d3-a39a-cf043ef94c09}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\bee\subprocess\subprocess_posix.cpp">
@@ -68,9 +71,6 @@
     <ClInclude Include="..\bee\utility\dynarray.h">
       <Filter>bee\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\bee\utility\lua_range.h">
-      <Filter>bee\utility</Filter>
-    </ClInclude>
     <ClInclude Include="..\bee\exception\exception.h">
       <Filter>bee\exception</Filter>
     </ClInclude>
@@ -94,6 +94,12 @@
     </ClInclude>
     <ClInclude Include="..\bee\registry\value.h">
       <Filter>bee\registry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\lua\binding.h">
+      <Filter>bee\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\lua\range.h">
+      <Filter>bee\lua</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

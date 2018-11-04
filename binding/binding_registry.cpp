@@ -1,9 +1,7 @@
 #include <lua.hpp>	  
-#include <bee/registry/key.h> 
+#include <bee/registry/key.h>
 #include <bee/utility/unicode.h>
-
-#define RKEY_TRY() try   
-#define RKEY_TRY_END() catch (const std::exception& e) { lua_pushstring(L, e.what()); return lua_error(L); }
+#include <bee/lua/binding.h>
 
 namespace luareg {
 
@@ -12,20 +10,6 @@ namespace luareg {
 	key_w* rkey_read(lua_State* L, int idx)
 	{
 		return static_cast<key_w*>(lua_touserdata(L, idx));
-	}
-
-	std::wstring rkey_read_wstring(lua_State* L, int idx)
-	{
-		size_t len = 0;
-		const char* str = luaL_checklstring(L, idx, &len);
-		return bee::u2w(std::string_view(str, len));
-	}
-	
-	int rkey_push_wstring(lua_State* L, const std::wstring& value)
-	{
-		std::string utf8_value = bee::w2u(value);
-		lua_pushlstring(L, utf8_value.data(), utf8_value.size());
-		return 1;
 	}
 
 	int rkey_push_blob(lua_State* L, const std::dynarray<uint8_t>& value)
@@ -56,7 +40,7 @@ namespace luareg {
 	{
 		try {
 			key_w*       self = rkey_read(L, 1);
-			std::wstring key = rkey_read_wstring(L, 2);
+			std::wstring key = ::bee::lua::to_string(L, 2);
 			key_w::value_type& value = self->value(key);
 			switch (value.type())
 			{
@@ -68,7 +52,8 @@ namespace luareg {
 				return 1;
 			case REG_SZ:
 			case REG_EXPAND_SZ:
-				return rkey_push_wstring(L, value.get_string());
+				::bee::lua::push_string(L, value.get_string());
+				return 1;
 			case REG_BINARY:
 				return rkey_push_blob(L, value.get_binary());
 			default:
@@ -82,15 +67,15 @@ namespace luareg {
 
 	int rkey_newindex(lua_State* L)
 	{
-		RKEY_TRY()
+		LUA_TRY;
 		{
 			key_w*       self = rkey_read(L, 1);
-			std::wstring key = rkey_read_wstring(L, 2);
+			std::wstring key = ::bee::lua::to_string(L, 2);
 			key_w::value_type& value = self->value(key);
 			switch (lua_type(L, 3))
 			{
 			case LUA_TSTRING:
-				value.set(rkey_read_wstring(L, 3));
+				value.set(::bee::lua::to_string(L, 3));
 				return 0;
 			case LUA_TNUMBER:
 				value.set_uint32_t((uint32_t)lua_tointeger(L, 3));
@@ -111,7 +96,7 @@ namespace luareg {
 				case REG_EXPAND_SZ:
 				case REG_SZ:
 					lua_geti(L, 3, 2);
-					value.set(rkey_read_wstring(L, -1));
+					value.set(::bee::lua::to_string(L, -1));
 					break;
 				case REG_MULTI_SZ:
 				{
@@ -120,7 +105,7 @@ namespace luareg {
 					for (int i = 2; i <= len; ++i)
 					{
 						lua_geti(L, 3, i);
-						str += rkey_read_wstring(L, -1);
+						str += ::bee::lua::to_string(L, -1);
 						str.push_back(L'\0');
 						lua_pop(L, 1);
 					}
@@ -145,19 +130,19 @@ namespace luareg {
 			}
 			}
 		}
-		RKEY_TRY_END()
+		LUA_TRY_END;
 	}
 
 	int rkey_div(lua_State* L)
 	{
-		RKEY_TRY()
+		LUA_TRY;
 		{
 			key_w*       self = rkey_read(L, 1);
-			std::wstring rht = rkey_read_wstring(L, 2);
+			std::wstring rht = ::bee::lua::to_string(L, 2);
 			key_w        ret = *self / rht;
 			return rkey_copy(L, 1, &ret);
 		}
-		RKEY_TRY_END()
+		LUA_TRY_END;
 	}
 
 	int rkey_gc(lua_State* L)
@@ -168,7 +153,7 @@ namespace luareg {
 
 	int open(lua_State* L)
 	{
-		std::wstring key = rkey_read_wstring(L, 1);
+		std::wstring key = ::bee::lua::to_string(L, 1);
 		size_t pos = key.find(L'\\');
 		if (pos == -1) {
 			return 0;

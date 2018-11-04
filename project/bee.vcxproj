@@ -161,6 +161,8 @@
     <ClInclude Include="..\bee\config.h" />
     <ClInclude Include="..\bee\exception\exception.h" />
     <ClInclude Include="..\bee\exception\windows_exception.h" />
+    <ClInclude Include="..\bee\lua\binding.h" />
+    <ClInclude Include="..\bee\lua\range.h" />
     <ClInclude Include="..\bee\registry\exception.h" />
     <ClInclude Include="..\bee\registry\key.h" />
     <ClInclude Include="..\bee\registry\predefined_keys.h" />
@@ -175,7 +177,6 @@
     </ClInclude>
     <ClInclude Include="..\bee\subprocess\subprocess_win.h" />
     <ClInclude Include="..\bee\utility\dynarray.h" />
-    <ClInclude Include="..\bee\utility\lua_range.h" />
     <ClInclude Include="..\bee\utility\path_helper.h" />
     <ClInclude Include="..\bee\utility\unicode.h" />
   </ItemGroup>

@@ -1,31 +1,12 @@
 #include <bee/subprocess.h>
 #include <bee/utility/unicode.h>
+#include <bee/lua/binding.h>
 #include <lua.hpp>
 #include <optional>
 #include <errno.h>
 #include <string.h>
 
-#if defined(_WIN32)
-
-typedef std::wstring nativestring;
-
-std::wstring luaL_checknativestring(lua_State* L, int idx) {
-    size_t len = 0;
-    const char* str = luaL_checklstring(L, idx, &len);
-    return bee::u2w(std::string_view(str, len));
-}
-
-#else
-
-typedef std::string nativestring;
-
-std::string luaL_checknativestring(lua_State* L, int idx) {
-    size_t len = 0;
-    const char* str = luaL_checklstring(L, idx, &len);
-    return std::string(str, len);
-}
-
-#endif
+typedef ::bee::lua::string_type nativestring;
 
 namespace process {
     static int constructor(lua_State* L, bee::subprocess::spawn& spawn) {
@@ -87,7 +68,7 @@ namespace process {
 namespace spawn {
     static std::optional<nativestring> cast_cwd(lua_State* L) {
         if (LUA_TSTRING == lua_getfield(L, 1, "cwd")) {
-            nativestring ret(luaL_checknativestring(L, -1));
+            nativestring ret(::bee::lua::to_string(L, -1));
             lua_pop(L, 1);
             return ret;
         }
@@ -121,7 +102,7 @@ namespace spawn {
 
 #if defined(_WIN32)
     typedef std::vector<nativestring> native_args;
-#   define LOAD_ARGS(L, idx) luaL_checknativestring((L), (idx))
+#   define LOAD_ARGS(L, idx) ::bee::lua::to_string((L), (idx))
 #else
     typedef std::vector<char*> native_args;
 #   define LOAD_ARGS(L, idx) (char*)luaL_checkstring((L), (idx))
@@ -183,10 +164,10 @@ namespace spawn {
             lua_next(L, 1);
             while (lua_next(L, -2)) {
                 if (LUA_TSTRING == lua_type(L, -1)) {
-                    self.env_set(luaL_checknativestring(L, -2), luaL_checknativestring(L, -1));
+                    self.env_set(::bee::lua::to_string(L, -2), ::bee::lua::to_string(L, -1));
                 }
                 else {
-                    self.env_del(luaL_checknativestring(L, -2));
+                    self.env_del(::bee::lua::to_string(L, -2));
                 }
                 lua_pop(L, 1);
             }
