@@ -142,6 +142,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\bee\exception\exception.cpp" />
+    <ClCompile Include="..\bee\exception\windows_exception.cpp" />
     <ClCompile Include="..\bee\subprocess\subprocess_posix.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -149,11 +151,15 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\bee\subprocess\subprocess_win.cpp" />
+    <ClCompile Include="..\bee\utility\path_helper.cpp" />
     <ClCompile Include="..\bee\utility\unicode.cpp" />
+    <ClCompile Include="..\binding\binding_filesystem.cpp" />
     <ClCompile Include="..\binding\binding_subprocess.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\bee\config.h" />
+    <ClInclude Include="..\bee\exception\exception.h" />
+    <ClInclude Include="..\bee\exception\windows_exception.h" />
     <ClInclude Include="..\bee\subprocess.h" />
     <ClInclude Include="..\bee\subprocess\subprocess_posix.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -163,6 +169,8 @@
     </ClInclude>
     <ClInclude Include="..\bee\subprocess\subprocess_win.h" />
     <ClInclude Include="..\bee\utility\dynarray.h" />
+    <ClInclude Include="..\bee\utility\lua_range.h" />
+    <ClInclude Include="..\bee\utility\path_helper.h" />
     <ClInclude Include="..\bee\utility\unicode.h" />
   </ItemGroup>
   <ItemGroup>

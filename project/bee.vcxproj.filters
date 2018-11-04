@@ -13,6 +13,9 @@
     <Filter Include="bee\utility">
       <UniqueIdentifier>{e96a350e-8bb0-4c5c-9985-c36c965b1fbb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="bee\exception">
+      <UniqueIdentifier>{cfcadfb9-e951-4eb4-b3f2-aaf8ab73a11a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\bee\subprocess\subprocess_posix.cpp">
@@ -25,6 +28,18 @@
       <Filter>binding</Filter>
     </ClCompile>
     <ClCompile Include="..\bee\utility\unicode.cpp">
+      <Filter>bee\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\binding\binding_filesystem.cpp">
+      <Filter>binding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\bee\exception\exception.cpp">
+      <Filter>bee\exception</Filter>
+    </ClCompile>
+    <ClCompile Include="..\bee\exception\windows_exception.cpp">
+      <Filter>bee\exception</Filter>
+    </ClCompile>
+    <ClCompile Include="..\bee\utility\path_helper.cpp">
       <Filter>bee\utility</Filter>
     </ClCompile>
   </ItemGroup>
@@ -45,6 +60,18 @@
       <Filter>bee\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\bee\utility\dynarray.h">
+      <Filter>bee\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\utility\lua_range.h">
+      <Filter>bee\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\exception\exception.h">
+      <Filter>bee\exception</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\exception\windows_exception.h">
+      <Filter>bee\exception</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\utility\path_helper.h">
       <Filter>bee\utility</Filter>
     </ClInclude>
   </ItemGroup>
