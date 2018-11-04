@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="bee">
+      <UniqueIdentifier>{a7686827-47d6-434c-b27b-d7a859fbe2cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="bee\subprocess">
+      <UniqueIdentifier>{38141c45-3650-4043-9f3d-6dfc36491155}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="binding">
+      <UniqueIdentifier>{555b7d54-da03-4fd0-bb06-95b71ff1d82b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="bee\utility">
+      <UniqueIdentifier>{e96a350e-8bb0-4c5c-9985-c36c965b1fbb}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\bee\subprocess\subprocess_posix.cpp">
+      <Filter>bee\subprocess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\bee\subprocess\subprocess_win.cpp">
+      <Filter>bee\subprocess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\binding\binding_subprocess.cpp">
+      <Filter>binding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\bee\utility\unicode.cpp">
+      <Filter>bee\utility</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\bee\subprocess\subprocess_posix.h">
+      <Filter>bee\subprocess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\subprocess\subprocess_win.h">
+      <Filter>bee\subprocess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\config.h">
+      <Filter>bee</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\subprocess.h">
+      <Filter>bee</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\utility\unicode.h">
+      <Filter>bee\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\utility\dynarray.h">
+      <Filter>bee\utility</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
