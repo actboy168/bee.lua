@@ -16,6 +16,9 @@
     <Filter Include="bee\exception">
       <UniqueIdentifier>{cfcadfb9-e951-4eb4-b3f2-aaf8ab73a11a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="bee\registry">
+      <UniqueIdentifier>{320fcbac-33a2-45b9-bf37-73ee502df548}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\bee\subprocess\subprocess_posix.cpp">
@@ -41,6 +44,9 @@
     </ClCompile>
     <ClCompile Include="..\bee\utility\path_helper.cpp">
       <Filter>bee\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\binding\binding_registry.cpp">
+      <Filter>binding</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -73,6 +79,21 @@
     </ClInclude>
     <ClInclude Include="..\bee\utility\path_helper.h">
       <Filter>bee\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\registry\exception.h">
+      <Filter>bee\registry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\registry\key.h">
+      <Filter>bee\registry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\registry\predefined_keys.h">
+      <Filter>bee\registry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\registry\traits.h">
+      <Filter>bee\registry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\registry\value.h">
+      <Filter>bee\registry</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

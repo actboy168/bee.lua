@@ -154,12 +154,18 @@
     <ClCompile Include="..\bee\utility\path_helper.cpp" />
     <ClCompile Include="..\bee\utility\unicode.cpp" />
     <ClCompile Include="..\binding\binding_filesystem.cpp" />
+    <ClCompile Include="..\binding\binding_registry.cpp" />
     <ClCompile Include="..\binding\binding_subprocess.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\bee\config.h" />
     <ClInclude Include="..\bee\exception\exception.h" />
     <ClInclude Include="..\bee\exception\windows_exception.h" />
+    <ClInclude Include="..\bee\registry\exception.h" />
+    <ClInclude Include="..\bee\registry\key.h" />
+    <ClInclude Include="..\bee\registry\predefined_keys.h" />
+    <ClInclude Include="..\bee\registry\traits.h" />
+    <ClInclude Include="..\bee\registry\value.h" />
     <ClInclude Include="..\bee\subprocess.h" />
     <ClInclude Include="..\bee\subprocess\subprocess_posix.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
