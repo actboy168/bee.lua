@@ -101,5 +101,8 @@
     <ClInclude Include="..\bee\lua\range.h">
       <Filter>bee\lua</Filter>
     </ClInclude>
+    <ClInclude Include="..\bee\utility\array_view.h">
+      <Filter>bee\utility</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

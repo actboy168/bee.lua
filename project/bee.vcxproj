@@ -176,6 +176,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\bee\subprocess\subprocess_win.h" />
+    <ClInclude Include="..\bee\utility\array_view.h" />
     <ClInclude Include="..\bee\utility\dynarray.h" />
     <ClInclude Include="..\bee\utility\path_helper.h" />
     <ClInclude Include="..\bee\utility\unicode.h" />
