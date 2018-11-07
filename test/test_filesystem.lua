@@ -158,3 +158,29 @@ local f = io.open(path2:string(), 'rb')
 assert(content == f:read 'a')
 f:close()
 os.remove(path2:string())
+
+-- remove
+local path = fs.path('temp')
+io.open(path:string(), 'wb'):close()
+assert(fs.exists(path) == true)
+fs.remove(path)
+assert(fs.exists(path) == false)
+
+local dir = fs.path('tempdir')
+fs.create_directory(dir)
+assert(fs.exists(dir) == true)
+fs.remove(dir)
+assert(fs.exists(dir) == false)
+
+-- remove_all
+local dir = fs.path('tempdir')
+local dirs = dir / 'a' / 'b'
+fs.create_directories(dirs)
+assert(fs.is_directory(dir) == true)
+assert(fs.is_directory(dirs) == true)
+fs.remove_all(dir)
+assert(fs.is_directory(dir) == false)
+
+-- current_path
+local current = io.popen('echo %cd%', 'r'):read 'l'
+assert(fs.current_path():string() == current)
