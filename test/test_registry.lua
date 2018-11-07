@@ -20,7 +20,7 @@ assert(reg['TEST_REG_SZ']        == 'bee')
 assert(reg['TEST_REG_BINARY']    == 'BEE')
 assert(reg['TEST_REG_DWORD']     == 10)
 assert(reg['TEST_REG_QWORD']     == 2^50)
---assert(reg['TEST_REG_MULTI_SZ']  == 'REG_MULTI_SZ')
+--assert(reg['TEST_REG_MULTI_SZ']  == 'REG_MULTI_SZ') -- TODO
 assert(reg['TEST_REG_EXPAND_SZ'] == 'REG_EXPAND_SZ')
 
 local reg = (registry.open [[HKEY_CURRENT_USER\Software]]) / 'bee_test'
@@ -29,7 +29,7 @@ assert(reg['TEST_REG_SZ']        == 'bee')
 assert(reg['TEST_REG_BINARY']    == 'BEE')
 assert(reg['TEST_REG_DWORD']     == 10)
 assert(reg['TEST_REG_QWORD']     == 2^50)
---assert(reg['TEST_REG_MULTI_SZ']  == 'REG_MULTI_SZ')
+--assert(reg['TEST_REG_MULTI_SZ']  == 'REG_MULTI_SZ') -- TODO
 assert(reg['TEST_REG_EXPAND_SZ'] == 'REG_EXPAND_SZ')
 
 local reg = registry.open [[HKEY_CURRENT_USER\Software\bee_test]]

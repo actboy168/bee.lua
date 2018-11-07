@@ -1,5 +1,11 @@
 local fs = require 'bee.filesystem'
 
+local function wait_second()
+    local f = io.popen('ping -n 1 127.1>nul', 'r')
+    f:read 'a'
+    f:close()
+end
+
 -- fs.path
 local path = fs.path('test')
 assert(type(path) == 'userdata')
@@ -49,5 +55,102 @@ local path = fs.path('dir/filename.lua')
 local ext = fs.path('.json')
 assert(path:replace_extension(ext):string() == 'dir/filename.json')
 
+-- list_directory
+local path = fs.path('C:/')
+local founded = {}
+for filename in path:list_directory() do
+    local string = filename:filename():string()
+    founded[string] = true
+end
+
+local os_list = io.popen([[dir C:\ /A /B]], 'r'):read 'a'
+for filename in os_list:gmatch '[^\r\n]+' do
+    assert(founded[filename] == true)
+    founded[filename] = nil
+end
+assert(next(founded) == nil)
+
+-- permissions
+local path = fs.path('temp.txt')
+io.open(path:string(), 'w'):close()
+assert(path:permissions() & 128 ~= 0)
+os.execute('attrib +r temp.txt')
+assert(path:permissions() & 128 == 0)
+os.execute('attrib -r temp.txt')
+os.remove(path:string())
+
+-- add_permissions
+local path = fs.path('temp.txt')
+io.open(path:string(), 'w'):close()
+assert(path:permissions() & 128 ~= 0)
+os.execute('attrib +r temp.txt')
+assert(path:permissions() & 128 == 0)
+path:add_permissions(128)
+os.remove(path:string())
+
+-- remove_permissions
+local path = fs.path('temp.txt')
+io.open(path:string(), 'w'):close()
+assert(path:permissions() & 128 ~= 0)
+path:remove_permissions(128)
+--assert(path:permissions() & 128 == 0) -- TODO
+os.execute('attrib -r temp.txt')
+os.remove(path:string())
+
+-- __div
+local path = fs.path('dir') / 'filename'
+assert(path:string() == 'dir\\filename')
+
 -- __eq
---assert(fs.path('test') == fs.path('test'))
+--assert(fs.path('test') == fs.path('test')) -- TODO
+
+-- fs.exists
+local path = fs.path('temp.txt')
+assert(fs.exists(path) == false)
+io.open(path:string(), 'w'):close()
+assert(fs.exists(path) == true)
+os.remove(path:string())
+
+-- is_directory
+local path = fs.path('temp.txt')
+io.open(path:string(), 'w'):close()
+assert(fs.is_directory(path) == false)
+os.remove(path:string())
+
+local dir = fs.path('..')
+assert(fs.is_directory(dir) == true)
+
+-- create_directory
+local dir = fs.path('tempdir')
+fs.create_directory(dir)
+assert(fs.is_directory(dir) == true)
+while fs.exists(dir) do
+    wait_second()
+    os.execute('rd /Q ' .. dir:string())
+end
+
+-- create_directories
+local dir = fs.path('tempdir')
+local dirs = dir / 'a' / 'b'
+fs.create_directories(dirs)
+assert(fs.is_directory(dir) == true)
+assert(fs.is_directory(dirs) == true)
+while fs.exists(dir) do
+    wait_second()
+    os.execute('rd /S /Q ' .. dir:string())
+end
+
+-- rename
+local path1 = fs.path('temp')
+local path2 = fs.path('temp_renamed')
+local content = tostring(os.time())
+local f = io.open(path1:string(), 'wb')
+f:write(content)
+f:close()
+fs.rename(path1, path2)
+assert(fs.exists(path1) == false)
+assert(fs.exists(path2) == true)
+local f = io.open(path2:string(), 'rb')
+assert(content == f:read 'a')
+f:close()
+os.remove(path2:string())
