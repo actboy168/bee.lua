@@ -263,3 +263,7 @@ f:close()
 local time2 = fs.last_write_time(path)
 fs.remove(path)
 assert(time2 > time1)
+
+-- procedure_path
+local exe = fs.absolute(fs.path(arg[-3]))
+assert(fs.procedure_path():string() == exe:parent_path():string())
