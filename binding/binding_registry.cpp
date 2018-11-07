@@ -51,6 +51,7 @@ namespace luareg {
 				lua_pushinteger(L, value.get_uint64_t());
 				return 1;
 			case REG_SZ:
+			case REG_MULTI_SZ:
 			case REG_EXPAND_SZ:
 				::bee::lua::push_string(L, value.get_string());
 				return 1;
