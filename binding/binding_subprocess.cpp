@@ -218,7 +218,7 @@ namespace spawn {
         int retn = 0;
         bee::subprocess::spawn spawn;
         native_args args = cast_args(L);
-        if (args.size() <= 1) {
+        if (args.size() == 0) {
             return 0;
         }
 
