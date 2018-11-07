@@ -201,7 +201,7 @@ namespace spawn {
         }
         lua_pop(L, 1);
 
-        if (LUA_TBOOLEAN == lua_getfield(L, 1, "windowHide")) {
+        if (LUA_TBOOLEAN == lua_getfield(L, 1, "hideWindow")) {
             if (lua_toboolean(L, -1)) {
                 self.hide_window();
             }
