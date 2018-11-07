@@ -184,3 +184,82 @@ assert(fs.is_directory(dir) == false)
 -- current_path
 local current = io.popen('echo %cd%', 'r'):read 'l'
 assert(fs.current_path():string() == current)
+
+-- copy_file
+local path1 = fs.path('temp1')
+local path2 = fs.path('temp2')
+local content = tostring(os.time())
+
+local f = io.open(path1:string(), 'wb')
+f:write(content)
+f:close()
+fs.copy_file(path1, path2)
+assert(fs.exists(path1) == true)
+assert(fs.exists(path2) == true)
+local f = io.open(path1:string(), 'rb')
+assert(f:read 'a' == content)
+f:close()
+local f = io.open(path2:string(), 'rb')
+assert(f:read 'a' == content)
+f:close()
+fs.remove(path1)
+fs.remove(path2)
+assert(fs.exists(path1) == false)
+assert(fs.exists(path2) == false)
+
+local f = io.open(path1:string(), 'wb')
+f:write(content)
+f:close()
+fs.copy_file(path1, path2)
+io.open(path2:string(), 'wb'):close()
+assert(fs.exists(path1) == true)
+assert(fs.exists(path2) == true)
+local suc = pcall(fs.copy_file, path1, path2)
+assert(suc == false)
+local suc = pcall(fs.copy_file, path1, path2, true)
+assert(suc == true)
+local f = io.open(path1:string(), 'rb')
+assert(f:read 'a' == content)
+f:close()
+local f = io.open(path2:string(), 'rb')
+assert(f:read 'a' == content)
+f:close()
+fs.remove(path1)
+fs.remove(path2)
+assert(fs.exists(path1) == false)
+assert(fs.exists(path2) == false)
+
+-- absolute
+local path = fs.path('D:/A\\B\\../C')
+assert(fs.absolute(path):string() == 'D:\\A\\C')
+
+local path = fs.path('temp')
+assert((fs.current_path() / path):string() == fs.absolute(path):string())
+
+local path = fs.path('temp')
+local base = fs.path('D:\\')
+assert((base / path):string() == fs.absolute(path, base):string())
+
+-- relative
+local path = fs.path('D:\\A\\C')
+local base = fs.path('D:\\')
+assert(fs.relative(path, base):string() == 'A\\C')
+
+local path = fs.path('D:/A\\B\\../C')
+local base = fs.path('D:\\')
+assert(fs.relative(path, base):string() == 'A\\C')
+
+local path = fs.path('C:\\A')
+local base = fs.path('D:\\')
+assert(fs.relative(path, base):string() == '')
+
+-- last_write_time
+local path = fs.path('temp')
+local f = io.open(path:string(), 'wb')
+local time1 = fs.last_write_time(path)
+wait_second()
+f:write('a')
+f:close()
+local time2 = fs.last_write_time(path)
+fs.remove(path)
+assert(time2 > time1)
