@@ -4,135 +4,134 @@
 #include <bee/lua/binding.h>
 
 namespace luareg {
-
 	using namespace bee::registry;
 
-	key_w* rkey_read(lua_State* L, int idx) {
-		return static_cast<key_w*>(lua_touserdata(L, idx));
-	}
+	namespace rkey {
+		key_w* read(lua_State* L, int idx) {
+			return static_cast<key_w*>(lua_touserdata(L, idx));
+		}
 
-	int rkey_push_blob(lua_State* L, const std::dynarray<uint8_t>& value) {
-		lua_pushlstring(L, (const char*)value.data(), value.size());
-		return 1;
-	}
+		key_w* create(lua_State* L, key_w::hkey_type keytype, open_access::t access) {
+			key_w* storage = (key_w*)lua_newuserdata(L, sizeof(key_w));
+			lua_pushvalue(L, lua_upvalueindex(1));
+			lua_setmetatable(L, -2);
+			new (storage)key_w(keytype, access);
+			return storage;
+		}
 
-	key_w* rkey_create(lua_State* L, key_w::hkey_type keytype, open_access::t access) {
-		key_w* storage = (key_w*)lua_newuserdata(L, sizeof(key_w));
-		lua_pushvalue(L, lua_upvalueindex(1));
-		lua_setmetatable(L, -2);
-		new (storage)key_w(keytype, access);
-		return storage;
-	}
+		int copy(lua_State* L, int ud_idx, const key_w* key) {
+			void* storage = lua_newuserdata(L, sizeof(key_w));
+			lua_getmetatable(L, ud_idx);
+			lua_setmetatable(L, -2);
+			new (storage)key_w(*key);
+			return 1;
+		}
 
-	int rkey_copy(lua_State* L, int ud_idx, const key_w* key) {
-		void* storage = lua_newuserdata(L, sizeof(key_w));
-		lua_getmetatable(L, ud_idx);
-		lua_setmetatable(L, -2);
-		new (storage)key_w(*key);
-		return 1;
-	}
+		int mt_index(lua_State* L) {
+			try {
+				key_w*       self = read(L, 1);
+				std::wstring key = ::bee::lua::to_string(L, 2);
+				key_w::value_type& value = self->value(key);
+				switch (value.type()) {
+				case REG_DWORD:
+					lua_pushinteger(L, value.get_uint32_t());
+					return 1;
+				case REG_QWORD:
+					lua_pushinteger(L, value.get_uint64_t());
+					return 1;
+				case REG_SZ:
+				case REG_MULTI_SZ:
+				case REG_EXPAND_SZ:
+					::bee::lua::push_string(L, value.get_string());
+					return 1;
+				case REG_BINARY: {
+					std::dynarray<uint8_t> blob = value.get_binary();
+					lua_pushlstring(L, (const char*)blob.data(), blob.size());
+					return 1;
+				}
+				default:
+					return luaL_error(L, "Unknown REG type(%d).", value.type());
+				}
+			}
+			catch (const std::exception&) {
+			}
+			lua_pushnil(L);
+			return 1;
+		}
 
-	int rkey_index(lua_State* L) {
-		try {
-			key_w*       self = rkey_read(L, 1);
+		int mt_newindex(lua_State* L) {
+			LUA_TRY;
+			key_w*       self = read(L, 1);
 			std::wstring key = ::bee::lua::to_string(L, 2);
 			key_w::value_type& value = self->value(key);
-			switch (value.type())
-			{
-			case REG_DWORD:
-				lua_pushinteger(L, value.get_uint32_t());
-				return 1;
-			case REG_QWORD:
-				lua_pushinteger(L, value.get_uint64_t());
-				return 1;
-			case REG_SZ:
-			case REG_MULTI_SZ:
-			case REG_EXPAND_SZ:
-				::bee::lua::push_string(L, value.get_string());
-				return 1;
-			case REG_BINARY:
-				return rkey_push_blob(L, value.get_binary());
-			default:
-				break;
-			}
-		} catch (const std::exception&) {
-		}
-		lua_pushnil(L);
-		return 1;
-	}
-
-	int rkey_newindex(lua_State* L) {
-		LUA_TRY;
-		key_w*       self = rkey_read(L, 1);
-		std::wstring key = ::bee::lua::to_string(L, 2);
-		key_w::value_type& value = self->value(key);
-		switch (lua_type(L, 3)) {
-		case LUA_TSTRING:
-			value.set(::bee::lua::to_string(L, 3));
-			return 0;
-		case LUA_TNUMBER:
-			value.set_uint32_t((uint32_t)lua_tointeger(L, 3));
-			return 0;
-		case LUA_TTABLE: {
-			lua_geti(L, 3, 1);
-			switch (lua_tointeger(L, -1)) {
-			case REG_DWORD:
-				lua_geti(L, 3, 2);
-				value.set_uint32_t((uint32_t)lua_tointeger(L, -1));
-				break;
-			case REG_QWORD:
-				lua_geti(L, 3, 2);
-				value.set_uint64_t(lua_tointeger(L, -1));
-				break;
-			case REG_EXPAND_SZ:
-			case REG_SZ:
-				lua_geti(L, 3, 2);
-				value.set(::bee::lua::to_string(L, -1));
-				break;
-			case REG_MULTI_SZ: {
-				int len = (int)luaL_len(L, 3);
-				std::wstring str = L"";
-				for (int i = 2; i <= len; ++i)
-				{
-					lua_geti(L, 3, i);
-					str += ::bee::lua::to_string(L, -1);
+			switch (lua_type(L, 3)) {
+			case LUA_TSTRING:
+				value.set(::bee::lua::to_string(L, 3));
+				return 0;
+			case LUA_TNUMBER:
+				value.set_uint32_t((uint32_t)luaL_checkinteger(L, 3));
+				return 0;
+			case LUA_TTABLE: {
+				lua_geti(L, 3, 1);
+				switch (luaL_checkinteger(L, -1)) {
+				case REG_DWORD:
+					lua_geti(L, 3, 2);
+					value.set_uint32_t((uint32_t)luaL_checkinteger(L, -1));
+					break;
+				case REG_QWORD:
+					lua_geti(L, 3, 2);
+					value.set_uint64_t(luaL_checkinteger(L, -1));
+					break;
+				case REG_EXPAND_SZ:
+				case REG_SZ:
+					lua_geti(L, 3, 2);
+					value.set(::bee::lua::to_string(L, -1));
+					break;
+				case REG_MULTI_SZ: {
+					lua_Integer len = luaL_len(L, 3);
+					std::wstring str = L"";
+					for (lua_Integer i = 2; i <= len; ++i) {
+						lua_geti(L, 3, i);
+						str += ::bee::lua::to_string(L, -1);
+						str.push_back(L'\0');
+						lua_pop(L, 1);
+					}
 					str.push_back(L'\0');
-					lua_pop(L, 1);
+					value.set(REG_MULTI_SZ, str.c_str(), str.size() * sizeof(wchar_t));
+					break;
 				}
-				str.push_back(L'\0');
-				value.set(REG_MULTI_SZ, str.c_str(), str.size() * sizeof(wchar_t));
-				break;
-			}
-			case REG_BINARY: {
-				lua_geti(L, 3, 2);
-				size_t buflen = 0;
-				const char* buf = lua_tolstring(L, -1, &buflen);
-				value.set((const void*)buf, buflen);
-				break;
-			}
+				case REG_BINARY: {
+					lua_geti(L, 3, 2);
+					size_t len = 0;
+					const char* buf = luaL_checklstring(L, -1, &len);
+					value.set((const void*)buf, len);
+					break;
+				}
+				default:
+					return luaL_error(L, "Unknown REG type(%d).", luaL_checkinteger(L, -1));
+				}
+				return 0;
 			default:
-				break;
+				return luaL_error(L, "Set value's type must be integer, string or table.");
 			}
-			return 0;
-		default:
+			}
+			LUA_TRY_END;
+		}
+
+		int mt_div(lua_State* L) {
+			LUA_TRY;
+			key_w*       self = read(L, 1);
+			std::wstring rht = ::bee::lua::to_string(L, 2);
+			key_w        ret = *self / rht;
+			return copy(L, 1, &ret);
+			LUA_TRY_END;
+		}
+
+		int mt_gc(lua_State* L) {
+			static_cast<key_w*>(lua_touserdata(L, 1))->~key_w();
 			return 0;
 		}
-		}
-		LUA_TRY_END;
-	}
 
-	int rkey_div(lua_State* L) {
-		LUA_TRY;
-		key_w*       self = rkey_read(L, 1);
-		std::wstring rht = ::bee::lua::to_string(L, 2);
-		key_w        ret = *self / rht;
-		return rkey_copy(L, 1, &ret);
-		LUA_TRY_END;
-	}
-
-	int rkey_gc(lua_State* L) {
-		static_cast<key_w*>(lua_touserdata(L, 1))->~key_w();
-		return 0;
 	}
 
 	int open(lua_State* L) {
@@ -153,13 +152,13 @@ namespace luareg {
 			return 0;
 		}
 		std::wstring sub = key.substr(pos + 1);
-		key_w* rkey = rkey_create(L, basetype, open_access::none);
+		key_w* rkey = rkey::create(L, basetype, open_access::none);
 		key_w ret = *rkey / sub;
-		return rkey_copy(L, lua_absindex(L, -1), &ret);
+		return rkey::copy(L, lua_absindex(L, -1), &ret);
 	}
 
 	int del(lua_State* L) {
-		key_w* self = rkey_read(L, 1);
+		key_w* self = rkey::read(L, 1);
 		lua_pushboolean(L, self->del()? 1: 0);
 		return 1;
 	}
@@ -173,10 +172,10 @@ int luaopen_bee_registry(lua_State* L) {
 		{ NULL, NULL }
 	};
 	static luaL_Reg rkey_mt[] = {
-		{ "__index", luareg::rkey_index },
-		{ "__newindex", luareg::rkey_newindex },
-		{ "__div", luareg::rkey_div },
-		{ "__gc", luareg::rkey_gc },
+		{ "__index", luareg::rkey::mt_index },
+		{ "__newindex", luareg::rkey::mt_newindex },
+		{ "__div", luareg::rkey::mt_div },
+		{ "__gc", luareg::rkey::mt_gc },
 		{ NULL, NULL }
 	};
 	luaL_newlibtable(L, func);
