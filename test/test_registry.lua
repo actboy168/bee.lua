@@ -36,6 +36,7 @@ local reg = registry.open [[HKEY_CURRENT_USER\Software\bee_test]]
 assert(true == registry.del(reg))
 
 local reg = registry.open [[HKEY_CURRENT_USER\Software\bee_test]]
+-- 不存在的树是否可以打开？
 assert(reg ~= nil)
 assert(reg['TEST_REG_SZ']        == nil)
 assert(reg['TEST_REG_BINARY']    == nil)
