@@ -72,30 +72,32 @@ for filename in os_list:gmatch '[^\r\n]+' do
 end
 assert(next(founded) == nil)
 
+local ALLOW_WRITE = 0x92
+
 -- permissions
 local path = fs.path('temp.txt')
 io.open(path:string(), 'w'):close()
-assert(path:permissions() & 128 ~= 0)
+assert(path:permissions() & ALLOW_WRITE ~= 0)
 os.execute('attrib +r temp.txt')
-assert(path:permissions() & 128 == 0)
+assert(path:permissions() & ALLOW_WRITE == 0)
 os.execute('attrib -r temp.txt')
 os.remove(path:string())
 
 -- add_permissions
 local path = fs.path('temp.txt')
 io.open(path:string(), 'w'):close()
-assert(path:permissions() & 128 ~= 0)
+assert(path:permissions() & ALLOW_WRITE ~= 0)
 os.execute('attrib +r temp.txt')
-assert(path:permissions() & 128 == 0)
-path:add_permissions(128)
+assert(path:permissions() & ALLOW_WRITE == 0)
+path:add_permissions(ALLOW_WRITE)
 os.remove(path:string())
 
 -- remove_permissions
 local path = fs.path('temp.txt')
 io.open(path:string(), 'w'):close()
-assert(path:permissions() & 128 ~= 0)
-path:remove_permissions(128)
---assert(path:permissions() & 128 == 0) -- TODO
+assert(path:permissions() & ALLOW_WRITE ~= 0)
+path:remove_permissions(ALLOW_WRITE)
+assert(path:permissions() & ALLOW_WRITE == 0)
 os.execute('attrib -r temp.txt')
 os.remove(path:string())
 
@@ -104,7 +106,7 @@ local path = fs.path('dir') / 'filename'
 assert(path:string() == 'dir\\filename')
 
 -- __eq
---assert(fs.path('test') == fs.path('test')) -- TODO
+assert(fs.path('test') == fs.path('test'))
 
 -- fs.exists
 local path = fs.path('temp.txt')
