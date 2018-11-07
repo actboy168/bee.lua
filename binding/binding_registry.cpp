@@ -135,6 +135,7 @@ namespace luareg {
 	}
 
 	int open(lua_State* L) {
+		LUA_TRY;
 		std::wstring key = ::bee::lua::to_string(L, 1);
 		size_t pos = key.find(L'\\');
 		if (pos == -1) {
@@ -155,12 +156,15 @@ namespace luareg {
 		key_w* rkey = rkey::create(L, basetype, open_access::none);
 		key_w ret = *rkey / sub;
 		return rkey::copy(L, lua_absindex(L, -1), &ret);
+		LUA_TRY_END;
 	}
 
 	int del(lua_State* L) {
+		LUA_TRY;
 		key_w* self = rkey::read(L, 1);
 		lua_pushboolean(L, self->del()? 1: 0);
 		return 1;
+		LUA_TRY_END;
 	}
 }
 
