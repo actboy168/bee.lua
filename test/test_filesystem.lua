@@ -1,4 +1,5 @@
 local fs = require 'bee.filesystem'
+local uni = require 'ffi.unicode'
 
 local function wait_second()
     local f = io.popen('ping -n 1 127.1>nul', 'r')
@@ -65,6 +66,7 @@ end
 
 local os_list = io.popen([[dir C:\ /A /B]], 'r'):read 'a'
 for filename in os_list:gmatch '[^\r\n]+' do
+    filename = uni.a2u(filename)
     assert(founded[filename] == true)
     founded[filename] = nil
 end
