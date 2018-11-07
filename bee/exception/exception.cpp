@@ -6,7 +6,7 @@
 
 namespace bee { 
 
-#define YD_VA_START(v)  ((va_list)_ADDRESSOF(v) + _INTSIZEOF(v))
+#define YD_VA_START(v)  (va_start(const_cast<va_list&>(vl_), v), vl_)
 
 	exception::exception()
 		: what_()

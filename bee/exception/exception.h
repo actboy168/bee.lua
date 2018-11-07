@@ -63,7 +63,8 @@ namespace bee {
 		werrormsg get_format_string(const wchar_t* fmt, ...) const;
 		werrormsg get_format_string(const wchar_t* fmt, va_list argsList) const;
 #pragma warning(suppress:4251)
-		errormsg  what_;
+		errormsg  what_; 
+		va_list   vl_;
 #pragma warning(pop)
 	};
 }
