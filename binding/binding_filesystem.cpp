@@ -9,26 +9,13 @@ namespace fs = std::filesystem;
 
 namespace luafs {
 	namespace path {
-		class directory_container
-		{
+		class directory_container {
 		public:
-			directory_container(directory_container const& that) : p_(that.p_) { }
-			directory_container(fs::path const& that) : p_(that) { }
-			fs::directory_iterator cbegin() const {
-				std::error_code ec;
-				auto r = fs::directory_iterator(p_, ec);
-				if (!!ec)
-				{
-					return fs::directory_iterator();
-				}
-				return r;
-			}
-			fs::directory_iterator begin() const { return cbegin(); }
-			fs::directory_iterator begin()       { return cbegin(); }
-			fs::directory_iterator end() const   { return fs::directory_iterator(); }
-			fs::directory_iterator end()         { return fs::directory_iterator(); }
+			directory_container(fs::path const& o) : p(o) { }
+			fs::directory_iterator begin() const { return fs::directory_iterator(p); }
+			fs::directory_iterator end()   const { return fs::directory_iterator(); }
 		private:
-			const fs::path& p_;
+			const fs::path& p;
 		};
 
 		static void* newudata(lua_State* L)

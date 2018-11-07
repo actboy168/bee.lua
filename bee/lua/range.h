@@ -3,6 +3,7 @@
 #include <bee/config.h>
 #include <utility> 
 #include <lua.hpp>
+#include <bee/lua/binding.h>
 
 namespace bee { namespace lua {
 	template <class T>
@@ -19,6 +20,7 @@ namespace bee { namespace lua {
 	template <class Iterator>
 	struct iterator {
 		static int next(lua_State* L) {
+			LUA_TRY;
 			iterator* self = static_cast<iterator*>(lua_touserdata(L, lua_upvalueindex(1)));
 			if (self->first_ == self->last_) {
 				lua_pushnil(L);
@@ -27,6 +29,7 @@ namespace bee { namespace lua {
 			int nreslut = convert_to_lua(L, *self->first_);
 			++(self->first_);
 			return nreslut;
+			LUA_TRY_END;
 		}
 		static int destroy(lua_State* L) {
 			static_cast<iterator*>(lua_touserdata(L, 1))->~iterator();
