@@ -243,12 +243,6 @@ namespace luafs {
 			LUA_TRY;
 			const fs::path& self = path::to(L, 1);
 			const fs::path& rht = path::to(L, 2);
-			std::error_code ec;
-			bool r = fs::equivalent(self, rht, ec);
-			if (ec) {
-				lua_pushboolean(L, r);
-				return 1;
-			}
 			lua_pushboolean(L, bee::path::equal(self, rht));
 			return 1;
 			LUA_TRY_END;
