@@ -1,8 +1,5 @@
 package.cpath = '../bin/x86/debug/?.dll'
-require 'bee_compat'
-print(require 'bee.subprocess')
-print(require 'bee.filesystem')
-print(require 'bee.registry')
+dofile '../3rd/luaffi/src/test.lua'
 require 'test_filesystem'
 require 'test_subprocess'
 require 'test_registry'
