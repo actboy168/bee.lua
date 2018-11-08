@@ -1,5 +1,5 @@
 local fs = require 'bee.filesystem'
-local uni = require 'ffi.unicode'
+local uni = require 'bee.unicode'
 
 local function wait_second()
     local f = io.popen('ping -n 1 127.1>nul', 'r')

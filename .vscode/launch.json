@@ -9,15 +9,16 @@
             "request": "launch",
             "name": "Make",
             "luaexe": "${workspaceFolder}/make/luamake/lua.exe",
-            "cwd" :"${workspaceFolder}",
-            "program": "${workspaceFolder}/make/make.lua"
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/make/make.lua",
+            "path": "${workspaceFolder}/script/?.lua;${workspaceFolder}/make/luamake/?.lua;${workspaceFolder}/make/?.lua"
         },
         {
             "type": "lua",
             "request": "launch",
             "name": "Test",
             "luaRuntime": "5.4 32bit",
-            "cwd" :"${workspaceFolder}",
+            "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/test/test.lua",
             "stopOnEntry": false
         }
