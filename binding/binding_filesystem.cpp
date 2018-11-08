@@ -1,4 +1,4 @@
-#include <lua.hpp>	  		
+#include <lua.hpp>
 #include <filesystem>
 #include <bee/utility/path_helper.h>
 #include <bee/utility/unicode.h>
@@ -80,15 +80,6 @@ namespace luafs {
 			}
 			luaL_checktype(L, 1, LUA_TSTRING);
 			return 0;
-			LUA_TRY_END;
-		}
-
-		static int string(lua_State* L)
-		{
-			LUA_TRY;
-			const fs::path& self = path::to(L, 1);
-			::bee::lua::push_string(L, self.string<fs::path::value_type>());
-			return 1;
 			LUA_TRY_END;
 		}
 
@@ -397,7 +388,7 @@ extern "C" __declspec(dllexport)
 int luaopen_bee_filesystem(lua_State* L)
 {
 	static luaL_Reg mt[] = {
-		{ "string", luafs::path::string },
+		{ "string", luafs::path::mt_tostring },
 		{ "filename", luafs::path::filename },
 		{ "parent_path", luafs::path::parent_path },
 		{ "stem", luafs::path::stem },

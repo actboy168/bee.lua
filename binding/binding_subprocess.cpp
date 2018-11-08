@@ -5,8 +5,15 @@
 #include <optional>
 #include <errno.h>
 #include <string.h>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 typedef ::bee::lua::string_type nativestring;
+
+static fs::path& topath(lua_State* L, int idx) {
+	return *(fs::path*)luaL_checkudata(L, idx, "filesystem");
+}
 
 namespace process {
     static int constructor(lua_State* L, bee::subprocess::spawn& spawn) {
@@ -72,6 +79,11 @@ namespace spawn {
             lua_pop(L, 1);
             return ret;
         }
+		else if (LUA_TUSERDATA == lua_type(L, -1)) {
+			nativestring ret = topath(L, -1).string<nativestring::value_type>();
+			lua_pop(L, 1);
+			return ret;
+		}
         lua_pop(L, 1);
         return std::optional<nativestring>();
     }
@@ -114,9 +126,19 @@ namespace spawn {
             case LUA_TSTRING:
                 args.push_back(LOAD_ARGS(L, -1));
                 break;
+			case LUA_TUSERDATA:
+#if defined(_WIN32)
+				args.push_back(topath(L, -1).wstring());
+#else
+				args.push_back(topath(L, -1).c_str());
+#endif
+				break;
             case LUA_TTABLE:
                 cast_args(L, lua_absindex(L, -1), args);
                 break;
+			default:
+				luaL_error(L, "Unsupported type: %s.", lua_typename(L, lua_type(L, -1)));
+				return;
             }
             lua_pop(L, 1);
         }

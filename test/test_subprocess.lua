@@ -9,5 +9,5 @@ local function wait_second()
 end
 
 -- spawn
-local process = subprocess.spawn { exe:string() }
+local process = subprocess.spawn { exe }
 assert(process ~= nil)
