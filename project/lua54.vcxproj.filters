@@ -108,14 +108,14 @@
     <ClCompile Include="..\3rd\lua\src\ltablib.c">
       <Filter>standard-library</Filter>
     </ClCompile>
-    <ClCompile Include="..\3rd\lua\utf8\unicode.c" />
-    <ClCompile Include="..\3rd\lua\utf8\utf8_crt.c" />
     <ClCompile Include="..\3rd\lua\src\linit.c">
       <Filter>standard-library</Filter>
     </ClCompile>
     <ClCompile Include="..\3rd\lua\src\lstrlib.c">
       <Filter>standard-library</Filter>
     </ClCompile>
+    <ClCompile Include="..\3rd\lua\utf8\utf8_crt.c" />
+    <ClCompile Include="..\3rd\lua\utf8\utf8_unicode.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\3rd\lua\src\lua.h">
@@ -190,8 +190,11 @@
     <ClInclude Include="..\3rd\lua\src\lzio.h">
       <Filter>core\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\3rd\lua\src\lprefix.h" />
-    <ClInclude Include="..\3rd\lua\utf8\unicode.h" />
     <ClInclude Include="..\3rd\lua\utf8\utf8_crt.h" />
+    <ClInclude Include="..\3rd\lua\utf8\utf8_prefix.h" />
+    <ClInclude Include="..\3rd\lua\utf8\utf8_unicode.h" />
+    <ClInclude Include="..\3rd\lua\src\lprefix.h">
+      <Filter>core</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

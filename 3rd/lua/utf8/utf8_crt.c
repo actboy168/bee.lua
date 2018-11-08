@@ -1,6 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "utf8_crt.h"
-#include "unicode.h"
+#include "utf8_unicode.h"
 #include <malloc.h>
 #include <Windows.h>
 

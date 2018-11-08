@@ -1,4 +1,4 @@
-#include "unicode.h"
+#include "utf8_unicode.h"
 #include <Windows.h>
 
 wchar_t* u2w(const char *str) {

@@ -152,16 +152,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\3rd\lua\utf8\unicode.c" />
-    <ClCompile Include="..\3rd\lua\utf8\wmain.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\3rd\lua\utf8\unicode.h" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="lua54.vcxproj">
       <Project>{316b33ed-1056-48b0-abf0-ce3ce55f7a17}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\3rd\lua\utf8\utf8_lua.c" />
+    <ClCompile Include="..\3rd\lua\utf8\utf8_unicode.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\3rd\lua\utf8\utf8_unicode.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

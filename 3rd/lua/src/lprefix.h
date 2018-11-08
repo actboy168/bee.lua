@@ -39,20 +39,7 @@
 #define _CRT_SECURE_NO_WARNINGS  /* avoid warnings about ISO C functions */
 #endif
 
-#if !defined(lua_c) && !defined(luac_c)
-#include "../utf8/utf8_crt.h"
-#if !defined(lundump_c)
-#include <Windows.h>
-#endif
-#define fopen(...) utf8_fopen(__VA_ARGS__)
-#define popen(...) utf8_popen(__VA_ARGS__)
-#define system(...) utf8_system(__VA_ARGS__)
-#define remove(...) utf8_remove(__VA_ARGS__)
-#define rename(...) utf8_rename(__VA_ARGS__)
-#define getenv(...) utf8_getenv(__VA_ARGS__)
-#define LoadLibraryExA(...) utf8_LoadLibraryExA(__VA_ARGS__)
-#define GetModuleFileNameA(...) utf8_GetModuleFileNameA(__VA_ARGS__)
-#endif
+#include "../utf8/utf8_prefix.h"
 
 #endif			/* } */
 
