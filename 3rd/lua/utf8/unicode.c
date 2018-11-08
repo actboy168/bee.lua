@@ -1,4 +1,5 @@
-#include <windows.h>
+#include "unicode.h"
+#include <Windows.h>
 
 wchar_t* u2w(const char *str) {
 	int len = 0;
