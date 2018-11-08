@@ -5,7 +5,7 @@ if not msvc:initialize(141, 'utf8') then
     error('Cannot found Visual Studio Toolset.')
 end
 
-local root = fs.absolute(fs.path '../')
+local root = fs.absolute(fs.path './')
 local property = {
     Configuration = 'Debug',
     Platform = 'x86'
