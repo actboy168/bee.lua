@@ -108,13 +108,13 @@ local function writeactions(out, name)
   out:write("static const unsigned char ", name, "[", nn, "] = {\n")
   local s = "  "
   for n,b in ipairs(actlist) do
-    s = s..b..","
+    s = s..("0x%02x,"):format(b)
     if #s >= 75 then
       assert(out:write(s, "\n"))
       s = "  "
     end
   end
-  out:write(s, last, "\n};\n\n") -- Add last byte back.
+  out:write(s, ("0x%02x"):format(last), "\n};\n\n") -- Add last byte back.
 end
 
 ------------------------------------------------------------------------------
