@@ -7,6 +7,9 @@
 
 namespace fs = std::filesystem;
 
+// http://blogs.msdn.com/oldnewthing/archive/2004/10/25/247180.aspx
+extern "C" IMAGE_DOS_HEADER __ImageBase;
+
 namespace luafs {
 	namespace path {
 		class directory_container {
@@ -373,6 +376,13 @@ namespace luafs {
 		return path::constructor_(L, std::move(bee::path::module().parent_path()));
 		LUA_TRY_END;
 	}
+
+	static int module_path(lua_State* L)
+	{
+		LUA_TRY;
+		return path::constructor_(L, std::move(bee::path::module(reinterpret_cast<HMODULE>(&__ImageBase)).parent_path()));
+		LUA_TRY_END;
+	}
 }
  
 namespace bee { namespace lua {
@@ -428,6 +438,7 @@ int luaopen_bee_filesystem(lua_State* L)
 		{ "relative", luafs::relative },
 		{ "last_write_time", luafs::last_write_time },
 		{ "procedure_path", luafs::procedure_path },
+		{ "module_path", luafs::module_path },
 		{ NULL, NULL }
 	};	
 	lua_newtable(L);
