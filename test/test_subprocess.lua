@@ -1,6 +1,15 @@
 local subprocess = require 'bee.subprocess'
 local fs = require 'bee.filesystem'
-local exe = fs.path(arg[-3])
+
+local function getexe()
+    local i = 0
+    while arg[i] ~= nil do
+        i = i - 1
+    end
+    return arg[i + 1]
+end
+
+local exe = fs.path(getexe())
 
 local function wait_second()
     local f = io.popen('ping -n 1 127.1>nul', 'r')
