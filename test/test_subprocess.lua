@@ -37,12 +37,12 @@ fs.remove(fs.path 'temp')
 
 -- wait
 fs.remove(fs.path 'temp')
+assert(fs.exists(fs.path 'temp') ~= true)
 local lua = subprocess.spawn {
     exe,
     '-e', 'io.open("temp", "w"):close()'
 }
 assert(lua ~= nil)
-assert(fs.exists(fs.path 'temp') ~= true)
 lua:wait()
 assert(fs.exists(fs.path 'temp') == true)
 fs.remove(fs.path 'temp')
