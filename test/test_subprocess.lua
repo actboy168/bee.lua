@@ -18,13 +18,17 @@ local function wait_second()
 end
 
 -- subprocess.spawn
-local lua = subprocess.spawn { exe }
+local lua = subprocess.spawn {
+    exe,
+    console = 'disable'
+}
 assert(lua ~= nil)
 
 fs.remove(fs.path 'temp')
 local lua = subprocess.spawn {
     exe,
-    '-e', 'io.open("temp", "w"):close()'
+    '-e', 'io.open("temp", "w"):close()', 
+    console = 'disable'
 }
 assert(lua ~= nil)
 wait_second()
@@ -49,7 +53,10 @@ assert(lua ~= nil)
 assert(lua:is_running() == true)
 
 -- kill
-local lua = subprocess.spawn { exe }
+local lua = subprocess.spawn {
+    exe, 
+    console = 'disable'
+}
 assert(lua ~= nil)
 assert(lua:is_running() == true)
 assert(lua:kill() == true)
@@ -57,7 +64,10 @@ assert(lua:is_running() == false)
 assert(lua:kill() == false)
 
 -- get_id
-local lua = subprocess.spawn { exe }
+local lua = subprocess.spawn {
+    exe,
+    console = 'disable'
+}
 assert(lua ~= nil)
 local id = lua:get_id()
 local f = io.popen(('tasklist /FI "PID eq %d"'):format(id), 'r')
@@ -71,6 +81,7 @@ local lua, stdin, stdout, stderr = subprocess.spawn {
     stdin = true,
     stdout = true,
     stderr = true,
+    console = 'disable'
 }
 assert(lua ~= nil)
 assert(stdin ~= nil)
