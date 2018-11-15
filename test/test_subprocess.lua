@@ -20,6 +20,7 @@ end
 -- subprocess.spawn
 local lua = subprocess.spawn {
     exe,
+    '-e', '',
     console = 'disable'
 }
 assert(lua ~= nil)
@@ -27,7 +28,7 @@ assert(lua ~= nil)
 fs.remove(fs.path 'temp')
 local lua = subprocess.spawn {
     exe,
-    '-e', 'io.open("temp", "w"):close()', 
+    '-e', 'io.open("temp", "w"):close()',
     console = 'disable'
 }
 assert(lua ~= nil)
@@ -37,6 +38,7 @@ fs.remove(fs.path 'temp')
 
 -- wait
 fs.remove(fs.path 'temp')
+print(fs.absolute(fs.path 'temp'))
 assert(fs.exists(fs.path 'temp') ~= true)
 local lua = subprocess.spawn {
     exe,
@@ -48,13 +50,18 @@ assert(fs.exists(fs.path 'temp') == true)
 fs.remove(fs.path 'temp')
 
 -- is_running
-local lua = subprocess.spawn { exe }
+local lua = subprocess.spawn {
+    exe,
+    '-e', '',
+    console = 'disable',
+}
 assert(lua ~= nil)
 assert(lua:is_running() == true)
 
 -- kill
 local lua = subprocess.spawn {
-    exe, 
+    exe,
+    '-e', '',
     console = 'disable'
 }
 assert(lua ~= nil)
@@ -73,17 +80,30 @@ local id = lua:get_id()
 local f = io.popen(('tasklist /FI "PID eq %d"'):format(id), 'r')
 local buf = f:read 'a'
 f:close()
+lua:kill()
 assert(buf:find(exe:filename():string(), 1, true) ~= nil)
 
---
-local lua, stdin, stdout, stderr = subprocess.spawn {
+-- resume TODO
+
+-- native_handle TODO
+
+-- stdout
+local lua, stdout = subprocess.spawn {
     exe,
-    stdin = true,
+    '-e', 'io.write("ok")',
+    console = 'disable',
     stdout = true,
-    stderr = true,
-    console = 'disable'
 }
-assert(lua ~= nil)
-assert(stdin ~= nil)
-assert(stdout ~= nil)
-assert(stderr ~= nil)
+lua:wait()
+print(stdout:read 'a')
+assert(stdout:read 'a')
+
+-- subprocess.peek
+local lua, stdout = subprocess.spawn {
+    exe,
+    '-e', 'io.write("ok")',
+    console = 'disable',
+    stdout = true,
+}
+lua:wait()
+assert(subprocess.peek(stdout) == 2)
