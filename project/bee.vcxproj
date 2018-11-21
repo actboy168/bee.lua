@@ -95,7 +95,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(projectDir)..\;$(projectDir)..\3rd\lua\src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(projectDir)..\;$(projectDir)..\3rd\lua\src\;$(projectDir)..\3rd\lua-seri\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BEE_EXPORTS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -106,7 +106,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(projectDir)..\;$(projectDir)..\3rd\lua\src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(projectDir)..\;$(projectDir)..\3rd\lua\src\;$(projectDir)..\3rd\lua-seri\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BEE_EXPORTS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -119,7 +119,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(projectDir)..\;$(projectDir)..\3rd\lua\src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(projectDir)..\;$(projectDir)..\3rd\lua\src\;$(projectDir)..\3rd\lua-seri\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BEE_EXPORTS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -136,7 +136,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(projectDir)..\;$(projectDir)..\3rd\lua\src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(projectDir)..\;$(projectDir)..\3rd\lua\src\;$(projectDir)..\3rd\lua-seri\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BEE_EXPORTS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -146,6 +146,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\3rd\lua-seri\lua-seri.c" />
     <ClCompile Include="..\bee\exception\exception.cpp" />
     <ClCompile Include="..\bee\exception\windows_exception.cpp" />
     <ClCompile Include="..\bee\subprocess\subprocess_posix.cpp">
@@ -160,8 +161,10 @@
     <ClCompile Include="..\binding\binding_filesystem.cpp" />
     <ClCompile Include="..\binding\binding_registry.cpp" />
     <ClCompile Include="..\binding\binding_subprocess.cpp" />
+    <ClCompile Include="..\binding\binding_thread.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\3rd\lua-seri\lua-seri.h" />
     <ClInclude Include="..\bee\config.h" />
     <ClInclude Include="..\bee\exception\exception.h" />
     <ClInclude Include="..\bee\exception\windows_exception.h" />
@@ -183,6 +186,7 @@
     <ClInclude Include="..\bee\utility\array_view.h" />
     <ClInclude Include="..\bee\utility\dynarray.h" />
     <ClInclude Include="..\bee\utility\path_helper.h" />
+    <ClInclude Include="..\bee\utility\semaphore.h" />
     <ClInclude Include="..\bee\utility\unicode.h" />
   </ItemGroup>
   <ItemGroup>
