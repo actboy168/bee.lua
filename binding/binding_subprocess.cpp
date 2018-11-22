@@ -12,20 +12,20 @@ namespace fs = std::filesystem;
 typedef ::bee::lua::string_type nativestring;
 
 static fs::path& topath(lua_State* L, int idx) {
-	return *(fs::path*)luaL_checkudata(L, idx, "filesystem");
+	return *(fs::path*)luaL_checkudata(L, idx, "bee::filesystem");
 }
 
 namespace process {
     static int constructor(lua_State* L, bee::subprocess::spawn& spawn) {
         void* storage = lua_newuserdata(L, sizeof(bee::subprocess::process));
-        luaL_getmetatable(L, "subprocess");
+        luaL_getmetatable(L, "bee::subprocess");
         lua_setmetatable(L, -2);
         new (storage)bee::subprocess::process(spawn);
         return 1;
     }
 
     static bee::subprocess::process& to(lua_State* L, int idx) {
-        return *(bee::subprocess::process*)luaL_checkudata(L, idx, "subprocess");
+        return *(bee::subprocess::process*)luaL_checkudata(L, idx, "bee::subprocess");
     }
 
     static int destructor(lua_State* L) {
@@ -317,7 +317,7 @@ int luaopen_bee_subprocess(lua_State* L)
         { "__gc", process::destructor },
         { NULL, NULL }
     };
-    luaL_newmetatable(L, "subprocess");
+    luaL_newmetatable(L, "bee::subprocess");
     luaL_setfuncs(L, mt, 0);
     lua_pushvalue(L, -1);
     lua_setfield(L, -2, "__index");

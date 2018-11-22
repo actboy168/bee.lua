@@ -24,14 +24,14 @@ namespace luafs {
 		static void* newudata(lua_State* L)
 		{
 			void* storage = lua_newuserdata(L, sizeof(fs::path));
-			luaL_getmetatable(L, "filesystem");
+			luaL_getmetatable(L, "bee::filesystem");
 			lua_setmetatable(L, -2);
 			return storage;
 		}
 
 		static fs::path& to(lua_State* L, int idx)
 		{
-			return *(fs::path*)luaL_checkudata(L, idx, "filesystem");
+			return *(fs::path*)luaL_checkudata(L, idx, "bee::filesystem");
 		}
 
 		static int constructor_(lua_State* L)
@@ -418,7 +418,7 @@ int luaopen_bee_filesystem(lua_State* L)
 		{ "__debugger_tostring", luafs::path::mt_tostring },
 		{ NULL, NULL }
 	};
-	luaL_newmetatable(L, "filesystem");
+	luaL_newmetatable(L, "bee::filesystem");
 	luaL_setfuncs(L, mt, 0);
 	lua_pushvalue(L, -1);
 	lua_setfield(L, -2, "__index");
