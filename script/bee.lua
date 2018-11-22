@@ -2,16 +2,8 @@ local sp = require 'bee.subprocess'
 local fs = require 'bee.filesystem'
 
 local function fork(script, args, options)
-    -- TODO
-    local function getexe()
-        local i = 0
-        while arg[i] ~= nil do
-            i = i - 1
-        end
-        return arg[i + 1]
-    end
     local init = {
-        getexe(),
+        fs.procedure_path(),
         '-E',
         '-e', ('package.path=[[%s]]'):format(package.path)
         '-e', ('package.cpath=[[%s]]'):format(package.cpath)

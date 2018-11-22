@@ -1,14 +1,6 @@
 local fs = require 'bee.filesystem'
 local uni = require 'bee.unicode'
 
-local function getexe()
-    local i = 0
-    while arg[i] ~= nil do
-        i = i - 1
-    end
-    return arg[i + 1]
-end
-
 local function wait_second()
     local f = io.popen('ping -n 1 127.1>nul', 'r')
     f:read 'a'
@@ -273,5 +265,11 @@ fs.remove(path)
 assert(time2 > time1)
 
 -- procedure_path
-local exe = fs.absolute(fs.path(getexe()))
-assert(fs.procedure_path():string() == exe:parent_path():string())
+local function getexe()
+    local i = 0
+    while arg[i] ~= nil do
+        i = i - 1
+    end
+    return fs.absolute(fs.path(arg[i + 1]))
+end
+assert(fs.procedure_path() == getexe())

@@ -1,15 +1,7 @@
 local subprocess = require 'bee.subprocess'
 local fs = require 'bee.filesystem'
 
-local function getexe()
-    local i = 0
-    while arg[i] ~= nil do
-        i = i - 1
-    end
-    return arg[i + 1]
-end
-
-local exe = fs.path(getexe())
+local exe = fs.procedure_path()
 
 local function wait_second()
     local f = io.popen('ping -n 1 127.1>nul', 'r')
@@ -20,16 +12,14 @@ end
 -- subprocess.spawn
 local lua = subprocess.spawn {
     exe,
-    '-e', '',
-    console = 'disable'
+    '-e', ''
 }
 assert(lua ~= nil)
 
 fs.remove(fs.path 'temp')
 local lua = subprocess.spawn {
     exe,
-    '-e', 'io.open("temp", "w"):close()',
-    console = 'disable'
+    '-e', 'io.open("temp", "w"):close()'
 }
 assert(lua ~= nil)
 wait_second()
@@ -52,8 +42,7 @@ fs.remove(fs.path 'temp')
 -- is_running
 local lua = subprocess.spawn {
     exe,
-    '-e', '',
-    console = 'disable',
+    '-e', ''
 }
 assert(lua ~= nil)
 assert(lua:is_running() == true)
@@ -61,8 +50,7 @@ assert(lua:is_running() == true)
 -- kill
 local lua = subprocess.spawn {
     exe,
-    '-e', '',
-    console = 'disable'
+    '-e', ''
 }
 assert(lua ~= nil)
 assert(lua:is_running() == true)
@@ -72,8 +60,7 @@ assert(lua:kill() == false)
 
 -- get_id
 local lua = subprocess.spawn {
-    exe,
-    console = 'disable'
+    exe
 }
 assert(lua ~= nil)
 local id = lua:get_id()
@@ -91,8 +78,7 @@ assert(buf:find(exe:filename():string(), 1, true) ~= nil)
 local lua, stdout = subprocess.spawn {
     exe,
     '-e', 'io.write("ok")',
-    console = 'disable',
-    stdout = true,
+    stdout = true
 }
 lua:wait()
 print(stdout:read 'a')
@@ -102,8 +88,7 @@ assert(stdout:read 'a')
 local lua, stdout = subprocess.spawn {
     exe,
     '-e', 'io.write("ok")',
-    console = 'disable',
-    stdout = true,
+    stdout = true
 }
 lua:wait()
 assert(subprocess.peek(stdout) == 2)
