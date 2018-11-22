@@ -25,6 +25,9 @@
     <Filter Include="3rd">
       <UniqueIdentifier>{39cd527b-5a71-43d9-9235-117b5f084a99}</UniqueIdentifier>
     </Filter>
+    <Filter Include="bee\nonstd">
+      <UniqueIdentifier>{e9705383-2f16-4d0a-9f01-29b20b49b479}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\bee\subprocess\subprocess_posix.cpp">
@@ -110,14 +113,14 @@
     <ClInclude Include="..\bee\lua\range.h">
       <Filter>bee\lua</Filter>
     </ClInclude>
-    <ClInclude Include="..\bee\utility\array_view.h">
-      <Filter>bee\utility</Filter>
-    </ClInclude>
     <ClInclude Include="..\3rd\lua-seri\lua-seri.h">
       <Filter>3rd</Filter>
     </ClInclude>
     <ClInclude Include="..\bee\utility\semaphore.h">
       <Filter>bee\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\nonstd\span.h">
+      <Filter>bee\nonstd</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <bee/utility/array_view.h>
+#include <bee/nonstd/span.h>
 
 namespace std {
 	class bad_array_length : public bad_alloc {
@@ -13,9 +13,9 @@ namespace std {
 	};
 
 	template <class T>
-	class dynarray : public array_view<T> {
+	class dynarray : public nonstd::span<T> {
 	public:
-		typedef       array_view<T>                   mybase;
+		typedef       nonstd::span<T>                 mybase;
 		typedef       T                               value_type;
 		typedef       T&                              reference;
 		typedef const T&                              const_reference;
@@ -31,15 +31,16 @@ namespace std {
 		explicit dynarray(size_type c)
 			: mybase(alloc(c), c)
 		{ 
-			size_type i = 0;
+			auto i = mybase::begin();
 			try {
-				for (i = 0; i < mybase::count_; ++i) {
-					new (mybase::store_+i) T;
+				for (; i != mybase::end(); ++i) {
+					new (&*i) T;
 				}
 			}
 			catch (...) {
-				for (; i > 0; --i)
-					(mybase::store_+(i-1))->~T();
+				for (; i >= mybase::begin(); --i) {
+					i->~T();
+				}
 				throw;
 			} 
 		}
@@ -57,10 +58,9 @@ namespace std {
 		}
 
 		dynarray(dynarray&& d)
-			: mybase(d.store_, d.count_)
+			: mybase(d.data(), d.size())
 		{
-			d.store_ = nullptr;
-			d.count_ = 0;
+			d = mybase();
 		}
 
 		dynarray(std::initializer_list<T> l)
@@ -83,28 +83,27 @@ namespace std {
 				uninitialized_copy(v.begin(), v.end(), mybase::begin());
 			}
 			catch (...) {
-				delete[] reinterpret_cast<char*>(mybase::store_);
+				delete[] reinterpret_cast<char*>(mybase::data());
 				throw;
 			}
 		}
 
 		~dynarray()
 		{
-			for (size_type i = 0; i < mybase::count_; ++i) {
-				(mybase::store_+i)->~T();
+			for (auto i : *this) {
+				i.~T();
 			}
-			delete[] reinterpret_cast<char*>(mybase::store_);
+			delete[] reinterpret_cast<char*>(mybase::data());
 		}
 
 		dynarray& operator=(const dynarray& d) {
 			if (this != &d) {
-				mybase::store_ = alloc(d.count_);
-				mybase::count_ = d.count_;
+				*this = mybase(alloc(d.data()), d.size());
 				try {
 					uninitialized_copy(d.begin(), d.end(), mybase::begin());
 				}
 				catch (...) {
-					delete[] reinterpret_cast<char*>(mybase::store_);
+					delete[] reinterpret_cast<char*>(mybase::data());
 					throw;
 				}
 			}
@@ -112,10 +111,8 @@ namespace std {
 		}
 		dynarray& operator=(dynarray&& d) {
 			if (this != &d) {
-				mybase::store_ = d.store_;
-				mybase::count_ = d.count_;
-				d.store_ = nullptr;
-				d.count_ = 0;
+				*this = mybase(d.data(), d.size());
+				d = mybase();
 			}
 			return *this;
 		}
