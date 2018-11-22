@@ -373,14 +373,14 @@ namespace luafs {
 	static int procedure_path(lua_State* L)
 	{
 		LUA_TRY;
-		return path::constructor_(L, std::move(bee::path::module()));
+		return path::constructor_(L, std::move(bee::path::module().value()));
 		LUA_TRY_END;
 	}
 
 	static int module_path(lua_State* L)
 	{
 		LUA_TRY;
-		return path::constructor_(L, std::move(bee::path::module(reinterpret_cast<HMODULE>(&__ImageBase))));
+		return path::constructor_(L, std::move(bee::path::module(reinterpret_cast<HMODULE>(&__ImageBase)).value()));
 		LUA_TRY_END;
 	}
 }

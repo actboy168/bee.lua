@@ -170,6 +170,7 @@
     <ClInclude Include="..\bee\exception\windows_exception.h" />
     <ClInclude Include="..\bee\lua\binding.h" />
     <ClInclude Include="..\bee\lua\range.h" />
+    <ClInclude Include="..\bee\nonstd\expected.h" />
     <ClInclude Include="..\bee\nonstd\span.h" />
     <ClInclude Include="..\bee\registry\exception.h" />
     <ClInclude Include="..\bee\registry\key.h" />

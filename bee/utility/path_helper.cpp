@@ -4,11 +4,11 @@
 #include <Windows.h>
 
 namespace bee { namespace path {
-	fs::path module(HMODULE module_handle) {
+	auto module(HMODULE module_handle) ->nonstd::expected<fs::path, std::exception> {
 		wchar_t buffer[MAX_PATH];
 		DWORD path_len = ::GetModuleFileNameW(module_handle, buffer, _countof(buffer));
 		if (path_len == 0) {
-			throw windows_exception("::GetModuleFileNameW failed.");
+			return nonstd::make_unexpected(windows_exception("::GetModuleFileNameW failed."));
 		}
 		if (path_len < _countof(buffer)) {
 			return std::move(fs::path(buffer, buffer + path_len));
@@ -17,13 +17,13 @@ namespace bee { namespace path {
 			std::dynarray<wchar_t> buf(path_len);
 			path_len = ::GetModuleFileNameW(module_handle, buf.data(), buf.size());
 			if (path_len == 0) {
-				throw windows_exception("::GetModuleFileNameW failed.");
+				return nonstd::make_unexpected(windows_exception("::GetModuleFileNameW failed."));
 			}
 			if (path_len < _countof(buffer)) {
 				return std::move(fs::path(buf.begin(), buf.end()));
 			}
 		}
-		throw std::logic_error("::GetModuleFileNameW return too long.");
+		return nonstd::make_unexpected(std::logic_error("::GetModuleFileNameW return too long."));
 	}
 
 	bool equal(fs::path const& lhs, fs::path const& rhs)
