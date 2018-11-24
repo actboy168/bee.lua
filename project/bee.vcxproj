@@ -156,9 +156,11 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\bee\subprocess\subprocess_win.cpp" />
+    <ClCompile Include="..\bee\utility\filewatch.cpp" />
     <ClCompile Include="..\bee\utility\path_helper.cpp" />
     <ClCompile Include="..\bee\utility\unicode.cpp" />
     <ClCompile Include="..\binding\binding_filesystem.cpp" />
+    <ClCompile Include="..\binding\binding_filewatch.cpp" />
     <ClCompile Include="..\binding\binding_registry.cpp" />
     <ClCompile Include="..\binding\binding_subprocess.cpp" />
     <ClCompile Include="..\binding\binding_thread.cpp" />
@@ -186,6 +188,8 @@
     </ClInclude>
     <ClInclude Include="..\bee\subprocess\subprocess_win.h" />
     <ClInclude Include="..\bee\utility\dynarray.h" />
+    <ClInclude Include="..\bee\utility\filewatch.h" />
+    <ClInclude Include="..\bee\utility\lockqueue.h" />
     <ClInclude Include="..\bee\utility\path_helper.h" />
     <ClInclude Include="..\bee\utility\semaphore.h" />
     <ClInclude Include="..\bee\utility\unicode.h" />

@@ -63,6 +63,12 @@
     <ClCompile Include="..\binding\binding_thread.cpp">
       <Filter>binding</Filter>
     </ClCompile>
+    <ClCompile Include="..\bee\utility\filewatch.cpp">
+      <Filter>bee\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\binding\binding_filewatch.cpp">
+      <Filter>binding</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\bee\subprocess\subprocess_posix.h">
@@ -124,6 +130,12 @@
     </ClInclude>
     <ClInclude Include="..\bee\nonstd\expected.h">
       <Filter>bee\nonstd</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\utility\lockqueue.h">
+      <Filter>bee\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\utility\filewatch.h">
+      <Filter>bee\utility</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

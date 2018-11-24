@@ -5,52 +5,42 @@
 #include <atomic>
 #include <thread>
 #include <bee/utility/semaphore.h>
+#include <bee/utility/lockqueue.h>
 
 extern "C" {
 #include "lua-seri.h"
 }
 
-class channel {
+
+class channel : public bee::lockqueue<void*> {
 public:
+	typedef bee::lockqueue<void*> mybase;
+
 	void push(void* data) {
-		std::unique_lock<std::mutex> lk(m);
-		queue.push(data);
-		lk.unlock();
+		mybase::push(data);
 		semaphore.signal();
 	}
 	void blocked_pop(void*& data) {
 		for (;;) {
-			if (pop(data)) {
+			if (mybase::pop(data)) {
 				return;
 			}
 			semaphore.wait();
 		}
 	}
 	bool timed_pop(void*& data, int timeout) {
-		if (!pop(data)) {
+		if (!mybase::pop(data)) {
 			if (!semaphore.timed_wait(timeout)) {
 				return false;
 			}
-			if (!pop(data)) {
+			if (!mybase::pop(data)) {
 				return false;
 			}
 		}
 		return true;
 	}
-	bool pop(void*& data) {
-		std::unique_lock<std::mutex> lk(m);
-		if (queue.empty()) {
-			return false;
-		}
-		data = queue.front();
-		queue.pop();
-		return true;
-	}
-
 private:
 	bee::semaphore semaphore;
-	std::queue<void*> queue;
-	std::mutex m;
 };
 
 class channelmgr {
@@ -174,7 +164,7 @@ struct thread_args {
 	std::string source;
 	lua_CFunction param;
 	thread_args(std::string&& src, lua_CFunction f)
-		: source(std::forward<std::string&&>(src))
+		: source(std::forward<std::string>(src))
 		, param(f)
 	{ }
 };

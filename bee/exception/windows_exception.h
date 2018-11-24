@@ -16,4 +16,6 @@ namespace bee {
 	#pragma warning(suppress:4251)
 		std::error_code error_code_;
 	};
+
+	_BEE_API std::wstring error_message(int error_code = ::GetLastError());
 }
