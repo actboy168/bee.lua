@@ -137,5 +137,11 @@
     <ClInclude Include="..\bee\utility\filewatch.h">
       <Filter>bee\utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\bee\utility\format.h">
+      <Filter>bee\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\utility\hybrid_array.h">
+      <Filter>bee\utility</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

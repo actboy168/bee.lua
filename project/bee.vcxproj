@@ -189,6 +189,8 @@
     <ClInclude Include="..\bee\subprocess\subprocess_win.h" />
     <ClInclude Include="..\bee\utility\dynarray.h" />
     <ClInclude Include="..\bee\utility\filewatch.h" />
+    <ClInclude Include="..\bee\utility\format.h" />
+    <ClInclude Include="..\bee\utility\hybrid_array.h" />
     <ClInclude Include="..\bee\utility\lockqueue.h" />
     <ClInclude Include="..\bee\utility\path_helper.h" />
     <ClInclude Include="..\bee\utility\semaphore.h" />

@@ -1,5 +1,6 @@
 #include <bee/utility/filewatch.h>
 #include <bee/utility/unicode.h>
+#include <bee/utility/format.h>
 #include <bee/exception/windows_exception.h>
 #include <process.h>
 #include <assert.h>
@@ -38,7 +39,7 @@ namespace bee {
 		if (ok) {
 			return true;
 		}
-		push_notify(tasktype::Error, error_message());
+		push_notify(tasktype::Error, bee::format(L"`CreateFileW` failed: %s", error_message()));
 		return false;
 	}
 
@@ -85,7 +86,7 @@ namespace bee {
 		if (ok) {
 			return true;
 		}
-		push_notify(tasktype::Error, error_message());
+		push_notify(tasktype::Error, bee::format(L"`ReadDirectoryChangesW` failed: %s", error_message()));
 		return false;
 	}
 
