@@ -99,6 +99,11 @@
       <PreprocessorDefinitions>BEE_EXPORTS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
+    <PreBuildEvent>
+      <Command>$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h
+$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h $(ProjectDir)..\binding\binding_embed.cpp
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -110,6 +115,11 @@
       <PreprocessorDefinitions>BEE_EXPORTS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
+    <PreBuildEvent>
+      <Command>$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h
+$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h $(ProjectDir)..\binding\binding_embed.cpp
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -127,6 +137,11 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <PreBuildEvent>
+      <Command>$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h
+$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h $(ProjectDir)..\binding\binding_embed.cpp
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -144,6 +159,11 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <PreBuildEvent>
+      <Command>$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h
+$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h $(ProjectDir)..\binding\binding_embed.cpp
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\3rd\lua-seri\lua-seri.c" />
@@ -159,6 +179,7 @@
     <ClCompile Include="..\bee\utility\filewatch.cpp" />
     <ClCompile Include="..\bee\utility\path_helper.cpp" />
     <ClCompile Include="..\bee\utility\unicode.cpp" />
+    <ClCompile Include="..\binding\binding_embed.cpp" />
     <ClCompile Include="..\binding\binding_filesystem.cpp" />
     <ClCompile Include="..\binding\binding_filewatch.cpp" />
     <ClCompile Include="..\binding\binding_registry.cpp" />
@@ -172,6 +193,7 @@
     <ClInclude Include="..\bee\exception\windows_exception.h" />
     <ClInclude Include="..\bee\lua\binding.h" />
     <ClInclude Include="..\bee\lua\range.h" />
+    <ClInclude Include="..\bee\nonstd\embed.h" />
     <ClInclude Include="..\bee\nonstd\expected.h" />
     <ClInclude Include="..\bee\nonstd\span.h" />
     <ClInclude Include="..\bee\registry\exception.h" />

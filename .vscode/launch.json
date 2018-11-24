@@ -5,6 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Embed",
+            "type": "lua",
+            "request": "launch",
+            "stopOnEntry": true,
+            "luaRuntime": "5.4 32bit",
+            "program": "${workspaceFolder}/make/embed.lua",
+            "cwd": "${workspaceFolder}",
+            "console":"integratedTerminal",
+            "arg": [
+                "${workspaceFolder}\\bee\\nonstd\\embed_detail.h",
+                "${workspaceFolder}\\binding\\binding_embed.cpp"
+            ]
+        },
+        {
             "type": "lua",
             "request": "launch",
             "name": "Make",

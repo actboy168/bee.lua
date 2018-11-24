@@ -2,3 +2,5 @@
 /tmp/
 .vs/
 *.user
+
+/bee/nonstd/embed_detail.h

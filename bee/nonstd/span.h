@@ -51,7 +51,7 @@
 #endif
 
 #ifndef  span_FEATURE_BYTE_SPAN
-# define span_FEATURE_BYTE_SPAN  0
+# define span_FEATURE_BYTE_SPAN  1
 #endif
 
 // Force use of std or nonstd span:
