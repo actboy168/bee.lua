@@ -98,7 +98,7 @@ namespace std {
 
 		dynarray& operator=(const dynarray& d) {
 			if (this != &d) {
-				*this = mybase(alloc(d.data()), d.size());
+				*(mybase*)this = mybase(alloc(d.data()), d.size());
 				try {
 					uninitialized_copy(d.begin(), d.end(), mybase::begin());
 				}
@@ -111,8 +111,8 @@ namespace std {
 		}
 		dynarray& operator=(dynarray&& d) {
 			if (this != &d) {
-				*this = mybase(d.data(), d.size());
-				d = mybase();
+				*(mybase*)this = mybase(d.data(), d.size());
+				*(mybase*)&d = mybase();
 			}
 			return *this;
 		}
