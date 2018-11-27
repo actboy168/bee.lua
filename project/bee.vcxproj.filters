@@ -28,6 +28,9 @@
     <Filter Include="bee\nonstd">
       <UniqueIdentifier>{e9705383-2f16-4d0a-9f01-29b20b49b479}</UniqueIdentifier>
     </Filter>
+    <Filter Include="bee\filewatch">
+      <UniqueIdentifier>{2fa452a8-1244-4642-834f-6e3c285da1d4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\bee\subprocess\subprocess_posix.cpp">
@@ -63,14 +66,14 @@
     <ClCompile Include="..\binding\binding_thread.cpp">
       <Filter>binding</Filter>
     </ClCompile>
-    <ClCompile Include="..\bee\utility\filewatch.cpp">
-      <Filter>bee\utility</Filter>
-    </ClCompile>
     <ClCompile Include="..\binding\binding_filewatch.cpp">
       <Filter>binding</Filter>
     </ClCompile>
     <ClCompile Include="..\binding\binding_embed.cpp">
       <Filter>binding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\bee\filewatch\filewatch_win.cpp">
+      <Filter>bee\filewatch</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -137,9 +140,6 @@
     <ClInclude Include="..\bee\utility\lockqueue.h">
       <Filter>bee\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\bee\utility\filewatch.h">
-      <Filter>bee\utility</Filter>
-    </ClInclude>
     <ClInclude Include="..\bee\utility\format.h">
       <Filter>bee\utility</Filter>
     </ClInclude>
@@ -148,6 +148,12 @@
     </ClInclude>
     <ClInclude Include="..\bee\nonstd\embed.h">
       <Filter>bee\nonstd</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\filewatch\filewatch_win.h">
+      <Filter>bee\filewatch</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\filewatch.h">
+      <Filter>bee</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -169,6 +169,7 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     <ClCompile Include="..\3rd\lua-seri\lua-seri.c" />
     <ClCompile Include="..\bee\exception\exception.cpp" />
     <ClCompile Include="..\bee\exception\windows_exception.cpp" />
+    <ClCompile Include="..\bee\filewatch\filewatch_win.cpp" />
     <ClCompile Include="..\bee\subprocess\subprocess_posix.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -176,7 +177,6 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\bee\subprocess\subprocess_win.cpp" />
-    <ClCompile Include="..\bee\utility\filewatch.cpp" />
     <ClCompile Include="..\bee\utility\path_helper.cpp" />
     <ClCompile Include="..\bee\utility\unicode.cpp" />
     <ClCompile Include="..\binding\binding_embed.cpp" />
@@ -191,6 +191,8 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     <ClInclude Include="..\bee\config.h" />
     <ClInclude Include="..\bee\exception\exception.h" />
     <ClInclude Include="..\bee\exception\windows_exception.h" />
+    <ClInclude Include="..\bee\filewatch.h" />
+    <ClInclude Include="..\bee\filewatch\filewatch_win.h" />
     <ClInclude Include="..\bee\lua\binding.h" />
     <ClInclude Include="..\bee\lua\range.h" />
     <ClInclude Include="..\bee\nonstd\embed.h" />
@@ -210,7 +212,6 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     </ClInclude>
     <ClInclude Include="..\bee\subprocess\subprocess_win.h" />
     <ClInclude Include="..\bee\utility\dynarray.h" />
-    <ClInclude Include="..\bee\utility\filewatch.h" />
     <ClInclude Include="..\bee\utility\format.h" />
     <ClInclude Include="..\bee\utility\hybrid_array.h" />
     <ClInclude Include="..\bee\utility\lockqueue.h" />

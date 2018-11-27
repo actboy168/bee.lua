@@ -1,11 +1,11 @@
-#include <bee/utility/filewatch.h>
+#include <bee/filewatch/filewatch_win.h>
 #include <bee/utility/unicode.h>
 #include <bee/utility/format.h>
 #include <bee/exception/windows_exception.h>
 #include <process.h>
 #include <assert.h>
 
-namespace bee {
+namespace bee::win {
 	filewatch::task::task(filewatch* watch, taskid id, int filter)
 		: m_watch(watch)
 		, m_id(id)
