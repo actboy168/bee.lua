@@ -31,7 +31,7 @@
     <Filter Include="bee\net">
       <UniqueIdentifier>{e5d8b5da-6e81-4274-b147-aed5e7dbd8e3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="bee\filewatch">
+    <Filter Include="bee\fsevent">
       <UniqueIdentifier>{2fa452a8-1244-4642-834f-6e3c285da1d4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -84,8 +84,8 @@
     <ClCompile Include="..\bee\net\socket.cpp">
       <Filter>bee\net</Filter>
     </ClCompile>
-    <ClCompile Include="..\bee\filewatch\filewatch_win.cpp">
-      <Filter>bee\filewatch</Filter>
+    <ClCompile Include="..\bee\fsevent\fsevent_win.cpp">
+      <Filter>bee\fsevent</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -167,11 +167,11 @@
     <ClInclude Include="..\bee\net\socket.h">
       <Filter>bee\net</Filter>
     </ClInclude>
-    <ClInclude Include="..\bee\filewatch\filewatch_win.h">
-      <Filter>bee\filewatch</Filter>
-    </ClInclude>
-    <ClInclude Include="..\bee\filewatch.h">
+    <ClInclude Include="..\bee\fsevent.h">
       <Filter>bee</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\fsevent\fsevent_win.h">
+      <Filter>bee\fsevent</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
