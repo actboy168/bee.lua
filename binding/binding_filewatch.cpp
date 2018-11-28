@@ -31,7 +31,6 @@ namespace luafw {
 		if (!self.select(notify)) {
 			return 0;
 		}
-		lua_pushinteger(L, notify.id);
 		switch (notify.type) {
 		case bee::filewatch::tasktype::Error:
 			lua_pushstring(L, "error");
@@ -52,7 +51,7 @@ namespace luafw {
 			lua_pushstring(L, "unknown");
 			break;
 		}
-		bee::lua::push_string(L, notify.message);
+		bee::lua::push_string(L, notify.path);
 		return 3;
 	}
 

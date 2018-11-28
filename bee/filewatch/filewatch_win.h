@@ -5,9 +5,13 @@
 #include <array>
 #include <map>
 #include <memory>
+#include <filesystem>
 #include <bee/utility/lockqueue.h>
 
+namespace fs = std::filesystem;
+
 namespace bee::win {
+
 	class filewatch {
 	public:
 		typedef int taskid;
@@ -20,9 +24,8 @@ namespace bee::win {
 		};
 
 		struct notify {
-			taskid       id;
 			tasktype     type;
-			std::wstring message;
+			std::wstring path;
 		};
 
 		static const taskid kInvalidTaskId = 0;
@@ -32,7 +35,7 @@ namespace bee::win {
 		virtual ~filewatch();
 
 		void   stop();
-		taskid add(const std::wstring& directory);
+		taskid add(const std::wstring& path);
 		bool   remove(taskid id);
 		bool   select(notify& notify);
 
@@ -44,7 +47,7 @@ namespace bee::win {
 			task(filewatch* watch, taskid id);
 			~task();
 
-			bool   open(const std::wstring& directory);
+			bool   open(const std::wstring& path);
 			bool   start();
 			void   cancel();
 			taskid getid();
@@ -58,28 +61,29 @@ namespace bee::win {
 		private:
 			filewatch*                    m_watch;
 			taskid                        m_id;
+			fs::path                      m_path;
 			HANDLE                        m_directory;
 			std::array<uint8_t, kBufSize> m_buffer;
 			std::array<uint8_t, kBufSize> m_bakbuffer;
 		};
 
 	private:
-		struct apcarg {
-			enum class Type {
+		struct apc_arg {
+			enum class type {
 				Add,
 				Remove,
 				Terminate,
 			};
 			filewatch*            m_watch;
-			Type                  m_type;
+			type                  m_type;
 			taskid                m_id;
-			std::wstring          m_directory;
+			std::wstring          m_path;
 		};
 		static unsigned int __stdcall proc_thread(void* arg);
 		static void         __stdcall proc_apc(ULONG_PTR arg);
-		void proc_add(apcarg* arg);
-		void proc_remove(apcarg* arg);
-		void proc_terminate(apcarg* arg);
+		void proc_add(apc_arg* arg);
+		void proc_remove(apc_arg* arg);
+		void proc_terminate(apc_arg* arg);
 		void removetask(task* task);
 
 	private:
