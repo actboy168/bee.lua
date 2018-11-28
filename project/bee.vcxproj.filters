@@ -28,6 +28,24 @@
     <Filter Include="bee\nonstd">
       <UniqueIdentifier>{e9705383-2f16-4d0a-9f01-29b20b49b479}</UniqueIdentifier>
     </Filter>
+    <Filter Include="bee\net">
+      <UniqueIdentifier>{e5d8b5da-6e81-4274-b147-aed5e7dbd8e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="bee\net\tcp">
+      <UniqueIdentifier>{62907f28-a9d9-4b0a-b6be-cb349b952835}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="bee\net\udp">
+      <UniqueIdentifier>{f15ade65-aecd-402b-8a68-d8e41c81995e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="bee\net\poller">
+      <UniqueIdentifier>{5a7dfb69-7f7b-4c92-ada2-c8d4af59ca84}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="bee\net\log">
+      <UniqueIdentifier>{89748b12-8dcb-4c63-932b-fc4b33fa8ab9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="bee\net\datetime">
+      <UniqueIdentifier>{98d6f98b-158e-41cd-8f44-81e810838a52}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\bee\subprocess\subprocess_posix.cpp">
@@ -71,6 +89,15 @@
     </ClCompile>
     <ClCompile Include="..\binding\binding_embed.cpp">
       <Filter>binding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\binding\binding_net.cpp">
+      <Filter>binding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\bee\net\endpoint.cpp">
+      <Filter>bee\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\bee\net\socket.cpp">
+      <Filter>bee\net</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -148,6 +175,75 @@
     </ClInclude>
     <ClInclude Include="..\bee\nonstd\embed.h">
       <Filter>bee\nonstd</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\endpoint.h">
+      <Filter>bee\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\namedpipe.h">
+      <Filter>bee\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\poller.h">
+      <Filter>bee\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\socket.h">
+      <Filter>bee\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\winapi.h">
+      <Filter>bee\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\tcp\buffer.h">
+      <Filter>bee\net\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\tcp\connecter.h">
+      <Filter>bee\net\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\tcp\listener.h">
+      <Filter>bee\net\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\tcp\rcvbuffer.h">
+      <Filter>bee\net\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\tcp\sndbuffer.h">
+      <Filter>bee\net\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\tcp\stream.h">
+      <Filter>bee\net\tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\udp\stream.h">
+      <Filter>bee\net\udp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\udp\udp.h">
+      <Filter>bee\net\udp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\poller\epoll.h">
+      <Filter>bee\net\poller</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\poller\event.h">
+      <Filter>bee\net\poller</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\poller\io_object.h">
+      <Filter>bee\net\poller</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\poller\select.h">
+      <Filter>bee\net\poller</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\poller\timer.h">
+      <Filter>bee\net\poller</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\poller\timer_queue.h">
+      <Filter>bee\net\poller</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\datetime\clock.h">
+      <Filter>bee\net\datetime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\datetime\date.h">
+      <Filter>bee\net\datetime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\datetime\now.h">
+      <Filter>bee\net\datetime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\log\logging.h">
+      <Filter>bee\net\log</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

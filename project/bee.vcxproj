@@ -95,7 +95,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(projectDir)..\;$(projectDir)..\3rd\lua\src\;$(projectDir)..\3rd\lua-seri\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(projectDir)..\;$(projectDir)..\3rd\lua\src\;$(projectDir)..\3rd\lua-seri\;$(projectDir)..\bee\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BEE_EXPORTS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -104,6 +104,9 @@
 $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h $(ProjectDir)..\binding\binding_embed.cpp
 </Command>
     </PreBuildEvent>
+    <Link>
+      <AdditionalDependencies>Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -111,7 +114,7 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(projectDir)..\;$(projectDir)..\3rd\lua\src\;$(projectDir)..\3rd\lua-seri\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(projectDir)..\;$(projectDir)..\3rd\lua\src\;$(projectDir)..\3rd\lua-seri\;$(projectDir)..\bee\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BEE_EXPORTS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -120,6 +123,9 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
 $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h $(ProjectDir)..\binding\binding_embed.cpp
 </Command>
     </PreBuildEvent>
+    <Link>
+      <AdditionalDependencies>Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -129,13 +135,14 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(projectDir)..\;$(projectDir)..\3rd\lua\src\;$(projectDir)..\3rd\lua-seri\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(projectDir)..\;$(projectDir)..\3rd\lua\src\;$(projectDir)..\3rd\lua-seri\;$(projectDir)..\bee\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BEE_EXPORTS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h
@@ -151,13 +158,14 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(projectDir)..\;$(projectDir)..\3rd\lua\src\;$(projectDir)..\3rd\lua-seri\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(projectDir)..\;$(projectDir)..\3rd\lua\src\;$(projectDir)..\3rd\lua-seri\;$(projectDir)..\bee\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BEE_EXPORTS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h
@@ -169,6 +177,8 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     <ClCompile Include="..\3rd\lua-seri\lua-seri.c" />
     <ClCompile Include="..\bee\exception\exception.cpp" />
     <ClCompile Include="..\bee\exception\windows_exception.cpp" />
+    <ClCompile Include="..\bee\net\endpoint.cpp" />
+    <ClCompile Include="..\bee\net\socket.cpp" />
     <ClCompile Include="..\bee\subprocess\subprocess_posix.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -182,6 +192,7 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     <ClCompile Include="..\binding\binding_embed.cpp" />
     <ClCompile Include="..\binding\binding_filesystem.cpp" />
     <ClCompile Include="..\binding\binding_filewatch.cpp" />
+    <ClCompile Include="..\binding\binding_net.cpp" />
     <ClCompile Include="..\binding\binding_registry.cpp" />
     <ClCompile Include="..\binding\binding_subprocess.cpp" />
     <ClCompile Include="..\binding\binding_thread.cpp" />
@@ -193,6 +204,29 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     <ClInclude Include="..\bee\exception\windows_exception.h" />
     <ClInclude Include="..\bee\lua\binding.h" />
     <ClInclude Include="..\bee\lua\range.h" />
+    <ClInclude Include="..\bee\net\datetime\clock.h" />
+    <ClInclude Include="..\bee\net\datetime\date.h" />
+    <ClInclude Include="..\bee\net\datetime\now.h" />
+    <ClInclude Include="..\bee\net\endpoint.h" />
+    <ClInclude Include="..\bee\net\log\logging.h" />
+    <ClInclude Include="..\bee\net\namedpipe.h" />
+    <ClInclude Include="..\bee\net\poller.h" />
+    <ClInclude Include="..\bee\net\poller\epoll.h" />
+    <ClInclude Include="..\bee\net\poller\event.h" />
+    <ClInclude Include="..\bee\net\poller\io_object.h" />
+    <ClInclude Include="..\bee\net\poller\select.h" />
+    <ClInclude Include="..\bee\net\poller\timer.h" />
+    <ClInclude Include="..\bee\net\poller\timer_queue.h" />
+    <ClInclude Include="..\bee\net\socket.h" />
+    <ClInclude Include="..\bee\net\tcp\buffer.h" />
+    <ClInclude Include="..\bee\net\tcp\connecter.h" />
+    <ClInclude Include="..\bee\net\tcp\listener.h" />
+    <ClInclude Include="..\bee\net\tcp\rcvbuffer.h" />
+    <ClInclude Include="..\bee\net\tcp\sndbuffer.h" />
+    <ClInclude Include="..\bee\net\tcp\stream.h" />
+    <ClInclude Include="..\bee\net\udp\stream.h" />
+    <ClInclude Include="..\bee\net\udp\udp.h" />
+    <ClInclude Include="..\bee\net\winapi.h" />
     <ClInclude Include="..\bee\nonstd\embed.h" />
     <ClInclude Include="..\bee\nonstd\expected.h" />
     <ClInclude Include="..\bee\nonstd\span.h" />

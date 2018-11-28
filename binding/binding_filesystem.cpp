@@ -440,8 +440,7 @@ int luaopen_bee_filesystem(lua_State* L)
 		{ "procedure_path", luafs::procedure_path },
 		{ "module_path", luafs::module_path },
 		{ NULL, NULL }
-	};	
-	lua_newtable(L);
-	luaL_setfuncs(L, lib, 0);
+	};
+	luaL_newlib(L, lib);
 	return 1;
 }

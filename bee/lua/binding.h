@@ -20,6 +20,13 @@ namespace bee { namespace lua {
 		return lua_error(L);
 	}
 
+	inline std::string_view to_strview(lua_State* L, int idx)
+	{
+		size_t len = 0;
+		const char* buf = luaL_checklstring(L, idx, &len);
+		return std::string_view(buf, len);
+	}
+
 	inline string_type to_string(lua_State* L, int idx)
 	{
 		size_t len = 0;
