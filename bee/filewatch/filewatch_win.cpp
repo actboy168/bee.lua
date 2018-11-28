@@ -5,14 +5,12 @@
 #include <array>
 #include <assert.h>
 
-namespace bee::win {
-	class fwtask : public OVERLAPPED {
+namespace bee::win::fsevent {
+	class task : public OVERLAPPED {
 		static const size_t kBufSize = 16 * 1024;
-		typedef filewatch::taskid taskid;
-		typedef filewatch::tasktype tasktype;
 	public:
-		fwtask(filewatch* watch, taskid id);
-		~fwtask();
+		task(watch* watch, taskid id);
+		~task();
 
 		bool   open(const std::wstring& path);
 		bool   start();
@@ -23,7 +21,7 @@ namespace bee::win {
 		void   changes_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered);
 
 	private:
-		filewatch*                    m_watch;
+		watch*                    m_watch;
 		taskid                        m_id;
 		fs::path                      m_path;
 		HANDLE                        m_directory;
@@ -32,16 +30,16 @@ namespace bee::win {
 	};
 
 	static void __stdcall filewatch_apc_cb(ULONG_PTR arg) {
-		filewatch* self = (filewatch*)arg;
+		watch* self = (watch*)arg;
 		self->apc_cb();
 	}
 
 	static void __stdcall fwtask_changes_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped) {
-		fwtask* self = (fwtask*)lpOverlapped->hEvent;
+		task* self = (task*)lpOverlapped->hEvent;
 		self->changes_cb(dwErrorCode, dwNumberOfBytesTransfered);
 	}
 
-	fwtask::fwtask(filewatch* watch, taskid id)
+	task::task(watch* watch, taskid id)
 		: m_watch(watch)
 		, m_id(id)
 		, m_path()
@@ -51,11 +49,11 @@ namespace bee::win {
 		hEvent = this;
 	}
 
-	fwtask::~fwtask() {
+	task::~task() {
 		assert(m_directory == INVALID_HANDLE_VALUE);
 	}
 
-	bool fwtask::open(const std::wstring& path) {
+	bool task::open(const std::wstring& path) {
 		if (m_directory != INVALID_HANDLE_VALUE) {
 			return true;
 		}
@@ -80,7 +78,7 @@ namespace bee::win {
 		return true;
 	}
 
-	void fwtask::cancel() {
+	void task::cancel() {
 		if (m_directory != INVALID_HANDLE_VALUE) {
 			::CancelIo(m_directory);
 			::CloseHandle(m_directory);
@@ -88,17 +86,17 @@ namespace bee::win {
 		}
 	}
 
-	fwtask::taskid fwtask::fwtask::getid() {
+	taskid task::task::getid() {
 		return m_id;
 	}
 
-	void fwtask::remove() {
+	void task::remove() {
 		if (m_watch) {
 			m_watch->removetask(this);
 		}
 	}
 
-	bool fwtask::start() {
+	bool task::start() {
 		assert(m_directory != INVALID_HANDLE_VALUE);
 		if (!::ReadDirectoryChangesW(
 			m_directory,
@@ -117,7 +115,7 @@ namespace bee::win {
 		return true;
 	}
 
-	void fwtask::changes_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered) {
+	void task::changes_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered) {
 		if (dwErrorCode == ERROR_OPERATION_ABORTED) {
 			remove();
 			return;
@@ -159,14 +157,14 @@ namespace bee::win {
 		}
 	}
 
-	void fwtask::push_notify(tasktype type, std::wstring&& message) {
+	void task::push_notify(tasktype type, std::wstring&& message) {
 		m_watch->m_notify.push({
 			type,
 			std::forward<std::wstring>(message),
 		});
 	}
 
-	filewatch::filewatch()
+	watch::watch()
 		: m_thread()
 		, m_tasks()
 		, m_notify()
@@ -174,12 +172,12 @@ namespace bee::win {
 		, m_gentask(kInvalidTaskId)
 	{ }
 
-	filewatch::~filewatch() {
+	watch::~watch() {
 		stop();
 		assert(m_tasks.empty());
 	}
 
-	void filewatch::removetask(fwtask* t) {
+	void watch::removetask(task* t) {
 		if (t) {
 			auto it = m_tasks.find(t->getid());
 			if (it != m_tasks.end()) {
@@ -188,25 +186,25 @@ namespace bee::win {
 		}
 	}
 
-	bool filewatch::thread_signal() {
+	bool watch::thread_signal() {
 		return !!::QueueUserAPC(filewatch_apc_cb, m_thread->native_handle(), (ULONG_PTR)this);
 	}
 
-	bool filewatch::thread_init() {
+	bool watch::thread_init() {
 		if (m_thread) {
 			return true;
 		}
-		m_thread.reset(new std::thread(std::bind(&filewatch::thread_cb, this)));
+		m_thread.reset(new std::thread(std::bind(&watch::thread_cb, this)));
 		return true;
 	}
 
-	void filewatch::thread_cb() {
+	void watch::thread_cb() {
 		while (!m_terminate || !m_tasks.empty()) {
 			::SleepEx(INFINITE, true);
 		}
 	}
 
-	void filewatch::stop() {
+	void watch::stop() {
 		if (!m_thread) {
 			return;
 		}
@@ -226,7 +224,7 @@ namespace bee::win {
 		m_thread.reset();
 	}
 
-	filewatch::taskid filewatch::add(const std::wstring& path) {
+	taskid watch::add(const std::wstring& path) {
 		if (!thread_init()) {
 			return kInvalidTaskId;
 		}
@@ -240,7 +238,7 @@ namespace bee::win {
 		return id;
 	}
 
-	bool filewatch::remove(taskid id) {
+	bool watch::remove(taskid id) {
 		if (!m_thread) {
 			return false;
 		}
@@ -252,7 +250,7 @@ namespace bee::win {
 		return true;
 	}
 
-	void filewatch::apc_cb() {
+	void watch::apc_cb() {
 		apc_arg arg;
 		while (m_apc_queue.pop(arg)) {
 			switch (arg.m_type) {
@@ -269,8 +267,8 @@ namespace bee::win {
 		}
 	}
 
-	void filewatch::apc_add(taskid id, const std::wstring& path) {
-		auto t = std::make_shared<fwtask>(this, id);
+	void watch::apc_add(taskid id, const std::wstring& path) {
+		auto t = std::make_shared<task>(this, id);
 		if (!t->open(path)) {
 			return;
 		}
@@ -278,18 +276,18 @@ namespace bee::win {
 		t->start();
 	}
 
-	void filewatch::apc_remove(taskid id) {
+	void watch::apc_remove(taskid id) {
 		auto it = m_tasks.find(id);
 		if (it != m_tasks.end()) {
 			it->second->cancel();
 		}
 	}
 
-	void filewatch::apc_terminate() {
+	void watch::apc_terminate() {
 		if (m_tasks.empty()) {
 			return;
 		}
-		std::vector<std::shared_ptr<fwtask>> tmp;
+		std::vector<std::shared_ptr<task>> tmp;
 		for (auto& it : m_tasks) {
 			tmp.push_back(it.second);
 		}
@@ -299,7 +297,7 @@ namespace bee::win {
 		m_terminate = true;
 	}
 
-	bool filewatch::select(notify& n) {
+	bool watch::select(notify& n) {
 		return m_notify.pop(n);
 	}
 }
