@@ -67,6 +67,9 @@ namespace bee::win {
 			std::array<uint8_t, kBufSize> m_bakbuffer;
 		};
 
+	public:
+		void apc_cb();
+
 	private:
 		struct apc_arg {
 			enum class type {
@@ -74,22 +77,21 @@ namespace bee::win {
 				Remove,
 				Terminate,
 			};
-			filewatch*            m_watch;
 			type                  m_type;
 			taskid                m_id;
 			std::wstring          m_path;
 		};
-		static unsigned int __stdcall proc_thread(void* arg);
-		static void         __stdcall proc_apc(ULONG_PTR arg);
-		void proc_add(apc_arg* arg);
-		void proc_remove(apc_arg* arg);
-		void proc_terminate(apc_arg* arg);
+		static unsigned int __stdcall thread_cb(void* arg);
+		void apc_add(taskid id, const std::wstring& path);
+		void apc_remove(taskid id);
+		void apc_terminate();
 		void removetask(task* task);
 
 	private:
 		HANDLE                                  m_thread;
 		std::map<taskid, std::shared_ptr<task>> m_tasks;
-		bee::lockqueue<notify>                  m_notify;
+		lockqueue<apc_arg>                      m_apc_queue;
+		lockqueue<notify>                       m_notify;
 		bool                                    m_terminate;
 		taskid                                  m_gentask;
 	};

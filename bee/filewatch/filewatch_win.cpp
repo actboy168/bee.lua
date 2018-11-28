@@ -6,6 +6,10 @@
 #include <assert.h>
 
 namespace bee::win {
+	static void __stdcall filewatch_apc_cb(ULONG_PTR arg) {
+		filewatch* self = (filewatch*)arg;
+		self->apc_cb();
+	}
 	filewatch::task::task(filewatch* watch, taskid id)
 		: m_watch(watch)
 		, m_id(id)
@@ -24,8 +28,14 @@ namespace bee::win {
 		if (m_directory != INVALID_HANDLE_VALUE) {
 			return true;
 		}
+		std::error_code ec;
+		m_path = fs::absolute(path, ec);
+		if (ec) {
+			push_notify(tasktype::Error, bee::format(L"`std::filesystem::absolute` failed: %s", ec.message()));
+			return false;
+		}
 		DWORD sharemode = FILE_SHARE_READ | FILE_SHARE_WRITE;
-		m_directory = ::CreateFileW(path.c_str(),
+		m_directory = ::CreateFileW(m_path.c_str(),
 			FILE_LIST_DIRECTORY,
 			sharemode,
 			NULL,
@@ -36,7 +46,6 @@ namespace bee::win {
 			push_notify(tasktype::Error, bee::format(L"`CreateFileW` failed: %s", error_message()));
 			return false;
 		}
-		m_path = path;
 		return true;
 	}
 
@@ -158,12 +167,11 @@ namespace bee::win {
 			return;
 		}
 		m_terminate = true;
-		std::unique_ptr<apc_arg> arg(new apc_arg);
-		arg->m_watch = this;
-		arg->m_type = apc_arg::type::Terminate;
-		bool ok = !!::QueueUserAPC(filewatch::proc_apc, m_thread, (ULONG_PTR)arg.get());
-		if (ok) {
-			arg.release();
+		m_apc_queue.push({
+			apc_arg::type::Terminate,
+		});
+		if (!::QueueUserAPC(filewatch_apc_cb, m_thread, (ULONG_PTR)this)) {
+			return;
 		}
 		::WaitForSingleObject(m_thread, INFINITE);
 		::CloseHandle(m_thread);
@@ -172,24 +180,21 @@ namespace bee::win {
 
 	filewatch::taskid filewatch::add(const std::wstring& path) {
 		::SetLastError(0);
-		bool ok = true;
 		if (!m_thread) {
-			m_thread = (HANDLE)_beginthreadex(NULL, 0, filewatch::proc_thread, this, 0, NULL);
+			m_thread = (HANDLE)_beginthreadex(NULL, 0, filewatch::thread_cb, this, 0, NULL);
 			if (!m_thread) {
 				return kInvalidTaskId;
 			}
 		}
 		taskid id = ++m_gentask;
-		std::unique_ptr<apc_arg> arg(new apc_arg);
-		arg->m_watch = this;
-		arg->m_type = apc_arg::type::Add;
-		arg->m_id = id;
-		arg->m_path = path;
-		ok = !!::QueueUserAPC(filewatch::proc_apc, m_thread, (ULONG_PTR)arg.get());
-		if (!ok) {
+		m_apc_queue.push({
+			apc_arg::type::Add,
+			id,
+			path
+		});
+		if (!::QueueUserAPC(filewatch_apc_cb, m_thread, (ULONG_PTR)this)) {
 			return kInvalidTaskId;
 		}
-		arg.release();
 		return id;
 	}
 
@@ -197,18 +202,14 @@ namespace bee::win {
 		if (!m_thread) {
 			return false;
 		}
-		std::unique_ptr<apc_arg> arg(new apc_arg);
-		arg->m_watch = this;
-		arg->m_type = apc_arg::type::Remove;
-		arg->m_id = id;
-		bool ok = !!::QueueUserAPC(filewatch::proc_apc, m_thread, (ULONG_PTR)arg.get());
-		if (ok) {
-			arg.release();
-		}
-		return ok;
+		m_apc_queue.push({
+			apc_arg::type::Remove,
+			id
+		});
+		return !!::QueueUserAPC(filewatch_apc_cb, m_thread, (ULONG_PTR)this);
 	}
 
-	unsigned int filewatch::proc_thread(void* arg) {
+	unsigned int filewatch::thread_cb(void* arg) {
 		filewatch* self = (filewatch*)arg;
 		while (!self->m_terminate || !self->m_tasks.empty()) {
 			::SleepEx(INFINITE, true);
@@ -216,38 +217,40 @@ namespace bee::win {
 		return 0;
 	}
 
-	void filewatch::proc_apc(ULONG_PTR ptr) {
-		std::unique_ptr<apc_arg> arg((apc_arg*)ptr);
-		switch (arg->m_type) {
-		case apc_arg::type::Add:
-			arg->m_watch->proc_add(arg.get());
-			break;
-		case apc_arg::type::Remove:
-			arg->m_watch->proc_remove(arg.get());
-			break;
-		case apc_arg::type::Terminate:
-			arg->m_watch->proc_terminate(arg.get());
-			break;
+	void filewatch::apc_cb() {
+		apc_arg arg;
+		while (m_apc_queue.pop(arg)) {
+			switch (arg.m_type) {
+			case apc_arg::type::Add:
+				apc_add(arg.m_id, arg.m_path);
+				break;
+			case apc_arg::type::Remove:
+				apc_remove(arg.m_id);
+				break;
+			case apc_arg::type::Terminate:
+				apc_terminate();
+				return;
+			}
 		}
 	}
 
-	void filewatch::proc_add(apc_arg* arg) {
-		auto t = std::make_shared<task>(this, arg->m_id);
-		if (!t->open(arg->m_path)) {
+	void filewatch::apc_add(taskid id, const std::wstring& path) {
+		auto t = std::make_shared<task>(this, id);
+		if (!t->open(path)) {
 			return;
 		}
-		m_tasks.insert(std::make_pair(arg->m_id, t));
+		m_tasks.insert(std::make_pair(id, t));
 		t->start();
 	}
 
-	void filewatch::proc_remove(apc_arg* arg) {
-		auto it = m_tasks.find(arg->m_id);
+	void filewatch::apc_remove(taskid id) {
+		auto it = m_tasks.find(id);
 		if (it != m_tasks.end()) {
 			it->second->cancel();
 		}
 	}
 
-	void filewatch::proc_terminate(apc_arg* arg) {
+	void filewatch::apc_terminate() {
 		if (m_tasks.empty()) {
 			return;
 		}

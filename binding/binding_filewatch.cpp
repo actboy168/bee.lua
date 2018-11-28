@@ -52,7 +52,7 @@ namespace luafw {
 			break;
 		}
 		bee::lua::push_string(L, notify.path);
-		return 3;
+		return 2;
 	}
 
 	static int gc(lua_State* L) {
