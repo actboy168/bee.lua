@@ -6,11 +6,10 @@
 #include <assert.h>
 
 namespace bee::win {
-	filewatch::task::task(filewatch* watch, taskid id, int filter)
+	filewatch::task::task(filewatch* watch, taskid id)
 		: m_watch(watch)
 		, m_id(id)
 		, m_directory(INVALID_HANDLE_VALUE)
-		, m_flag(filter)
 	{
 		memset(this, 0, sizeof(OVERLAPPED));
 		hEvent = this;
@@ -24,10 +23,7 @@ namespace bee::win {
 		if (m_directory != INVALID_HANDLE_VALUE) {
 			return true;
 		}
-		DWORD sharemode = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
-		if (m_flag & DisableDelete) {
-			sharemode &= ~FILE_SHARE_DELETE;
-		}
+		DWORD sharemode = FILE_SHARE_READ | FILE_SHARE_WRITE;
 		m_directory = ::CreateFileW(directory.c_str(),
 			FILE_LIST_DIRECTORY,
 			sharemode,
@@ -174,7 +170,7 @@ namespace bee::win {
 		m_thread = NULL;
 	}
 
-	filewatch::taskid filewatch::add(const std::wstring& directory, int filter) {
+	filewatch::taskid filewatch::add(const std::wstring& directory) {
 		::SetLastError(0);
 		bool ok = true;
 		if (!m_thread) {
@@ -189,7 +185,6 @@ namespace bee::win {
 		arg->m_type = apcarg::Type::Add;
 		arg->m_id = id;
 		arg->m_directory = directory;
-		arg->m_filter = filter;
 		ok = !!::QueueUserAPC(filewatch::proc_apc, m_thread, (ULONG_PTR)arg.get());
 		if (!ok) {
 			return kInvalidTaskId;
@@ -237,7 +232,7 @@ namespace bee::win {
 	}
 
 	void filewatch::proc_add(apcarg* arg) {
-		auto t = std::make_shared<task>(this, arg->m_id, arg->m_filter);
+		auto t = std::make_shared<task>(this, arg->m_id);
 		if (!t->open(arg->m_directory)) {
 			return;
 		}
@@ -265,7 +260,7 @@ namespace bee::win {
 		}
 	}
 
-	bool filewatch::pop(notify& n) {
+	bool filewatch::select(notify& n) {
 		return m_notify.pop(n);
 	}
 }

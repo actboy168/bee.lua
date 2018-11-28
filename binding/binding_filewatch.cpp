@@ -9,14 +9,7 @@ namespace luafw {
 	static int add(lua_State* L) {
 		bee::filewatch& self = to(L);
 		auto path = bee::lua::to_string(L, 1);
-		int filter = 0;
-		const char* sf = luaL_checkstring(L, 2);
-		for (const char* f = sf; *f; ++f) {
-			switch (*f) {
-			case 'l': filter |= bee::filewatch::DisableDelete; break;
-			}
-		}
-		bee::filewatch::taskid id = self.add(path, filter);
+		bee::filewatch::taskid id = self.add(path);
 		if (id == bee::filewatch::kInvalidTaskId) {
 			lua_pushnil(L);
 			lua_pushstring(L, bee::w2u(bee::error_message()).c_str());
@@ -35,7 +28,7 @@ namespace luafw {
 	static int select(lua_State* L) {
 		bee::filewatch& self = to(L);
 		bee::filewatch::notify notify;
-		if (!self.pop(notify)) {
+		if (!self.select(notify)) {
 			return 0;
 		}
 		lua_pushinteger(L, notify.id);

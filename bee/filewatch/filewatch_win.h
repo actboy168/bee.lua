@@ -26,23 +26,22 @@ namespace bee::win {
 		};
 
 		static const taskid kInvalidTaskId = 0;
-		static const int DisableDelete = 0x0010;
 
 	public:
 		filewatch();
 		virtual ~filewatch();
 
 		void   stop();
-		taskid add(const std::wstring& directory, int filter);
+		taskid add(const std::wstring& directory);
 		bool   remove(taskid id);
-		bool   pop(notify& notify);
+		bool   select(notify& notify);
 
 	private:
 		class task : public OVERLAPPED {
 			static const size_t kBufSize = 16 * 1024;
 
 		public:
-			task(filewatch* watch, taskid id, int filter);
+			task(filewatch* watch, taskid id);
 			~task();
 
 			bool   open(const std::wstring& directory);
@@ -60,7 +59,6 @@ namespace bee::win {
 			filewatch*                    m_watch;
 			taskid                        m_id;
 			HANDLE                        m_directory;
-			int                           m_flag;
 			std::array<uint8_t, kBufSize> m_buffer;
 			std::array<uint8_t, kBufSize> m_bakbuffer;
 		};
@@ -76,7 +74,6 @@ namespace bee::win {
 			Type                  m_type;
 			taskid                m_id;
 			std::wstring          m_directory;
-			int                   m_filter;
 		};
 		static unsigned int __stdcall proc_thread(void* arg);
 		static void         __stdcall proc_apc(ULONG_PTR arg);
