@@ -56,8 +56,8 @@ namespace bee::win {
 
 		private:
 			void remove();
-			static void __stdcall proc_changes(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped);
-			void proc_changes(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered);
+			static void __stdcall changes_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped);
+			void changes_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered);
 
 		private:
 			filewatch*                    m_watch;

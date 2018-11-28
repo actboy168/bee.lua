@@ -10,6 +10,7 @@ namespace bee::win {
 		filewatch* self = (filewatch*)arg;
 		self->apc_cb();
 	}
+
 	filewatch::task::task(filewatch* watch, taskid id)
 		: m_watch(watch)
 		, m_id(id)
@@ -78,7 +79,7 @@ namespace bee::win {
 			FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_LAST_ACCESS | FILE_NOTIFY_CHANGE_CREATION,
 			NULL,
 			this,
-			&task::proc_changes)) 
+			&task::changes_cb)) 
 		{
 			push_notify(tasktype::Error, bee::format(L"`ReadDirectoryChangesW` failed: %s", error_message()));
 			return false;
@@ -86,12 +87,12 @@ namespace bee::win {
 		return true;
 	}
 
-	void filewatch::task::proc_changes(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped) {
-		task* t = (task*)lpOverlapped->hEvent;
-		t->proc_changes(dwErrorCode, dwNumberOfBytesTransfered);
+	void filewatch::task::changes_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped) {
+		task* self = (task*)lpOverlapped->hEvent;
+		self->changes_cb(dwErrorCode, dwNumberOfBytesTransfered);
 	}
 
-	void filewatch::task::proc_changes(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered) {
+	void filewatch::task::changes_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered) {
 		if (dwErrorCode == ERROR_OPERATION_ABORTED) {
 			remove();
 			return;

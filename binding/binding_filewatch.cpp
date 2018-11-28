@@ -45,7 +45,7 @@ namespace luafw {
 			lua_pushstring(L, "modify");
 			break;
 		case bee::filewatch::tasktype::Rename:
-			lua_pushstring(L, "rename from");
+			lua_pushstring(L, "rename");
 			break;
 		default:
 			lua_pushstring(L, "unknown");
