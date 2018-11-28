@@ -141,7 +141,7 @@ namespace bee::win {
 	}
 
 	filewatch::filewatch()
-		: m_thread(NULL)
+		: m_thread()
 		, m_tasks()
 		, m_notify()
 		, m_terminate(false)
@@ -162,29 +162,47 @@ namespace bee::win {
 		}
 	}
 
+	bool filewatch::thread_signal() {
+		return !!::QueueUserAPC(filewatch_apc_cb, m_thread->native_handle(), (ULONG_PTR)this);
+	}
+
+	bool filewatch::thread_init() {
+		if (m_thread) {
+			return true;
+		}
+		m_thread.reset(new std::thread(std::bind(&filewatch::thread_cb, this)));
+		return true;
+	}
+
+	void filewatch::thread_cb() {
+		while (!m_terminate || !m_tasks.empty()) {
+			::SleepEx(INFINITE, true);
+		}
+	}
+
 	void filewatch::stop() {
 		if (!m_thread) {
 			return;
 		}
-		m_terminate = true;
-		m_apc_queue.push({
-			apc_arg::type::Terminate,
-		});
-		if (!::QueueUserAPC(filewatch_apc_cb, m_thread, (ULONG_PTR)this)) {
+		if (!m_thread->joinable()) {
+			m_thread.reset();
 			return;
 		}
-		::WaitForSingleObject(m_thread, INFINITE);
-		::CloseHandle(m_thread);
-		m_thread = NULL;
+		m_apc_queue.push({
+			apc_arg::type::Terminate
+		});
+		if (!thread_signal()) {
+			m_thread->detach();
+			m_thread.reset();
+			return;
+		}
+		m_thread->join();
+		m_thread.reset();
 	}
 
 	filewatch::taskid filewatch::add(const std::wstring& path) {
-		::SetLastError(0);
-		if (!m_thread) {
-			m_thread = (HANDLE)_beginthreadex(NULL, 0, filewatch::thread_cb, this, 0, NULL);
-			if (!m_thread) {
-				return kInvalidTaskId;
-			}
+		if (!thread_init()) {
+			return kInvalidTaskId;
 		}
 		taskid id = ++m_gentask;
 		m_apc_queue.push({
@@ -192,9 +210,7 @@ namespace bee::win {
 			id,
 			path
 		});
-		if (!::QueueUserAPC(filewatch_apc_cb, m_thread, (ULONG_PTR)this)) {
-			return kInvalidTaskId;
-		}
+		thread_signal();
 		return id;
 	}
 
@@ -206,15 +222,8 @@ namespace bee::win {
 			apc_arg::type::Remove,
 			id
 		});
-		return !!::QueueUserAPC(filewatch_apc_cb, m_thread, (ULONG_PTR)this);
-	}
-
-	unsigned int filewatch::thread_cb(void* arg) {
-		filewatch* self = (filewatch*)arg;
-		while (!self->m_terminate || !self->m_tasks.empty()) {
-			::SleepEx(INFINITE, true);
-		}
-		return 0;
+		thread_signal();
+		return true;
 	}
 
 	void filewatch::apc_cb() {
@@ -261,6 +270,7 @@ namespace bee::win {
 		for (auto& it : tmp) {
 			it->cancel();
 		}
+		m_terminate = true;
 	}
 
 	bool filewatch::select(notify& n) {

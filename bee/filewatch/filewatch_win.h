@@ -6,6 +6,7 @@
 #include <map>
 #include <memory>
 #include <filesystem>
+#include <thread>
 #include <bee/utility/lockqueue.h>
 
 namespace fs = std::filesystem;
@@ -81,14 +82,16 @@ namespace bee::win {
 			taskid                m_id;
 			std::wstring          m_path;
 		};
-		static unsigned int __stdcall thread_cb(void* arg);
 		void apc_add(taskid id, const std::wstring& path);
 		void apc_remove(taskid id);
 		void apc_terminate();
 		void removetask(task* task);
+		bool thread_init();
+		bool thread_signal();
+		void thread_cb();
 
 	private:
-		HANDLE                                  m_thread;
+		std::unique_ptr<std::thread>            m_thread;
 		std::map<taskid, std::shared_ptr<task>> m_tasks;
 		lockqueue<apc_arg>                      m_apc_queue;
 		lockqueue<notify>                       m_notify;
