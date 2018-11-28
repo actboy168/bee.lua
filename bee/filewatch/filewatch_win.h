@@ -2,7 +2,6 @@
 
 #include <Windows.h>
 #include <string>
-#include <array>
 #include <map>
 #include <memory>
 #include <filesystem>
@@ -12,8 +11,10 @@
 namespace fs = std::filesystem;
 
 namespace bee::win {
+	class fwtask;
 
 	class filewatch {
+		friend class fwtask;
 	public:
 		typedef int taskid;
 		enum class tasktype {
@@ -40,36 +41,8 @@ namespace bee::win {
 		bool   remove(taskid id);
 		bool   select(notify& notify);
 
-	private:
-		class task : public OVERLAPPED {
-			static const size_t kBufSize = 16 * 1024;
-
-		public:
-			task(filewatch* watch, taskid id);
-			~task();
-
-			bool   open(const std::wstring& path);
-			bool   start();
-			void   cancel();
-			taskid getid();
-			void   push_notify(tasktype type, std::wstring&& message);
-
-		private:
-			void remove();
-			static void __stdcall changes_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped);
-			void changes_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered);
-
-		private:
-			filewatch*                    m_watch;
-			taskid                        m_id;
-			fs::path                      m_path;
-			HANDLE                        m_directory;
-			std::array<uint8_t, kBufSize> m_buffer;
-			std::array<uint8_t, kBufSize> m_bakbuffer;
-		};
-
 	public:
-		void apc_cb();
+		void   apc_cb();
 
 	private:
 		struct apc_arg {
@@ -85,17 +58,17 @@ namespace bee::win {
 		void apc_add(taskid id, const std::wstring& path);
 		void apc_remove(taskid id);
 		void apc_terminate();
-		void removetask(task* task);
+		void removetask(fwtask* task);
 		bool thread_init();
 		bool thread_signal();
 		void thread_cb();
 
 	private:
-		std::unique_ptr<std::thread>            m_thread;
-		std::map<taskid, std::shared_ptr<task>> m_tasks;
-		lockqueue<apc_arg>                      m_apc_queue;
-		lockqueue<notify>                       m_notify;
-		bool                                    m_terminate;
-		taskid                                  m_gentask;
+		std::unique_ptr<std::thread>              m_thread;
+		std::map<taskid, std::shared_ptr<fwtask>> m_tasks;
+		lockqueue<apc_arg>                        m_apc_queue;
+		lockqueue<notify>                         m_notify;
+		bool                                      m_terminate;
+		taskid                                    m_gentask;
 	};
 }

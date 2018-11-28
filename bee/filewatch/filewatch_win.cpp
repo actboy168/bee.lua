@@ -2,16 +2,46 @@
 #include <bee/utility/unicode.h>
 #include <bee/utility/format.h>
 #include <bee/exception/windows_exception.h>
-#include <process.h>
+#include <array>
 #include <assert.h>
 
 namespace bee::win {
+	class fwtask : public OVERLAPPED {
+		static const size_t kBufSize = 16 * 1024;
+		typedef filewatch::taskid taskid;
+		typedef filewatch::tasktype tasktype;
+	public:
+		fwtask(filewatch* watch, taskid id);
+		~fwtask();
+
+		bool   open(const std::wstring& path);
+		bool   start();
+		void   cancel();
+		taskid getid();
+		void   push_notify(tasktype type, std::wstring&& message);
+		void   remove();
+		void   changes_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered);
+
+	private:
+		filewatch*                    m_watch;
+		taskid                        m_id;
+		fs::path                      m_path;
+		HANDLE                        m_directory;
+		std::array<uint8_t, kBufSize> m_buffer;
+		std::array<uint8_t, kBufSize> m_bakbuffer;
+	};
+
 	static void __stdcall filewatch_apc_cb(ULONG_PTR arg) {
 		filewatch* self = (filewatch*)arg;
 		self->apc_cb();
 	}
 
-	filewatch::task::task(filewatch* watch, taskid id)
+	static void __stdcall fwtask_changes_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped) {
+		fwtask* self = (fwtask*)lpOverlapped->hEvent;
+		self->changes_cb(dwErrorCode, dwNumberOfBytesTransfered);
+	}
+
+	fwtask::fwtask(filewatch* watch, taskid id)
 		: m_watch(watch)
 		, m_id(id)
 		, m_path()
@@ -21,11 +51,11 @@ namespace bee::win {
 		hEvent = this;
 	}
 
-	filewatch::task::~task() {
+	fwtask::~fwtask() {
 		assert(m_directory == INVALID_HANDLE_VALUE);
 	}
 
-	bool filewatch::task::open(const std::wstring& path) {
+	bool fwtask::open(const std::wstring& path) {
 		if (m_directory != INVALID_HANDLE_VALUE) {
 			return true;
 		}
@@ -50,7 +80,7 @@ namespace bee::win {
 		return true;
 	}
 
-	void filewatch::task::cancel() {
+	void fwtask::cancel() {
 		if (m_directory != INVALID_HANDLE_VALUE) {
 			::CancelIo(m_directory);
 			::CloseHandle(m_directory);
@@ -58,17 +88,17 @@ namespace bee::win {
 		}
 	}
 
-	filewatch::taskid filewatch::task::task::getid() {
+	fwtask::taskid fwtask::fwtask::getid() {
 		return m_id;
 	}
 
-	void filewatch::task::remove() {
+	void fwtask::remove() {
 		if (m_watch) {
 			m_watch->removetask(this);
 		}
 	}
 
-	bool filewatch::task::start() {
+	bool fwtask::start() {
 		assert(m_directory != INVALID_HANDLE_VALUE);
 		if (!::ReadDirectoryChangesW(
 			m_directory,
@@ -79,7 +109,7 @@ namespace bee::win {
 			FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_LAST_ACCESS | FILE_NOTIFY_CHANGE_CREATION,
 			NULL,
 			this,
-			&task::changes_cb)) 
+			&fwtask_changes_cb))
 		{
 			push_notify(tasktype::Error, bee::format(L"`ReadDirectoryChangesW` failed: %s", error_message()));
 			return false;
@@ -87,12 +117,7 @@ namespace bee::win {
 		return true;
 	}
 
-	void filewatch::task::changes_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped) {
-		task* self = (task*)lpOverlapped->hEvent;
-		self->changes_cb(dwErrorCode, dwNumberOfBytesTransfered);
-	}
-
-	void filewatch::task::changes_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered) {
+	void fwtask::changes_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered) {
 		if (dwErrorCode == ERROR_OPERATION_ABORTED) {
 			remove();
 			return;
@@ -134,7 +159,7 @@ namespace bee::win {
 		}
 	}
 
-	void filewatch::task::push_notify(tasktype type, std::wstring&& message) {
+	void fwtask::push_notify(tasktype type, std::wstring&& message) {
 		m_watch->m_notify.push({
 			type,
 			std::forward<std::wstring>(message),
@@ -154,7 +179,7 @@ namespace bee::win {
 		assert(m_tasks.empty());
 	}
 
-	void filewatch::removetask(task* t) {
+	void filewatch::removetask(fwtask* t) {
 		if (t) {
 			auto it = m_tasks.find(t->getid());
 			if (it != m_tasks.end()) {
@@ -245,7 +270,7 @@ namespace bee::win {
 	}
 
 	void filewatch::apc_add(taskid id, const std::wstring& path) {
-		auto t = std::make_shared<task>(this, id);
+		auto t = std::make_shared<fwtask>(this, id);
 		if (!t->open(path)) {
 			return;
 		}
@@ -264,7 +289,7 @@ namespace bee::win {
 		if (m_tasks.empty()) {
 			return;
 		}
-		std::vector<std::shared_ptr<task>> tmp;
+		std::vector<std::shared_ptr<fwtask>> tmp;
 		for (auto& it : m_tasks) {
 			tmp.push_back(it.second);
 		}
