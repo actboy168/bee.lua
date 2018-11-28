@@ -7,7 +7,7 @@
 #include <memory>
 #include <bee/utility/lockqueue.h>
 
-namespace bee {
+namespace bee::win {
 	class filewatch {
 	public:
 		typedef int taskid;

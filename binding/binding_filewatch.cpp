@@ -1,4 +1,4 @@
-#include <bee/utility/filewatch.h>
+#include <bee/filewatch.h>
 #include <bee/exception/windows_exception.h>
 #include <bee/lua/binding.h>
 
