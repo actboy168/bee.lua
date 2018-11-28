@@ -4,6 +4,7 @@
 #include <bee/exception/windows_exception.h>
 #include <array>
 #include <assert.h>
+#include <Windows.h>
 
 namespace bee::win::fsevent {
 	class task : public OVERLAPPED {
@@ -18,7 +19,7 @@ namespace bee::win::fsevent {
 		taskid getid();
 		void   push_notify(tasktype type, std::wstring&& message);
 		void   remove();
-		void   changes_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered);
+		void   event_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered);
 
 	private:
 		watch*                    m_watch;
@@ -29,14 +30,14 @@ namespace bee::win::fsevent {
 		std::array<uint8_t, kBufSize> m_bakbuffer;
 	};
 
-	static void __stdcall filewatch_apc_cb(ULONG_PTR arg) {
+	static void __stdcall watch_apc_cb(ULONG_PTR arg) {
 		watch* self = (watch*)arg;
 		self->apc_cb();
 	}
 
-	static void __stdcall fwtask_changes_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped) {
+	static void __stdcall task_event_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped) {
 		task* self = (task*)lpOverlapped->hEvent;
-		self->changes_cb(dwErrorCode, dwNumberOfBytesTransfered);
+		self->event_cb(dwErrorCode, dwNumberOfBytesTransfered);
 	}
 
 	task::task(watch* watch, taskid id)
@@ -63,10 +64,9 @@ namespace bee::win::fsevent {
 			push_notify(tasktype::Error, bee::format(L"`std::filesystem::absolute` failed: %s", ec.message()));
 			return false;
 		}
-		DWORD sharemode = FILE_SHARE_READ | FILE_SHARE_WRITE;
 		m_directory = ::CreateFileW(m_path.c_str(),
 			FILE_LIST_DIRECTORY,
-			sharemode,
+			FILE_SHARE_READ | FILE_SHARE_WRITE,
 			NULL,
 			OPEN_EXISTING,
 			FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
@@ -107,7 +107,7 @@ namespace bee::win::fsevent {
 			FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_LAST_ACCESS | FILE_NOTIFY_CHANGE_CREATION,
 			NULL,
 			this,
-			&fwtask_changes_cb))
+			&task_event_cb))
 		{
 			push_notify(tasktype::Error, bee::format(L"`ReadDirectoryChangesW` failed: %s", error_message()));
 			return false;
@@ -115,7 +115,7 @@ namespace bee::win::fsevent {
 		return true;
 	}
 
-	void task::changes_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered) {
+	void task::event_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered) {
 		if (dwErrorCode == ERROR_OPERATION_ABORTED) {
 			remove();
 			return;
@@ -187,7 +187,7 @@ namespace bee::win::fsevent {
 	}
 
 	bool watch::thread_signal() {
-		return !!::QueueUserAPC(filewatch_apc_cb, m_thread->native_handle(), (ULONG_PTR)this);
+		return !!::QueueUserAPC(watch_apc_cb, m_thread->native_handle(), (ULONG_PTR)this);
 	}
 
 	bool watch::thread_init() {
@@ -268,12 +268,14 @@ namespace bee::win::fsevent {
 	}
 
 	void watch::apc_add(taskid id, const std::wstring& path) {
-		auto t = std::make_shared<task>(this, id);
+		auto t = std::make_unique<task>(this, id);
 		if (!t->open(path)) {
 			return;
 		}
-		m_tasks.insert(std::make_pair(id, t));
-		t->start();
+		if (!t->start()) {
+			return;
+		}
+		m_tasks.emplace(std::make_pair(id, std::move(t)));
 	}
 
 	void watch::apc_remove(taskid id) {
@@ -284,17 +286,13 @@ namespace bee::win::fsevent {
 	}
 
 	void watch::apc_terminate() {
+		m_terminate = true;
 		if (m_tasks.empty()) {
 			return;
 		}
-		std::vector<std::shared_ptr<task>> tmp;
 		for (auto& it : m_tasks) {
-			tmp.push_back(it.second);
+			it.second->cancel();
 		}
-		for (auto& it : tmp) {
-			it->cancel();
-		}
-		m_terminate = true;
 	}
 
 	bool watch::select(notify& n) {

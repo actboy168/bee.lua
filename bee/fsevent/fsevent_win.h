@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Windows.h>
 #include <string>
 #include <map>
 #include <memory>
@@ -33,7 +32,7 @@ namespace bee::win::fsevent {
 
 	public:
 		watch();
-		virtual ~watch();
+		~watch();
 
 		void   stop();
 		taskid add(const std::wstring& path);
@@ -64,10 +63,10 @@ namespace bee::win::fsevent {
 
 	private:
 		std::unique_ptr<std::thread>            m_thread;
-		std::map<taskid, std::shared_ptr<task>> m_tasks;
 		lockqueue<apc_arg>                      m_apc_queue;
 		lockqueue<notify>                       m_notify;
-		bool                                    m_terminate;
 		taskid                                  m_gentask;
+		std::map<taskid, std::unique_ptr<task>> m_tasks;
+		bool                                    m_terminate;
 	};
 }
