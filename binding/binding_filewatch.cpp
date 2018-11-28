@@ -13,10 +13,6 @@ namespace luafw {
 		const char* sf = luaL_checkstring(L, 2);
 		for (const char* f = sf; *f; ++f) {
 			switch (*f) {
-			case 'f': filter |= bee::filewatch::WatchFile; break;
-			case 'd': filter |= bee::filewatch::WatchDir; break;
-			case 't': filter |= bee::filewatch::WatchTime; break;
-			case 's': filter |= bee::filewatch::WatchSubtree; break;
 			case 'l': filter |= bee::filewatch::DisableDelete; break;
 			}
 		}
@@ -56,11 +52,8 @@ namespace luafw {
 		case bee::filewatch::tasktype::Modify:
 			lua_pushstring(L, "modify");
 			break;
-		case bee::filewatch::tasktype::RenameFrom:
+		case bee::filewatch::tasktype::Rename:
 			lua_pushstring(L, "rename from");
-			break;
-		case bee::filewatch::tasktype::RenameTo:
-			lua_pushstring(L, "rename to");
 			break;
 		default:
 			lua_pushstring(L, "unknown");

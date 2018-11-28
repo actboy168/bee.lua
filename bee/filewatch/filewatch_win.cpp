@@ -63,23 +63,13 @@ namespace bee::win {
 
 	bool filewatch::task::start() {
 		assert(m_directory != INVALID_HANDLE_VALUE);
-		DWORD flags = 0;
-		if (m_flag & WatchFile) {
-			flags |= FILE_NOTIFY_CHANGE_FILE_NAME;
-		}
-		if (m_flag & WatchDir) {
-			flags |= FILE_NOTIFY_CHANGE_DIR_NAME;
-		}
-		if (m_flag & WatchTime) {
-			flags |= FILE_NOTIFY_CHANGE_LAST_WRITE
-				| FILE_NOTIFY_CHANGE_LAST_WRITE;
-		}
 		bool ok = !!::ReadDirectoryChangesW(
 			m_directory,
 			&m_buffer[0],
 			static_cast<DWORD>(m_buffer.size()),
-			(m_flag & WatchSubtree) != 0,
-			flags,
+			TRUE,
+			FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME |
+			FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_LAST_ACCESS | FILE_NOTIFY_CHANGE_CREATION,
 			NULL,
 			this,
 			&task::proc_changes);
@@ -123,10 +113,8 @@ namespace bee::win {
 				push_notify(tasktype::Modify, std::move(path));
 				break;
 			case FILE_ACTION_RENAMED_OLD_NAME:
-				push_notify(tasktype::RenameFrom, std::move(path));
-				break;
 			case FILE_ACTION_RENAMED_NEW_NAME:
-				push_notify(tasktype::RenameTo, std::move(path));
+				push_notify(tasktype::Rename, std::move(path));
 				break;
 			default:
 				assert(false);

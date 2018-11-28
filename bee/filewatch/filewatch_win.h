@@ -12,12 +12,11 @@ namespace bee::win {
 	public:
 		typedef int taskid;
 		enum class tasktype {
-			Error = 0,
-			Create = 1,
+			Error,
+			Create,
 			Delete,
 			Modify,
-			RenameFrom,
-			RenameTo,
+			Rename,
 		};
 
 		struct notify {
@@ -27,10 +26,6 @@ namespace bee::win {
 		};
 
 		static const taskid kInvalidTaskId = 0;
-		static const int WatchFile     = 0x0001;
-		static const int WatchDir      = 0x0002;
-		static const int WatchSubtree  = 0x0004;
-		static const int WatchTime     = 0x0008;
 		static const int DisableDelete = 0x0010;
 
 	public:
