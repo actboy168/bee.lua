@@ -3,6 +3,7 @@
 #include <bee/utility/format.h>
 #include <bee/exception/windows_exception.h>
 #include <array>
+#include <functional>
 #include <assert.h>
 #include <Windows.h>
 
@@ -58,12 +59,22 @@ namespace bee::win::fsevent {
 		if (m_directory != INVALID_HANDLE_VALUE) {
 			return true;
 		}
+		
+#if defined(__MINGW32__)
+		try {
+			m_path = fs::absolute(path);
+		} catch (std::exception& e) {
+			push_notify(tasktype::Error, u2w(e.what()));
+			return false;
+		}
+#else
 		std::error_code ec;
 		m_path = fs::absolute(path, ec);
 		if (ec) {
-			push_notify(tasktype::Error, bee::format(L"`std::filesystem::absolute` failed: %s", ec.message()));
+			push_notify(tasktype::Error, format(L"`std::filesystem::absolute` failed: %s", ec.message()));
 			return false;
 		}
+#endif
 		m_directory = ::CreateFileW(m_path.c_str(),
 			FILE_LIST_DIRECTORY,
 			FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -72,7 +83,7 @@ namespace bee::win::fsevent {
 			FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
 			NULL);
 		if (m_directory == INVALID_HANDLE_VALUE) {
-			push_notify(tasktype::Error, bee::format(L"`CreateFileW` failed: %s", error_message()));
+			push_notify(tasktype::Error, format(L"`CreateFileW` failed: %s", error_message()));
 			return false;
 		}
 		return true;
@@ -109,7 +120,7 @@ namespace bee::win::fsevent {
 			this,
 			&task_event_cb))
 		{
-			push_notify(tasktype::Error, bee::format(L"`ReadDirectoryChangesW` failed: %s", error_message()));
+			push_notify(tasktype::Error, format(L"`ReadDirectoryChangesW` failed: %s", error_message()));
 			return false;
 		}
 		return true;
@@ -166,10 +177,11 @@ namespace bee::win::fsevent {
 
 	watch::watch()
 		: m_thread()
-		, m_tasks()
+		, m_apc_queue()
 		, m_notify()
-		, m_terminate(false)
 		, m_gentask(kInvalidTaskId)
+		, m_tasks()
+		, m_terminate(false)
 	{ }
 
 	watch::~watch() {
@@ -187,7 +199,12 @@ namespace bee::win::fsevent {
 	}
 
 	bool watch::thread_signal() {
+#if defined(__MINGW32__)
+		return !!::QueueUserAPC(watch_apc_cb, pthread_gethandle(m_thread->native_handle()), (ULONG_PTR)this);
+#else
 		return !!::QueueUserAPC(watch_apc_cb, m_thread->native_handle(), (ULONG_PTR)this);
+#endif
+
 	}
 
 	bool watch::thread_init() {

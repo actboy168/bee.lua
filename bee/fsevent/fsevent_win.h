@@ -3,11 +3,16 @@
 #include <string>
 #include <map>
 #include <memory>
-#include <filesystem>
 #include <thread>
 #include <bee/utility/lockqueue.h>
 
+#if defined(__MINGW32__)
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#else
+#include <filesystem>
 namespace fs = std::filesystem;
+#endif
 
 namespace bee::win::fsevent {
 	class task;
