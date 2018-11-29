@@ -18,14 +18,40 @@ namespace luanet {
 		lua_pushfstring(L, "%s: (%d)%s", msg, socket::errcode(), socket::errmessage().c_str());
 		return 2;
 	}
-	static int lclose(lua_State* L, socket::fd_t fd) {
-		if (!socket::close(fd)) {
-			return push_neterror(L, "close");
+	static int read_protocol(lua_State* L, int idx) {
+		const char* type = luaL_checkstring(L, 1);
+		if (0 == strcasecmp(type, "tcp")) {
+			return IPPROTO_TCP;
 		}
-		lua_pushboolean(L, 1);
+		else if (0 == strcasecmp(type, "udp")) {
+			return IPPROTO_UDP;
+		}
+		else {
+			return luaL_error(L, "invalid protocol `%s`.", type);
+		}
+	}
+	static socket::fd_t checkfd(lua_State* L, int idx) {
+		luaL_checktype(L, idx, LUA_TLIGHTUSERDATA);
+		return (socket::fd_t)lua_touserdata(L, idx);
+	}
+	static void constructor(lua_State* L, socket::fd_t fd) {
+		lua_pushlightuserdata(L, (void*)fd);
+		socket::reuse(fd);
+		socket::nonblocking(fd);
+	}
+	static int accept(lua_State* L) {
+		luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+		socket::fd_t fd = (socket::fd_t)lua_touserdata(L, 1);
+		socket::fd_t newfd;
+		if (socket::accept(fd, newfd)) {
+			return push_neterror(L, "accept");
+		}
+		constructor(L, newfd);
 		return 1;
 	}
-	static int lrecv(lua_State* L, socket::fd_t fd) {
+	static int recv(lua_State* L) {
+		luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+		socket::fd_t fd = (socket::fd_t)lua_touserdata(L, 1);
 		lua_Integer len = luaL_optinteger(L, 2, LUAL_BUFFERSIZE);
 		if (len > (std::numeric_limits<int>::max)()) {
 			return luaL_error(L, "bad argument #1 to 'recv' (invalid number)");
@@ -48,7 +74,9 @@ namespace luanet {
 			return 1;
 		}
 	}
-	static int lsend(lua_State* L, socket::fd_t fd) {
+	static int send(lua_State* L) {
+		luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+		socket::fd_t fd = (socket::fd_t)lua_touserdata(L, 1);
 		size_t len;
 		const char* buf = luaL_checklstring(L, 2, &len);
 		int rc = socket::send(fd, buf, (int)len);
@@ -63,190 +91,68 @@ namespace luanet {
 			return 1;
 		}
 	}
-
-	namespace tcp::stream {
-		static int recv(lua_State* L) {
-			return lrecv(L, *(socket::fd_t*)luaL_checkudata(L, 1, "bee::tcp::stream"));
+	static int recvfrom(lua_State* L) {
+		luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+		socket::fd_t fd = (socket::fd_t)lua_touserdata(L, 1);
+		lua_Integer len = luaL_optinteger(L, 2, LUAL_BUFFERSIZE);
+		if (len > (std::numeric_limits<int>::max)()) {
+			return luaL_error(L, "bad argument #1 to 'recv' (invalid number)");
 		}
-		static int send(lua_State* L) {
-			return lsend(L, *(socket::fd_t*)luaL_checkudata(L, 1, "bee::tcp::stream"));
+		endpoint ep = endpoint::from_empty();
+		luaL_Buffer b;
+		luaL_buffinit(L, &b);
+		char* buf = luaL_prepbuffsize(&b, (size_t)len);
+		int rc = socket::recvfrom(fd, buf, (int)len, ep);
+		switch (rc) {
+		case -3:
+			lua_pushnil(L);
+			return 1;
+		case -2:
+			lua_pushboolean(L, 0);
+			return 1;
+		case -1:
+			return push_neterror(L, "recv");
+		default: {
+			luaL_pushresultsize(&b, rc);
+			auto[ip, port] = ep.info();
+			lua_pushlstring(L, ip.data(), ip.size());
+			lua_pushinteger(L, port);
+			return 3;
 		}
-		static int close(lua_State* L) {
-			return lclose(L, *(socket::fd_t*)luaL_checkudata(L, 1, "bee::tcp::stream"));
-		}
-		static void constructor(lua_State* L, socket::fd_t fd) {
-			socket::fd_t* pfd = (socket::fd_t*)lua_newuserdata(L, sizeof(socket::fd_t));
-			*pfd = fd;
-			if (luaL_newmetatable(L, "bee::tcp::stream")) {
-				luaL_Reg mt[] = {
-					{ "recv", recv },
-					{ "send", send },
-					{ "close", close },
-					{ "__gc", close },
-					{ NULL, NULL },
-				};
-				luaL_setfuncs(L, mt, 0);
-				lua_pushvalue(L, -1);
-				lua_setfield(L, -2, "__index");
-			}
-			lua_setmetatable(L, -2);
-			socket::reuse(fd);
-			socket::nonblocking(fd);
 		}
 	}
-
-	namespace tcp::listen {
-		static int accept(lua_State* L) {
-			socket::fd_t& fd = *(socket::fd_t*)luaL_checkudata(L, 1, "bee::tcp::listen");
-			socket::fd_t newfd;
-			if (socket::accept(fd, newfd)) {
-				return push_neterror(L, "accept");
-			}
-			tcp::stream::constructor(L, newfd);
+	static int sendto(lua_State* L) {
+		luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+		socket::fd_t fd = (socket::fd_t)lua_touserdata(L, 1);
+		size_t len;
+		const char* buf = luaL_checklstring(L, 2, &len);
+		std::string_view ip = bee::lua::to_strview(L, 3);
+		int port = (int)luaL_checkinteger(L, 4);
+		auto ep = bee::net::endpoint::from_hostname(ip, port);
+		if (!ep) {
+			lua_pushlstring(L, ep.error().data(), ep.error().size());
+			return lua_error(L);
+		}
+		int rc = socket::sendto(fd, buf, (int)len, ep.value());
+		switch (rc) {
+		case -2:
+			lua_pushboolean(L, 0);
+			return 1;
+		case -1:
+			return push_neterror(L, "send");
+		default:
+			lua_pushinteger(L, rc);
 			return 1;
 		}
-		static int close(lua_State* L) {
-			return lclose(L, *(socket::fd_t*)luaL_checkudata(L, 1, "bee::tcp::listen"));
-		}
-		static void constructor(lua_State* L, socket::fd_t fd) {
-			socket::fd_t* pfd = (socket::fd_t*)lua_newuserdata(L, sizeof(socket::fd_t));
-			*pfd = fd;
-			if (luaL_newmetatable(L, "bee::tcp::listen")) {
-				luaL_Reg mt[] = {
-					{ "accept", accept },
-					{ "close", close },
-					{ "__gc", close },
-					{ NULL, NULL },
-				};
-				luaL_setfuncs(L, mt, 0);
-				lua_pushvalue(L, -1);
-				lua_setfield(L, -2, "__index");
-			}
-			lua_setmetatable(L, -2);
-			socket::reuse(fd);
-			socket::nonblocking(fd);
-		}
 	}
-
-	namespace udp::client {
-		static int recv(lua_State* L) {
-			return lrecv(L, *(socket::fd_t*)luaL_checkudata(L, 1, "bee::udp::client"));
+	static int close(lua_State* L) {
+		luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+		socket::fd_t fd = (socket::fd_t)lua_touserdata(L, 1);
+		if (!socket::close(fd)) {
+			return push_neterror(L, "close");
 		}
-		static int send(lua_State* L) {
-			return lsend(L, *(socket::fd_t*)luaL_checkudata(L, 1, "bee::udp::client"));
-		}
-		static int close(lua_State* L) {
-			return lclose(L, *(socket::fd_t*)luaL_checkudata(L, 1, "bee::udp::client"));
-		}
-		static void constructor(lua_State* L, socket::fd_t fd) {
-			socket::fd_t* pfd = (socket::fd_t*)lua_newuserdata(L, sizeof(socket::fd_t));
-			*pfd = fd;
-			if (luaL_newmetatable(L, "bee::udp::client")) {
-				luaL_Reg mt[] = {
-					{ "recv", recv },
-					{ "send", send },
-					{ "close", close },
-					{ "__gc", close },
-					{ NULL, NULL },
-				};
-				luaL_setfuncs(L, mt, 0);
-				lua_pushvalue(L, -1);
-				lua_setfield(L, -2, "__index");
-			}
-			lua_setmetatable(L, -2);
-			socket::reuse(fd);
-			socket::nonblocking(fd);
-		}
-	}
-
-	namespace udp::server {
-		static int recvfrom(lua_State* L) {
-			socket::fd_t& fd = *(socket::fd_t*)luaL_checkudata(L, 1, "bee::udp::server");
-			lua_Integer len = luaL_optinteger(L, 2, LUAL_BUFFERSIZE);
-			if (len > (std::numeric_limits<int>::max)()) {
-				return luaL_error(L, "bad argument #1 to 'recv' (invalid number)");
-			}
-			endpoint ep = endpoint::from_empty();
-			luaL_Buffer b;
-			luaL_buffinit(L, &b);
-			char* buf = luaL_prepbuffsize(&b, (size_t)len);
-			int rc = socket::recvfrom(fd, buf, (int)len, ep);
-			switch (rc) {
-			case -3:
-				lua_pushnil(L);
-				return 1;
-			case -2:
-				lua_pushboolean(L, 0);
-				return 1;
-			case -1:
-				return push_neterror(L, "recv");
-			default: {
-				luaL_pushresultsize(&b, rc);
-				auto [ip, port] = ep.info();
-				lua_pushlstring(L, ip.data(), ip.size());
-				lua_pushinteger(L, port);
-				return 3;
-			}
-			}
-		}
-		static int sendto(lua_State* L) {
-			socket::fd_t& fd = *(socket::fd_t*)luaL_checkudata(L, 1, "bee::udp::server");
-			size_t len;
-			const char* buf = luaL_checklstring(L, 2, &len);
-			std::string_view ip = bee::lua::to_strview(L, 3);
-			int port = (int)luaL_checkinteger(L, 4);
-			auto ep = bee::net::endpoint::from_hostname(ip, port);
-			if (!ep) {
-				lua_pushlstring(L, ep.error().data(), ep.error().size());
-				return lua_error(L);
-			}
-			int rc = socket::sendto(fd, buf, (int)len, ep.value());
-			switch (rc) {
-			case -2:
-				lua_pushboolean(L, 0);
-				return 1;
-			case -1:
-				return push_neterror(L, "send");
-			default:
-				lua_pushinteger(L, rc);
-				return 1;
-			}
-		}
-		static int close(lua_State* L) {
-			return lclose(L, *(socket::fd_t*)luaL_checkudata(L, 1, "bee::udp::server"));
-		}
-		static void constructor(lua_State* L, socket::fd_t fd) {
-			socket::fd_t* pfd = (socket::fd_t*)lua_newuserdata(L, sizeof(socket::fd_t));
-			*pfd = fd;
-			if (luaL_newmetatable(L, "bee::udp::server")) {
-				luaL_Reg mt[] = {
-					{ "recvfrom", recvfrom },
-					{ "send", sendto },
-					{ "close", close },
-					{ "__gc", close },
-					{ NULL, NULL },
-				};
-				luaL_setfuncs(L, mt, 0);
-				lua_pushvalue(L, -1);
-				lua_setfield(L, -2, "__index");
-			}
-			lua_setmetatable(L, -2);
-			socket::reuse(fd);
-			socket::nonblocking(fd);
-		}
-	}
-
-	static int read_protocol(lua_State* L, int idx) {
-		const char* type = luaL_checkstring(L, 1);
-		if (0 == strcasecmp(type, "tcp")) {
-			return IPPROTO_TCP;
-		}
-		else if (0 == strcasecmp(type, "udp")) {
-			return IPPROTO_UDP;
-		}
-		else {
-			return luaL_error(L, "invalid protocol `%s`.", type);
-		}
+		lua_pushboolean(L, 1);
+		return 1;
 	}
 	static int connect(lua_State* L) {
 		int protocol = read_protocol(L, 1);
@@ -261,12 +167,7 @@ namespace luanet {
 		if (fd == socket::retired_fd) {
 			return push_neterror(L, "socket");
 		}
-		if (protocol == IPPROTO_TCP) {
-			tcp::stream::constructor(L, fd);
-		}
-		else {
-			udp::client::constructor(L, fd);
-		}
+		constructor(L, fd);
 		switch (socket::connect(fd, *ep)) {
 		case 0:
 			lua_pushboolean(L, true);
@@ -293,14 +194,7 @@ namespace luanet {
 		if (fd == socket::retired_fd) {
 			return push_neterror(L, "socket");
 		}
-		if (protocol == IPPROTO_TCP) {
-			tcp::listen::constructor(L, fd);
-		}
-		else {
-			udp::server::constructor(L, fd);
-		}
-		socket::reuse(fd);
-		socket::nonblocking(fd);
+		constructor(L, fd);
 		if (socket::bind(fd, *ep)) {
 			return push_neterror(L, "bind");
 		}
@@ -313,7 +207,70 @@ namespace luanet {
 		return 1;
 	}
 	static int select(lua_State* L) {
-		return 0;
+		luaL_checktype(L, 1, LUA_TTABLE);
+		luaL_checktype(L, 2, LUA_TTABLE);
+		int rmax = (int)luaL_len(L, 1);
+		int wmax = (int)luaL_len(L, 2);
+		double timeo = luaL_optnumber(L, 3, -1);
+		if (!rmax && !wmax && timeo == -1) {
+			return luaL_error(L, "no open sockets to check and no timeout set");
+		}
+		struct timeval timeout, *timeop = &timeout;
+		if (timeo < 0) {
+			timeop = NULL;
+			if (rmax > FD_SETSIZE || wmax > FD_SETSIZE) {
+				return luaL_error(L, "sockets too much");
+			}
+		}
+		else {
+			int ntime = 1 + (std::max)(rmax, wmax) / FD_SETSIZE;
+			timeo /= ntime;
+			timeout.tv_sec = (long)timeo;
+			timeout.tv_usec = (long)((timeo - timeout.tv_sec) * 1000000);
+		}
+		lua_settop(L, 3);
+		lua_newtable(L);
+		lua_newtable(L);
+		lua_Integer rout = 0, wout = 0;
+		fd_set readfd, writefd;
+		bool read_finish = false, write_finish = false;
+		for (int x = 0; !read_finish && !write_finish; x += FD_SETSIZE) {
+			FD_ZERO(&readfd);
+			for (int r = 0; !read_finish && r < FD_SETSIZE; ++r) {
+				if (LUA_TNIL == lua_rawgeti(L, 1, x + r)) {
+					read_finish = true;
+					lua_pop(L, 1);
+					break;
+				}
+				FD_SET(checkfd(L, -1), &readfd);
+				lua_pop(L, 1);
+			}
+			FD_ZERO(&writefd);
+			for (int w = 0; !write_finish && w < FD_SETSIZE; ++w) {
+				if (LUA_TNIL == lua_rawgeti(L, 2, x + w)) {
+					write_finish = true;
+					lua_pop(L, 1);
+					break;
+				}
+				FD_SET(checkfd(L, -1), &writefd);
+				lua_pop(L, 1);
+			}
+			int ok = ::select(0, &readfd, &writefd, NULL, timeop);
+			if (ok > 0) {
+				for (u_int i = 0; i < readfd.fd_count; ++i) {
+					lua_pushlightuserdata(L, (void*)readfd.fd_array[i]);
+					lua_rawseti(L, 4, ++rout);
+				}
+				for (u_int i = 0; i < writefd.fd_count; ++i) {
+					lua_pushlightuserdata(L, (void*)writefd.fd_array[i]);
+					lua_rawseti(L, 5, ++wout);
+				}
+			}
+			else if (ok < 0) {
+				return push_neterror(L, "select");
+			}
+		}
+		return 2;
 	}
 }
 
@@ -321,6 +278,12 @@ extern "C" __declspec(dllexport)
 int luaopen_bee_net(lua_State* L) {
 	bee::net::socket::initialize();
 	luaL_Reg lib[] = {
+		{ "accept", luanet::accept },
+		{ "recv", luanet::recv },
+		{ "send", luanet::send },
+		{ "recvfrom", luanet::recvfrom },
+		{ "sendto", luanet::sendto },
+		{ "close", luanet::close },
 		{ "connect", luanet::connect },
 		{ "bind", luanet::bind },
 		{ "select", luanet::select },
