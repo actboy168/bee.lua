@@ -79,7 +79,7 @@ namespace bee::win::subprocess {
     };
 
     namespace pipe {
-		_BEE_API std::pair<FILE*, FILE*> open();
-		_BEE_API int                     peek(FILE* f);
+        _BEE_API std::pair<FILE*, FILE*> open();
+        _BEE_API int                     peek(FILE* f);
     }
 }

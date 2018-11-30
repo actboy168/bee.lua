@@ -177,6 +177,12 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     <ClCompile Include="..\3rd\lua-seri\lua-seri.c" />
     <ClCompile Include="..\bee\exception\exception.cpp" />
     <ClCompile Include="..\bee\exception\windows_exception.cpp" />
+    <ClCompile Include="..\bee\fsevent\fsevent_osx.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\bee\fsevent\fsevent_win.cpp" />
     <ClCompile Include="..\bee\net\endpoint.cpp" />
     <ClCompile Include="..\bee\net\socket.cpp" />
@@ -203,6 +209,12 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     <ClInclude Include="..\bee\exception\exception.h" />
     <ClInclude Include="..\bee\exception\windows_exception.h" />
     <ClInclude Include="..\bee\fsevent.h" />
+    <ClInclude Include="..\bee\fsevent\fsevent_osx.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\bee\fsevent\fsevent_win.h" />
     <ClInclude Include="..\bee\lua\binding.h" />
     <ClInclude Include="..\bee\lua\range.h" />

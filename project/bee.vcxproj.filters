@@ -87,6 +87,9 @@
     <ClCompile Include="..\binding\binding_socket.cpp">
       <Filter>binding</Filter>
     </ClCompile>
+    <ClCompile Include="..\bee\fsevent\fsevent_osx.cpp">
+      <Filter>bee\fsevent</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\bee\subprocess\subprocess_posix.h">
@@ -171,6 +174,9 @@
       <Filter>bee</Filter>
     </ClInclude>
     <ClInclude Include="..\bee\fsevent\fsevent_win.h">
+      <Filter>bee\fsevent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\fsevent\fsevent_osx.h">
       <Filter>bee\fsevent</Filter>
     </ClInclude>
   </ItemGroup>
