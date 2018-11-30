@@ -75,9 +75,6 @@
     <ClCompile Include="..\binding\binding_embed.cpp">
       <Filter>binding</Filter>
     </ClCompile>
-    <ClCompile Include="..\binding\binding_net.cpp">
-      <Filter>binding</Filter>
-    </ClCompile>
     <ClCompile Include="..\bee\net\endpoint.cpp">
       <Filter>bee\net</Filter>
     </ClCompile>
@@ -86,6 +83,9 @@
     </ClCompile>
     <ClCompile Include="..\bee\fsevent\fsevent_win.cpp">
       <Filter>bee\fsevent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\binding\binding_socket.cpp">
+      <Filter>binding</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

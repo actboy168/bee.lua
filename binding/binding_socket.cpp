@@ -8,7 +8,7 @@
 #define strcasecmp _stricmp
 #endif
 
-namespace luanet {
+namespace luasocket {
 	using namespace bee::net;
 
 	static const int kDefaultBackLog = 5;
@@ -207,10 +207,10 @@ namespace luanet {
 		return 1;
 	}
 	static int select(lua_State* L) {
-		luaL_checktype(L, 1, LUA_TTABLE);
-		luaL_checktype(L, 2, LUA_TTABLE);
-		int rmax = (int)luaL_len(L, 1);
-		int wmax = (int)luaL_len(L, 2);
+		bool read_finish = lua_type(L, 1) != LUA_TTABLE;
+		bool write_finish = lua_type(L, 2) != LUA_TTABLE;
+		int rmax = read_finish? 0 : (int)luaL_len(L, 1);
+		int wmax = write_finish? 0 : (int)luaL_len(L, 2);
 		double timeo = luaL_optnumber(L, 3, -1);
 		if (!rmax && !wmax && timeo == -1) {
 			return luaL_error(L, "no open sockets to check and no timeout set");
@@ -232,37 +232,43 @@ namespace luanet {
 		lua_newtable(L);
 		lua_newtable(L);
 		lua_Integer rout = 0, wout = 0;
-		fd_set readfd, writefd;
-		bool read_finish = false, write_finish = false;
+		fd_set readfds, writefds, exceptfds;
 		for (int x = 0; !read_finish && !write_finish; x += FD_SETSIZE) {
-			FD_ZERO(&readfd);
+			FD_ZERO(&readfds);
 			for (int r = 0; !read_finish && r < FD_SETSIZE; ++r) {
 				if (LUA_TNIL == lua_rawgeti(L, 1, x + r)) {
 					read_finish = true;
 					lua_pop(L, 1);
 					break;
 				}
-				FD_SET(checkfd(L, -1), &readfd);
+				FD_SET(checkfd(L, -1), &readfds);
 				lua_pop(L, 1);
 			}
-			FD_ZERO(&writefd);
+			FD_ZERO(&writefds);
 			for (int w = 0; !write_finish && w < FD_SETSIZE; ++w) {
 				if (LUA_TNIL == lua_rawgeti(L, 2, x + w)) {
 					write_finish = true;
 					lua_pop(L, 1);
 					break;
 				}
-				FD_SET(checkfd(L, -1), &writefd);
+				FD_SET(checkfd(L, -1), &writefds);
 				lua_pop(L, 1);
 			}
-			int ok = ::select(0, &readfd, &writefd, NULL, timeop);
+			exceptfds.fd_count = writefds.fd_count;
+			for (u_int i = 0; i < writefds.fd_count; ++i) {
+				exceptfds.fd_array[i] = writefds.fd_array[i];
+			}
+			int ok = ::select(0, &readfds, &writefds, &exceptfds, timeop);
 			if (ok > 0) {
-				for (u_int i = 0; i < readfd.fd_count; ++i) {
-					lua_pushlightuserdata(L, (void*)readfd.fd_array[i]);
+				for (u_int i = 0; i < exceptfds.fd_count; ++i) {
+					FD_SET(exceptfds.fd_array[i], &writefds);
+				}
+				for (u_int i = 0; i < readfds.fd_count; ++i) {
+					lua_pushlightuserdata(L, (void*)readfds.fd_array[i]);
 					lua_rawseti(L, 4, ++rout);
 				}
-				for (u_int i = 0; i < writefd.fd_count; ++i) {
-					lua_pushlightuserdata(L, (void*)writefd.fd_array[i]);
+				for (u_int i = 0; i < writefds.fd_count; ++i) {
+					lua_pushlightuserdata(L, (void*)writefds.fd_array[i]);
 					lua_rawseti(L, 5, ++wout);
 				}
 			}
@@ -275,18 +281,18 @@ namespace luanet {
 }
 
 extern "C" __declspec(dllexport)
-int luaopen_bee_net(lua_State* L) {
+int luaopen_bee_socket(lua_State* L) {
 	bee::net::socket::initialize();
 	luaL_Reg lib[] = {
-		{ "accept", luanet::accept },
-		{ "recv", luanet::recv },
-		{ "send", luanet::send },
-		{ "recvfrom", luanet::recvfrom },
-		{ "sendto", luanet::sendto },
-		{ "close", luanet::close },
-		{ "connect", luanet::connect },
-		{ "bind", luanet::bind },
-		{ "select", luanet::select },
+		{ "accept",   luasocket::accept },
+		{ "recv",     luasocket::recv },
+		{ "send",     luasocket::send },
+		{ "recvfrom", luasocket::recvfrom },
+		{ "sendto",   luasocket::sendto },
+		{ "close",    luasocket::close },
+		{ "connect",  luasocket::connect },
+		{ "bind",     luasocket::bind },
+		{ "select",   luasocket::select },
 		{ NULL, NULL }
 	};
 	luaL_newlib(L, lib);

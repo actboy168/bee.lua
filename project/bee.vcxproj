@@ -192,7 +192,7 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     <ClCompile Include="..\binding\binding_embed.cpp" />
     <ClCompile Include="..\binding\binding_filesystem.cpp" />
     <ClCompile Include="..\binding\binding_filewatch.cpp" />
-    <ClCompile Include="..\binding\binding_net.cpp" />
+    <ClCompile Include="..\binding\binding_socket.cpp" />
     <ClCompile Include="..\binding\binding_registry.cpp" />
     <ClCompile Include="..\binding\binding_subprocess.cpp" />
     <ClCompile Include="..\binding\binding_thread.cpp" />
