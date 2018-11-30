@@ -240,6 +240,7 @@ namespace luasocket {
 		}
 		return 1;
 	}
+#if defined(_WIN32)
 	static int select(lua_State* L) {
 		bool read_finish = lua_type(L, 1) != LUA_TTABLE;
 		bool write_finish = lua_type(L, 2) != LUA_TTABLE;
@@ -312,6 +313,92 @@ namespace luasocket {
 		}
 		return 2;
 	}
+#else
+	static int select(lua_State* L) {
+		bool read_finish = lua_type(L, 1) != LUA_TTABLE;
+		bool write_finish = lua_type(L, 2) != LUA_TTABLE;
+		int rmax = read_finish ? 0 : (int)luaL_len(L, 1);
+		int wmax = write_finish ? 0 : (int)luaL_len(L, 2);
+		double timeo = luaL_optnumber(L, 3, -1);
+		if (!rmax && !wmax && timeo == -1) {
+			return luaL_error(L, "no open sockets to check and no timeout set");
+		}
+		struct timeval timeout, *timeop = &timeout;
+		if (timeo < 0) {
+			timeop = NULL;
+			if (rmax > FD_SETSIZE || wmax > FD_SETSIZE) {
+				return luaL_error(L, "sockets too much");
+			}
+		}
+		else {
+			int ntime = 1 + (std::max)(rmax, wmax) / FD_SETSIZE;
+			timeo /= ntime;
+			timeout.tv_sec = (long)timeo;
+			timeout.tv_usec = (long)((timeo - timeout.tv_sec) * 1000000);
+		}
+		lua_settop(L, 3);
+		lua_newtable(L);
+		lua_newtable(L);
+		lua_Integer rout = 0, wout = 0;
+		fd_set readfds, writefds;
+		for (int x = 1; !read_finish || !write_finish; x += FD_SETSIZE) {
+			int maxfd = 0;
+			FD_ZERO(&readfds);
+			int r = 0;
+			for (; !read_finish && r < FD_SETSIZE; ++r) {
+				if (LUA_TNIL == lua_rawgeti(L, 1, x + r)) {
+					read_finish = true;
+					lua_pop(L, 1);
+					break;
+				}
+				socket::fd_t fd = checkfd(L, -1);
+				maxfd = (std::max)(maxfd, (int)fd);
+				FD_SET(fd, &readfds);
+				lua_pop(L, 1);
+			}
+			FD_ZERO(&writefds);
+			int w = 0;
+			for (; !write_finish && w < FD_SETSIZE; ++w) {
+				if (LUA_TNIL == lua_rawgeti(L, 2, x + w)) {
+					write_finish = true;
+					lua_pop(L, 1);
+					break;
+				}
+				socket::fd_t fd = checkfd(L, -1);
+				maxfd = (std::max)(maxfd, (int)fd);
+				FD_SET(fd, &writefds);
+				lua_pop(L, 1);
+			}
+			int ok = ::select(maxfd + 1, &readfds, &writefds, NULL, timeop);
+			if (ok > 0) {
+				for (int i = 0; i < r; ++i) {
+					if (LUA_TLIGHTUSERDATA == lua_rawgeti(L, 1, x + r)
+						&& FD_ISSET(lua_touserdata(L, -1), &readfds))
+					{
+						lua_rawseti(L, 4, ++rout);
+					}
+					else {
+						lua_pop(L, 1);
+					}
+				}
+				for (int i = 0; i < w; ++i) {
+					if (LUA_TLIGHTUSERDATA == lua_rawgeti(L, 2, x + r)
+						&& FD_ISSET(lua_touserdata(L, -1), &writefds))
+					{
+						lua_rawseti(L, 5, ++wout);
+					}
+					else {
+						lua_pop(L, 1);
+					}
+				}
+			}
+			else if (ok < 0) {
+				return push_neterror(L, "select");
+			}
+		}
+		return 2;
+	}
+#endif
 }
 
 extern "C" __declspec(dllexport)
