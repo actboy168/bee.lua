@@ -5,7 +5,7 @@
 #include <set>
 #include <vector>
 
-namespace bee { namespace win { namespace subprocess {
+namespace bee::win::subprocess {
     namespace ignore_case {
         template <class T> struct less;
         template <> struct less<wchar_t> {
@@ -82,4 +82,4 @@ namespace bee { namespace win { namespace subprocess {
 		_BEE_API std::pair<FILE*, FILE*> open();
 		_BEE_API int                     peek(FILE* f);
     }
-}}}
+}
