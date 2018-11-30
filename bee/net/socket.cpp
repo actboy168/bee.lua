@@ -406,6 +406,24 @@ namespace bee::net { namespace socket {
 		return rc;
 	}
 
+	bool getpeername(fd_t s, endpoint& ep) {
+		socklen_t addrlen = ep.addrlen();
+		if (::getpeername(s, ep.addr(), &addrlen) < 0) {
+			return false;
+		}
+		ep.resize(addrlen);
+		return true;
+	}
+
+	bool getsockname(fd_t s, endpoint& ep) {
+		socklen_t addrlen = ep.addrlen();
+		if (::getsockname(s, ep.addr(), &addrlen) < 0) {
+			return false;
+		}
+		ep.resize(addrlen);
+		return true;
+	}
+
 	int errcode() {
 #if defined _WIN32
 		return ::WSAGetLastError();
@@ -413,11 +431,29 @@ namespace bee::net { namespace socket {
 		return errno;
 #endif
 	}
+
+	int errcode(fd_t fd) {
+		int err;
+		socklen_t errl = sizeof(err);
+		if (getsockopt(fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errl) >= 0) {
+			return err;
+		}
+		return errcode();
+	}
+
+	std::string errmessage(int errcode) {
+#if defined _WIN32
+		return bee::w2u(bee::error_message(errcode));
+#else
+		return strerror(errcode);
+#endif
+	}
+
 	std::string errmessage() {
 #if defined _WIN32
-		return bee::w2u(bee::error_message(::WSAGetLastError()));
+		return errmessage(::WSAGetLastError());
 #else
-		return strerror(errno);
+		return errmessage(errno);
 #endif
 	}
 }}

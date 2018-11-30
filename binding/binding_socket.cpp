@@ -4,10 +4,6 @@
 #include <bee/net/endpoint.h>
 #include <limits>
 
-#if _MSC_VER > 0
-#define strcasecmp _stricmp
-#endif
-
 namespace luasocket {
 	using namespace bee::net;
 
@@ -19,11 +15,11 @@ namespace luasocket {
 		return 2;
 	}
 	static int read_protocol(lua_State* L, int idx) {
-		const char* type = luaL_checkstring(L, 1);
-		if (0 == strcasecmp(type, "tcp")) {
+		std::string_view type = bee::lua::to_strview(L, 1);
+		if (type == "tcp") {
 			return IPPROTO_TCP;
 		}
-		else if (0 == strcasecmp(type, "udp")) {
+		else if (type == "udp") {
 			return IPPROTO_UDP;
 		}
 		else {
@@ -154,6 +150,44 @@ namespace luasocket {
 		lua_pushboolean(L, 1);
 		return 1;
 	}
+	static int status(lua_State* L) {
+		luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+		socket::fd_t fd = (socket::fd_t)lua_touserdata(L, 1);
+		int err = socket::errcode(fd);
+		if (err == 0) {
+			lua_pushboolean(L, true);
+			return 1;
+		}
+		lua_pushnil(L);
+		lua_pushfstring(L, "(%d)%s", err, socket::errmessage(err).c_str());
+		return 2;
+	}
+	static int info(lua_State* L) {
+		luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+		socket::fd_t fd = (socket::fd_t)lua_touserdata(L, 1);
+		std::string_view which = bee::lua::to_strview(L, 2);
+		if (which == "peer") {
+			endpoint ep = endpoint::from_empty();
+			if (!socket::getpeername(fd, ep)) {
+				return push_neterror(L, "getpeername");
+			}
+			auto[ip, port] = ep.info();
+			lua_pushlstring(L, ip.data(), ip.size());
+			lua_pushinteger(L, port);
+			return 2;
+		}
+		else if (which == "sock") {
+			endpoint ep = endpoint::from_empty();
+			if (!socket::getsockname(fd, ep)) {
+				return push_neterror(L, "getsockname");
+			}
+			auto[ip, port] = ep.info();
+			lua_pushlstring(L, ip.data(), ip.size());
+			lua_pushinteger(L, port);
+			return 2;
+		}
+		return 0;
+	}
 	static int connect(lua_State* L) {
 		int protocol = read_protocol(L, 1);
 		std::string_view ip = bee::lua::to_strview(L, 2);
@@ -233,7 +267,7 @@ namespace luasocket {
 		lua_newtable(L);
 		lua_Integer rout = 0, wout = 0;
 		fd_set readfds, writefds, exceptfds;
-		for (int x = 0; !read_finish && !write_finish; x += FD_SETSIZE) {
+		for (int x = 1; !read_finish || !write_finish; x += FD_SETSIZE) {
 			FD_ZERO(&readfds);
 			for (int r = 0; !read_finish && r < FD_SETSIZE; ++r) {
 				if (LUA_TNIL == lua_rawgeti(L, 1, x + r)) {
@@ -290,6 +324,8 @@ int luaopen_bee_socket(lua_State* L) {
 		{ "recvfrom", luasocket::recvfrom },
 		{ "sendto",   luasocket::sendto },
 		{ "close",    luasocket::close },
+		{ "status",   luasocket::status },
+		{ "info",     luasocket::info },
 		{ "connect",  luasocket::connect },
 		{ "bind",     luasocket::bind },
 		{ "select",   luasocket::select },

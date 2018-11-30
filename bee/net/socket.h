@@ -51,7 +51,11 @@ namespace bee::net { namespace socket {
 	int  send(fd_t s, const char* buf, int len);
 	int  recvfrom(fd_t s, char* buf, int len, endpoint& ep);
 	int  sendto(fd_t s, const char* buf, int len, const endpoint& ep);
+	bool getpeername(fd_t s, endpoint& ep);
+	bool getsockname(fd_t s, endpoint& ep);
 	int  errcode();
+	int  errcode(fd_t fd);
+	std::string errmessage(int errcode);
 	std::string errmessage();
 }}
 
