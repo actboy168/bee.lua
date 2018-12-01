@@ -22,6 +22,7 @@ namespace bee::net {
 		void                        resize(socklen_t len);
 
 		static nonstd::expected<endpoint, std::string> from_hostname(const std::string_view& ip, int port);
+		static nonstd::expected<endpoint, std::string> from_unixpath(const std::string_view& path);
 		static endpoint                                from_empty();
 
 	private:

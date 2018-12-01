@@ -56,6 +56,9 @@ namespace bee::net::socket {
 		//  10036 - Operation now in progress.
 		case WSAEINPROGRESS:
 			return EAGAIN;
+		//  10038 - Socket operation on non-socket.
+		case WSAENOTSOCK:
+			return ENOTSOCK;
 		//  10040 - Message too long.
 		case WSAEMSGSIZE:
 			return EMSGSIZE;
@@ -118,13 +121,15 @@ namespace bee::net::socket {
 #endif
 	}
 
-	fd_t open(int family, int protocol)
+	fd_t open(int family, protocol protocol)
 	{
 		switch (protocol) {
-		case IPPROTO_TCP:
-			return ::socket(family, SOCK_STREAM, protocol);
-		case IPPROTO_UDP:
-			return ::socket(family, SOCK_DGRAM, protocol);
+		case protocol::tcp:
+			return ::socket(family, SOCK_STREAM, IPPROTO_TCP);
+		case protocol::udp:
+			return ::socket(family, SOCK_DGRAM, IPPROTO_UDP);
+		case protocol::unix:
+			return ::socket(family, SOCK_STREAM, 0);
 		default:
 			return retired_fd;
 		}
@@ -250,11 +255,7 @@ namespace bee::net::socket {
 	void reuse(fd_t s)
 	{
 		int flag = 1;
-#if defined _WIN32
-		const int rc = setsockopt(s, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (char*) &flag, sizeof flag);
-#else
-		const int rc = setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char*) &flag, sizeof flag);
-#endif
+		const int rc = setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char*)&flag, sizeof flag);
 		net_assert_success(rc);
 	}
 
@@ -301,12 +302,35 @@ namespace bee::net::socket {
 			{
 				return -1;
 			}
+			else
+			{
+				return -2;
+			}
+#endif
+		}
+		return 0;
+	}
+
+	int accept(fd_t s, fd_t& fd, endpoint& ep)
+	{
+		socklen_t addrlen = ep.addrlen();
+		fd = ::accept(s, ep.addr(), &addrlen);
+		if (fd == retired_fd)
+		{
+#if defined _WIN32
+			return -1;
+#else 
+			if (errno != EAGAIN && errno != ECONNABORTED && errno != EPROTO && errno != EINTR)
+			{
+				return -1;
+			}
 			else 
 			{
 				return -2;
 			}
 #endif
 		}
+		ep.resize(addrlen);
 		return 0;
 	}
 
@@ -390,6 +414,25 @@ namespace bee::net::socket {
 		}
 		ep.resize(addrlen);
 		return true;
+	}
+
+	bool unlink(fd_t s) {
+		endpoint ep = endpoint::from_empty();
+		if (!socket::getsockname(s, ep)) {
+			return false;
+		}
+		if (ep.addr()->sa_family != AF_UNIX) {
+			return false;
+		}
+		auto[ip, port] = ep.info();
+		if (ip.size() == 0) {
+			return false;
+		}
+#if defined _WIN32
+		return !!::DeleteFileW(u2w(ip).c_str());
+#else
+		return 0 == ::unlink(ip.c_str());
+#endif
 	}
 
 	int errcode() {
