@@ -31,17 +31,8 @@ namespace bee::net { namespace socket {
 		}
 	}
 
-	int error_no_()
-	{
 #if defined _WIN32
-		return ::WSAGetLastError();
-#else
-		return errno;
-#endif
-	}
-
-#if defined _WIN32
-	int wsa_error_to_errno(int errcode)
+	static int wsa_error_to_errno(int errcode)
 	{
 		switch (errcode) {
 		//  10009 - File handle is not valid.
@@ -118,12 +109,12 @@ namespace bee::net { namespace socket {
 	}
 #endif
 
-	int error_no()
+	static int error_no()
 	{
 #if defined _WIN32
-		return wsa_error_to_errno(error_no_());
+		return wsa_error_to_errno(::WSAGetLastError());
 #else
-		return error_no_();
+		return errno;
 #endif
 	}
 
@@ -267,40 +258,18 @@ namespace bee::net { namespace socket {
 		net_assert_success(rc);
 	}
 
-	bool connect_error(fd_t s)
-	{
-		int err = 0;
-#if defined _WIN32
-		int len = sizeof(err);
-#else
-		socklen_t len = sizeof(err);
-#endif
-		int rc = getsockopt(s, SOL_SOCKET, SO_ERROR, (char*) &err, &len);
-#if defined _WIN32
-		assert(rc == 0);
-		if (err != 0)
-			return false;
-#else
-		if (rc == -1)
-			err = error_no_();
-		if (err != 0)
-			return false;
-#endif
-		return true;
-	}
-
 	int connect(fd_t s, const endpoint& ep)
 	{
 		int rc = ::connect(s, ep.addr(), (int)ep.addrlen());
 		if (rc == 0)
 			return 0;
 
-		const int error_code = error_no_();
 #if defined _WIN32
+		const int error_code = ::WSAGetLastError();
 		if (error_code == WSAEINPROGRESS || error_code == WSAEWOULDBLOCK)
 			return -2;
 #else
-		if (error_code == EINTR || error_code == EINPROGRESS)
+		if (errno == EINTR || errno == EINPROGRESS)
 			return -2;
 #endif
 		return -1;
@@ -328,8 +297,7 @@ namespace bee::net { namespace socket {
 #if defined _WIN32
 			return -1;
 #else 
-			const int error_code = error_no_();
-			if (error_code != EAGAIN && error_code != ECONNABORTED && error_code != EPROTO && error_code != EINTR)
+			if (errno != EAGAIN && errno != ECONNABORTED && errno != EPROTO && errno != EINTR)
 			{
 				return -1;
 			}

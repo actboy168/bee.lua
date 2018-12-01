@@ -41,12 +41,10 @@ namespace bee::net { namespace socket {
 	void send_buffer(fd_t s, int bufsize);
 	void recv_buffer(fd_t s, int bufsize);
 	void reuse(fd_t s);
-	bool connect_error(fd_t s);
 	int  connect(fd_t s, const endpoint& ep);
 	int  bind(fd_t s, const endpoint& ep);
 	int  listen(fd_t s, int backlog);
 	int  accept(fd_t s, fd_t& sock);
-	int  error_no();
 	int  recv(fd_t s, char* buf, int len);
 	int  send(fd_t s, const char* buf, int len);
 	int  recvfrom(fd_t s, char* buf, int len, endpoint& ep);
