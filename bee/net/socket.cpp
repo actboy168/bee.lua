@@ -1,6 +1,6 @@
 #pragma once
 
-#include <net/socket.h>
+#include <bee/net/socket.h>
 #include <assert.h>
 #if defined _WIN32
 #	include <Mstcpip.h>

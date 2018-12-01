@@ -52,7 +52,7 @@ namespace std {
 				uninitialized_copy(d.begin(), d.end(), mybase::begin());
 			}
 			catch (...) {
-				delete[] reinterpret_cast<char*>(mybase::store_);
+				delete[] reinterpret_cast<char*>(mybase::data());
 				throw; 
 			} 
 		}
@@ -98,7 +98,7 @@ namespace std {
 
 		dynarray& operator=(const dynarray& d) {
 			if (this != &d) {
-				*(mybase*)this = mybase(alloc(d.data()), d.size());
+				*(mybase*)this = mybase(alloc(d.size()), d.size());
 				try {
 					uninitialized_copy(d.begin(), d.end(), mybase::begin());
 				}

@@ -18,7 +18,7 @@
 #	define net_assert_success(x) net_assert((x) == 0)
 #endif
 
-#include <net/endpoint.h>
+#include <bee/net/endpoint.h>
 
 namespace bee::net::socket {
 #if defined _WIN32
