@@ -12,6 +12,20 @@
 #	include <signal.h>
 #endif
 
+
+#if defined _WIN32
+#	define net_success(x) ((x) != SOCKET_ERROR)
+#else
+#	define net_success(x) ((x) == 0)
+#endif
+
+#define net_assert_success(x) \
+	do { \
+		auto r = (x); \
+		assert(net_success(r)); \
+	} while (0)
+
+
 namespace bee::net::socket {
 
 	void initialize()
@@ -105,7 +119,7 @@ namespace bee::net::socket {
 		case WSAEHOSTUNREACH:
 			return EHOSTUNREACH;
 		default:
-			net_assert(false);
+			assert(false);
 		}
 		//  Not reachable
 		return 0;
@@ -141,41 +155,30 @@ namespace bee::net::socket {
 #if defined _WIN32
 		return ::closesocket(s) != SOCKET_ERROR;
 #else
-		return ::close(s) != 0;
+		return ::close(s) == 0;
 #endif
 	}
 
-	void shutdown(fd_t s)
+	bool shutdown(fd_t s, shutdown_flag flag)
 	{
 		assert(s != retired_fd);
-#if defined _WIN32
-		int rc = ::shutdown(s, SD_BOTH);
+#if defined(_WIN32)
+		switch (flag) {
+		case shutdown_flag::both:  return net_success(::shutdown(s, SD_BOTH));
+		case shutdown_flag::read:  return net_success(::shutdown(s, SD_RECEIVE));
+		case shutdown_flag::write: return net_success(::shutdown(s, SD_SEND));
+		default: break;
+		}
 #else
-		int rc = ::shutdown(s, SHUT_RDWR);
+		switch (flag) {
+		case shutdown_flag::both:  return net_success(::shutdown(s, SHUT_RDWR));
+		case shutdown_flag::read:  return net_success(::shutdown(s, SHUT_RD));
+		case shutdown_flag::write: return net_success(::shutdown(s, SHUT_WR));
+		default: break;
+		}
 #endif
-		net_assert_success(rc);
-	}
-
-	void shutdown_read(fd_t s)
-	{
-		assert(s != retired_fd);
-#if defined _WIN32
-		int rc = ::shutdown(s, SD_RECEIVE);
-#else
-		int rc = ::shutdown(s, SHUT_RD);
-#endif
-		net_assert_success(rc);
-	}
-
-	void shutdown_write(fd_t s)
-	{
-		assert(s != retired_fd);
-#if defined _WIN32
-		int rc = ::shutdown(s, SD_SEND);
-#else
-		int rc = ::shutdown(s, SHUT_WR);
-#endif
-		net_assert_success(rc);
+		assert(false);
+		return false;
 	}
 
 	void nonblocking(fd_t s)

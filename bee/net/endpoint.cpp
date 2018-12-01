@@ -2,6 +2,7 @@
 #include <Ws2tcpip.h>
 #include <bee/utility/format.h>
 #include <bee/exception/windows_exception.h>
+#include <afunix.h>
 
 namespace bee::net {
 	struct autorelease_addrinfo {
@@ -49,7 +50,17 @@ namespace bee::net {
 		}
 		return autorelease_addrinfo(info);
 	}
-
+	nonstd::expected<endpoint, std::string> endpoint::from_unixpath(const std::string_view& path) {
+		if (path.size() >= UNIX_PATH_MAX) {
+			return nonstd::make_unexpected("unix domain path too long");
+		};
+		endpoint ep(offsetof(struct sockaddr_un, sun_path) + path.size() + 1);
+		struct sockaddr_un* su = (struct sockaddr_un*)ep.data();
+		su->sun_family = AF_UNIX;
+		memcpy(&su->sun_path[0], path.data(), path.size());
+		su->sun_path[path.size()] = '\0';
+		return std::move(ep);
+	}
 	nonstd::expected<endpoint, std::string> endpoint::from_hostname(const std::string_view& ip, int port) {
 		addrinfo hint = { 0 };
 		hint.ai_family = AF_UNSPEC;
@@ -60,7 +71,7 @@ namespace bee::net {
 		if (!info) {
 			return nonstd::make_unexpected(bee::format("getaddrinfo: %s", bee::error_message(::WSAGetLastError())));
 		}
-		else if (info->ai_family != AF_INET && info->ai_family != AF_INET6) {
+		else if (info->ai_family != AF_INET && info->ai_family != AF_INET6 && info->ai_family != AF_UNIX) {
 			return nonstd::make_unexpected("unknown address family");
 		}
 		const addrinfo& addrinfo = *info;
@@ -85,6 +96,9 @@ namespace bee::net {
 			char tmp[sizeof "ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255"];
 			const char* s = inet_ntop(sa->sa_family, (const void*) &((struct sockaddr_in6*)sa)->sin6_addr, tmp, sizeof tmp);
 			return { std::string(s), ntohs(((struct sockaddr_in6*)sa)->sin6_port) };
+		}
+		else if (sa->sa_family == AF_UNIX) {
+			return { ((struct sockaddr_un*)sa)->sun_path, 0 };
 		}
 		return { "", 0 };
 	}

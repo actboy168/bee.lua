@@ -11,13 +11,6 @@
 #	include <unistd.h>
 #endif
 
-#define net_assert(x) do { assert(x); (x); } while (0)
-#if defined _WIN32
-#	define net_assert_success(x) net_assert((x) != SOCKET_ERROR)
-#else
-#	define net_assert_success(x) net_assert((x) == 0)
-#endif
-
 #include <bee/net/endpoint.h>
 
 namespace bee::net::socket {
@@ -36,12 +29,16 @@ namespace bee::net::socket {
 		unix,
 	};
 
+	enum class shutdown_flag {
+		both,
+		read,
+		write,
+	};
+
 	void initialize();
 	fd_t open(int family, protocol protocol);
 	bool close(fd_t s);
-	void shutdown(fd_t s);
-	void shutdown_read(fd_t s);
-	void shutdown_write(fd_t s);
+	bool shutdown(fd_t s, shutdown_flag flag);
 	void nonblocking(fd_t s);
 	void keepalive(fd_t s, int keepalive, int keepalive_cnt, int keepalive_idle, int keepalive_intvl);
 	void udp_connect_reset(fd_t s);

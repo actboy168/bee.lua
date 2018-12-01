@@ -188,6 +188,29 @@ namespace luasocket {
 		lua_pushboolean(L, 1);
 		return 1;
 	}
+	static int shutdown(lua_State* L, luafd& self, socket::shutdown_flag flag) {
+		if (!socket::shutdown(self.fd, flag)) {
+			return push_neterror(L, "shutdown");
+		}
+		lua_pushboolean(L, true);
+		return 1;
+	}
+	static int shutdown(lua_State* L) {
+		luafd& self = checkfd(L, 1);
+		if (lua_isnoneornil(L, 2)) {
+			return shutdown(L, self, socket::shutdown_flag::both);
+		}
+		std::string_view flag = bee::lua::to_strview(L, 2);
+		if (flag[0] == 'r') {
+			return shutdown(L, self, socket::shutdown_flag::read);
+		}
+		else if(flag[0] == 'w') {
+			return shutdown(L, self, socket::shutdown_flag::write);
+		}
+		lua_pushnil(L);
+		lua_pushstring(L, "invalid flag");
+		return 2;
+	}
 	static int gc(lua_State* L) {
 		luafd& self = checkfd(L, 1);
 		if (self.fd == socket::retired_fd) {
@@ -249,6 +272,7 @@ namespace luasocket {
 				{ "recvfrom", luasocket::recvfrom },
 				{ "sendto",   luasocket::sendto },
 				{ "close",    luasocket::close },
+				{ "shutdown", luasocket::shutdown },
 				{ "status",   luasocket::status },
 				{ "info",     luasocket::info },
 				{ "__gc",     luasocket::gc },
