@@ -90,6 +90,9 @@
     <ClCompile Include="..\bee\fsevent\fsevent_osx.cpp">
       <Filter>bee\fsevent</Filter>
     </ClCompile>
+    <ClCompile Include="..\binding\binding_unicode.cpp">
+      <Filter>binding</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\bee\subprocess\subprocess_posix.h">

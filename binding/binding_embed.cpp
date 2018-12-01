@@ -13,8 +13,3 @@ extern "C" __declspec(dllexport)
 int luaopen_bee(lua_State* L) {
 	return do_span(L, nonstd::embed(bee, "script/bee.lua"));
 }
-
-extern "C" __declspec(dllexport)
-int luaopen_bee_unicode(lua_State* L) {
-	return do_span(L, nonstd::embed(bee_unicode, "script/bee/unicode.lua"));
-}
