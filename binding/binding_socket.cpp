@@ -10,8 +10,9 @@ namespace luasocket {
 	static const int kDefaultBackLog = 5;
 
 	struct luafd {
-		socket::fd_t fd;
-		int family;
+		socket::fd_t     fd;
+		socket::protocol protocol;
+		bool connect = false;
 	};
 
 	static int push_neterror(lua_State* L, const char* msg) {
@@ -60,13 +61,14 @@ namespace luasocket {
 	static luafd& checkfd(lua_State* L, int idx) {
 		return *(luafd*)luaL_checkudata(L, idx, "bee::socket");
 	}
-	static luafd& pushfd(lua_State* L, socket::fd_t fd, int family);
-	static void constructor(lua_State* L, socket::fd_t fd, int family) {
-		pushfd(L, fd, family);
+	static luafd& pushfd(lua_State* L, socket::fd_t fd, socket::protocol protocol);
+	static luafd& constructor(lua_State* L, socket::fd_t fd, socket::protocol protocol) {
+		luafd& self = pushfd(L, fd, protocol);
 		socket::nonblocking(fd);
-		if (family != AF_UNIX) {
+		if (protocol != socket::protocol::unix) {
 			socket::reuse(fd);
 		}
+		return self;
 	}
 	static int accept(lua_State* L) {
 		luafd& self = checkfd(L, 1);
@@ -74,7 +76,7 @@ namespace luasocket {
 		if (socket::accept(self.fd, newfd)) {
 			return push_neterror(L, "accept");
 		}
-		constructor(L, newfd, self.family);
+		constructor(L, newfd, self.protocol);
 		return 1;
 	}
 	static int recv(lua_State* L) {
@@ -177,7 +179,7 @@ namespace luasocket {
 		}
 		socket::fd_t fd = self.fd;
 		self.fd = socket::retired_fd;
-		if (self.family == AF_UNIX) {
+		if (self.protocol == socket::protocol::unix) {
 			socket::unlink(fd);
 		}
 		if (!socket::close(fd)) {
@@ -193,7 +195,7 @@ namespace luasocket {
 		}
 		socket::fd_t fd = self.fd;
 		self.fd = socket::retired_fd;
-		if (self.family == AF_UNIX) {
+		if (self.protocol == socket::protocol::unix) {
 			socket::unlink(fd);
 		}
 		socket::close(fd);
@@ -235,10 +237,10 @@ namespace luasocket {
 		}
 		return 0;
 	}
-	static luafd& pushfd(lua_State* L, socket::fd_t fd, int family) {
+	static luafd& pushfd(lua_State* L, socket::fd_t fd, socket::protocol protocol) {
 		luafd* self = (luafd*)lua_newuserdata(L, sizeof(luafd));
 		self->fd = fd;
-		self->family = family;
+		self->protocol = protocol;
 		if (luaL_newmetatable(L, "bee::socket")) {
 			luaL_Reg mt[] = {
 				{ "accept",   luasocket::accept },
@@ -270,7 +272,8 @@ namespace luasocket {
 		if (fd == socket::retired_fd) {
 			return push_neterror(L, "socket");
 		}
-		constructor(L, fd, ep->addr()->sa_family);
+		luafd& self = constructor(L, fd, protocol);
+		self.connect = true;
 		switch (socket::connect(fd, *ep)) {
 		case 0:
 			lua_pushboolean(L, true);
@@ -296,7 +299,7 @@ namespace luasocket {
 		if (fd == socket::retired_fd) {
 			return push_neterror(L, "socket");
 		}
-		constructor(L, fd, ep->addr()->sa_family);
+		constructor(L, fd, protocol);
 		if (socket::bind(fd, *ep)) {
 			return push_neterror(L, "bind");
 		}
@@ -348,6 +351,7 @@ namespace luasocket {
 				lua_pop(L, 1);
 			}
 			FD_ZERO(&writefds);
+			FD_ZERO(&exceptfds);
 			int w = 0;
 			for (; !write_finish && w < FD_SETSIZE; ++w) {
 				if (LUA_TNIL == lua_rawgeti(L, 2, x + w)) {
@@ -355,12 +359,12 @@ namespace luasocket {
 					lua_pop(L, 1);
 					break;
 				}
-				FD_SET(checkfd(L, -1).fd, &writefds);
+				luafd& self = checkfd(L, -1);
+				FD_SET(self.fd, &writefds);
+				if (self.connect) {
+					FD_SET(self.fd, &exceptfds);
+				}
 				lua_pop(L, 1);
-			}
-			exceptfds.fd_count = writefds.fd_count;
-			for (u_int i = 0; i < writefds.fd_count; ++i) {
-				exceptfds.fd_array[i] = writefds.fd_array[i];
 			}
 			int ok = ::select(0, &readfds, &writefds, &exceptfds, timeop);
 			if (ok > 0) {
