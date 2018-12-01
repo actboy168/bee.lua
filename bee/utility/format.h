@@ -32,7 +32,7 @@
 		} while (0)
 #endif
 
-namespace bee { namespace format_detail {
+namespace bee::format_detail {
 
 template <class T>
 inline int crt_snprintf(char* buf, size_t buf_size, const char* fmt, const T& value)
@@ -667,6 +667,7 @@ inline std::ostream& standard_output(const char*) { return std::cout; }
 inline std::wostream& standard_output(const wchar_t*) { return std::wcout; }
 }
 
+namespace bee {
 #if defined(_MSC_VER) && _MSC_VER < 1800
 #include <boost/preprocessor/repetition.hpp>
 #include <boost/preprocessor/punctuation/comma_if.hpp>

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace bee { namespace registry {
+namespace bee::registry {
 
 	class predefined_key
 	{
@@ -42,4 +42,4 @@ namespace bee { namespace registry {
 	{
 		return predefined_key(HKEY_LOCAL_MACHINE);
 	}
-}}
+}

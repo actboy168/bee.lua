@@ -3,7 +3,7 @@
 #include <bee/utility/unicode.h>
 #include <lua.hpp>
 
-namespace bee { namespace lua {
+namespace bee::lua {
 #if defined(_WIN32)
 	typedef std::wstring string_type;
 #else
@@ -47,7 +47,7 @@ namespace bee { namespace lua {
 		lua_pushlstring(L, str.data(), str.size());
 #endif
 	}
-}}
+}
 
 #define LUA_TRY     try {   
 #define LUA_TRY_END } catch (const std::exception& e) { return ::bee::lua::push_error(L, e); }

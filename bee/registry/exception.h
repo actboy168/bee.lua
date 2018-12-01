@@ -3,7 +3,7 @@
 #include <bee/config.h>
 #include <bee/exception/windows_exception.h>
 
-namespace bee { namespace registry {
+namespace bee::registry {
 
 	class registry_exception
 		: public windows_exception
@@ -37,4 +37,4 @@ namespace bee { namespace registry {
 			}
 		}
 	}
-}}
+}

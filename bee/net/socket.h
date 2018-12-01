@@ -20,7 +20,7 @@
 
 #include <net/endpoint.h>
 
-namespace bee::net { namespace socket {
+namespace bee::net::socket {
 #if defined _WIN32
 	typedef SOCKET fd_t;
 	enum { retired_fd = (fd_t)INVALID_SOCKET };
@@ -55,5 +55,4 @@ namespace bee::net { namespace socket {
 	int  errcode(fd_t fd);
 	std::string errmessage(int errcode);
 	std::string errmessage();
-}}
-
+}

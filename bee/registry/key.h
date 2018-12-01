@@ -8,7 +8,7 @@
 #include <bee/registry/traits.h>   
 #include <bee/registry/value.h>
 
-namespace bee { namespace registry {
+namespace bee::registry {
 
 	namespace open_option 
 	{
@@ -289,6 +289,6 @@ namespace bee { namespace registry {
 
 	typedef basic_key<char>    key_a;
 	typedef basic_key<wchar_t> key_w;
-}}
+}
 
 #include <bee/registry/predefined_keys.h>

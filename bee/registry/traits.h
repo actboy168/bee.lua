@@ -5,7 +5,7 @@
 #include <string>
 #include <Windows.h>
 
-namespace bee { namespace registry {
+namespace bee::registry {
 
 	template <class C>
 	struct reg_traits
@@ -407,4 +407,4 @@ namespace bee { namespace registry {
 		}
 
 	};
-}}
+}

@@ -385,14 +385,14 @@ namespace luafs {
 	}
 }
  
-namespace bee { namespace lua {
+namespace bee::lua {
 	template <>
 	int convert_to_lua(lua_State* L, const fs::directory_entry& v)
 	{
 		luafs::path::constructor_(L, v.path());
 		return 1;
 	}
-}}
+}
 
 extern "C" __declspec(dllexport)
 int luaopen_bee_filesystem(lua_State* L)

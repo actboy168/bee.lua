@@ -3,7 +3,7 @@
 #include <bee/utility/dynarray.h>
 #include <Windows.h>
 
-namespace bee { namespace path {
+namespace bee::path {
 	auto module(HMODULE module_handle) ->nonstd::expected<fs::path, std::exception> {
 		wchar_t buffer[MAX_PATH];
 		DWORD path_len = ::GetModuleFileNameW(module_handle, buffer, _countof(buffer));
@@ -38,4 +38,4 @@ namespace bee { namespace path {
 		}
 		return *l == *r;
 	}
-}}
+}

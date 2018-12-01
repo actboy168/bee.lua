@@ -5,7 +5,7 @@
 #include <lua.hpp>
 #include <bee/lua/binding.h>
 
-namespace bee { namespace lua {
+namespace bee::lua {
 	template <class T>
 	int convert_to_lua(lua_State* L, const T& v);
 
@@ -59,4 +59,4 @@ namespace bee { namespace lua {
 	int make_range(lua_State* L, const Container& container) {
 		return make_range(L, std::begin(container), std::end(container));
 	}
-}}
+}

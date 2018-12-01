@@ -10,7 +10,7 @@
 #include <bee/registry/traits.h> 
 #include <bee/registry/exception.h>
 
-namespace bee { namespace registry {
+namespace bee::registry {
 
 	template <class char_type, class T>
 	struct is_stringable { static const bool value = false; };
@@ -373,4 +373,4 @@ namespace bee { namespace registry {
 			return false;
 		}
 	}
-}}
+}

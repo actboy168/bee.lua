@@ -12,7 +12,7 @@
 #	include <signal.h>
 #endif
 
-namespace bee::net { namespace socket {
+namespace bee::net::socket {
 
 	void initialize()
 	{
@@ -424,4 +424,4 @@ namespace bee::net { namespace socket {
 		return errmessage(errno);
 #endif
 	}
-}}
+}
