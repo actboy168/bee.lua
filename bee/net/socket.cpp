@@ -138,7 +138,7 @@ namespace bee::net::socket {
 
 	static bool wait_finish()
 	{
-		switch (bee::last_neterror()) {
+		switch (last_neterror()) {
 #if defined _WIN32
 		case WSAEINPROGRESS:
 		case WSAEWOULDBLOCK:
@@ -438,6 +438,6 @@ namespace bee::net::socket {
 		if (getsockopt(fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errl) >= 0) {
 			return err;
 		}
-		return bee::last_neterror();
+		return last_neterror();
 	}
 }

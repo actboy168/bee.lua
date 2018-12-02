@@ -13,7 +13,7 @@ namespace bee::lua {
 	inline int push_error(lua_State* L, const std::exception& e)
 	{
 #if defined(_WIN32)
-		lua_pushstring(L, bee::a2u(e.what()).c_str());
+		lua_pushstring(L, a2u(e.what()).c_str());
 #else
 		lua_pushstring(L, e.what());
 #endif
@@ -32,7 +32,7 @@ namespace bee::lua {
 		size_t len = 0;
 		const char* buf = luaL_checklstring(L, idx, &len);
 #if defined(_WIN32)
-		return bee::u2w(std::string_view(buf, len));
+		return u2w(std::string_view(buf, len));
 #else
 		return std::string(buf, len);
 #endif
@@ -41,7 +41,7 @@ namespace bee::lua {
 	inline void push_string(lua_State* L, const string_type& str)
 	{
 #if defined(_WIN32) 
-		std::string utf8 = bee::w2u(str);
+		std::string utf8 = w2u(str);
 		lua_pushlstring(L, utf8.data(), utf8.size());
 #else
 		lua_pushlstring(L, str.data(), str.size());

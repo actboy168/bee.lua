@@ -81,7 +81,7 @@ namespace bee::net {
 		}
 		auto info = gethostaddr(hint, ip, port);
 		if (!info) {
-			return nonstd::make_unexpected(bee::make_neterror("getaddrinfo").what());
+			return nonstd::make_unexpected(make_neterror("getaddrinfo").what());
 		}
 		else if (info->ai_family != AF_INET && info->ai_family != AF_INET6) {
 			return nonstd::make_unexpected("unknown address family");
