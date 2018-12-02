@@ -3,6 +3,9 @@
 #include <bee/utility/dynarray.h>
 #include <Windows.h>
 
+// http://blogs.msdn.com/oldnewthing/archive/2004/10/25/247180.aspx
+extern "C" IMAGE_DOS_HEADER __ImageBase;
+
 namespace bee::path {
 	auto module(HMODULE module_handle) ->nonstd::expected<fs::path, std::exception> {
 		wchar_t buffer[MAX_PATH];
@@ -24,6 +27,18 @@ namespace bee::path {
 			}
 		}
 		return nonstd::make_unexpected(std::logic_error("::GetModuleFileNameW return too long."));
+	}
+
+	auto exe_path()->nonstd::expected<fs::path, std::exception> {
+		return module(NULL);
+	}
+
+	auto dll_path()->nonstd::expected<fs::path, std::exception> {
+		return module(reinterpret_cast<HMODULE>(&__ImageBase));
+	}
+
+	auto dll_path(HMODULE module_handle)->nonstd::expected<fs::path, std::exception> {
+		return module(module_handle);
 	}
 
 	bool equal(fs::path const& lhs, fs::path const& rhs)

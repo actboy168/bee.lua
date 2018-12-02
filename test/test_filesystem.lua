@@ -264,7 +264,7 @@ local time2 = fs.last_write_time(path)
 fs.remove(path)
 assert(time2 > time1)
 
--- procedure_path
+-- exe_path
 local function getexe()
     local i = 0
     while arg[i] ~= nil do
@@ -272,4 +272,4 @@ local function getexe()
     end
     return fs.absolute(fs.path(arg[i + 1]))
 end
-assert(fs.procedure_path() == getexe())
+assert(fs.exe_path() == getexe())

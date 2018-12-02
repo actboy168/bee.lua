@@ -4,7 +4,7 @@ local thd = require 'bee.thread'
 
 local function fork(script, args, options)
     local init = {
-        fs.procedure_path(),
+        fs.exe_path(),
         '-E',
         '-e', ('package.path=[[%s]]'):format(package.path),
         '-e', ('package.cpath=[[%s]]'):format(package.cpath),
