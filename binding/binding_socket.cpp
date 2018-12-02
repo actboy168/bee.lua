@@ -334,95 +334,6 @@ namespace luasocket {
 		}
 		return 1;
 	}
-#if defined(_WIN32)
-	static int select(lua_State* L) {
-		bool read_finish = lua_type(L, 1) != LUA_TTABLE;
-		bool write_finish = lua_type(L, 2) != LUA_TTABLE;
-		int rmax = read_finish? 0 : (int)luaL_len(L, 1);
-		int wmax = write_finish? 0 : (int)luaL_len(L, 2);
-		double timeo = luaL_optnumber(L, 3, -1);
-		if (!rmax && !wmax && timeo == -1) {
-			return luaL_error(L, "no open sockets to check and no timeout set");
-		}
-		struct timeval timeout, *timeop = &timeout;
-		if (timeo < 0) {
-			timeop = NULL;
-			if (rmax > FD_SETSIZE || wmax > FD_SETSIZE) {
-				return luaL_error(L, "sockets too much");
-			}
-		}
-		else {
-			int ntime = 1 + (std::max)(rmax, wmax) / FD_SETSIZE;
-			timeo /= ntime;
-			timeout.tv_sec = (long)timeo;
-			timeout.tv_usec = (long)((timeo - timeout.tv_sec) * 1000000);
-		}
-		lua_settop(L, 3);
-		lua_newtable(L);
-		lua_newtable(L);
-		lua_Integer rout = 0, wout = 0;
-		fd_set readfds, writefds, exceptfds;
-		for (int x = 1; !read_finish || !write_finish; x += FD_SETSIZE) {
-			FD_ZERO(&readfds);
-			int r = 0;
-			for (; !read_finish && r < FD_SETSIZE; ++r) {
-				if (LUA_TNIL == lua_rawgeti(L, 1, x + r)) {
-					read_finish = true;
-					lua_pop(L, 1);
-					break;
-				}
-				FD_SET(checkfd(L, -1).fd, &readfds);
-				lua_pop(L, 1);
-			}
-			FD_ZERO(&writefds);
-			FD_ZERO(&exceptfds);
-			int w = 0;
-			for (; !write_finish && w < FD_SETSIZE; ++w) {
-				if (LUA_TNIL == lua_rawgeti(L, 2, x + w)) {
-					write_finish = true;
-					lua_pop(L, 1);
-					break;
-				}
-				luafd& self = checkfd(L, -1);
-				FD_SET(self.fd, &writefds);
-				if (self.connect) {
-					FD_SET(self.fd, &exceptfds);
-				}
-				lua_pop(L, 1);
-			}
-			int ok = ::select(0, &readfds, &writefds, &exceptfds, timeop);
-			if (ok > 0) {
-				for (u_int i = 0; i < exceptfds.fd_count; ++i) {
-					FD_SET(exceptfds.fd_array[i], &writefds);
-				}
-				for (int i = 0; i < r; ++i) {
-					if (LUA_TUSERDATA == lua_rawgeti(L, 1, x + i)
-						&& FD_ISSET(tofd(L, -1).fd, &readfds))
-					{
-						lua_rawseti(L, 4, ++rout);
-					}
-					else {
-						lua_pop(L, 1);
-					}
-				}
-				for (int i = 0; i < w; ++i) {
-					if (LUA_TUSERDATA == lua_rawgeti(L, 2, x + i)
-						&& FD_ISSET(tofd(L, -1).fd, &writefds))
-					{
-						lua_rawseti(L, 5, ++wout);
-					}
-					else {
-						lua_pop(L, 1);
-					}
-				}
-			}
-			else if (ok < 0) {
-				return push_neterror(L, "select");
-			}
-		}
-		return 2;
-	}
-#else
 	static int select(lua_State* L) {
 		bool read_finish = lua_type(L, 1) != LUA_TTABLE;
 		bool write_finish = lua_type(L, 2) != LUA_TTABLE;
@@ -450,8 +361,13 @@ namespace luasocket {
 		lua_newtable(L);
 		lua_Integer rout = 0, wout = 0;
 		fd_set readfds, writefds;
+#if defined(_WIN32)
+		fd_set exceptfds;
+#endif
 		for (int x = 1; !read_finish || !write_finish; x += FD_SETSIZE) {
+#if !defined(_WIN32)
 			int maxfd = 0;
+#endif
 			FD_ZERO(&readfds);
 			int r = 0;
 			for (; !read_finish && r < FD_SETSIZE; ++r) {
@@ -460,12 +376,18 @@ namespace luasocket {
 					lua_pop(L, 1);
 					break;
 				}
+
 				socket::fd_t fd = checkfd(L, -1).fd;
+#if !defined(_WIN32)
 				maxfd = (std::max)(maxfd, (int)fd);
+#endif
 				FD_SET(fd, &readfds);
 				lua_pop(L, 1);
 			}
 			FD_ZERO(&writefds);
+#if defined(_WIN32)
+			FD_ZERO(&exceptfds);
+#endif
 			int w = 0;
 			for (; !write_finish && w < FD_SETSIZE; ++w) {
 				if (LUA_TNIL == lua_rawgeti(L, 2, x + w)) {
@@ -473,13 +395,29 @@ namespace luasocket {
 					lua_pop(L, 1);
 					break;
 				}
-				socket::fd_t fd = checkfd(L, -1).fd;
-				maxfd = (std::max)(maxfd, (int)fd);
-				FD_SET(fd, &writefds);
+				luafd& self = checkfd(L, -1);
+#if !defined(_WIN32)
+				maxfd = (std::max)(maxfd, (int)self.fd);
+#endif
+				FD_SET(self.fd, &writefds);
+#if defined(_WIN32)
+				if (self.connect) {
+					FD_SET(self.fd, &exceptfds);
+				}
+#endif
 				lua_pop(L, 1);
 			}
+#if defined(_WIN32)
+			int ok = ::select(0, &readfds, &writefds, &exceptfds, timeop);
+#else
 			int ok = ::select(maxfd + 1, &readfds, &writefds, NULL, timeop);
+#endif
 			if (ok > 0) {
+#if defined(_WIN32)
+				for (u_int i = 0; i < exceptfds.fd_count; ++i) {
+					FD_SET(exceptfds.fd_array[i], &writefds);
+				}
+#endif
 				for (int i = 0; i < r; ++i) {
 					if (LUA_TUSERDATA == lua_rawgeti(L, 1, x + i)
 						&& FD_ISSET(tofd(L, -1).fd, &readfds))
@@ -507,7 +445,6 @@ namespace luasocket {
 		}
 		return 2;
 	}
-#endif
 }
 
 extern "C" __declspec(dllexport)
