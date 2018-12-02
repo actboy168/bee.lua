@@ -1,17 +1,25 @@
 #pragma once
 
-#include <bee/net/socket.h>
-#include <assert.h>
 #if defined _WIN32
-#	include <Mstcpip.h>
+#	include <winsock2.h>
+#	include <mswsock.h>
+#	include <mstcpip.h>
 #   include <bee/exception/windows_exception.h>
 #   include <bee/utility/unicode.h>
 #else
 #	include <fcntl.h>
 #	include <netinet/tcp.h>
 #	include <signal.h>
+#	include <sys/types.h>
+#	include <sys/socket.h>
+#	include <netinet/in.h>
+#	include <arpa/inet.h>
+#	include <unistd.h>
 #endif
 
+#include <bee/net/socket.h>
+#include <bee/net/endpoint.h>
+#include <assert.h>
 
 #if defined _WIN32
 #	define net_success(x) ((x) != SOCKET_ERROR)
@@ -27,6 +35,8 @@
 
 
 namespace bee::net::socket {
+
+	static_assert(sizeof(SOCKET) == sizeof(fd_t));
 
 	void initialize()
 	{
@@ -424,7 +434,7 @@ namespace bee::net::socket {
 		if (!socket::getsockname(s, ep)) {
 			return false;
 		}
-		if (ep.addr()->sa_family != AF_UNIX) {
+		if (ep.family() != AF_UNIX) {
 			return false;
 		}
 		auto[ip, port] = ep.info();

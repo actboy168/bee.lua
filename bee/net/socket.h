@@ -1,26 +1,22 @@
 #pragma once
 
+#include <string>
 #if defined _WIN32
-#	include <winsock2.h>
-#	include <mswsock.h>
-#else
-#	include <sys/types.h>
-#	include <sys/socket.h>
-#	include <netinet/in.h>
-#	include <arpa/inet.h>
-#	include <unistd.h>
+#include <stdint.h>
 #endif
 
-#include <bee/net/endpoint.h>
+namespace bee::net {
+	struct endpoint;
+}
 
 namespace bee::net::socket {
+
 #if defined _WIN32
-	typedef SOCKET fd_t;
-	enum { retired_fd = (fd_t)INVALID_SOCKET };
+	typedef uintptr_t fd_t;
 #else
 	typedef int fd_t;
-	enum { retired_fd = -1 };
 #endif
+	enum { retired_fd = -1 };
 
 	enum class protocol {
 		none,

@@ -1,4 +1,5 @@
 #include <lua.hpp>
+#include <winsock.h>
 #include <bee/lua/binding.h>
 #include <bee/net/socket.h>
 #include <bee/net/endpoint.h>
@@ -6,15 +7,14 @@
 
 namespace luasocket {
 	using namespace bee::net;
-
 	static const int kDefaultBackLog = 5;
-
 	struct luafd {
 		socket::fd_t     fd;
 		socket::protocol protocol;
 		bool connect = false;
+		luafd(socket::fd_t s, socket::protocol p) : fd(s) , protocol(p)
+		{ }
 	};
-
 	static int push_neterror(lua_State* L, const char* msg) {
 		lua_pushnil(L);
 		lua_pushfstring(L, "%s: (%d)%s", msg, socket::errcode(), socket::errmessage().c_str());
@@ -262,8 +262,7 @@ namespace luasocket {
 	}
 	static luafd& pushfd(lua_State* L, socket::fd_t fd, socket::protocol protocol) {
 		luafd* self = (luafd*)lua_newuserdata(L, sizeof(luafd));
-		self->fd = fd;
-		self->protocol = protocol;
+		new (self) luafd(fd, protocol);
 		if (luaL_newmetatable(L, "bee::socket")) {
 			luaL_Reg mt[] = {
 				{ "accept",   luasocket::accept },
@@ -292,7 +291,7 @@ namespace luasocket {
 			lua_pushlstring(L, ep.error().data(), ep.error().size());
 			return lua_error(L);
 		}
-		socket::fd_t fd = socket::open(ep->addr()->sa_family, protocol);
+		socket::fd_t fd = socket::open(ep->family(), protocol);
 		if (fd == socket::retired_fd) {
 			return push_neterror(L, "socket");
 		}
@@ -319,7 +318,7 @@ namespace luasocket {
 			return 2;
 		}
 		int backlog = read_backlog(L, protocol);
-		socket::fd_t fd = socket::open(ep->addr()->sa_family, protocol);
+		socket::fd_t fd = socket::open(ep->family(), protocol);
 		if (fd == socket::retired_fd) {
 			return push_neterror(L, "socket");
 		}
@@ -334,6 +333,25 @@ namespace luasocket {
 		}
 		return 1;
 	}
+#if defined(_WIN32)
+#define MAXFD_INIT()
+#define MAXFD_SET(fd)
+#define MAXFD_GET() 0
+#define EXFDS_INIT() fd_set exceptfds
+#define EXFDS_ZERO() FD_ZERO(&exceptfds)
+#define EXFDS_SET(connect, fd) if (connect) FD_SET((fd), &exceptfds) 
+#define EXFDS_GET() (&exceptfds)
+#define EXFDS_UPDATE(wfds) for (u_int i = 0; i < exceptfds.fd_count; ++i) FD_SET(exceptfds.fd_array[i], &(wfds))
+#else
+#define MAXFD_INIT() int maxfd = 0
+#define MAXFD_SET(fd) maxfd = (std::max)(maxfd, (int)(fd))
+#define MAXFD_GET() (maxfd + 1)
+#define EXFDS_INIT()
+#define EXFDS_ZERO()
+#define EXFDS_SET(connect, fd)
+#define EXFDS_GET() NULL
+#define EXFDS_UPDATE(wfds)
+#endif
 	static int select(lua_State* L) {
 		bool read_finish = lua_type(L, 1) != LUA_TTABLE;
 		bool write_finish = lua_type(L, 2) != LUA_TTABLE;
@@ -361,15 +379,13 @@ namespace luasocket {
 		lua_newtable(L);
 		lua_Integer rout = 0, wout = 0;
 		fd_set readfds, writefds;
-#if defined(_WIN32)
-		fd_set exceptfds;
-#endif
+		EXFDS_INIT();
 		for (int x = 1; !read_finish || !write_finish; x += FD_SETSIZE) {
-#if !defined(_WIN32)
-			int maxfd = 0;
-#endif
+			MAXFD_INIT();
 			FD_ZERO(&readfds);
-			int r = 0;
+			FD_ZERO(&writefds);
+			EXFDS_ZERO();
+			int r = 0, w = 0;
 			for (; !read_finish && r < FD_SETSIZE; ++r) {
 				if (LUA_TNIL == lua_rawgeti(L, 1, x + r)) {
 					read_finish = true;
@@ -378,17 +394,10 @@ namespace luasocket {
 				}
 
 				socket::fd_t fd = checkfd(L, -1).fd;
-#if !defined(_WIN32)
-				maxfd = (std::max)(maxfd, (int)fd);
-#endif
+				MAXFD_SET(fd);
 				FD_SET(fd, &readfds);
 				lua_pop(L, 1);
 			}
-			FD_ZERO(&writefds);
-#if defined(_WIN32)
-			FD_ZERO(&exceptfds);
-#endif
-			int w = 0;
 			for (; !write_finish && w < FD_SETSIZE; ++w) {
 				if (LUA_TNIL == lua_rawgeti(L, 2, x + w)) {
 					write_finish = true;
@@ -396,32 +405,16 @@ namespace luasocket {
 					break;
 				}
 				luafd& self = checkfd(L, -1);
-#if !defined(_WIN32)
-				maxfd = (std::max)(maxfd, (int)self.fd);
-#endif
+				MAXFD_SET(fd);
 				FD_SET(self.fd, &writefds);
-#if defined(_WIN32)
-				if (self.connect) {
-					FD_SET(self.fd, &exceptfds);
-				}
-#endif
+				EXFDS_SET(self.connect, self.fd);
 				lua_pop(L, 1);
 			}
-#if defined(_WIN32)
-			int ok = ::select(0, &readfds, &writefds, &exceptfds, timeop);
-#else
-			int ok = ::select(maxfd + 1, &readfds, &writefds, NULL, timeop);
-#endif
+			int ok = ::select(MAXFD_GET(), &readfds, &writefds, EXFDS_GET(), timeop);
 			if (ok > 0) {
-#if defined(_WIN32)
-				for (u_int i = 0; i < exceptfds.fd_count; ++i) {
-					FD_SET(exceptfds.fd_array[i], &writefds);
-				}
-#endif
+				EXFDS_UPDATE(writefds);
 				for (int i = 0; i < r; ++i) {
-					if (LUA_TUSERDATA == lua_rawgeti(L, 1, x + i)
-						&& FD_ISSET(tofd(L, -1).fd, &readfds))
-					{
+					if (LUA_TUSERDATA == lua_rawgeti(L, 1, x + i) && FD_ISSET(tofd(L, -1).fd, &readfds)) {
 						lua_rawseti(L, 4, ++rout);
 					}
 					else {
@@ -429,9 +422,7 @@ namespace luasocket {
 					}
 				}
 				for (int i = 0; i < w; ++i) {
-					if (LUA_TUSERDATA == lua_rawgeti(L, 2, x + i)
-						&& FD_ISSET(tofd(L, -1).fd, &writefds))
-					{
+					if (LUA_TUSERDATA == lua_rawgeti(L, 2, x + i) && FD_ISSET(tofd(L, -1).fd, &writefds)) {
 						lua_rawseti(L, 5, ++wout);
 					}
 					else {

@@ -131,4 +131,7 @@ namespace bee::net {
 		}
 		*(mybase*)this = std::move(mybase::subspan(0, len));
 	}
+	int endpoint::family() const {
+		return addr()->sa_family;
+	}
 }

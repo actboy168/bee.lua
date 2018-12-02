@@ -20,6 +20,7 @@ namespace bee::net {
 		socklen_t                   addrlen() const;
 		sockaddr*                   addr();
 		void                        resize(socklen_t len);
+		int                         family() const;
 
 		static nonstd::expected<endpoint, std::string> from_hostname(const std::string_view& ip, int port);
 		static nonstd::expected<endpoint, std::string> from_unixpath(const std::string_view& path);
