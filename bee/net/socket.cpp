@@ -136,13 +136,21 @@ namespace bee::net::socket {
 	}
 #endif
 
-	static int error_no()
+	static bool wait_finish()
 	{
+		switch (bee::last_neterror()) {
 #if defined _WIN32
-		return wsa_error_to_errno(bee::last_neterror());
+		case WSAEINPROGRESS:
+		case WSAEWOULDBLOCK:
 #else
-		return bee::last_neterror();
+		case EAGAIN:
+		case EINTR:
+		case EWOULDBLOCK:
 #endif
+			return true;
+		default:
+			return false;
+		}
 	}
 
 	fd_t open(int family, protocol protocol)
@@ -353,13 +361,7 @@ namespace bee::net::socket {
 			return -3;
 		}
 		if (rc < 0) {
-			int ec = error_no();
-			if (ec == EAGAIN || ec == EWOULDBLOCK || ec == EINTR) {
-				return -2;
-			}
-			else {
-				return -1;
-			}
+			return wait_finish() ? -2 : -1;
 		}
 		return rc;
 	}
@@ -367,13 +369,7 @@ namespace bee::net::socket {
 	int send(fd_t s, const char* buf, int len) {
 		int rc = ::send(s, buf, len, 0);
 		if (rc < 0) {
-			int ec = error_no();
-			if (ec == EAGAIN || ec == EWOULDBLOCK || ec == EINTR) {
-				return -2;
-			}
-			else {
-				return -1;
-			}
+			return wait_finish() ? -2 : -1;
 		}
 		return rc;
 	}
@@ -385,13 +381,7 @@ namespace bee::net::socket {
 			return -3;
 		}
 		if (rc < 0) {
-			int ec = error_no();
-			if (ec == EAGAIN || ec == EWOULDBLOCK || ec == EINTR) {
-				return -2;
-			}
-			else {
-				return -1;
-			}
+			return wait_finish() ? -2 : -1;
 		}
 		ep.resize(addrlen);
 		return rc;
@@ -400,13 +390,7 @@ namespace bee::net::socket {
 	int  sendto(fd_t s, const char* buf, int len, const endpoint& ep) {
 		int rc = ::sendto(s, buf, len, 0, ep.addr(), ep.addrlen());
 		if (rc < 0) {
-			int ec = error_no();
-			if (ec == EAGAIN || ec == EWOULDBLOCK || ec == EINTR) {
-				return -2;
-			}
-			else {
-				return -1;
-			}
+			return wait_finish() ? -2 : -1;
 		}
 		return rc;
 	}
