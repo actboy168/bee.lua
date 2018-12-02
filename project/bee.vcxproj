@@ -176,6 +176,7 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
   <ItemGroup>
     <ClCompile Include="..\3rd\lua-seri\lua-seri.c" />
     <ClCompile Include="..\bee\error.cpp" />
+    <ClCompile Include="..\bee\error\windows_category.cpp" />
     <ClCompile Include="..\bee\fsevent\fsevent_osx.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -207,6 +208,7 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     <ClInclude Include="..\3rd\lua-seri\lua-seri.h" />
     <ClInclude Include="..\bee\config.h" />
     <ClInclude Include="..\bee\error.h" />
+    <ClInclude Include="..\bee\error\windows_category.h" />
     <ClInclude Include="..\bee\fsevent.h" />
     <ClInclude Include="..\bee\fsevent\fsevent_osx.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>

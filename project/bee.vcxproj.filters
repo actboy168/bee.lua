@@ -31,6 +31,9 @@
     <Filter Include="bee\fsevent">
       <UniqueIdentifier>{2fa452a8-1244-4642-834f-6e3c285da1d4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="bee\error">
+      <UniqueIdentifier>{9c0c8d8e-8087-4ce0-9bfb-809076f74cf3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\bee\subprocess\subprocess_posix.cpp">
@@ -86,6 +89,9 @@
     </ClCompile>
     <ClCompile Include="..\bee\error.cpp">
       <Filter>bee</Filter>
+    </ClCompile>
+    <ClCompile Include="..\bee\error\windows_category.cpp">
+      <Filter>bee\error</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -172,6 +178,9 @@
     </ClInclude>
     <ClInclude Include="..\bee\error.h">
       <Filter>bee</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\error\windows_category.h">
+      <Filter>bee\error</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
