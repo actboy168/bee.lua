@@ -1,7 +1,7 @@
 #include <bee/net/endpoint.h>
 #include <Ws2tcpip.h>
 #include <bee/utility/format.h>
-#include <bee/exception/windows_exception.h>
+#include <bee/error.h>
 
 //
 // need Windows SDK >= 17063
@@ -81,7 +81,7 @@ namespace bee::net {
 		}
 		auto info = gethostaddr(hint, ip, port);
 		if (!info) {
-			return nonstd::make_unexpected(bee::format("getaddrinfo: %s", bee::error_message(::WSAGetLastError())));
+			return nonstd::make_unexpected(bee::make_neterror("getaddrinfo").what());
 		}
 		else if (info->ai_family != AF_INET && info->ai_family != AF_INET6) {
 			return nonstd::make_unexpected("unknown address family");

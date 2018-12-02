@@ -4,7 +4,6 @@
 #	include <winsock2.h>
 #	include <mswsock.h>
 #	include <mstcpip.h>
-#   include <bee/exception/windows_exception.h>
 #   include <bee/utility/unicode.h>
 #else
 #	include <fcntl.h>
@@ -19,6 +18,7 @@
 
 #include <bee/net/socket.h>
 #include <bee/net/endpoint.h>
+#include <bee/error.h>
 #include <assert.h>
 
 #if defined _WIN32
@@ -139,9 +139,9 @@ namespace bee::net::socket {
 	static int error_no()
 	{
 #if defined _WIN32
-		return wsa_error_to_errno(::WSAGetLastError());
+		return wsa_error_to_errno(bee::last_neterror());
 #else
-		return errno;
+		return bee::last_neterror();
 #endif
 	}
 
@@ -448,36 +448,12 @@ namespace bee::net::socket {
 #endif
 	}
 
-	int errcode() {
-#if defined _WIN32
-		return ::WSAGetLastError();
-#else
-		return errno;
-#endif
-	}
-
 	int errcode(fd_t fd) {
 		int err;
 		socklen_t errl = sizeof(err);
 		if (getsockopt(fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errl) >= 0) {
 			return err;
 		}
-		return errcode();
-	}
-
-	std::string errmessage(int errcode) {
-#if defined _WIN32
-		return bee::w2u(bee::error_message(errcode));
-#else
-		return strerror(errcode);
-#endif
-	}
-
-	std::string errmessage() {
-#if defined _WIN32
-		return errmessage(::WSAGetLastError());
-#else
-		return errmessage(errno);
-#endif
+		return bee::last_neterror();
 	}
 }

@@ -1,5 +1,5 @@
 #include <bee/fsevent.h>
-#include <bee/exception/windows_exception.h>
+#include <bee/error.h>
 #include <bee/lua/binding.h>
 
 namespace luafw {
@@ -12,7 +12,7 @@ namespace luafw {
 		bee::fsevent::taskid id = self.add(path);
 		if (id == bee::fsevent::kInvalidTaskId) {
 			lua_pushnil(L);
-			lua_pushstring(L, bee::w2u(bee::error_message()).c_str());
+			lua_pushstring(L, bee::make_syserror().what());
 			return 2;
 		}
 		lua_pushinteger(L, id);

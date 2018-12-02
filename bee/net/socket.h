@@ -53,8 +53,5 @@ namespace bee::net::socket {
 	bool getpeername(fd_t s, endpoint& ep);
 	bool getsockname(fd_t s, endpoint& ep);
 	bool unlink(fd_t s);
-	int  errcode();
 	int  errcode(fd_t fd);
-	std::string errmessage(int errcode);
-	std::string errmessage();
 }

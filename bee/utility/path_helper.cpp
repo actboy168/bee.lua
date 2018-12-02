@@ -1,6 +1,6 @@
 #include <bee/utility/path_helper.h>
-#include <bee/exception/windows_exception.h>
 #include <bee/utility/dynarray.h>
+#include <bee/error.h>
 #include <Windows.h>
 
 // http://blogs.msdn.com/oldnewthing/archive/2004/10/25/247180.aspx
@@ -11,7 +11,7 @@ namespace bee::path {
 		wchar_t buffer[MAX_PATH];
 		DWORD path_len = ::GetModuleFileNameW(module_handle, buffer, _countof(buffer));
 		if (path_len == 0) {
-			return nonstd::make_unexpected(windows_exception("::GetModuleFileNameW failed."));
+			return nonstd::make_unexpected(make_syserror("GetModuleFileNameW"));
 		}
 		if (path_len < _countof(buffer)) {
 			return std::move(fs::path(buffer, buffer + path_len));
@@ -20,7 +20,7 @@ namespace bee::path {
 			std::dynarray<wchar_t> buf(path_len);
 			path_len = ::GetModuleFileNameW(module_handle, buf.data(), buf.size());
 			if (path_len == 0) {
-				return nonstd::make_unexpected(windows_exception("::GetModuleFileNameW failed."));
+				return nonstd::make_unexpected(make_syserror("GetModuleFileNameW"));
 			}
 			if (path_len < _countof(buffer)) {
 				return std::move(fs::path(buf.begin(), buf.end()));

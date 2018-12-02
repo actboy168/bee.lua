@@ -1,7 +1,7 @@
 #include <bee/fsevent/fsevent_win.h>
 #include <bee/utility/unicode.h>
 #include <bee/utility/format.h>
-#include <bee/exception/windows_exception.h>
+#include <bee/error.h>
 #include <array>
 #include <functional>
 #include <assert.h>
@@ -83,7 +83,8 @@ namespace bee::win::fsevent {
             FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
             NULL);
         if (m_directory == INVALID_HANDLE_VALUE) {
-            push_notify(tasktype::Error, format(L"`CreateFileW` failed: %s", error_message()));
+			;
+            push_notify(tasktype::Error, u2w(make_syserror("CreateFileW").what()).c_str());
             return false;
         }
         return true;
@@ -120,7 +121,7 @@ namespace bee::win::fsevent {
             this,
             &task_event_cb))
         {
-            push_notify(tasktype::Error, format(L"`ReadDirectoryChangesW` failed: %s", error_message()));
+            push_notify(tasktype::Error, u2w(make_syserror("ReadDirectoryChangesW").what()).c_str());
             return false;
         }
         return true;

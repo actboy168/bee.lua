@@ -1,16 +1,15 @@
 #pragma once
 
 #include <bee/config.h>
-#include <bee/exception/windows_exception.h>
 
 namespace bee::registry {
 
 	class registry_exception
-		: public windows_exception
+		: public std::system_error
 	{
 	public:
 		registry_exception(const char* reason, int error_code)
-			: windows_exception(reason, error_code)
+			: std::system_error(error_code, std::system_category(), reason)
 		{ }
 	};
 

@@ -3,6 +3,7 @@
 #include <bee/lua/binding.h>
 #include <bee/net/socket.h>
 #include <bee/net/endpoint.h>
+#include <bee/error.h>
 #include <limits>
 
 namespace luasocket {
@@ -16,8 +17,9 @@ namespace luasocket {
 		{ }
 	};
 	static int push_neterror(lua_State* L, const char* msg) {
+		auto error = bee::make_neterror(msg);
 		lua_pushnil(L);
-		lua_pushfstring(L, "%s: (%d)%s", msg, socket::errcode(), socket::errmessage().c_str());
+		lua_pushfstring(L, "%s (%d)", error.what(), error.code().value());
 		return 2;
 	}
 	static socket::protocol read_protocol(lua_State* L, int idx) {
@@ -231,8 +233,9 @@ namespace luasocket {
 			lua_pushboolean(L, true);
 			return 1;
 		}
+		auto error = bee::make_error(err);
 		lua_pushnil(L);
-		lua_pushfstring(L, "(%d)%s", err, socket::errmessage(err).c_str());
+		lua_pushfstring(L, "%s (%d)", err, error.what());
 		return 2;
 	}
 	static int info(lua_State* L) {
