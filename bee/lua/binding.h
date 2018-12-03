@@ -63,3 +63,7 @@ namespace bee::lua {
 	int luaopen_bee_## name ##(lua_State* L) { \
 		return bee::lua_## name ##::luaopen(L); \
 	}
+
+#define newObject(L, name)      luaL_newmetatable((L), "bee::" name)
+#define getObject(L, idx, name) luaL_checkudata((L), (idx), "bee::" name)
+

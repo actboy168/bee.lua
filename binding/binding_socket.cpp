@@ -61,7 +61,7 @@ namespace bee::lua_socket {
 		return *(luafd*)lua_touserdata(L, idx);
 	}
 	static luafd& checkfd(lua_State* L, int idx) {
-		return *(luafd*)luaL_checkudata(L, idx, "bee::socket");
+		return *(luafd*)getObject(L, idx, "socket");
 	}
 	static luafd& pushfd(lua_State* L, socket::fd_t fd, socket::protocol protocol);
 	static luafd& constructor(lua_State* L, socket::fd_t fd, socket::protocol protocol) {
@@ -266,7 +266,7 @@ namespace bee::lua_socket {
 	static luafd& pushfd(lua_State* L, socket::fd_t fd, socket::protocol protocol) {
 		luafd* self = (luafd*)lua_newuserdata(L, sizeof(luafd));
 		new (self) luafd(fd, protocol);
-		if (luaL_newmetatable(L, "bee::socket")) {
+		if (newObject(L, "socket")) {
 			luaL_Reg mt[] = {
 				{ "accept",   accept },
 				{ "recv",     recv },

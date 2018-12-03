@@ -88,7 +88,7 @@ namespace bee::lua_thread {
 	}
 
 	static int lchannel_push(lua_State* L) {
-		boxchannel* bc = (boxchannel*)luaL_checkudata(L, 1, "bee::channel");
+		boxchannel* bc = (boxchannel*)getObject(L, 1, "channel");
 		channel* c = bc->c;
 		void* buffer = seri_pack(L, 1);
 		c->push(buffer);
@@ -96,7 +96,7 @@ namespace bee::lua_thread {
 	}
 
 	static int lchannel_bpop(lua_State* L) {
-		boxchannel* bc = (boxchannel*)luaL_checkudata(L, 1, "bee::channel");
+		boxchannel* bc = (boxchannel*)getObject(L, 1, "channel");
 		channel* c = bc->c;
 		void* data;
 		c->blocked_pop(data);
@@ -104,7 +104,7 @@ namespace bee::lua_thread {
 	}
 
 	static int lchannel_pop(lua_State* L) {
-		boxchannel* bc = (boxchannel*)luaL_checkudata(L, 1, "bee::channel");
+		boxchannel* bc = (boxchannel*)getObject(L, 1, "channel");
 		channel* c = bc->c;
 		void* data;
 		lua_settop(L, 2);
@@ -140,7 +140,7 @@ namespace bee::lua_thread {
 
 		boxchannel* bc = (boxchannel*)lua_newuserdata(L, sizeof(boxchannel));
 		bc->c = c;
-		if (luaL_newmetatable(L, "bee::channel")) {
+		if (newObject(L, "channel")) {
 			luaL_Reg mt[] = {
 				{ "push", lchannel_push },
 				{ "pop", lchannel_pop },
@@ -223,7 +223,7 @@ namespace bee::lua_thread {
 	}
 
 	static int lthread_wait(lua_State* L) {
-		std::thread* thread = (std::thread*)luaL_checkudata(L, 1, "bee::thread");
+		std::thread* thread = (std::thread*)getObject(L, 1, "thread");
 		if (thread->joinable()) {
 			thread->join();
 		}
@@ -231,7 +231,7 @@ namespace bee::lua_thread {
 	}
 
 	static int lthread_gc(lua_State* L) {
-		std::thread* thread = (std::thread*)luaL_checkudata(L, 1, "bee::thread");
+		std::thread* thread = (std::thread*)getObject(L, 1, "thread");
 		if (thread->joinable()) {
 			thread->detach();
 		}
@@ -251,7 +251,7 @@ namespace bee::lua_thread {
 		thread_args* args = new thread_args(std::move(source), f);
 		std::thread* thread = (std::thread*)lua_newuserdata(L, sizeof(std::thread));
 		new (thread) std::thread(std::bind(thread_main, args));
-		if (luaL_newmetatable(L, "bee::thread")) {
+		if (newObject(L, "thread")) {
 			luaL_Reg mt[] = {
 				{ "wait", lthread_wait },
 				{ "__gc", lthread_gc },

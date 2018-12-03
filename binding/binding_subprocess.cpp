@@ -13,20 +13,12 @@ namespace bee::lua_subprocess {
 	typedef lua::string_type nativestring;
 
 	static fs::path& topath(lua_State* L, int idx) {
-		return *(fs::path*)luaL_checkudata(L, idx, "bee::filesystem");
+		return *(fs::path*)getObject(L, idx, "filesystem");
 	}
 
 	namespace process {
-		static int constructor(lua_State* L, subprocess::spawn& spawn) {
-			void* storage = lua_newuserdata(L, sizeof(subprocess::process));
-			luaL_getmetatable(L, "bee::subprocess");
-			lua_setmetatable(L, -2);
-			new (storage)subprocess::process(spawn);
-			return 1;
-		}
-
 		static subprocess::process& to(lua_State* L, int idx) {
-			return *(subprocess::process*)luaL_checkudata(L, idx, "bee::subprocess");
+			return *(subprocess::process*)getObject(L, idx, "subprocess");
 		}
 
 		static int destructor(lua_State* L) {
@@ -69,6 +61,29 @@ namespace bee::lua_subprocess {
 		static int native_handle(lua_State* L) {
 			subprocess::process& self = to(L, 1);
 			lua_pushinteger(L, self.native_handle());
+			return 1;
+		}
+
+		static int constructor(lua_State* L, subprocess::spawn& spawn) {
+			void* storage = lua_newuserdata(L, sizeof(subprocess::process));
+
+			if (newObject(L, "subprocess")) {
+				static luaL_Reg mt[] = {
+					{ "wait", process::wait },
+					{ "kill", process::kill },
+					{ "get_id", process::get_id },
+					{ "is_running", process::is_running },
+					{ "resume", process::resume },
+					{ "native_handle", process::native_handle },
+					{ "__gc", process::destructor },
+					{ NULL, NULL }
+				};
+				luaL_setfuncs(L, mt, 0);
+				lua_pushvalue(L, -1);
+				lua_setfield(L, -2, "__index");
+			}
+			lua_setmetatable(L, -2);
+			new (storage)subprocess::process(spawn);
 			return 1;
 		}
 	}
@@ -303,21 +318,6 @@ namespace bee::lua_subprocess {
 #endif
 
 	int luaopen(lua_State* L) {
-		static luaL_Reg mt[] = {
-			{ "wait", process::wait },
-			{ "kill", process::kill },
-			{ "get_id", process::get_id },
-			{ "is_running", process::is_running },
-			{ "resume", process::resume },
-			{ "native_handle", process::native_handle },
-			{ "__gc", process::destructor },
-			{ NULL, NULL }
-		};
-		luaL_newmetatable(L, "bee::subprocess");
-		luaL_setfuncs(L, mt, 0);
-		lua_pushvalue(L, -1);
-		lua_setfield(L, -2, "__index");
-
 		static luaL_Reg lib[] = {
 			{ "spawn", spawn::spawn },
 			{ "peek", peek },

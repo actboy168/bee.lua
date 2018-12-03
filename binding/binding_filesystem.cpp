@@ -18,17 +18,11 @@ namespace bee::lua_filesystem {
 			const fs::path& p;
 		};
 
-		static void* newudata(lua_State* L)
-		{
-			void* storage = lua_newuserdata(L, sizeof(fs::path));
-			luaL_getmetatable(L, "bee::filesystem");
-			lua_setmetatable(L, -2);
-			return storage;
-		}
+		static void* newudata(lua_State* L);
 
 		static fs::path& to(lua_State* L, int idx)
 		{
-			return *(fs::path*)luaL_checkudata(L, idx, "bee::filesystem");
+			return *(fs::path*)getObject(L, idx, "filesystem");
 		}
 
 		static int constructor_(lua_State* L)
@@ -243,6 +237,38 @@ namespace bee::lua_filesystem {
 			return 1;
 			LUA_TRY_END;
 		}
+
+		static void* newudata(lua_State* L) {
+			void* storage = lua_newuserdata(L, sizeof(fs::path));
+			if (newObject(L, "filesystem")) {
+				static luaL_Reg mt[] = {
+					{ "string", path::mt_tostring },
+					{ "filename", path::filename },
+					{ "parent_path", path::parent_path },
+					{ "stem", path::stem },
+					{ "extension", path::extension },
+					{ "is_absolute", path::is_absolute },
+					{ "is_relative", path::is_relative },
+					{ "remove_filename", path::remove_filename },
+					{ "replace_extension", path::replace_extension },
+					{ "list_directory", path::list_directory },
+					{ "permissions", path::permissions },
+					{ "add_permissions", path::add_permissions },
+					{ "remove_permissions", path::remove_permissions },
+					{ "__div", path::mt_div },
+					{ "__eq", path::mt_eq },
+					{ "__gc", path::destructor },
+					{ "__tostring", path::mt_tostring },
+					{ "__debugger_tostring", path::mt_tostring },
+					{ NULL, NULL }
+				};
+				luaL_setfuncs(L, mt, 0);
+				lua_pushvalue(L, -1);
+				lua_setfield(L, -2, "__index");
+			}
+			lua_setmetatable(L, -2);
+			return storage;
+		}
 	}
 
 	static int exists(lua_State* L)
@@ -382,32 +408,6 @@ namespace bee::lua_filesystem {
 	}
 	
 	int luaopen(lua_State* L) {
-		static luaL_Reg mt[] = {
-			{ "string", path::mt_tostring },
-			{ "filename", path::filename },
-			{ "parent_path", path::parent_path },
-			{ "stem", path::stem },
-			{ "extension", path::extension },
-			{ "is_absolute", path::is_absolute },
-			{ "is_relative", path::is_relative },
-			{ "remove_filename", path::remove_filename },
-			{ "replace_extension", path::replace_extension },
-			{ "list_directory", path::list_directory },
-			{ "permissions", path::permissions },
-			{ "add_permissions", path::add_permissions },
-			{ "remove_permissions", path::remove_permissions },
-			{ "__div", path::mt_div },
-			{ "__eq", path::mt_eq },
-			{ "__gc", path::destructor },
-			{ "__tostring", path::mt_tostring },
-			{ "__debugger_tostring", path::mt_tostring },
-			{ NULL, NULL }
-		};
-		luaL_newmetatable(L, "bee::filesystem");
-		luaL_setfuncs(L, mt, 0);
-		lua_pushvalue(L, -1);
-		lua_setfield(L, -2, "__index");
-
 		static luaL_Reg lib[] = {
 			{ "path", path::constructor },
 			{ "exists", exists },
