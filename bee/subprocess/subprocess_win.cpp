@@ -410,18 +410,18 @@ namespace bee::win::subprocess {
     }
 
     namespace pipe {
-        std::pair<FILE*, FILE*> open() {
+		open_result open() {
             SECURITY_ATTRIBUTES sa;
             sa.nLength = sizeof(SECURITY_ATTRIBUTES);
             sa.bInheritHandle = FALSE;
             sa.lpSecurityDescriptor = NULL;
             HANDLE read_pipe = NULL, write_pipe = NULL;
             if (!::CreatePipe(&read_pipe, &write_pipe, &sa, 0)) {
-                return std::make_pair((FILE*)NULL, (FILE*)NULL);
+				return { NULL, NULL };
             }
             FILE* rd = _fdopen(_open_osfhandle((intptr_t)read_pipe, _O_RDONLY | _O_BINARY), "rb");
             FILE* wr = _fdopen(_open_osfhandle((intptr_t)write_pipe, _O_WRONLY | _O_BINARY), "wb");
-            return std::make_pair(rd, wr);
+			return { rd, wr };
         }
 
         int peek(FILE* f) {
