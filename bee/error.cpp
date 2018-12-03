@@ -31,15 +31,15 @@ namespace bee {
 #endif
 	}
 
+	std::system_error make_error(int err, const char* message) {
+		return std::system_error(make_error_code(err), message ? message : "");
+	}
+
 	std::system_error make_syserror(const char* message) {
-		return std::system_error(make_error_code(last_syserror()), message ? message : "");
+		return make_error(last_syserror(), message);
 	}
 
 	std::system_error make_neterror(const char* message) {
-		return std::system_error(make_error_code(last_neterror()), message ? message : "");
-	}
-
-	std::system_error make_error(int err, const char* message) {
-		return std::system_error(make_error_code(err), message ? message : "");
+		return make_error(last_neterror(), message);
 	}
 }

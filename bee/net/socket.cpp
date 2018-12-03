@@ -55,87 +55,6 @@ namespace bee::net::socket {
 		}
 	}
 
-#if defined _WIN32
-	static int wsa_error_to_errno(int errcode)
-	{
-		switch (errcode) {
-		//  10009 - File handle is not valid.
-		case WSAEBADF:
-			return EBADF;
-		//  10013 - Permission denied.
-		case WSAEACCES:
-			return EACCES;
-		//  10014 - Bad address.
-		case WSAEFAULT:
-			return EFAULT;
-		//  10022 - Invalid argument.
-		case WSAEINVAL:
-			return EINVAL;
-		//  10024 - Too many open files.
-		case WSAEMFILE:
-			return EMFILE;
-		//  10035 - A non-blocking socket operation could not be completed immediately.
-		case WSAEWOULDBLOCK:
-			return EWOULDBLOCK;
-		//  10036 - Operation now in progress.
-		case WSAEINPROGRESS:
-			return EAGAIN;
-		//  10038 - Socket operation on non-socket.
-		case WSAENOTSOCK:
-			return ENOTSOCK;
-		//  10040 - Message too long.
-		case WSAEMSGSIZE:
-			return EMSGSIZE;
-		//  10043 - Protocol not supported.
-		case WSAEPROTONOSUPPORT:
-			return EPROTONOSUPPORT;
-		//  10047 - Address family not supported by protocol family.
-		case WSAEAFNOSUPPORT:
-			return EAFNOSUPPORT;
-		//  10048 - Address already in use.
-		case WSAEADDRINUSE:
-			return EADDRINUSE;
-		//  10049 - Cannot assign requested address.
-		case WSAEADDRNOTAVAIL:
-			return EADDRNOTAVAIL;
-		//  10050 - Network is down.
-		case WSAENETDOWN:
-			return ENETDOWN;
-		//  10051 - Network is unreachable.
-		case WSAENETUNREACH:
-			return ENETUNREACH;
-		//  10052 - Network dropped connection on reset.
-		case WSAENETRESET:
-			return ENETRESET;
-		//  10053 - Software caused connection abort.
-		case WSAECONNABORTED:
-			return ECONNABORTED;
-		//  10054 - Connection reset by peer.
-		case WSAECONNRESET:
-			return ECONNRESET;
-		//  10055 - No buffer space available.
-		case WSAENOBUFS:
-			return ENOBUFS;
-		//  10057 - Socket is not connected.
-		case WSAENOTCONN:
-			return ENOTCONN;
-		//  10060 - Connection timed out.
-		case WSAETIMEDOUT:
-			return ETIMEDOUT;
-		//  10061 - Connection refused.
-		case WSAECONNREFUSED:
-			return ECONNREFUSED;
-		//  10065 - No route to host.
-		case WSAEHOSTUNREACH:
-			return EHOSTUNREACH;
-		default:
-			assert(false);
-		}
-		//  Not reachable
-		return 0;
-	}
-#endif
-
 	static bool wait_finish()
 	{
 		switch (last_neterror()) {
@@ -421,21 +340,21 @@ namespace bee::net::socket {
 		if (ep.family() != AF_UNIX) {
 			return false;
 		}
-		auto[ip, port] = ep.info();
-		if (ip.size() == 0) {
+		auto[path, port] = ep.info();
+		if (path.size() == 0) {
 			return false;
 		}
 #if defined _WIN32
-		return !!::DeleteFileW(u2w(ip).c_str());
+		return !!::DeleteFileW(u2w(path).c_str());
 #else
-		return 0 == ::unlink(ip.c_str());
+		return 0 == ::unlink(path.c_str());
 #endif
 	}
 
-	int errcode(fd_t fd) {
+	int errcode(fd_t s) {
 		int err;
 		socklen_t errl = sizeof(err);
-		if (getsockopt(fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errl) >= 0) {
+		if (getsockopt(s, SOL_SOCKET, SO_ERROR, (char *)&err, &errl) >= 0) {
 			return err;
 		}
 		return last_neterror();
