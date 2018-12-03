@@ -93,6 +93,9 @@
     <ClCompile Include="..\binding\lua_embed.cpp">
       <Filter>binding</Filter>
     </ClCompile>
+    <ClCompile Include="..\bee\error\exception.cpp">
+      <Filter>bee\error</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\bee\subprocess\subprocess_posix.h">
@@ -180,6 +183,9 @@
       <Filter>bee</Filter>
     </ClInclude>
     <ClInclude Include="..\bee\error\windows_category.h">
+      <Filter>bee\error</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\error\exception.h">
       <Filter>bee\error</Filter>
     </ClInclude>
   </ItemGroup>

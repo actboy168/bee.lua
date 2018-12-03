@@ -26,7 +26,7 @@ namespace bee::path_helper {
 				return std::move(fs::path(buf.begin(), buf.end()));
 			}
 		}
-		return nonstd::make_unexpected(std::logic_error("::GetModuleFileNameW return too long."));
+		return nonstd::make_unexpected(std::exception("::GetModuleFileNameW return too long."));
 	}
 
 	auto exe_path()->nonstd::expected<fs::path, std::exception> {

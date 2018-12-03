@@ -21,14 +21,14 @@
 #    define BEE_FORMAT_THROW_ERROR(reason) \
         do { \
             assert(0 && (reason)); \
-            throw std::logic_error(reason); \
+            throw std::exception(reason); \
             __pragma(warning(suppress: 4127)) \
         } while (0)
 #else
 #    define BEE_FORMAT_THROW_ERROR(reason) \
         do { \
             assert(0 && (reason)); \
-            throw std::logic_error(reason); \
+            throw std::exception(reason); \
         } while (0)
 #endif
 
