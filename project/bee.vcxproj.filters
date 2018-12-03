@@ -42,32 +42,14 @@
     <ClCompile Include="..\bee\subprocess\subprocess_win.cpp">
       <Filter>bee\subprocess</Filter>
     </ClCompile>
-    <ClCompile Include="..\binding\binding_subprocess.cpp">
-      <Filter>binding</Filter>
-    </ClCompile>
     <ClCompile Include="..\bee\utility\unicode.cpp">
       <Filter>bee\utility</Filter>
-    </ClCompile>
-    <ClCompile Include="..\binding\binding_filesystem.cpp">
-      <Filter>binding</Filter>
     </ClCompile>
     <ClCompile Include="..\bee\utility\path_helper.cpp">
       <Filter>bee\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\binding\binding_registry.cpp">
-      <Filter>binding</Filter>
-    </ClCompile>
     <ClCompile Include="..\3rd\lua-seri\lua-seri.c">
       <Filter>3rd</Filter>
-    </ClCompile>
-    <ClCompile Include="..\binding\binding_thread.cpp">
-      <Filter>binding</Filter>
-    </ClCompile>
-    <ClCompile Include="..\binding\binding_filewatch.cpp">
-      <Filter>binding</Filter>
-    </ClCompile>
-    <ClCompile Include="..\binding\binding_embed.cpp">
-      <Filter>binding</Filter>
     </ClCompile>
     <ClCompile Include="..\bee\net\endpoint.cpp">
       <Filter>bee\net</Filter>
@@ -78,20 +60,38 @@
     <ClCompile Include="..\bee\fsevent\fsevent_win.cpp">
       <Filter>bee\fsevent</Filter>
     </ClCompile>
-    <ClCompile Include="..\binding\binding_socket.cpp">
-      <Filter>binding</Filter>
-    </ClCompile>
     <ClCompile Include="..\bee\fsevent\fsevent_osx.cpp">
       <Filter>bee\fsevent</Filter>
-    </ClCompile>
-    <ClCompile Include="..\binding\binding_unicode.cpp">
-      <Filter>binding</Filter>
     </ClCompile>
     <ClCompile Include="..\bee\error.cpp">
       <Filter>bee</Filter>
     </ClCompile>
     <ClCompile Include="..\bee\error\windows_category.cpp">
       <Filter>bee\error</Filter>
+    </ClCompile>
+    <ClCompile Include="..\binding\lua_socket.cpp">
+      <Filter>binding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\binding\lua_subprocess.cpp">
+      <Filter>binding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\binding\lua_thread.cpp">
+      <Filter>binding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\binding\lua_unicode.cpp">
+      <Filter>binding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\binding\lua_registry.cpp">
+      <Filter>binding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\binding\lua_filewatch.cpp">
+      <Filter>binding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\binding\lua_filesystem.cpp">
+      <Filter>binding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\binding\lua_embed.cpp">
+      <Filter>binding</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

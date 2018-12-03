@@ -101,7 +101,7 @@
     </ClCompile>
     <PreBuildEvent>
       <Command>$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h
-$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h $(ProjectDir)..\binding\binding_embed.cpp
+$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h $(ProjectDir)..\binding\lua_embed.cpp
 </Command>
     </PreBuildEvent>
     <Link>
@@ -120,7 +120,7 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     </ClCompile>
     <PreBuildEvent>
       <Command>$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h
-$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h $(ProjectDir)..\binding\binding_embed.cpp
+$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h $(ProjectDir)..\binding\lua_embed.cpp
 </Command>
     </PreBuildEvent>
     <Link>
@@ -146,7 +146,7 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     </Link>
     <PreBuildEvent>
       <Command>$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h
-$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h $(ProjectDir)..\binding\binding_embed.cpp
+$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h $(ProjectDir)..\binding\lua_embed.cpp
 </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -169,7 +169,7 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     </Link>
     <PreBuildEvent>
       <Command>$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h
-$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h $(ProjectDir)..\binding\binding_embed.cpp
+$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h $(ProjectDir)..\binding\lua_embed.cpp
 </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -195,14 +195,14 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     <ClCompile Include="..\bee\subprocess\subprocess_win.cpp" />
     <ClCompile Include="..\bee\utility\path_helper.cpp" />
     <ClCompile Include="..\bee\utility\unicode.cpp" />
-    <ClCompile Include="..\binding\binding_embed.cpp" />
-    <ClCompile Include="..\binding\binding_filesystem.cpp" />
-    <ClCompile Include="..\binding\binding_filewatch.cpp" />
-    <ClCompile Include="..\binding\binding_socket.cpp" />
-    <ClCompile Include="..\binding\binding_registry.cpp" />
-    <ClCompile Include="..\binding\binding_subprocess.cpp" />
-    <ClCompile Include="..\binding\binding_thread.cpp" />
-    <ClCompile Include="..\binding\binding_unicode.cpp" />
+    <ClCompile Include="..\binding\lua_embed.cpp" />
+    <ClCompile Include="..\binding\lua_filesystem.cpp" />
+    <ClCompile Include="..\binding\lua_filewatch.cpp" />
+    <ClCompile Include="..\binding\lua_socket.cpp" />
+    <ClCompile Include="..\binding\lua_registry.cpp" />
+    <ClCompile Include="..\binding\lua_subprocess.cpp" />
+    <ClCompile Include="..\binding\lua_thread.cpp" />
+    <ClCompile Include="..\binding\lua_unicode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\3rd\lua-seri\lua-seri.h" />

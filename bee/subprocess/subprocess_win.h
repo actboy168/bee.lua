@@ -37,11 +37,9 @@ namespace bee::win::subprocess {
     class _BEE_API process : public PROCESS_INFORMATION {
     public:
         process(spawn& spawn);
-        process(process& pi);
         process(process&& pi);
-        process(PROCESS_INFORMATION& pi);
+        process(PROCESS_INFORMATION&& pi);
         ~process();
-        process& operator=(process& pi);
         process& operator=(process&& pi);
         bool      is_running();
         bool      kill(int signum);

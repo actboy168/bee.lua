@@ -318,22 +318,22 @@ namespace bee::win::subprocess {
         : PROCESS_INFORMATION(spawn.release())
     { }
 
-    process::process(process& pi)
-        : PROCESS_INFORMATION(pi)
-    {
-        memset(&pi, 0, sizeof(PROCESS_INFORMATION));
-    }
-
     process::process(process&& pi)
         : PROCESS_INFORMATION(pi)
     {
-        memset(&pi, 0, sizeof(PROCESS_INFORMATION));
+		pi.hProcess = 0;
+		pi.hThread = 0;
+		pi.dwProcessId = 0;
+		pi.dwThreadId = 0;
     }
 
-    process::process(PROCESS_INFORMATION& pi)
+    process::process(PROCESS_INFORMATION&& pi)
         : PROCESS_INFORMATION(pi)
     {
-        memset(&pi, 0, sizeof(PROCESS_INFORMATION));
+		pi.hProcess = 0;
+		pi.hThread = 0;
+		pi.dwProcessId = 0;
+		pi.dwThreadId = 0;
     }
 
     process::~process() {
@@ -341,18 +341,16 @@ namespace bee::win::subprocess {
         ::CloseHandle(hProcess);
     }
 
-    process& process::operator=(process& pi) {
-        if (this != &pi) {
-            memcpy(this, &pi, sizeof(PROCESS_INFORMATION));
-            memset(&pi, 0, sizeof(PROCESS_INFORMATION));
-        }
-        return *this;
-    }
-
     process& process::operator=(process&& pi) {
         if (this != &pi) {
-            memcpy(this, &pi, sizeof(PROCESS_INFORMATION));
-            memset(&pi, 0, sizeof(PROCESS_INFORMATION));
+			hProcess = pi.hProcess;
+			hThread = pi.hThread;
+			dwProcessId = pi.dwProcessId;
+			dwThreadId = pi.dwThreadId;
+			pi.hProcess = 0;
+			pi.hThread = 0;
+			pi.dwProcessId = 0;
+			pi.dwThreadId = 0;
         }
         return *this;
     }
