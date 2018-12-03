@@ -1,9 +1,13 @@
 #pragma once
 
+#include  <bee/config.h>
 #include  <bee/utility/dynarray.h>
 
 namespace bee {
-	class exception : public std::exception {
+#pragma warning(push)
+#pragma warning(disable:4251)
+#pragma warning(disable:4275)
+	class _BEE_API exception : public std::exception {
 	public:
 		exception();
 		exception(const char* fmt, ...);
@@ -13,4 +17,5 @@ namespace bee {
 	protected:
 		std::dynarray<char> what_;
 	};
+#pragma warning(pop)
 }
