@@ -7,7 +7,7 @@
 
 namespace fs = std::filesystem;
 
-namespace luafs {
+namespace bee::lua_filesystem {
 	namespace path {
 		class directory_container {
 		public:
@@ -74,7 +74,7 @@ namespace luafs {
 			}
 			switch (lua_type(L, 1)) {
 			case LUA_TSTRING:
-				return constructor_(L, ::bee::lua::to_string(L, 1));
+				return constructor_(L, lua::to_string(L, 1));
 			case LUA_TUSERDATA:
 				return constructor_(L, to(L, 1));
 			}
@@ -148,7 +148,7 @@ namespace luafs {
 			fs::path& self = path::to(L, 1);
 			switch (lua_type(L, 2)) {
 			case LUA_TSTRING:
-				self.replace_extension(::bee::lua::to_string(L, 2));
+				self.replace_extension(lua::to_string(L, 2));
 				lua_settop(L, 1);
 				return 1;
 			case LUA_TUSERDATA:
@@ -165,7 +165,7 @@ namespace luafs {
 		{
 			LUA_TRY;
 			const fs::path& self = path::to(L, 1);  
-			bee::lua::make_range(L, directory_container(self));
+			lua::make_range(L, directory_container(self));
 			lua_pushnil(L);
 			lua_pushnil(L);
 			return 3;
@@ -207,7 +207,7 @@ namespace luafs {
 			const fs::path& self = path::to(L, 1);
 			switch (lua_type(L, 2)) {
 			case LUA_TSTRING:
-				return constructor_(L, std::move(self / ::bee::lua::to_string(L, 2)));
+				return constructor_(L, std::move(self / lua::to_string(L, 2)));
 			case LUA_TUSERDATA:
 				return constructor_(L, std::move(self / to(L, 2)));
 			}
@@ -221,7 +221,7 @@ namespace luafs {
 			LUA_TRY;
 			const fs::path& self = path::to(L, 1);
 			const fs::path& rht = path::to(L, 2);
-			lua_pushboolean(L, bee::path::equal(self, rht));
+			lua_pushboolean(L, path_helper::equal(self, rht));
 			return 1;
 			LUA_TRY_END;
 		}
@@ -239,7 +239,7 @@ namespace luafs {
 		{
 			LUA_TRY;
 			const fs::path& self = path::to(L, 1);
-			::bee::lua::push_string(L, self.string<fs::path::value_type>());
+			lua::push_string(L, self.string<fs::path::value_type>());
 			return 1;
 			LUA_TRY_END;
 		}
@@ -370,74 +370,73 @@ namespace luafs {
 	static int exe_path(lua_State* L)
 	{
 		LUA_TRY;
-		return path::constructor_(L, std::move(bee::path::exe_path().value()));
+		return path::constructor_(L, std::move(path_helper::exe_path().value()));
 		LUA_TRY_END;
 	}
 
 	static int dll_path(lua_State* L)
 	{
 		LUA_TRY;
-		return path::constructor_(L, std::move(bee::path::dll_path().value()));
+		return path::constructor_(L, std::move(path_helper::dll_path().value()));
 		LUA_TRY_END;
 	}
-}
- 
-namespace bee::lua {
-	template <>
-	int convert_to_lua(lua_State* L, const fs::directory_entry& v)
-	{
-		luafs::path::constructor_(L, v.path());
+	
+	int luaopen(lua_State* L) {
+		static luaL_Reg mt[] = {
+			{ "string", path::mt_tostring },
+			{ "filename", path::filename },
+			{ "parent_path", path::parent_path },
+			{ "stem", path::stem },
+			{ "extension", path::extension },
+			{ "is_absolute", path::is_absolute },
+			{ "is_relative", path::is_relative },
+			{ "remove_filename", path::remove_filename },
+			{ "replace_extension", path::replace_extension },
+			{ "list_directory", path::list_directory },
+			{ "permissions", path::permissions },
+			{ "add_permissions", path::add_permissions },
+			{ "remove_permissions", path::remove_permissions },
+			{ "__div", path::mt_div },
+			{ "__eq", path::mt_eq },
+			{ "__gc", path::destructor },
+			{ "__tostring", path::mt_tostring },
+			{ "__debugger_tostring", path::mt_tostring },
+			{ NULL, NULL }
+		};
+		luaL_newmetatable(L, "bee::filesystem");
+		luaL_setfuncs(L, mt, 0);
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -2, "__index");
+
+		static luaL_Reg lib[] = {
+			{ "path", path::constructor },
+			{ "exists", exists },
+			{ "is_directory", is_directory },
+			{ "create_directory", create_directory },
+			{ "create_directories", create_directories },
+			{ "rename", rename },
+			{ "remove", remove },
+			{ "remove_all", remove_all },
+			{ "current_path", current_path },
+			{ "copy_file", copy_file },
+			{ "absolute", absolute },
+			{ "relative", relative },
+			{ "last_write_time", last_write_time },
+			{ "exe_path", exe_path },
+			{ "dll_path", dll_path },
+			{ NULL, NULL }
+		};
+		luaL_newlib(L, lib);
 		return 1;
 	}
 }
 
-extern "C" __declspec(dllexport)
-int luaopen_bee_filesystem(lua_State* L)
-{
-	static luaL_Reg mt[] = {
-		{ "string", luafs::path::mt_tostring },
-		{ "filename", luafs::path::filename },
-		{ "parent_path", luafs::path::parent_path },
-		{ "stem", luafs::path::stem },
-		{ "extension", luafs::path::extension },
-		{ "is_absolute", luafs::path::is_absolute },
-		{ "is_relative", luafs::path::is_relative },
-		{ "remove_filename", luafs::path::remove_filename },
-		{ "replace_extension", luafs::path::replace_extension },
-		{ "list_directory", luafs::path::list_directory },
-		{ "permissions", luafs::path::permissions },
-		{ "add_permissions", luafs::path::add_permissions },
-		{ "remove_permissions", luafs::path::remove_permissions },
-		{ "__div", luafs::path::mt_div },
-		{ "__eq", luafs::path::mt_eq },
-		{ "__gc", luafs::path::destructor },
-		{ "__tostring", luafs::path::mt_tostring },
-		{ "__debugger_tostring", luafs::path::mt_tostring },
-		{ NULL, NULL }
-	};
-	luaL_newmetatable(L, "bee::filesystem");
-	luaL_setfuncs(L, mt, 0);
-	lua_pushvalue(L, -1);
-	lua_setfield(L, -2, "__index");
-
-	static luaL_Reg lib[] = {
-		{ "path", luafs::path::constructor },
-		{ "exists", luafs::exists },
-		{ "is_directory", luafs::is_directory },
-		{ "create_directory", luafs::create_directory },
-		{ "create_directories", luafs::create_directories },
-		{ "rename", luafs::rename },
-		{ "remove", luafs::remove },
-		{ "remove_all", luafs::remove_all },
-		{ "current_path", luafs::current_path },
-		{ "copy_file", luafs::copy_file },
-		{ "absolute", luafs::absolute },
-		{ "relative", luafs::relative },
-		{ "last_write_time", luafs::last_write_time },
-		{ "exe_path", luafs::exe_path },
-		{ "dll_path", luafs::dll_path },
-		{ NULL, NULL }
-	};
-	luaL_newlib(L, lib);
-	return 1;
+namespace bee::lua {
+	template <>
+	int convert_to_lua(lua_State* L, const fs::directory_entry& v) {
+		lua_filesystem::path::constructor_(L, v.path());
+		return 1;
+	}
 }
+
+DEFINE_LUAOPEN(filesystem)

@@ -3,7 +3,7 @@
 #include <bee/utility/unicode.h>
 #include <bee/lua/binding.h>
 
-namespace luareg {
+namespace bee::lua_registry {
 	using namespace bee::registry;
 
 	namespace rkey {
@@ -30,7 +30,7 @@ namespace luareg {
 		int mt_index(lua_State* L) {
 			try {
 				key_w*       self = read(L, 1);
-				std::wstring key = ::bee::lua::to_string(L, 2);
+				std::wstring key = lua::to_string(L, 2);
 				key_w::value_type& value = self->value(key);
 				switch (value.type()) {
 				case REG_DWORD:
@@ -42,7 +42,7 @@ namespace luareg {
 				case REG_SZ:
 				case REG_MULTI_SZ:
 				case REG_EXPAND_SZ:
-					::bee::lua::push_string(L, value.get_string());
+					lua::push_string(L, value.get_string());
 					return 1;
 				case REG_BINARY: {
 					std::dynarray<uint8_t> blob = value.get_binary();
@@ -62,11 +62,11 @@ namespace luareg {
 		int mt_newindex(lua_State* L) {
 			LUA_TRY;
 			key_w*       self = read(L, 1);
-			std::wstring key = ::bee::lua::to_string(L, 2);
+			std::wstring key = lua::to_string(L, 2);
 			key_w::value_type& value = self->value(key);
 			switch (lua_type(L, 3)) {
 			case LUA_TSTRING:
-				value.set(::bee::lua::to_string(L, 3));
+				value.set(lua::to_string(L, 3));
 				return 0;
 			case LUA_TNUMBER:
 				value.set_uint32_t((uint32_t)luaL_checkinteger(L, 3));
@@ -85,14 +85,14 @@ namespace luareg {
 				case REG_EXPAND_SZ:
 				case REG_SZ:
 					lua_geti(L, 3, 2);
-					value.set(::bee::lua::to_string(L, -1));
+					value.set(lua::to_string(L, -1));
 					break;
 				case REG_MULTI_SZ: {
 					lua_Integer len = luaL_len(L, 3);
 					std::wstring str = L"";
 					for (lua_Integer i = 2; i <= len; ++i) {
 						lua_geti(L, 3, i);
-						str += ::bee::lua::to_string(L, -1);
+						str += lua::to_string(L, -1);
 						str.push_back(L'\0');
 						lua_pop(L, 1);
 					}
@@ -121,7 +121,7 @@ namespace luareg {
 		int mt_div(lua_State* L) {
 			LUA_TRY;
 			key_w*       self = read(L, 1);
-			std::wstring rht = ::bee::lua::to_string(L, 2);
+			std::wstring rht = lua::to_string(L, 2);
 			key_w        ret = *self / rht;
 			return copy(L, 1, &ret);
 			LUA_TRY_END;
@@ -136,7 +136,7 @@ namespace luareg {
 
 	int open(lua_State* L) {
 		LUA_TRY;
-		std::wstring key = ::bee::lua::to_string(L, 1);
+		std::wstring key = lua::to_string(L, 1);
 		size_t pos = key.find(L'\\');
 		if (pos == -1) {
 			return 0;
@@ -166,39 +166,40 @@ namespace luareg {
 		return 1;
 		LUA_TRY_END;
 	}
-}
 
-extern "C" __declspec(dllexport)
-int luaopen_bee_registry(lua_State* L) {
-	static luaL_Reg func[] = {
-		{ "open", luareg::open },
-		{ "del", luareg::del },
-		{ NULL, NULL }
-	};
-	static luaL_Reg rkey_mt[] = {
-		{ "__index", luareg::rkey::mt_index },
-		{ "__newindex", luareg::rkey::mt_newindex },
-		{ "__div", luareg::rkey::mt_div },
-		{ "__gc", luareg::rkey::mt_gc },
-		{ NULL, NULL }
-	};
-	luaL_newlibtable(L, func);
-	luaL_newlib(L, rkey_mt);
-	luaL_setfuncs(L, func, 1);
+	int luaopen(lua_State* L) {
+		static luaL_Reg func[] = {
+			{ "open", open },
+			{ "del", del },
+			{ NULL, NULL }
+		};
+		static luaL_Reg rkey_mt[] = {
+			{ "__index", rkey::mt_index },
+			{ "__newindex", rkey::mt_newindex },
+			{ "__div", rkey::mt_div },
+			{ "__gc", rkey::mt_gc },
+			{ NULL, NULL }
+		};
+		luaL_newlibtable(L, func);
+		luaL_newlib(L, rkey_mt);
+		luaL_setfuncs(L, func, 1);
 
 #define LUA_PUSH_CONST(L, val) \
 	lua_pushinteger(L, (val)); \
 	lua_setfield(L, -2, # val);
 
-	LUA_PUSH_CONST(L, REG_DWORD);
-	LUA_PUSH_CONST(L, REG_QWORD);
-	LUA_PUSH_CONST(L, REG_SZ);
-	LUA_PUSH_CONST(L, REG_EXPAND_SZ);
-	LUA_PUSH_CONST(L, REG_MULTI_SZ);
-	LUA_PUSH_CONST(L, REG_BINARY);
-	LUA_PUSH_CONST(L, KEY_WOW64_32KEY);
-	LUA_PUSH_CONST(L, KEY_WOW64_64KEY);
+		LUA_PUSH_CONST(L, REG_DWORD);
+		LUA_PUSH_CONST(L, REG_QWORD);
+		LUA_PUSH_CONST(L, REG_SZ);
+		LUA_PUSH_CONST(L, REG_EXPAND_SZ);
+		LUA_PUSH_CONST(L, REG_MULTI_SZ);
+		LUA_PUSH_CONST(L, REG_BINARY);
+		LUA_PUSH_CONST(L, KEY_WOW64_32KEY);
+		LUA_PUSH_CONST(L, KEY_WOW64_64KEY);
 
 #undef LUA_PUSH_CONST
-	return 1;
+		return 1;
+	}
 }
+
+DEFINE_LUAOPEN(registry)

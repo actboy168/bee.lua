@@ -6,7 +6,7 @@
 // http://blogs.msdn.com/oldnewthing/archive/2004/10/25/247180.aspx
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
-namespace bee::path {
+namespace bee::path_helper {
 	auto module(HMODULE module_handle) ->nonstd::expected<fs::path, std::exception> {
 		wchar_t buffer[MAX_PATH];
 		DWORD path_len = ::GetModuleFileNameW(module_handle, buffer, _countof(buffer));

@@ -50,4 +50,16 @@ namespace bee::lua {
 }
 
 #define LUA_TRY     try {   
-#define LUA_TRY_END } catch (const std::exception& e) { return ::bee::lua::push_error(L, e); }
+#define LUA_TRY_END } catch (const std::exception& e) { return lua::push_error(L, e); }
+
+#if defined(_WIN32)
+#define BEE_LUA_API extern "C" __declspec(dllexport)
+#else
+#define BEE_LUA_API extern "C"
+#endif
+
+#define DEFINE_LUAOPEN(name) \
+	BEE_LUA_API \
+	int luaopen_bee_## name ##(lua_State* L) { \
+		return bee::lua_## name ##::luaopen(L); \
+	}

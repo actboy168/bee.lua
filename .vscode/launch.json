@@ -12,7 +12,7 @@
             "luaRuntime": "5.4 32bit",
             "program": "${workspaceFolder}/make/embed.lua",
             "cwd": "${workspaceFolder}",
-            "console":"integratedTerminal",
+            "console": "integratedTerminal",
             "arg": [
                 "${workspaceFolder}\\bee\\nonstd\\embed_detail.h",
                 "${workspaceFolder}\\binding\\binding_embed.cpp"
@@ -25,7 +25,11 @@
             "luaexe": "${workspaceFolder}/make/luamake/lua.exe",
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/make/make.lua",
-            "path": "${workspaceFolder}/script/?.lua;${workspaceFolder}/make/luamake/?.lua;${workspaceFolder}/make/?.lua"
+            "path": [
+                "${workspaceFolder}/script/?.lua",
+                "${workspaceFolder}/make/luamake/?.lua",
+                "${workspaceFolder}/make/?.lua"
+            ]
         },
         {
             "type": "lua",

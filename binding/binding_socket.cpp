@@ -6,7 +6,7 @@
 #include <bee/error.h>
 #include <limits>
 
-namespace luasocket {
+namespace bee::lua_socket {
 	using namespace bee::net;
 	static const int kDefaultBackLog = 5;
 	struct luafd {
@@ -17,13 +17,13 @@ namespace luasocket {
 		{ }
 	};
 	static int push_neterror(lua_State* L, const char* msg) {
-		auto error = bee::make_neterror(msg);
+		auto error = make_neterror(msg);
 		lua_pushnil(L);
 		lua_pushfstring(L, "%s (%d)", error.what(), error.code().value());
 		return 2;
 	}
 	static socket::protocol read_protocol(lua_State* L, int idx) {
-		std::string_view type = bee::lua::to_strview(L, 1);
+		std::string_view type = lua::to_strview(L, 1);
 		if (type == "tcp") {
 			return socket::protocol::tcp;
 		}
@@ -39,12 +39,12 @@ namespace luasocket {
 		}
 	}
 	static auto read_endpoint(lua_State* L, socket::protocol protocol, int idx) {
-		std::string_view ip = bee::lua::to_strview(L, idx);
+		std::string_view ip = lua::to_strview(L, idx);
 		if (protocol != socket::protocol::unix) {
 			int port = (int)luaL_checkinteger(L, idx + 1);
-			return bee::net::endpoint::from_hostname(ip, port);
+			return endpoint::from_hostname(ip, port);
 		}
-		return bee::net::endpoint::from_unixpath(ip);
+		return endpoint::from_unixpath(ip);
 	}
 	static int read_backlog(lua_State* L, socket::protocol protocol) {
 		switch (protocol) {
@@ -154,9 +154,9 @@ namespace luasocket {
 		luafd& self = checkfd(L, 1);
 		size_t len;
 		const char* buf = luaL_checklstring(L, 2, &len);
-		std::string_view ip = bee::lua::to_strview(L, 3);
+		std::string_view ip = lua::to_strview(L, 3);
 		int port = (int)luaL_checkinteger(L, 4);
-		auto ep = bee::net::endpoint::from_hostname(ip, port);
+		auto ep = endpoint::from_hostname(ip, port);
 		if (!ep) {
 			lua_pushlstring(L, ep.error().data(), ep.error().size());
 			return lua_error(L);
@@ -202,7 +202,7 @@ namespace luasocket {
 		if (lua_isnoneornil(L, 2)) {
 			return shutdown(L, self, socket::shutdown_flag::both);
 		}
-		std::string_view flag = bee::lua::to_strview(L, 2);
+		std::string_view flag = lua::to_strview(L, 2);
 		if (flag[0] == 'r') {
 			return shutdown(L, self, socket::shutdown_flag::read);
 		}
@@ -233,14 +233,14 @@ namespace luasocket {
 			lua_pushboolean(L, true);
 			return 1;
 		}
-		auto error = bee::make_error(err);
+		auto error = make_error(err);
 		lua_pushnil(L);
 		lua_pushfstring(L, "%s (%d)", err, error.what());
 		return 2;
 	}
 	static int info(lua_State* L) {
 		luafd& self = checkfd(L, 1);
-		std::string_view which = bee::lua::to_strview(L, 2);
+		std::string_view which = lua::to_strview(L, 2);
 		if (which == "peer") {
 			endpoint ep = endpoint::from_empty();
 			if (!socket::getpeername(self.fd, ep)) {
@@ -268,16 +268,16 @@ namespace luasocket {
 		new (self) luafd(fd, protocol);
 		if (luaL_newmetatable(L, "bee::socket")) {
 			luaL_Reg mt[] = {
-				{ "accept",   luasocket::accept },
-				{ "recv",     luasocket::recv },
-				{ "send",     luasocket::send },
-				{ "recvfrom", luasocket::recvfrom },
-				{ "sendto",   luasocket::sendto },
-				{ "close",    luasocket::close },
-				{ "shutdown", luasocket::shutdown },
-				{ "status",   luasocket::status },
-				{ "info",     luasocket::info },
-				{ "__gc",     luasocket::gc },
+				{ "accept",   accept },
+				{ "recv",     recv },
+				{ "send",     send },
+				{ "recvfrom", recvfrom },
+				{ "sendto",   sendto },
+				{ "close",    close },
+				{ "shutdown", shutdown },
+				{ "status",   status },
+				{ "info",     info },
+				{ "__gc",     gc },
 				{ NULL, NULL },
 			};
 			luaL_setfuncs(L, mt, 0);
@@ -439,17 +439,18 @@ namespace luasocket {
 		}
 		return 2;
 	}
+
+	int luaopen(lua_State* L) {
+		socket::initialize();
+		luaL_Reg lib[] = {
+			{ "connect",  connect },
+			{ "bind",     bind },
+			{ "select",   select },
+			{ NULL, NULL }
+		};
+		luaL_newlib(L, lib);
+		return 1;
+	}
 }
 
-extern "C" __declspec(dllexport)
-int luaopen_bee_socket(lua_State* L) {
-	bee::net::socket::initialize();
-	luaL_Reg lib[] = {
-		{ "connect",  luasocket::connect },
-		{ "bind",     luasocket::bind },
-		{ "select",   luasocket::select },
-		{ NULL, NULL }
-	};
-	luaL_newlib(L, lib);
-	return 1;
-}
+DEFINE_LUAOPEN(socket)
