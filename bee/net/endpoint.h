@@ -12,15 +12,20 @@ namespace bee::net {
 	typedef int socklen_t;
 #endif
 
+	struct endpoint_info {
+		std::string ip;
+		int port;
+	};
+
 	struct endpoint : private std::dynarray<std::byte> {
 		static const size_t kMaxSize = 256;
 		typedef std::dynarray<std::byte> mybase;
-		std::pair<std::string, int> info() const;
-		const sockaddr*             addr() const;
-		socklen_t                   addrlen() const;
-		sockaddr*                   addr();
-		void                        resize(socklen_t len);
-		int                         family() const;
+		endpoint_info   info() const;
+		const sockaddr* addr() const;
+		socklen_t       addrlen() const;
+		sockaddr*       addr();
+		void            resize(socklen_t len);
+		int             family() const;
 
 		static nonstd::expected<endpoint, std::string> from_hostname(const std::string_view& ip, int port);
 		static nonstd::expected<endpoint, std::string> from_unixpath(const std::string_view& path);

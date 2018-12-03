@@ -2,6 +2,7 @@
 #include <Ws2tcpip.h>
 #include <bee/utility/format.h>
 #include <bee/error.h>
+#include <charconv>
 
 //
 // need Windows SDK >= 17063
@@ -49,9 +50,9 @@ namespace bee::net {
 		return false;
 	}
 
-	static autorelease_addrinfo gethostaddr(const addrinfo& hint, const std::string_view& ip, int port) {
+	static autorelease_addrinfo gethostaddr(const addrinfo& hint, const std::string_view& ip, const char* port) {
 		addrinfo* info = 0;
-		int err = ::getaddrinfo(ip.data(), std::to_string(port).c_str(), &hint, &info);
+		int err = ::getaddrinfo(ip.data(), port, &hint, &info);
 		if (err != 0) {
 			if (info) ::freeaddrinfo(info);
 			info = 0;
@@ -79,7 +80,14 @@ namespace bee::net {
 		if (needsnolookup(ip)) {
 			hint.ai_flags = AI_NUMERICHOST;
 		}
-		auto info = gethostaddr(hint, ip, port);
+		std::array<char, 10> portstr;
+		if (auto[p, ec] = std::to_chars(portstr.data(), portstr.data() + portstr.size() - 1, port); ec != std::errc()) {
+			return nonstd::make_unexpected(make_error_code(ec).message());
+		}
+		else {
+			p[0] = '\0';
+		}
+		auto info = gethostaddr(hint, ip, portstr.data());
 		if (!info) {
 			return nonstd::make_unexpected(make_neterror("getaddrinfo").what());
 		}
@@ -97,7 +105,7 @@ namespace bee::net {
 
 	endpoint::endpoint(size_t n) : mybase(n)
 	{ }
-	std::pair<std::string, int> endpoint::info() const {
+	endpoint_info endpoint::info() const {
 		const sockaddr* sa = addr();
 		if (sa->sa_family == AF_INET) {
 			char tmp[sizeof "255.255.255.255"];
