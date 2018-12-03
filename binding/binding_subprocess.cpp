@@ -1,6 +1,7 @@
 #include <bee/subprocess.h>
 #include <bee/utility/unicode.h>
 #include <bee/lua/binding.h>
+#include <bee/error.h>
 #include <lua.hpp>
 #include <optional>
 #include <errno.h>
@@ -281,7 +282,9 @@ namespace bee::lua_subprocess {
 				retn++;
 			}
 			if (!spawn.exec(args, cwd ? cwd->c_str() : 0)) {
-				return 0;
+				lua_pushnil(L);
+				lua_pushstring(L, make_syserror().what());
+				return 2;
 			}
 			process::constructor(L, spawn);
 			retn += 1;
