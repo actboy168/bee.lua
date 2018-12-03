@@ -4,34 +4,34 @@
 #include <condition_variable>
 
 namespace bee {
-	class semaphore {
-	public:
-		void signal() {
-			std::unique_lock<std::mutex> lk(mutex);
-			if (ok) {
-				return;
-			}
-			ok = true;
-			lk.unlock();
-			condition.notify_one();
-		}
-		void wait() {
-			std::unique_lock<std::mutex> lk(mutex);
-			condition.wait(lk, [this] { return ok; });
-			ok = false;
-		}
-		template<class Rep, class Period>
-		bool timed_wait(const std::chrono::duration<Rep, Period>& timeout) {
-			std::unique_lock<std::mutex> lk(mutex);
-			if (condition.wait_for(lk, timeout, [this] { return ok; })) {
-				ok = false;
-				return true;
-			}
-			return false;
-		}
-	private:
-		std::mutex mutex;
-		std::condition_variable condition;
-		bool ok = false;
-	};
+    class semaphore {
+    public:
+        void signal() {
+            std::unique_lock<std::mutex> lk(mutex);
+            if (ok) {
+                return;
+            }
+            ok = true;
+            lk.unlock();
+            condition.notify_one();
+        }
+        void wait() {
+            std::unique_lock<std::mutex> lk(mutex);
+            condition.wait(lk, [this] { return ok; });
+            ok = false;
+        }
+        template<class Rep, class Period>
+        bool timed_wait(const std::chrono::duration<Rep, Period>& timeout) {
+            std::unique_lock<std::mutex> lk(mutex);
+            if (condition.wait_for(lk, timeout, [this] { return ok; })) {
+                ok = false;
+                return true;
+            }
+            return false;
+        }
+    private:
+        std::mutex mutex;
+        std::condition_variable condition;
+        bool ok = false;
+    };
 }

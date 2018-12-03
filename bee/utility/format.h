@@ -295,326 +295,326 @@ private:
 
     template <class T>
     uint64_t convert_to_integer(const T& value
-    	, typename std::enable_if<std::is_convertible<T, uint64_t>::value>::type* = 0)
-	{
-		uint64_t number = 0;
-		if (flags_ & FL_SIGNED)
-		{
-			int64_t n = static_cast<int64_t>(value);
-			if (n < 0)
-			{
-				flags_ |= FL_NEGATIVE;
-				number = -n;
-			}
-			else
-			{
-				number = n;
-			}
-		}
-		else
-		{
-			number = static_cast<uint64_t>(value);
-		}
+        , typename std::enable_if<std::is_convertible<T, uint64_t>::value>::type* = 0)
+    {
+        uint64_t number = 0;
+        if (flags_ & FL_SIGNED)
+        {
+            int64_t n = static_cast<int64_t>(value);
+            if (n < 0)
+            {
+                flags_ |= FL_NEGATIVE;
+                number = -n;
+            }
+            else
+            {
+                number = n;
+            }
+        }
+        else
+        {
+            number = static_cast<uint64_t>(value);
+        }
 
-		return number;
-	}
+        return number;
+    }
 
-	template <class T>
-	uint64_t convert_to_integer(const T& value
-		, typename std::enable_if<std::is_convertible<T, void*>::value>::type* = 0)
-	{
-		return convert_to_integer(reinterpret_cast<uintptr_t>(value));
-	}
+    template <class T>
+    uint64_t convert_to_integer(const T& value
+        , typename std::enable_if<std::is_convertible<T, void*>::value>::type* = 0)
+    {
+        return convert_to_integer(reinterpret_cast<uintptr_t>(value));
+    }
 
-	template <class T>
-	double convert_to_float(const T& /*value*/
-		, typename std::enable_if<!std::is_floating_point<T>::value>::type* = 0)
-	{
-		BEE_FORMAT_THROW_ERROR("format: Cannot convert from argument type to float.");
-		return 0.;
-	}
+    template <class T>
+    double convert_to_float(const T& /*value*/
+        , typename std::enable_if<!std::is_floating_point<T>::value>::type* = 0)
+    {
+        BEE_FORMAT_THROW_ERROR("format: Cannot convert from argument type to float.");
+        return 0.;
+    }
 
-	template <class T>
-	double convert_to_float(const T& value
-		, typename std::enable_if<std::is_floating_point<T>::value>::type* = 0)
-	{
-		return static_cast<double>(value);
-	}
+    template <class T>
+    double convert_to_float(const T& value
+        , typename std::enable_if<std::is_floating_point<T>::value>::type* = 0)
+    {
+        return static_cast<double>(value);
+    }
 
-	template <size_t Base>
-	unsigned count_digits(uint64_t n) 
-	{
-		unsigned count = 1;
-		for (;;) 
-		{
-			if (n < Base) return count;
-			if (n < Base*Base) return count + 1;
-			if (n < Base*Base*Base) return count + 2;
-			if (n < Base*Base*Base*Base) return count + 3;
-			n /= (Base*Base*Base*Base);
-			count += 4;
-		}
-	}
+    template <size_t Base>
+    unsigned count_digits(uint64_t n) 
+    {
+        unsigned count = 1;
+        for (;;) 
+        {
+            if (n < Base) return count;
+            if (n < Base*Base) return count + 1;
+            if (n < Base*Base*Base) return count + 2;
+            if (n < Base*Base*Base*Base) return count + 3;
+            n /= (Base*Base*Base*Base);
+            count += 4;
+        }
+    }
 
-	template <size_t Base>
-	void format_cast_integer(uint64_t number) 
-	{
-		unsigned len = count_digits<Base>(number);
-		const char* digits = ch_ ? "0123456789abcdef" : "0123456789ABCDEF";
+    template <size_t Base>
+    void format_cast_integer(uint64_t number) 
+    {
+        unsigned len = count_digits<Base>(number);
+        const char* digits = ch_ ? "0123456789abcdef" : "0123456789ABCDEF";
 
-		temp_.resize(len);
-		while (number >= Base) 
-		{
-			unsigned index = number % Base;
-			number /= Base;
-			temp_[--len] = static_cast<char_t>(digits[index]);
-		}
-		temp_[0] = static_cast<char_t>(digits[number]);
+        temp_.resize(len);
+        while (number >= Base) 
+        {
+            unsigned index = number % Base;
+            number /= Base;
+            temp_[--len] = static_cast<char_t>(digits[index]);
+        }
+        temp_[0] = static_cast<char_t>(digits[number]);
 
-		format_value(temp_.data(), temp_.size());
-	}
+        format_value(temp_.data(), temp_.size());
+    }
 
-	void format_cast_float(const double& value)
-	{
-		for (std::size_t len = buffer_.size(), offset = 16;; offset *= 2)
-		{
-			buffer_.resize(len + offset);
+    void format_cast_float(const double& value)
+    {
+        for (std::size_t len = buffer_.size(), offset = 16;; offset *= 2)
+        {
+            buffer_.resize(len + offset);
 
-			int ret = crt_snprintf(&*buffer_.begin() + len, offset, format_.data(), value);
+            int ret = crt_snprintf(&*buffer_.begin() + len, offset, format_.data(), value);
 
-			if (ret > 0)
-			{
-				buffer_.resize(len + ret);
-				break;
-			}
-		}
-	}
+            if (ret > 0)
+            {
+                buffer_.resize(len + ret);
+                break;
+            }
+        }
+    }
 
-	int parse_int_and_advance(const char_t*& c)
-	{
-		int i = 0;
-		for (;*c >= '0' && *c <= '9'; ++c)
-			i = 10 * i + (*c - '0');
-		return i;
-	}
+    int parse_int_and_advance(const char_t*& c)
+    {
+        int i = 0;
+        for (;*c >= '0' && *c <= '9'; ++c)
+            i = 10 * i + (*c - '0');
+        return i;
+    }
 
-	void reset_format(const char_t* first, const char_t* last)
-	{
-		format_.clear();
-		format_.append(first, last);
-		format_.push_back(0);
-	}
+    void reset_format(const char_t* first, const char_t* last)
+    {
+        format_.clear();
+        format_.append(first, last);
+        format_.push_back(0);
+    }
 
-	const char_t* print_string_literal(const char_t* fmt)
-	{
-		const char_t* c = fmt;
-		for(;; ++c)
-		{
-			switch (*c)
-			{
-			case '\0':
-				buffer_.append(fmt, c);
-				return c;
-			case '%':
-				buffer_.append(fmt, c);
-				if(*(c+1) != '%')
-					return c;
-				// for "%%", tack trailing % onto next literal section.
-				fmt = ++c;
-				break;
-			}
-		}
-	}
+    const char_t* print_string_literal(const char_t* fmt)
+    {
+        const char_t* c = fmt;
+        for(;; ++c)
+        {
+            switch (*c)
+            {
+            case '\0':
+                buffer_.append(fmt, c);
+                return c;
+            case '%':
+                buffer_.append(fmt, c);
+                if(*(c+1) != '%')
+                    return c;
+                // for "%%", tack trailing % onto next literal section.
+                fmt = ++c;
+                break;
+            }
+        }
+    }
 
-	template <class T>
-	const char_t* print_string_format(const char_t* fmtStart, const T& value)
-	{
-		if (*fmtStart != '%')
-		{
-			BEE_FORMAT_THROW_ERROR("format: Not enough conversion specifiers in format string");
-			return fmtStart;
-		}
+    template <class T>
+    const char_t* print_string_format(const char_t* fmtStart, const T& value)
+    {
+        if (*fmtStart != '%')
+        {
+            BEE_FORMAT_THROW_ERROR("format: Not enough conversion specifiers in format string");
+            return fmtStart;
+        }
 
-		flags_ = 0;
-		width_ = -1;
-		precision_ = -1;
-		ch_ = 0;
+        flags_ = 0;
+        width_ = -1;
+        precision_ = -1;
+        ch_ = 0;
 
-		const char_t* c = fmtStart + 1;
-		// 1) Parse flags
-		for(;; ++c)
-		{
-			switch(*c)
-			{
-			case '-':
-				flags_ |= FL_LEFT;   /* '-' => left justify */
-				continue;
-			case '+':
-				flags_ |= FL_SIGN;   /* '+' => force sign indicator */
-				continue;
-			case ' ':
-				flags_ |= FL_SIGNSP; /* ' ' => force sign or space */
-				continue;
-			case '#':
-				flags_ |= FL_ALTERNATE;  /* '#' => alternate form */
-				continue;
-			case '0':
-				flags_ |= FL_LEADZERO;   /* '0' => pad with leading zeros */
-				continue;
-			}
-			break;
-		}
-		// 2) Parse width
-		if (*c >= '0' && *c <= '9')
-		{
-			width_ = parse_int_and_advance(c);
-		}
+        const char_t* c = fmtStart + 1;
+        // 1) Parse flags
+        for(;; ++c)
+        {
+            switch(*c)
+            {
+            case '-':
+                flags_ |= FL_LEFT;   /* '-' => left justify */
+                continue;
+            case '+':
+                flags_ |= FL_SIGN;   /* '+' => force sign indicator */
+                continue;
+            case ' ':
+                flags_ |= FL_SIGNSP; /* ' ' => force sign or space */
+                continue;
+            case '#':
+                flags_ |= FL_ALTERNATE;  /* '#' => alternate form */
+                continue;
+            case '0':
+                flags_ |= FL_LEADZERO;   /* '0' => pad with leading zeros */
+                continue;
+            }
+            break;
+        }
+        // 2) Parse width
+        if (*c >= '0' && *c <= '9')
+        {
+            width_ = parse_int_and_advance(c);
+        }
 
-		if (*c == '*')
-		{
-			++c;
-			BEE_FORMAT_THROW_ERROR("format: * conversion spec not supported");
-		}
+        if (*c == '*')
+        {
+            ++c;
+            BEE_FORMAT_THROW_ERROR("format: * conversion spec not supported");
+        }
 
-		// 3) Parse precision
-		if (*c == '.')
-		{
-			++c;
-			int precision = 0;
-			if (*c == '*')
-			{
-				++c;
-				BEE_FORMAT_THROW_ERROR("format: * conversion spec not supported");
-			}
-			else
-			{
-				if (*c >= '0' && *c <= '9')
-					precision = parse_int_and_advance(c);
-				else if(*c == '-')
-					parse_int_and_advance(++c);
-			}
-			precision_ = precision;
-		}
+        // 3) Parse precision
+        if (*c == '.')
+        {
+            ++c;
+            int precision = 0;
+            if (*c == '*')
+            {
+                ++c;
+                BEE_FORMAT_THROW_ERROR("format: * conversion spec not supported");
+            }
+            else
+            {
+                if (*c >= '0' && *c <= '9')
+                    precision = parse_int_and_advance(c);
+                else if(*c == '-')
+                    parse_int_and_advance(++c);
+            }
+            precision_ = precision;
+        }
 
-		// 4) Ignore any C99 length modifier
-		while (*c == 'l' || *c == 'h' || *c == 'L'
-			|| *c == 'j' || *c == 'z' || *c == 't')
-		{
-			++c;
-		}
+        // 4) Ignore any C99 length modifier
+        while (*c == 'l' || *c == 'h' || *c == 'L'
+            || *c == 'j' || *c == 'z' || *c == 't')
+        {
+            ++c;
+        }
 
-		// 5) We're up to the conversion specifier character.
-		// Set stream flags based on conversion specifier (thanks to the
-		// boost::format class for forging the way here).
-		if (*c == '\0')
-		{
-			BEE_FORMAT_THROW_ERROR("format: Conversion spec incorrectly terminated by end of string");
-			return c;
-		}
+        // 5) We're up to the conversion specifier character.
+        // Set stream flags based on conversion specifier (thanks to the
+        // boost::format class for forging the way here).
+        if (*c == '\0')
+        {
+            BEE_FORMAT_THROW_ERROR("format: Conversion spec incorrectly terminated by end of string");
+            return c;
+        }
 
-		reset_format(fmtStart, c + 1);
+        reset_format(fmtStart, c + 1);
 
-		switch (*c)
-		{
-		case 'd': case 'i':
-			flags_ |= FL_SIGNED;
-		case 'u': 
-			format_cast_integer<10>(convert_to_integer(value));
-			break;
-		case 'o':
-			if (flags_ & FL_ALTERNATE)
-			{
-				flags_ |= FL_FORCEOCTAL;
-			}
-			format_cast_integer<8>(convert_to_integer(value));
-			break;
-		case 'x':
-			ch_ = 'a' - 'A';
-		case 'X':
-			goto COMMON_HEX;
-		case 'p':
-			precision_ = 2 * sizeof(uintptr_t);
-		COMMON_HEX:
-			if (flags_ & FL_ALTERNATE) 
-			{
-				flags_ |= FL_FORCEHEX;
-			}
-			format_cast_integer<16>(*(uintptr_t*)&value);
-			break;
-		case 'A': case 'E': case 'F': case 'G':
-		case 'a': case 'e': case 'f': case 'g':
-			format_cast_float(convert_to_float(value));
-			break;
-		case 'c':
-			format_cast_char(value);
-			break;
-		case 's':
-			format_cast_string(value);
-			break;
-		case 'n':
-			BEE_FORMAT_THROW_ERROR("format: %n conversion spec not supported");
-			break;
-		}
+        switch (*c)
+        {
+        case 'd': case 'i':
+            flags_ |= FL_SIGNED;
+        case 'u': 
+            format_cast_integer<10>(convert_to_integer(value));
+            break;
+        case 'o':
+            if (flags_ & FL_ALTERNATE)
+            {
+                flags_ |= FL_FORCEOCTAL;
+            }
+            format_cast_integer<8>(convert_to_integer(value));
+            break;
+        case 'x':
+            ch_ = 'a' - 'A';
+        case 'X':
+            goto COMMON_HEX;
+        case 'p':
+            precision_ = 2 * sizeof(uintptr_t);
+        COMMON_HEX:
+            if (flags_ & FL_ALTERNATE) 
+            {
+                flags_ |= FL_FORCEHEX;
+            }
+            format_cast_integer<16>(*(uintptr_t*)&value);
+            break;
+        case 'A': case 'E': case 'F': case 'G':
+        case 'a': case 'e': case 'f': case 'g':
+            format_cast_float(convert_to_float(value));
+            break;
+        case 'c':
+            format_cast_char(value);
+            break;
+        case 's':
+            format_cast_string(value);
+            break;
+        case 'n':
+            BEE_FORMAT_THROW_ERROR("format: %n conversion spec not supported");
+            break;
+        }
 
-		return c+1;
-	}
+        return c+1;
+    }
 
-	hybrid_array<char_t, 512> buffer_;
-	hybrid_array<char_t, 16>  format_;
-	hybrid_array<char_t, 16>  temp_;
-	const char_t*             fmt_;
-	std::size_t               flags_;
-	std::ptrdiff_t            width_;
-	std::ptrdiff_t            precision_;
-	char_t                    ch_;
+    hybrid_array<char_t, 512> buffer_;
+    hybrid_array<char_t, 16>  format_;
+    hybrid_array<char_t, 16>  temp_;
+    const char_t*             fmt_;
+    std::size_t               flags_;
+    std::ptrdiff_t            width_;
+    std::ptrdiff_t            precision_;
+    char_t                    ch_;
 };
 
 template <>
 inline void format_analyzer<wchar_t>::format_cast_string(const wchar_t* value)
 {
-	if (!value)
-	{
-		format_cast_string(empty_string(value));
-		return;
-	}
+    if (!value)
+    {
+        format_cast_string(empty_string(value));
+        return;
+    }
 
-	const char_t* first = value;
-	const char_t* next = first;
+    const char_t* first = value;
+    const char_t* next = first;
 
-	if (precision_ >= 0)
-	{
-		while (*next && precision_--) { ++next; }
-	}
-	else
-	{
-		while (*next) { ++next; }
-	}
+    if (precision_ >= 0)
+    {
+        while (*next && precision_--) { ++next; }
+    }
+    else
+    {
+        while (*next) { ++next; }
+    }
 
-	format_value(first, next - first);
+    format_value(first, next - first);
 }
 
 template <>
 inline void format_analyzer<char>::format_cast_string(const char* value)
 {
-	if (!value)
-	{
-		format_cast_string(empty_string(value));
-		return;
-	}
+    if (!value)
+    {
+        format_cast_string(empty_string(value));
+        return;
+    }
 
-	const char_t* first = value;
-	const char_t* next = first;
+    const char_t* first = value;
+    const char_t* next = first;
 
-	if (precision_ >= 0)
-	{
-		while (*next && precision_--) { ++next; }
-	}
-	else
-	{
-		while (*next) { ++next; }
-	}
+    if (precision_ >= 0)
+    {
+        while (*next && precision_--) { ++next; }
+    }
+    else
+    {
+        while (*next) { ++next; }
+    }
 
-	format_value(first, next - first);
+    format_value(first, next - first);
 }
 
 #if !defined(BEE_FORMAT_DISABLE_UNICODE)
@@ -622,41 +622,41 @@ inline void format_analyzer<char>::format_cast_string(const char* value)
 template <>
 inline void format_analyzer<wchar_t>::format_cast_string(const char* value)
 {
-	std::wstring valstr = u2w(value);
-	format_cast_string(valstr.c_str());
+    std::wstring valstr = u2w(value);
+    format_cast_string(valstr.c_str());
 }
 
 template <>
 inline void format_analyzer<char>::format_cast_string(const wchar_t* value)
 {
-	std::string valstr = w2u(value);
-	format_cast_string(valstr.c_str());
+    std::string valstr = w2u(value);
+    format_cast_string(valstr.c_str());
 }
 
 template <>
 inline void  format_analyzer<char>::format_cast_string(const std::basic_string<char>& value)
 {
-	format_value(value.c_str(), value.size());
+    format_value(value.c_str(), value.size());
 }
 
 template <>
 inline void format_analyzer<char>::format_cast_string(const std::basic_string<wchar_t>& value)
 {
-	std::string valstr = w2u(value);
-	format_value(valstr.c_str(), valstr.size());
+    std::string valstr = w2u(value);
+    format_value(valstr.c_str(), valstr.size());
 }
 
 template <>
 inline void  format_analyzer<wchar_t>::format_cast_string(const std::basic_string<char>& value)
 {
-	std::wstring valstr = u2w(value);
-	format_value(valstr.c_str(), valstr.size());
+    std::wstring valstr = u2w(value);
+    format_value(valstr.c_str(), valstr.size());
 }
 
 template <>
 inline void format_analyzer<wchar_t>::format_cast_string(const std::basic_string<wchar_t>& value)
 {
-	format_value(value.c_str(), value.size());
+    format_value(value.c_str(), value.size());
 }
 
 #endif
@@ -674,58 +674,58 @@ namespace bee {
 
 #define BASE_FORMAT_DEFINE_ACCEPT(z, n, param) fmt_iter.accept(BOOST_PP_CAT(param, n));
 #define BASE_FORMAT_DEFINE_CREATER(z, n, unused) \
-	template <class CharT BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, class T)> \
-	void format(std::basic_ostream<CharT, std::char_traits<CharT>>& out, const CharT* fmt BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& v)) \
-	{ \
-		format_detail::format_analyzer<CharT> fmt_iter(fmt); \
-		BOOST_PP_REPEAT(n, BASE_FORMAT_DEFINE_ACCEPT, v) \
-		fmt_iter.finish(); \
-		fmt_iter.write(out); \
-	} \
-	template <class CharT BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, class T)> \
-	std::basic_string<CharT> format(const CharT* fmt BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& v)) \
-	{ \
-		format_detail::format_analyzer<CharT> fmt_iter(fmt); \
-		BOOST_PP_REPEAT(n, BASE_FORMAT_DEFINE_ACCEPT, v) \
-		fmt_iter.finish(); \
-		return std::move(fmt_iter.str()); \
-	} \
-	template <class CharT BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, class T)> \
-	void printf(const CharT* fmt BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& v)) \
-	{ \
-		format(format_detail::standard_output(fmt), fmt BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, v)); \
-	}
+    template <class CharT BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, class T)> \
+    void format(std::basic_ostream<CharT, std::char_traits<CharT>>& out, const CharT* fmt BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& v)) \
+    { \
+        format_detail::format_analyzer<CharT> fmt_iter(fmt); \
+        BOOST_PP_REPEAT(n, BASE_FORMAT_DEFINE_ACCEPT, v) \
+        fmt_iter.finish(); \
+        fmt_iter.write(out); \
+    } \
+    template <class CharT BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, class T)> \
+    std::basic_string<CharT> format(const CharT* fmt BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& v)) \
+    { \
+        format_detail::format_analyzer<CharT> fmt_iter(fmt); \
+        BOOST_PP_REPEAT(n, BASE_FORMAT_DEFINE_ACCEPT, v) \
+        fmt_iter.finish(); \
+        return std::move(fmt_iter.str()); \
+    } \
+    template <class CharT BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, class T)> \
+    void printf(const CharT* fmt BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& v)) \
+    { \
+        format(format_detail::standard_output(fmt), fmt BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, v)); \
+    }
 
 BOOST_PP_REPEAT(16, BASE_FORMAT_DEFINE_CREATER, ~)
 #undef BASE_FORMAT_DEFINE_ACCEPT
 #undef BASE_FORMAT_DEFINE_CREATER
 #undef BEE_FORMAT_THROW_ERROR
-#else	
-	template <class CharT, class... Args>
-	void format(std::basic_ostream<CharT, std::char_traits<CharT>>& out, const CharT* fmt, const Args& ... args)
-	{
-		format_detail::format_analyzer<CharT> fmt_iter(fmt);
-		fmt_iter.accept(args...);
-		fmt_iter.finish();
-		fmt_iter.write(out); 
-	}
-	template <class CharT, class... Args>
-	std::basic_string<CharT> format(const CharT* fmt, const Args& ... args)
-	{
-		format_detail::format_analyzer<CharT> fmt_iter(fmt);
-		fmt_iter.accept(args...);
-		fmt_iter.finish();
-		return std::move(fmt_iter.str());
-	}
-	template <class CharT, class... Args>
-	void printf(const CharT* fmt, const Args& ... args)
-	{
-		format(format_detail::standard_output(fmt), fmt, args...);
-	}
+#else    
+    template <class CharT, class... Args>
+    void format(std::basic_ostream<CharT, std::char_traits<CharT>>& out, const CharT* fmt, const Args& ... args)
+    {
+        format_detail::format_analyzer<CharT> fmt_iter(fmt);
+        fmt_iter.accept(args...);
+        fmt_iter.finish();
+        fmt_iter.write(out); 
+    }
+    template <class CharT, class... Args>
+    std::basic_string<CharT> format(const CharT* fmt, const Args& ... args)
+    {
+        format_detail::format_analyzer<CharT> fmt_iter(fmt);
+        fmt_iter.accept(args...);
+        fmt_iter.finish();
+        return std::move(fmt_iter.str());
+    }
+    template <class CharT, class... Args>
+    void printf(const CharT* fmt, const Args& ... args)
+    {
+        format(format_detail::standard_output(fmt), fmt, args...);
+    }
 #endif
 
 }
 
 #if defined(_MSC_VER)
-#	pragma warning(pop)
+#    pragma warning(pop)
 #endif

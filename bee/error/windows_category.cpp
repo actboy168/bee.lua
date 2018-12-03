@@ -5,13 +5,13 @@
 
 namespace bee {
     struct errormsg : public std::wstring_view {
-		typedef std::wstring_view mybase;
-		errormsg(wchar_t* str) : mybase(str) { }
+        typedef std::wstring_view mybase;
+        errormsg(wchar_t* str) : mybase(str) { }
         ~errormsg() { ::LocalFree(reinterpret_cast<HLOCAL>(const_cast<wchar_t*>(mybase::data()))); }
     };
 
     static std::wstring error_message(int error_code) {
-		wchar_t* message = 0;
+        wchar_t* message = 0;
         unsigned long result = ::FormatMessageW(
             FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
             NULL,
@@ -26,7 +26,7 @@ namespace bee {
             os << L"Unable to get an error message for error code: " << error_code << ".";
             return os.str();
         }
-		errormsg str(message);
+        errormsg str(message);
         while (str.size() && ((str.back() == L'\n') || (str.back() == L'\r'))) {
             str.remove_suffix(1);
         }
