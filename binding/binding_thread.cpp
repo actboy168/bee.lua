@@ -28,7 +28,8 @@ public:
 			semaphore.wait();
 		}
 	}
-	bool timed_pop(void*& data, int timeout) {
+	template<class Rep, class Period>
+	bool timed_pop(void*& data, const std::chrono::duration<Rep, Period>& timeout) {
 		if (!mybase::pop(data)) {
 			if (!semaphore.timed_wait(timeout)) {
 				return false;
@@ -113,7 +114,7 @@ static int lchannel_pop(lua_State* L) {
 		}
 	}
 	else {
-		if (!c->timed_pop(data, (int)(v * 1000))) {
+		if (!c->timed_pop(data, std::chrono::duration<double>(v))) {
 			return 0;
 		}
 	}
@@ -155,8 +156,7 @@ static int lchannel(lua_State* L) {
 
 static int lsleep(lua_State* L) {
 	lua_Number sec = luaL_checknumber(L, 1);
-	int msec = (int)(sec * 1000);
-	std::this_thread::sleep_for(std::chrono::milliseconds(msec));
+	std::this_thread::sleep_for(std::chrono::duration<double>(sec));
 	return 0;
 }
 

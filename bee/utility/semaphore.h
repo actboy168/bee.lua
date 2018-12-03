@@ -20,14 +20,10 @@ namespace bee {
 			condition.wait(lk, [this] { return ok; });
 			ok = false;
 		}
-		bool timed_wait(int timeout) {
+		template<class Rep, class Period>
+		bool timed_wait(const std::chrono::duration<Rep, Period>& timeout) {
 			std::unique_lock<std::mutex> lk(mutex);
-			if (timeout < 0) {
-				condition.wait(lk, [this] { return ok; });
-				ok = false;
-				return true;
-			}
-			if (condition.wait_for(lk, std::chrono::milliseconds(timeout), [this] { return ok; })) {
+			if (condition.wait_for(lk, timeout, [this] { return ok; })) {
 				ok = false;
 				return true;
 			}
