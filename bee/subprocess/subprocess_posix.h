@@ -48,11 +48,11 @@ namespace bee::posix::subprocess {
     };
 
     namespace pipe {
-		struct open_result {
-			FILE* rd;
-			FILE* wr;
-		};
-		open_result open();
+        struct open_result {
+            FILE* rd;
+            FILE* wr;
+        };
+        open_result open();
         int         peek(FILE* f);
     }
 }

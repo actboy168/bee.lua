@@ -321,19 +321,19 @@ namespace bee::win::subprocess {
     process::process(process&& pi)
         : PROCESS_INFORMATION(pi)
     {
-		pi.hProcess = 0;
-		pi.hThread = 0;
-		pi.dwProcessId = 0;
-		pi.dwThreadId = 0;
+        pi.hProcess = 0;
+        pi.hThread = 0;
+        pi.dwProcessId = 0;
+        pi.dwThreadId = 0;
     }
 
     process::process(PROCESS_INFORMATION&& pi)
         : PROCESS_INFORMATION(pi)
     {
-		pi.hProcess = 0;
-		pi.hThread = 0;
-		pi.dwProcessId = 0;
-		pi.dwThreadId = 0;
+        pi.hProcess = 0;
+        pi.hThread = 0;
+        pi.dwProcessId = 0;
+        pi.dwThreadId = 0;
     }
 
     process::~process() {
@@ -343,14 +343,14 @@ namespace bee::win::subprocess {
 
     process& process::operator=(process&& pi) {
         if (this != &pi) {
-			hProcess = pi.hProcess;
-			hThread = pi.hThread;
-			dwProcessId = pi.dwProcessId;
-			dwThreadId = pi.dwThreadId;
-			pi.hProcess = 0;
-			pi.hThread = 0;
-			pi.dwProcessId = 0;
-			pi.dwThreadId = 0;
+            hProcess = pi.hProcess;
+            hThread = pi.hThread;
+            dwProcessId = pi.dwProcessId;
+            dwThreadId = pi.dwThreadId;
+            pi.hProcess = 0;
+            pi.hThread = 0;
+            pi.dwProcessId = 0;
+            pi.dwThreadId = 0;
         }
         return *this;
     }
@@ -408,18 +408,18 @@ namespace bee::win::subprocess {
     }
 
     namespace pipe {
-		open_result open() {
+        open_result open() {
             SECURITY_ATTRIBUTES sa;
             sa.nLength = sizeof(SECURITY_ATTRIBUTES);
             sa.bInheritHandle = FALSE;
             sa.lpSecurityDescriptor = NULL;
             HANDLE read_pipe = NULL, write_pipe = NULL;
             if (!::CreatePipe(&read_pipe, &write_pipe, &sa, 0)) {
-				return { NULL, NULL };
+                return { NULL, NULL };
             }
             FILE* rd = _fdopen(_open_osfhandle((intptr_t)read_pipe, _O_RDONLY | _O_BINARY), "rb");
             FILE* wr = _fdopen(_open_osfhandle((intptr_t)write_pipe, _O_WRONLY | _O_BINARY), "wb");
-			return { rd, wr };
+            return { rd, wr };
         }
 
         int peek(FILE* f) {

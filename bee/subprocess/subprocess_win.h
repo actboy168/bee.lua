@@ -77,10 +77,10 @@ namespace bee::win::subprocess {
     };
 
     namespace pipe {
-		struct open_result {
-			FILE* rd;
-			FILE* wr;
-		};
+        struct open_result {
+            FILE* rd;
+            FILE* wr;
+        };
         _BEE_API open_result open();
         _BEE_API int         peek(FILE* f);
     }

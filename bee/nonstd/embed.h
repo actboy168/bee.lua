@@ -9,7 +9,7 @@
 #include <bee/nonstd/span.h>
 
 namespace nonstd::embed_detail {
-	#include <bee/nonstd/embed_detail.h>
+    #include <bee/nonstd/embed_detail.h>
 }
 
 #define embed(NAME, FILENAME) byte_span(nonstd::embed_detail:: ## NAME)

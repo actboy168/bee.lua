@@ -83,7 +83,7 @@ namespace bee::win::fsevent {
             FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
             NULL);
         if (m_directory == INVALID_HANDLE_VALUE) {
-			;
+            ;
             push_notify(tasktype::Error, u2w(make_syserror("CreateFileW").what()).c_str());
             return false;
         }
