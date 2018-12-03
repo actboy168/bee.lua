@@ -12,7 +12,7 @@ end
 -- subprocess.spawn
 local lua = subprocess.spawn {
     exe,
-    '-e', ''
+    '-e', ' '
 }
 assert(lua ~= nil)
 
@@ -28,7 +28,6 @@ fs.remove(fs.path 'temp')
 
 -- wait
 fs.remove(fs.path 'temp')
-print(fs.absolute(fs.path 'temp'))
 assert(fs.exists(fs.path 'temp') ~= true)
 local lua = subprocess.spawn {
     exe,
@@ -42,7 +41,7 @@ fs.remove(fs.path 'temp')
 -- is_running
 local lua = subprocess.spawn {
     exe,
-    '-e', ''
+    '-e', ' '
 }
 assert(lua ~= nil)
 assert(lua:is_running() == true)
@@ -50,7 +49,7 @@ assert(lua:is_running() == true)
 -- kill
 local lua = subprocess.spawn {
     exe,
-    '-e', ''
+    '-e', ' '
 }
 assert(lua ~= nil)
 assert(lua:is_running() == true)
@@ -60,7 +59,9 @@ assert(lua:kill() == false)
 
 -- get_id
 local lua = subprocess.spawn {
-    exe
+    exe,
+    console = 'new',
+    hideWindow = true
 }
 assert(lua ~= nil)
 local id = lua:get_id()
@@ -81,7 +82,6 @@ local lua, stdout = subprocess.spawn {
     stdout = true
 }
 lua:wait()
-print(stdout:read 'a')
 assert(stdout:read 'a')
 
 -- subprocess.peek
