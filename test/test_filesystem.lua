@@ -1,11 +1,6 @@
 local fs = require 'bee.filesystem'
 local uni = require 'bee.unicode'
-
-local function wait_second()
-    local f = io.popen('ping -n 1 127.1>nul', 'r')
-    f:read 'a'
-    f:close()
-end
+local thread = require 'bee.thread'
 
 -- fs.path
 local path = fs.path('test')
@@ -129,7 +124,7 @@ local dir = fs.path('tempdir')
 fs.create_directory(dir)
 assert(fs.is_directory(dir) == true)
 while fs.exists(dir) do
-    wait_second()
+    thread.sleep(0.1)
     os.execute('rd /Q ' .. dir:string())
 end
 
@@ -140,7 +135,7 @@ fs.create_directories(dirs)
 assert(fs.is_directory(dir) == true)
 assert(fs.is_directory(dirs) == true)
 while fs.exists(dir) do
-    wait_second()
+    thread.sleep(0.1)
     os.execute('rd /S /Q ' .. dir:string())
 end
 
@@ -257,7 +252,7 @@ assert(fs.relative(path, base):string() == '')
 local path = fs.path('temp')
 local f = io.open(path:string(), 'wb')
 local time1 = fs.last_write_time(path)
-wait_second()
+thread.sleep(0.1)
 f:write('a')
 f:close()
 local time2 = fs.last_write_time(path)

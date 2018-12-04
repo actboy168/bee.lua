@@ -1,13 +1,8 @@
 local subprocess = require 'bee.subprocess'
 local fs = require 'bee.filesystem'
+local thread = require 'bee.thread'
 
 local exe = fs.exe_path()
-
-local function wait_second()
-    local f = io.popen('ping -n 1 127.1>nul', 'r')
-    f:read 'a'
-    f:close()
-end
 
 -- subprocess.spawn
 local lua = subprocess.spawn {
@@ -22,7 +17,7 @@ local lua = subprocess.spawn {
     '-e', 'io.open("temp", "w"):close()'
 }
 assert(lua ~= nil)
-wait_second()
+thread.sleep(0.1)
 assert(fs.exists(fs.path 'temp') == true)
 fs.remove(fs.path 'temp')
 
