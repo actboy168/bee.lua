@@ -34,6 +34,9 @@
     <Filter Include="bee\error">
       <UniqueIdentifier>{9c0c8d8e-8087-4ce0-9bfb-809076f74cf3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="bee\platform">
+      <UniqueIdentifier>{07e03cc1-f454-47c4-aade-02337f5229f2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\bee\subprocess\subprocess_posix.cpp">
@@ -98,6 +101,12 @@
     </ClCompile>
     <ClCompile Include="..\bee\net\unixsocket.cpp">
       <Filter>bee\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\bee\platform\version.cpp">
+      <Filter>bee\platform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\bee\utility\file_version.cpp">
+      <Filter>bee\utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -193,6 +202,12 @@
     </ClInclude>
     <ClInclude Include="..\bee\net\unixsocket.h">
       <Filter>bee\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\platform\version.h">
+      <Filter>bee\platform</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\utility\file_version.h">
+      <Filter>bee\utility</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

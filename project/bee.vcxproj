@@ -188,6 +188,7 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     <ClCompile Include="..\bee\net\endpoint.cpp" />
     <ClCompile Include="..\bee\net\socket.cpp" />
     <ClCompile Include="..\bee\net\unixsocket.cpp" />
+    <ClCompile Include="..\bee\platform\version.cpp" />
     <ClCompile Include="..\bee\subprocess\subprocess_posix.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -195,6 +196,7 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\bee\subprocess\subprocess_win.cpp" />
+    <ClCompile Include="..\bee\utility\file_version.cpp" />
     <ClCompile Include="..\bee\utility\path_helper.cpp" />
     <ClCompile Include="..\bee\utility\unicode.cpp" />
     <ClCompile Include="..\binding\lua_embed.cpp" />
@@ -228,6 +230,7 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     <ClInclude Include="..\bee\nonstd\embed.h" />
     <ClInclude Include="..\bee\nonstd\expected.h" />
     <ClInclude Include="..\bee\nonstd\span.h" />
+    <ClInclude Include="..\bee\platform\version.h" />
     <ClInclude Include="..\bee\registry\exception.h" />
     <ClInclude Include="..\bee\registry\key.h" />
     <ClInclude Include="..\bee\registry\predefined_keys.h" />
@@ -242,6 +245,7 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     </ClInclude>
     <ClInclude Include="..\bee\subprocess\subprocess_win.h" />
     <ClInclude Include="..\bee\utility\dynarray.h" />
+    <ClInclude Include="..\bee\utility\file_version.h" />
     <ClInclude Include="..\bee\utility\format.h" />
     <ClInclude Include="..\bee\utility\hybrid_array.h" />
     <ClInclude Include="..\bee\utility\lockqueue.h" />

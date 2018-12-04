@@ -1,6 +1,7 @@
 #include <winsock2.h>
 #include <bee/net/unixsocket.h>
 #include <bee/utility/unicode.h>
+#include <bee/platform/version.h>
 #include <fstream>
 #include <charconv>
 #include <limits>
@@ -45,7 +46,6 @@ namespace bee::net::socket {
 		if (unixpath.empty()) {
 			return false;
 		}
-
 		if (auto[p, ec] = std::from_chars(unixpath.data(), unixpath.data() + unixpath.size(), tcpport); ec != std::errc()) {
 			return false;
 		}
@@ -72,8 +72,14 @@ namespace bee::net::socket {
 		file::write_all(path, portstr.data());
 	}
 
+	static bool supportUnixDomainSocket() {
+		auto[ver, build] = bee::platform::get_version();
+		return ver == bee::platform::WinVer::Win10 && build >= 17134;
+	}
+
 	bool u_enable() {
-		return true;
+		static bool enable = !supportUnixDomainSocket();
+		return enable;
 	}
 
 	int u_connect(fd_t s, const endpoint& ep) {
@@ -92,7 +98,6 @@ namespace bee::net::socket {
 	int u_bind(fd_t s, const endpoint& ep) {
 		auto newep = endpoint::from_hostname("127.0.0.1", 0);
 		if (!newep) {
-			::WSASetLastError(0);
 			return -1;
 		}
 		int ok = socket::bind(s, *newep);
