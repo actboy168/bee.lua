@@ -187,6 +187,7 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     <ClCompile Include="..\bee\fsevent\fsevent_win.cpp" />
     <ClCompile Include="..\bee\net\endpoint.cpp" />
     <ClCompile Include="..\bee\net\socket.cpp" />
+    <ClCompile Include="..\bee\net\unixsocket.cpp" />
     <ClCompile Include="..\bee\subprocess\subprocess_posix.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -223,6 +224,7 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     <ClInclude Include="..\bee\lua\range.h" />
     <ClInclude Include="..\bee\net\endpoint.h" />
     <ClInclude Include="..\bee\net\socket.h" />
+    <ClInclude Include="..\bee\net\unixsocket.h" />
     <ClInclude Include="..\bee\nonstd\embed.h" />
     <ClInclude Include="..\bee\nonstd\expected.h" />
     <ClInclude Include="..\bee\nonstd\span.h" />

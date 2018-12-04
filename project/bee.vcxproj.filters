@@ -96,6 +96,9 @@
     <ClCompile Include="..\bee\error\exception.cpp">
       <Filter>bee\error</Filter>
     </ClCompile>
+    <ClCompile Include="..\bee\net\unixsocket.cpp">
+      <Filter>bee\net</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\bee\subprocess\subprocess_posix.h">
@@ -187,6 +190,9 @@
     </ClInclude>
     <ClInclude Include="..\bee\error\exception.h">
       <Filter>bee\error</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\net\unixsocket.h">
+      <Filter>bee\net</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

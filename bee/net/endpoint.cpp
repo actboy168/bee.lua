@@ -8,9 +8,16 @@
 // need Windows SDK >= 17063
 // see the https://blogs.msdn.microsoft.com/commandline/2017/12/19/af_unix-comes-to-windows/
 //
-#if __has_include("afunix.h")
-#include <afunix.h>
-#define ENABLE_UNIX_SOCKET 1
+#if defined(_WIN32)
+	#if __has_include("afunix.h")
+		#include <afunix.h>
+	#else
+		#define UNIX_PATH_MAX 108
+		struct sockaddr_un {
+			unsigned short sun_family;
+			char sun_path[UNIX_PATH_MAX];
+		};
+	#endif
 #endif
 
 namespace bee::net {
@@ -60,7 +67,6 @@ namespace bee::net {
         return autorelease_addrinfo(info);
     }
     nonstd::expected<endpoint, std::string> endpoint::from_unixpath(const std::string_view& path) {
-#if ENABLE_UNIX_SOCKET
         if (path.size() >= UNIX_PATH_MAX) {
             return nonstd::make_unexpected("unix domain path too long");
         };
@@ -70,9 +76,6 @@ namespace bee::net {
         memcpy(&su->sun_path[0], path.data(), path.size());
         su->sun_path[path.size()] = '\0';
         return std::move(ep);
-#else
-        return nonstd::make_unexpected("not support unix socket");
-#endif
     }
     nonstd::expected<endpoint, std::string> endpoint::from_hostname(const std::string_view& ip, int port) {
         addrinfo hint = { 0 };
@@ -117,11 +120,9 @@ namespace bee::net {
             const char* s = inet_ntop(sa->sa_family, (const void*) &((struct sockaddr_in6*)sa)->sin6_addr, tmp, sizeof tmp);
             return { std::string(s), ntohs(((struct sockaddr_in6*)sa)->sin6_port) };
         }
-#if ENABLE_UNIX_SOCKET
         else if (sa->sa_family == AF_UNIX) {
             return { ((struct sockaddr_un*)sa)->sun_path, 0 };
         }
-#endif
         return { "", 0 };
     }
     sockaddr* endpoint::addr() {

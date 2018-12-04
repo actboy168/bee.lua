@@ -4,7 +4,8 @@
 #    include <winsock2.h>
 #    include <mswsock.h>
 #    include <mstcpip.h>
-#   include <bee/utility/unicode.h>
+#    include <bee/utility/unicode.h>
+#    include <bee/net/unixsocket.h>
 #else
 #    include <fcntl.h>
 #    include <netinet/tcp.h>
@@ -80,7 +81,12 @@ namespace bee::net::socket {
         case protocol::udp:
             return ::socket(family, SOCK_DGRAM, IPPROTO_UDP);
         case protocol::unix:
-            return ::socket(family, SOCK_STREAM, 0);
+#if defined _WIN32
+			if (u_enable()) {
+				return ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+			}
+#endif
+			return ::socket(family, SOCK_STREAM, 0);
         default:
             return retired_fd;
         }
@@ -201,6 +207,12 @@ namespace bee::net::socket {
 
     int connect(fd_t s, const endpoint& ep)
     {
+#if defined _WIN32
+		if (u_enable() && ep.family() == AF_UNIX) {
+			return u_connect(s, ep);
+		}
+#endif
+
         int rc = ::connect(s, ep.addr(), (int)ep.addrlen());
         if (rc == 0)
             return 0;
@@ -218,6 +230,11 @@ namespace bee::net::socket {
 
     int bind(fd_t s, const endpoint& ep)
     {
+#if defined _WIN32
+		if (u_enable() && ep.family() == AF_UNIX) {
+			return u_bind(s, ep);
+		}
+#endif
         return ::bind(s, ep.addr(), ep.addrlen());
     }
 

@@ -5,6 +5,9 @@
 #include <bee/net/endpoint.h>
 #include <bee/error.h>
 #include <limits>
+#if defined _WIN32
+#include <bee/net/unixsocket.h>
+#endif
 
 namespace bee::lua_socket {
     using namespace bee::net;
@@ -13,6 +16,7 @@ namespace bee::lua_socket {
         socket::fd_t     fd;
         socket::protocol protocol;
         bool connect = false;
+		std::string path;
         luafd(socket::fd_t s, socket::protocol p) : fd(s) , protocol(p)
         { }
     };
@@ -182,7 +186,16 @@ namespace bee::lua_socket {
         socket::fd_t fd = self.fd;
         self.fd = socket::retired_fd;
         if (self.protocol == socket::protocol::unix) {
-            socket::unlink(fd);
+#if defined _WIN32
+			if (socket::u_enable()) {
+				::DeleteFileW(u2w(self.path).c_str());
+			}
+			else {
+				socket::unlink(fd);
+			}
+#else
+			socket::unlink(fd);
+#endif
         }
         if (!socket::close(fd)) {
             return push_neterror(L, "close");
@@ -325,10 +338,16 @@ namespace bee::lua_socket {
         if (fd == socket::retired_fd) {
             return push_neterror(L, "socket");
         }
-        constructor(L, fd, protocol);
+        luafd& self = constructor(L, fd, protocol);
         if (socket::bind(fd, *ep)) {
             return push_neterror(L, "bind");
         }
+#if defined _WIN32
+		if (socket::u_enable()) {
+			auto[path, port] = ep->info();
+			self.path = path;
+		}
+#endif
         if (protocol != socket::protocol::udp) {
             if (socket::listen(fd, backlog)) {
                 return push_neterror(L, "listen");
