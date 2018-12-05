@@ -6,6 +6,7 @@
 #    include <mstcpip.h>
 #    include <bee/utility/unicode.h>
 #    include <bee/net/unixsocket.h>
+#    pragma comment(lib, "Ws2_32.lib")
 #else
 #    include <fcntl.h>
 #    include <netinet/tcp.h>

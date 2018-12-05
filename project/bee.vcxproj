@@ -104,9 +104,7 @@
 $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h $(ProjectDir)..\binding\lua_embed.cpp
 </Command>
     </PreBuildEvent>
-    <Link>
-      <AdditionalDependencies>Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
+    <Link />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -123,9 +121,7 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
 $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h $(ProjectDir)..\binding\lua_embed.cpp
 </Command>
     </PreBuildEvent>
-    <Link>
-      <AdditionalDependencies>Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
+    <Link />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -142,7 +138,6 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h
@@ -165,7 +160,6 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>$(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir)..\bee\nonstd\embed_detail.h
