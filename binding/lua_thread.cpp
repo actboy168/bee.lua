@@ -111,12 +111,14 @@ namespace bee::lua_thread {
         lua_Number v = lua_tonumber(L, 2);
         if (v == 0) {
             if (!c->pop(data)) {
-                return 0;
+				lua_pushboolean(L, 0);
+                return 1;
             }
         }
         else {
             if (!c->timed_pop(data, std::chrono::duration<double>(v))) {
-                return 0;
+				lua_pushboolean(L, 0);
+                return 1;
             }
         }
         lua_pushboolean(L, 1);

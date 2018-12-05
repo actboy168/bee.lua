@@ -167,7 +167,7 @@ local response = thread.channel 'response'
 
 request:push('request', 0.1)
 local ok, msg = response:pop()
--- assert(ok == false) TODO
+assert(ok == false)
 thread.sleep(0.15)
 local ok, msg = response:pop()
 assert(ok == true)
@@ -176,13 +176,13 @@ assert(msg == 'response')
 request:push('request', 0.2)
 local clock = os.clock()
 local ok, msg = response:pop(0.1)
--- assert(ok == false) TODO
+assert(ok == false)
 local passed = os.clock() - clock
--- assert(eq2(passed, 0.1)) TODO
+assert(eq2(passed, 0.1))
 
 local clock = os.clock()
 local ok, msg = response:pop(0.2)
 local passed = os.clock() - clock
--- assert(eq2(passed, 0.1)) TODO
+assert(eq2(passed, 0.1))
 assert(ok == true)
 assert(msg == 'response')
