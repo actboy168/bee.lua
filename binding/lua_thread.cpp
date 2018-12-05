@@ -30,16 +30,13 @@ namespace bee::lua_thread {
                 semaphore.wait();
             }
         }
-        template<class Rep, class Period>
-        bool timed_pop(void*& data, const std::chrono::duration<Rep, Period>& timeout) {
-            if (!mybase::pop(data)) {
-                if (!semaphore.timed_wait(timeout)) {
-                    return false;
-                }
-                if (!mybase::pop(data)) {
-                    return false;
-                }
-            }
+		template <class Clock, class Duration>
+        bool timed_pop(void*& data, const std::chrono::time_point<Clock, Duration>& timeout) {
+			while (!mybase::pop(data)) {
+				if (!semaphore.timed_wait(timeout)) {
+					return false;
+				}
+			}
             return true;
         }
     private:
@@ -117,7 +114,7 @@ namespace bee::lua_thread {
             }
         }
         else {
-            if (!c->timed_pop(data, std::chrono::duration<double>(v))) {
+            if (!c->timed_pop(data, std::chrono::steady_clock::now() + std::chrono::duration<double>(v))) {
 				lua_pushboolean(L, 0);
                 return 1;
             }
