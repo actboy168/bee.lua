@@ -106,15 +106,15 @@ namespace bee::lua_thread {
         channel* c = bc->c;
         void* data;
         lua_settop(L, 2);
-        lua_Number v = lua_tonumber(L, 2);
-        if (v == 0) {
+        lua_Number sec = lua_tonumber(L, 2);
+        if (sec == 0) {
             if (!c->pop(data)) {
 				lua_pushboolean(L, 0);
                 return 1;
             }
         }
         else {
-            if (!c->timed_pop(data, std::chrono::steady_clock::now() + std::chrono::duration<double>(v))) {
+            if (!c->timed_pop(data, std::chrono::steady_clock::now() + std::chrono::duration<double>(sec))) {
 				lua_pushboolean(L, 0);
                 return 1;
             }
@@ -157,7 +157,7 @@ namespace bee::lua_thread {
 
     static int lsleep(lua_State* L) {
         lua_Number sec = luaL_checknumber(L, 1);
-        std::this_thread::sleep_for(std::chrono::duration<double>(sec));
+        std::this_thread::sleep_until(std::chrono::steady_clock::now() + std::chrono::duration<double>(sec));
         return 0;
     }
 
