@@ -150,6 +150,13 @@ request:push('plus', {1, 2})
 local result = response:bpop()
 assert(result == 3)
 
+request:push('echo', 6)
+request:push('echo', 7)
+local result = response:bpop()
+assert(result == 6)
+local result = response:bpop()
+assert(result == 7)
+
 request:push('quit')
 
 thd:wait()
