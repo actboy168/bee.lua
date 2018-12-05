@@ -147,3 +147,42 @@ local result = response:bpop()
 assert(result == 3)
 
 thread.reset()
+
+-- pop
+thread.newchannel 'request'
+thread.newchannel 'response'
+local t = thread.thread(cpath_template .. [[
+    local thread = require "bee.thread"
+    local request = thread.channel 'request'
+    local response = thread.channel 'response'
+    while true do
+        local who, delay = request:bpop()
+        thread.sleep(delay)
+        response:push('response')
+    end
+]])
+
+local request = thread.channel 'request'
+local response = thread.channel 'response'
+
+request:push('request', 0.1)
+local ok, msg = response:pop()
+-- assert(ok == false) TODO
+thread.sleep(0.15)
+local ok, msg = response:pop()
+assert(ok == true)
+assert(msg == 'response')
+
+request:push('request', 0.2)
+local clock = os.clock()
+local ok, msg = response:pop(0.1)
+-- assert(ok == false) TODO
+local passed = os.clock() - clock
+-- assert(eq2(passed, 0.1)) TODO
+
+local clock = os.clock()
+local ok, msg = response:pop(0.2)
+local passed = os.clock() - clock
+-- assert(eq2(passed, 0.1)) TODO
+assert(ok == true)
+assert(msg == 'response')
