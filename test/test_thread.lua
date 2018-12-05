@@ -81,28 +81,29 @@ assert(suc == false)
 
 -- push
 -- bpop
-thread.newchannel 'request'
-thread.newchannel 'response'
-thread.thread(cpath_template .. [[
+thread.newchannel 'bpop_request'
+thread.newchannel 'bpop_response'
+local thd = thread.thread(cpath_template .. [[
     local thread = require "bee.thread"
-    local request = thread.channel 'request'
-    local response = thread.channel 'response'
+    local request = thread.channel 'bpop_request'
+    local response = thread.channel 'bpop_response'
     local msg = request:bpop()
     if msg == 'request' then
         response:push('response')
     end
 ]])
 
-local request = thread.channel 'request'
-local response = thread.channel 'response'
+local request = thread.channel 'bpop_request'
+local response = thread.channel 'bpop_response'
 request:push('request')
 local msg = response:bpop()
 assert(msg == 'response')
+thd:wait()
 
-thread.thread(cpath_template .. [[
+local thd = thread.thread(cpath_template .. [[
     local thread = require "bee.thread"
-    local request = thread.channel 'request'
-    local response = thread.channel 'response'
+    local request = thread.channel 'bpop_request'
+    local response = thread.channel 'bpop_response'
     local msg = request:bpop()
     if msg == 'request' then
         thread.sleep(0.1)
@@ -115,17 +116,20 @@ request:push('request')
 local msg = response:bpop()
 assert(msg == 'response')
 assert(eq2(os.clock() - clock, 0.1))
+thd:wait()
 
-thread.thread(cpath_template .. [[
+local thd = thread.thread(cpath_template .. [[
     local thread = require "bee.thread"
-    local request = thread.channel 'request'
-    local response = thread.channel 'response'
+    local request = thread.channel 'bpop_request'
+    local response = thread.channel 'bpop_response'
     while true do
         local op, data = request:bpop()
         if op == 'echo' then
             response:push(data)
         elseif op == 'plus' then
             response:push(data[1] + data[2])
+        elseif op == 'quit' then
+            return
         end
     end
 ]])
@@ -146,24 +150,30 @@ request:push('plus', {1, 2})
 local result = response:bpop()
 assert(result == 3)
 
+request:push('quit')
+
+thd:wait()
 thread.reset()
 
 -- pop
-thread.newchannel 'request'
-thread.newchannel 'response'
-local t = thread.thread(cpath_template .. [[
+thread.newchannel 'pop_request'
+thread.newchannel 'pop_response'
+local thd = thread.thread(cpath_template .. [[
     local thread = require "bee.thread"
-    local request = thread.channel 'request'
-    local response = thread.channel 'response'
+    local request = thread.channel 'pop_request'
+    local response = thread.channel 'pop_response'
     while true do
         local who, delay = request:bpop()
+        if who == 'quit' then
+            return
+        end
         thread.sleep(delay)
         response:push('response')
     end
 ]])
 
-local request = thread.channel 'request'
-local response = thread.channel 'response'
+local request = thread.channel 'pop_request'
+local response = thread.channel 'pop_response'
 
 request:push('request', 0.1)
 local ok, msg = response:pop()
@@ -186,3 +196,8 @@ local passed = os.clock() - clock
 assert(eq2(passed, 0.1))
 assert(ok == true)
 assert(msg == 'response')
+
+request:push('quit')
+thd:wait()
+
+channel.reset()
