@@ -4,6 +4,7 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <string>
 
 namespace bee::win::subprocess {
     namespace ignore_case {

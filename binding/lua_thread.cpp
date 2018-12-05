@@ -4,6 +4,7 @@
 #include <queue>
 #include <atomic>
 #include <thread>
+#include <functional>
 #include <bee/utility/semaphore.h>
 #include <bee/utility/lockqueue.h>
 #include <bee/lua/binding.h>
