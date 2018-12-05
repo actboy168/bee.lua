@@ -55,21 +55,21 @@ namespace bee::net::socket {
 		return true;
 	}
 
-	static void write_tcp_port(const endpoint& ep, fd_t s) {
+	static bool write_tcp_port(const endpoint& ep, fd_t s) {
 		endpoint newep = endpoint::from_empty();
 		if (!socket::getsockname(s, newep)) {
-			return;
+			return false;
 		}
 		auto[ip, tcpport] = newep.info();
 		std::array<char, 10> portstr;
 		if (auto[p, ec] = std::to_chars(portstr.data(), portstr.data() + portstr.size() - 1, tcpport); ec != std::errc()) {
-			return;
+			return false;
 		}
 		else {
 			p[0] = '\0';
 		}
 		auto[path, port] = ep.info();
-		file::write_all(path, portstr.data());
+		return file::write_all(path, portstr.data());
 	}
 
 	static bool supportUnixDomainSocket() {
@@ -104,7 +104,10 @@ namespace bee::net::socket {
 		if (ok < 0) {
 			return ok;
 		}
-		write_tcp_port(ep, s);
+		if (!write_tcp_port(ep, s)) {
+			::WSASetLastError(WSAENETDOWN);
+			return -1;
+		}
 		return ok;
 	}
 }
