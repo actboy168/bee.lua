@@ -74,7 +74,7 @@ namespace bee::net::socket {
 
 	static bool supportUnixDomainSocket() {
 		auto[ver, build] = bee::platform::get_version();
-		return ver == bee::platform::WinVer::Win10 && build >= 17134;
+		return ver == +bee::platform::WinVer::Win10 && build >= 17134;
 	}
 
 	bool u_enable() {

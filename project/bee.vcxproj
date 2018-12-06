@@ -222,6 +222,7 @@ $(ProjectDir)..\make\luamake\lua.exe $(ProjectDir)..\make\embed.lua $(ProjectDir
     <ClInclude Include="..\bee\net\socket.h" />
     <ClInclude Include="..\bee\net\unixsocket.h" />
     <ClInclude Include="..\bee\nonstd\embed.h" />
+    <ClInclude Include="..\bee\nonstd\enum.h" />
     <ClInclude Include="..\bee\nonstd\expected.h" />
     <ClInclude Include="..\bee\nonstd\span.h" />
     <ClInclude Include="..\bee\platform\version.h" />

@@ -209,5 +209,8 @@
     <ClInclude Include="..\bee\utility\file_version.h">
       <Filter>bee\utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\bee\nonstd\enum.h">
+      <Filter>bee\nonstd</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
