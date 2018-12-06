@@ -1,7 +1,8 @@
 #pragma once
 
-#include <stdint.h>
+#include <bee/config.h>
 #include <bee/nonstd/enum.h>
+#include <stdint.h>
 
 namespace bee::platform {
     BETTER_ENUM(WinVer, uint8_t,
@@ -19,5 +20,5 @@ namespace bee::platform {
 		WinVer   ver;
 		uint32_t build;
 	};
-	version get_version();
+	_BEE_API version get_version();
 }
