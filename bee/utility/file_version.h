@@ -36,7 +36,7 @@ namespace bee {
 		bool vaild_;
 	};
 
-	struct simple_file_version {
+	struct _BEE_API simple_file_version {
 		simple_file_version();
 		simple_file_version(const wchar_t* module_path, const wchar_t* key = L"FileVersion", const wchar_t pred = L',');
 		uint32_t major;
