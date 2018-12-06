@@ -1,11 +1,12 @@
 #pragma once
 
+#include <bee/config.h>
 #include <Windows.h>
 #include <stdint.h>
 #include <memory>
 
 namespace bee {
-	class file_version {
+	class _BEE_API file_version {
 		const static WORD ansi_code_page = 1252;
 	public:
 		file_version();
