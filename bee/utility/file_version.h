@@ -43,6 +43,5 @@ namespace bee {
 		uint32_t minor;
 		uint32_t revision;
 		uint32_t build;
-		uint32_t size;
 	};
 }

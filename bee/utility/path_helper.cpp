@@ -16,14 +16,14 @@ namespace bee::path_helper {
         if (path_len < _countof(buffer)) {
             return std::move(fs::path(buffer, buffer + path_len));
         }
-        for (size_t buf_len = 0x200; buf_len <= 0x10000; buf_len <<= 1) {
-            std::dynarray<wchar_t> buf(path_len);
-            path_len = ::GetModuleFileNameW(module_handle, buf.data(), buf.size());
+        for (DWORD buf_len = 0x200; buf_len <= 0x10000; buf_len <<= 1) {
+            std::dynarray<wchar_t> buf(buf_len);
+            DWORD path_len = ::GetModuleFileNameW(module_handle, buf.data(), buf_len);
             if (path_len == 0) {
                 return nonstd::make_unexpected(make_syserror("GetModuleFileNameW"));
             }
             if (path_len < _countof(buffer)) {
-                return std::move(fs::path(buf.begin(), buf.end()));
+                return std::move(fs::path(buf.data(), buf.data() + path_len));
             }
         }
         return nonstd::make_unexpected(std::exception("::GetModuleFileNameW return too long."));

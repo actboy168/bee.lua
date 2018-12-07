@@ -178,8 +178,7 @@ namespace bee::registry {
         {
             assert(nullptr != src);
             assert(nullptr != dest || 0 == cch_dest);
-
-            return ::ExpandEnvironmentStringsA(src, dest, cch_dest);
+            return ::ExpandEnvironmentStringsA(src, dest, (DWORD)cch_dest);
         }
 
     private:
@@ -367,8 +366,7 @@ namespace bee::registry {
         {
             assert(nullptr != src);
             assert(nullptr != dest || 0 == cch_dest);
-
-            return ::ExpandEnvironmentStringsW(src, dest, cch_dest);
+            return ::ExpandEnvironmentStringsW(src, dest, (DWORD)cch_dest);
         }
 
     private:
