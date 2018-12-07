@@ -1,4 +1,7 @@
 # bee.lua
+
+[![Build status](https://actboy168.visualstudio.com/bee.lua/_apis/build/status/bee.lua-CI)](https://actboy168.visualstudio.com/bee.lua/_build/latest?definitionId=2)
+
 Lua runtime and toolset
 
 ## Compiler
