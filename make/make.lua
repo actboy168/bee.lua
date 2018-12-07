@@ -1,3 +1,5 @@
+local platform, configuration = ...
+
 local fs = require 'bee.filesystem'
 
 local msvc = require 'msvc'
@@ -7,7 +9,7 @@ end
 
 local root = fs.absolute(fs.path './')
 local property = {
-    Configuration = 'Debug',
-    Platform = 'x86'
+    Configuration = configuration,
+    Platform = platform,
 }
 msvc:compile('build', root / 'project' / 'bee.sln', property)

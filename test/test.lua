@@ -1,5 +1,7 @@
+local platform, configuration = ...
+
 package.path = './test/?.lua'
-package.cpath = './bin/msvc_x86_debug/?.dll'
+package.cpath = ('./bin/msvc_%s_%s/?.dll'):format(platform, configuration)
 
 dofile './3rd/luaffi/src/test.lua'
 require 'test_filesystem'

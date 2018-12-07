@@ -30,6 +30,10 @@
                 "${workspaceFolder}/script/?.lua",
                 "${workspaceFolder}/make/luamake/?.lua",
                 "${workspaceFolder}/make/?.lua"
+            ],
+            "arg": [
+                "x86",
+                "Release"
             ]
         },
         {
@@ -40,7 +44,11 @@
             "luadll": "${workspaceFolder}/bin/msvc_x86_Debug/lua54.dll",
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/test/test.lua",
-            "stopOnEntry": false
+            "stopOnEntry": false,
+            "arg": [
+                "x86",
+                "Debug"
+            ]
         }
     ]
 }
