@@ -6,8 +6,8 @@ Lua runtime and toolset
 
 ## Compiler
 
-* MSVC 2017
-* MSVC 2019
+* msvc 2017+
+* mingw 8.2+
 
 ## Lua patch
 
