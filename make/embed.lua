@@ -1,5 +1,5 @@
 local fs = require 'bee.filesystem'
-local cwd = fs.exe_path():parent_path():parent_path():parent_path()
+local cwd = fs.exe_path():parent_path():parent_path()
 
 local function readfile(filename)
     local f = assert(io.open(filename, "rb"))

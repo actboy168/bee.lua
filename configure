@@ -1,1 +1,1 @@
-make/luamake/lua make/makefile_deps.lua project/make/deps.mk
+make/luamake make/makefile_deps.lua project/make/deps.mk
