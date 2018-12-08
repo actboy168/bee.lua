@@ -46,6 +46,7 @@
 #include <stdlib.h>
 
 __inline unsigned int luafix_makeseed(void *L) {
+	(void)L;
 	const char* seed = getenv("LUA_SEED");
 	if (seed) {
 		return atoi(seed);

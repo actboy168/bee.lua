@@ -2,5 +2,10 @@
 /tmp/
 .vs/
 *.user
+/3rd/lua/utf8/*.o
+/3rd/lua/src/*.o
+/3rd/lua/src/*.a
+/3rd/lua/src/*.exe
+/3rd/lua/src/*.dll
 
 /bee/nonstd/embed_detail.h
