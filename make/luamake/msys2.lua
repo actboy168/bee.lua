@@ -13,7 +13,12 @@ end
 
 function mt:exec(cmd, cwd)
     cwd = cwd or fs.current_path():string()
-    local command = ([[%s -lc "cd %s; %s"]]):format(self.bash:string(), convertpath(cwd), convertpath(cmd))
+    local command = ([[%s -lc "export PATH=$PATH:%s/mingw64/bin/; cd %s; %s"]]):format(
+        self.bash:string(),
+        convertpath(self.path:string()),
+        convertpath(cwd),
+        convertpath(cmd)
+    )
     local f = io.popen(command, 'r')
     for l in f:lines() do
         print(l)
