@@ -92,9 +92,9 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\tmp\$(ProjectName)\msvc_$(PlatformTarget)_$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\tmp\$(ProjectName)\msvc_$(PlatformTarget)_$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
@@ -111,11 +111,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(ProjectDir)..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)..\tmp\$(ProjectName)\msvc_$(PlatformTarget)_$(Configuration)\</IntDir>
+    <IntDir>$(ProjectDir)..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(ProjectDir)..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)..\tmp\$(ProjectName)\msvc_$(PlatformTarget)_$(Configuration)\</IntDir>
+    <IntDir>$(ProjectDir)..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

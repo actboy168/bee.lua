@@ -115,10 +115,10 @@ macosx:
 
 mingw:
 	$(MAKE) "LUA_A=lua54.dll" "LUA_T=lua.exe" \
-	"MYOBJS=../utf8/utf8_unicode.o ../utf8/utf8_crt.o" "LUA_O=../utf8/utf8_lua.o ../utf8/utf8_unicode.o" \
+	"MYOBJS=../utf8/utf8_crt.o" "LUA_O=../utf8/utf8_lua.o" \
 	"AR=$(CC) -shared -o" "RANLIB=strip --strip-unneeded" \
 	"SYSCFLAGS=-DLUA_BUILD_AS_DLL" "SYSLIBS=" "SYSLDFLAGS=-s" lua.exe
-	$(MAKE) "LUAC_T=luac.exe" "MYOBJS=../utf8/utf8_unicode.o ../utf8/utf8_crt.o" luac.exe
+	$(MAKE) "LUAC_T=luac.exe" "MYOBJS=../utf8/utf8_crt.o" luac.exe
 
 posix:
 	$(MAKE) $(ALL) SYSCFLAGS="-DLUA_USE_POSIX"
@@ -195,7 +195,6 @@ lvm.o: lvm.c lprefix.h lua.h luaconf.h ldebug.h lstate.h lobject.h \
 lzio.o: lzio.c lprefix.h lua.h luaconf.h llimits.h lmem.h lstate.h \
  lobject.h ltm.h lzio.h
 
-utf8_unicode.o: ../utf8/utf8_unicode.c ../utf8/utf8_unicode.h
 ../utf8/utf8_crt.o: ../utf8/utf8_crt.c ../utf8/utf8_crt.h ../utf8/utf8_unicode.h
 ../utf8/utf8_lua.o: ../utf8/utf8_lua.c ../utf8/utf8_unicode.h lua.c \
  lprefix.h lua.h luaconf.h lauxlib.h lualib.h

@@ -115,7 +115,6 @@
       <Filter>standard-library</Filter>
     </ClCompile>
     <ClCompile Include="..\3rd\lua\utf8\utf8_crt.c" />
-    <ClCompile Include="..\3rd\lua\utf8\utf8_unicode.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\3rd\lua\src\lua.h">

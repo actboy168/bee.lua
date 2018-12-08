@@ -70,25 +70,25 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)..\tmp\$(ProjectName)\msvc_$(PlatformTarget)_$(Configuration)\</IntDir>
+    <IntDir>$(ProjectDir)..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(ProjectDir)..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)..\tmp\$(ProjectName)\msvc_$(PlatformTarget)_$(Configuration)\</IntDir>
+    <IntDir>$(ProjectDir)..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)..\tmp\$(ProjectName)\msvc_$(PlatformTarget)_$(Configuration)\</IntDir>
+    <IntDir>$(ProjectDir)..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(ProjectDir)..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)..\tmp\$(ProjectName)\msvc_$(PlatformTarget)_$(Configuration)\</IntDir>
+    <IntDir>$(ProjectDir)..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -162,7 +162,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\3rd\lua\utf8\utf8_lua.c" />
-    <ClCompile Include="..\3rd\lua\utf8\utf8_unicode.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\3rd\lua\utf8\utf8_unicode.h" />
