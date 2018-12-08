@@ -2,6 +2,7 @@ include project/make/init.mk
 
 BINDIR = bin/$(PLAT)_$(BUILD_CONFIG)
 TMPDIR = tmp/$(PLAT)_$(BUILD_CONFIG)
+LUACFLAGS ：= CFLAGS
 CFLAGS += -DBEE_EXPORTS
 
 default : $(BINDIR)/bee.dll
@@ -10,7 +11,7 @@ include project/make/deps.mk
 include project/make/bee.mk
 
 lua : | $(BINDIR)
-	@cd $(LUADIR) && $(MAKE) --no-print-directory "PLAT=$(PLAT)" "CC=$(CC)" "CFLAGS=$(CFLAGS) $(SYSCFLAGS)"
+	@cd $(LUADIR) && $(MAKE) --no-print-directory "PLAT=$(PLAT)" "CC=$(CC)" "CFLAGS=$(LUACFLAGS) $(SYSCFLAGS)"
 	@cp $(LUADIR)/liblua.a  $(BINDIR)
 	@cp $(LUADIR)/lua.exe   $(BINDIR)
 	@cp $(LUADIR)/lua54.dll $(BINDIR)
