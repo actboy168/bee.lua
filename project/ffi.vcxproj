@@ -132,10 +132,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>"$(ProjectDir)..\make\luamake\lua.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(ProjectDir)..\3rd\luaffi\src\call_x86.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake\lua.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake\lua.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -D X64WIN -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64win.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake\lua.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -o  "$(ProjectDir)..\3rd\luaffi\src\call_arm.h"  "$(ProjectDir)..\3rd\luaffi\src\call_arm.dasc"</Command>
+      <Command>"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(ProjectDir)..\3rd\luaffi\src\call_x86.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
+"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
+"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -D X64WIN -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64win.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
+"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -o  "$(ProjectDir)..\3rd\luaffi\src\call_arm.h"  "$(ProjectDir)..\3rd\luaffi\src\call_arm.dasc"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -153,10 +153,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>"$(ProjectDir)..\make\luamake\lua.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(ProjectDir)..\3rd\luaffi\src\call_x86.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake\lua.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake\lua.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -D X64WIN -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64win.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake\lua.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -o  "$(ProjectDir)..\3rd\luaffi\src\call_arm.h"  "$(ProjectDir)..\3rd\luaffi\src\call_arm.dasc"</Command>
+      <Command>"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(ProjectDir)..\3rd\luaffi\src\call_x86.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
+"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
+"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -D X64WIN -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64win.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
+"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -o  "$(ProjectDir)..\3rd\luaffi\src\call_arm.h"  "$(ProjectDir)..\3rd\luaffi\src\call_arm.dasc"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -176,10 +176,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>"$(ProjectDir)..\make\luamake\lua.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(ProjectDir)..\3rd\luaffi\src\call_x86.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake\lua.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake\lua.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -D X64WIN -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64win.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake\lua.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -o  "$(ProjectDir)..\3rd\luaffi\src\call_arm.h"  "$(ProjectDir)..\3rd\luaffi\src\call_arm.dasc"</Command>
+      <Command>"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(ProjectDir)..\3rd\luaffi\src\call_x86.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
+"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
+"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -D X64WIN -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64win.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
+"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -o  "$(ProjectDir)..\3rd\luaffi\src\call_arm.h"  "$(ProjectDir)..\3rd\luaffi\src\call_arm.dasc"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -199,10 +199,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>"$(ProjectDir)..\make\luamake\lua.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(ProjectDir)..\3rd\luaffi\src\call_x86.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake\lua.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake\lua.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -D X64WIN -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64win.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake\lua.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -o  "$(ProjectDir)..\3rd\luaffi\src\call_arm.h"  "$(ProjectDir)..\3rd\luaffi\src\call_arm.dasc"</Command>
+      <Command>"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(ProjectDir)..\3rd\luaffi\src\call_x86.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
+"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
+"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -D X64WIN -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64win.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
+"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -o  "$(ProjectDir)..\3rd\luaffi\src\call_arm.h"  "$(ProjectDir)..\3rd\luaffi\src\call_arm.dasc"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
