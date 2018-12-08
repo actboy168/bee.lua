@@ -51,6 +51,7 @@ local function deps_dir(dir)
 end
 
 local function calc_deps_file(p, a, b)
+    assert(alldeps[p], p)
     if a[p] then
         return
     end
