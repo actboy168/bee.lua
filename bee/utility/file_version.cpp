@@ -4,21 +4,21 @@
 
 namespace bee {
 	file_version::file_version()
-		: vaild_(false)
-		, fixed_file_info_(nullptr)
+		: fixed_file_info_(nullptr)
 		, translation_size_(0)
 		, current_(0)
 		, translation_()
 		, version_info_()
+        , vaild_(false)
 	{ }
 
 	file_version::file_version(const wchar_t* module_path)
-		: vaild_(create(module_path))
-		, fixed_file_info_(nullptr)
+		: fixed_file_info_(nullptr)
 		, translation_size_(0)
 		, current_(0)
 		, translation_()
 		, version_info_()
+        , vaild_(create(module_path))
 	{ }
 
 	const wchar_t* file_version::operator[] (const wchar_t* key) const {

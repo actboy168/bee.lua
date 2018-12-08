@@ -25,7 +25,6 @@ namespace bee {
 			WORD code_page;
 		};
 
-		bool vaild_;
 		VS_FIXEDFILEINFO* fixed_file_info_;
 		size_t translation_size_;
 		size_t current_;
@@ -38,6 +37,7 @@ namespace bee {
 #if defined(_MSC_VER)
 #pragma warning(pop)
 #endif
+        bool vaild_;
 	};
 
 	struct _BEE_API simple_file_version {
