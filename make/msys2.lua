@@ -18,6 +18,7 @@ function mt:exec(cmd, cwd)
         convertpath(cwd),
         convertpath(cmd)
     )
+    print(command)
     local f = io.popen(command, 'r')
     for l in f:lines() do
         print(l)
