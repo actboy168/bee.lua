@@ -1,0 +1,5 @@
+/utf8/*.o
+/src/*.o
+/src/*.a
+/src/*.exe
+/src/*.dll
