@@ -13,7 +13,7 @@ end
 
 function mt:exec(cmd, cwd)
     cwd = cwd or fs.current_path():string()
-    local command = ([[%s -lc "export PATH=/mingw64/bin:/usr/local/bin:/usr/bin:/bin:/opt/bin; cd %s; %s"]]):format(
+    local command = ([[%s -lc "export PATH=$PATH:/mingw64/bin:/usr/local/bin:/usr/bin:/bin:/opt/bin; cd %s; %s"]]):format(
         self.bash:string(),
         convertpath(cwd),
         convertpath(cmd)
