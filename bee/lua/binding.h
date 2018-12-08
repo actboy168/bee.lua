@@ -60,8 +60,8 @@ namespace bee::lua {
 
 #define DEFINE_LUAOPEN(name) \
     BEE_LUA_API \
-    int luaopen_bee_## name ##(lua_State* L) { \
-        return bee::lua_## name ##::luaopen(L); \
+    int luaopen_bee_##name (lua_State* L) { \
+        return bee::lua_##name ::luaopen(L); \
     }
 
 #define newObject(L, name)      luaL_newmetatable((L), "bee::" name)

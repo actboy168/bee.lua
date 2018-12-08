@@ -27,7 +27,7 @@ namespace bee::lua_socket {
         return 2;
     }
     static socket::protocol read_protocol(lua_State* L, int idx) {
-        std::string_view type = lua::to_strview(L, 1);
+        std::string_view type = lua::to_strview(L, idx);
         if (type == "tcp") {
             return socket::protocol::tcp;
         }

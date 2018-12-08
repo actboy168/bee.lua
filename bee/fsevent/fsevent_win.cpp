@@ -231,7 +231,9 @@ namespace bee::win::fsevent {
             return;
         }
         m_apc_queue.push({
-            apc_arg::type::Terminate
+            apc_arg::type::Terminate,
+            kInvalidTaskId,
+            std::wstring(),
         });
         if (!thread_signal()) {
             m_thread->detach();
@@ -262,7 +264,8 @@ namespace bee::win::fsevent {
         }
         m_apc_queue.push({
             apc_arg::type::Remove,
-            id
+            id,
+            std::wstring(),
         });
         thread_signal();
         return true;

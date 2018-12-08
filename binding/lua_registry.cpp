@@ -11,7 +11,7 @@ namespace bee::lua_registry {
             return static_cast<key_w*>(lua_touserdata(L, idx));
         }
 
-        key_w* create(lua_State* L, key_w::hkey_type keytype, open_access::t access) {
+        key_w* create(lua_State* L, key_w::hkey_type keytype, open_access access) {
             key_w* storage = (key_w*)lua_newuserdata(L, sizeof(key_w));
             lua_pushvalue(L, lua_upvalueindex(1));
             lua_setmetatable(L, -2);
@@ -138,7 +138,7 @@ namespace bee::lua_registry {
         LUA_TRY;
         std::wstring key = lua::to_string(L, 1);
         size_t pos = key.find(L'\\');
-        if (pos == -1) {
+        if (pos == std::wstring::npos) {
             return 0;
         }
         std::wstring base =  key.substr(0, pos);

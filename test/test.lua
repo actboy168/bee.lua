@@ -1,7 +1,7 @@
-local platform, configuration = ...
+local plat = ...
 
 package.path = './test/?.lua'
-package.cpath = ('./bin/msvc_%s_%s/?.dll'):format(platform, configuration)
+package.cpath = ('./bin/%s/?.dll'):format(plat)
 
 dofile './3rd/luaffi/src/test.lua'
 require 'test_filesystem'

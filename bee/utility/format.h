@@ -28,7 +28,7 @@
 #    define BEE_FORMAT_THROW_ERROR(reason) \
         do { \
             assert(0 && (reason)); \
-            throw std::exception(reason); \
+            throw std::runtime_error(reason); \
         } while (0)
 #endif
 
@@ -518,6 +518,7 @@ private:
         {
         case 'd': case 'i':
             flags_ |= FL_SIGNED;
+            [[fallthrough]];
         case 'u': 
             format_cast_integer<10>(convert_to_integer(value));
             break;

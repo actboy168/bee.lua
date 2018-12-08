@@ -78,7 +78,7 @@ namespace bee::net {
         return std::move(ep);
     }
     nonstd::expected<endpoint, std::string> endpoint::from_hostname(const std::string_view& ip, int port) {
-        addrinfo hint = { 0 };
+        addrinfo hint = { };
         hint.ai_family = AF_UNSPEC;
         if (needsnolookup(ip)) {
             hint.ai_flags = AI_NUMERICHOST;
@@ -112,12 +112,20 @@ namespace bee::net {
         const sockaddr* sa = addr();
         if (sa->sa_family == AF_INET) {
             char tmp[sizeof "255.255.255.255"];
+#if !defined(__MINGW32__)
             const char* s = inet_ntop(sa->sa_family, (const void*) &((struct sockaddr_in*)sa)->sin_addr, tmp, sizeof tmp);
+#else
+            const char* s = inet_ntop(sa->sa_family, (void*) &((struct sockaddr_in*)sa)->sin_addr, tmp, sizeof tmp);
+#endif
             return { std::string(s), ntohs(((struct sockaddr_in*)sa)->sin_port) };
         }
         else if (sa->sa_family == AF_INET6) {
             char tmp[sizeof "ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255"];
-            const char* s = inet_ntop(sa->sa_family, (const void*) &((struct sockaddr_in6*)sa)->sin6_addr, tmp, sizeof tmp);
+#if !defined(__MINGW32__)
+            const char* s = inet_ntop(sa->sa_family, (const void*) &((const struct sockaddr_in6*)sa)->sin6_addr, tmp, sizeof tmp);
+#else
+            const char* s = inet_ntop(sa->sa_family, (void*) &((const struct sockaddr_in6*)sa)->sin6_addr, tmp, sizeof tmp);
+#endif
             return { std::string(s), ntohs(((struct sockaddr_in6*)sa)->sin6_port) };
         }
         else if (sa->sa_family == AF_UNIX) {

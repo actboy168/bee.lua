@@ -120,7 +120,7 @@ namespace bee {
             const char * const last_ch = const_cast<const char *>(reinterpret_cast<const volatile char *>(last));
             char * const dest_ch = const_cast<char *>(reinterpret_cast<volatile char *>(dest));
             const size_t count = last_ch - first_ch;
-            std::memmove(dest_ch, first_ch, count);
+            memmove(dest_ch, first_ch, count);
         }
 
         void grow(size_type size) 

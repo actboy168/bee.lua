@@ -25,15 +25,19 @@ namespace bee {
 			WORD code_page;
 		};
 
+		bool vaild_;
 		VS_FIXEDFILEINFO* fixed_file_info_;
 		size_t translation_size_;
 		size_t current_;
+#if defined(_MSC_VER)
 #pragma warning(push)
 #pragma warning(disable:4251)
+#endif
 		std::unique_ptr<TRANSLATION[]> translation_;
 		std::unique_ptr<uint8_t[]> version_info_;
+#if defined(_MSC_VER)
 #pragma warning(pop)
-		bool vaild_;
+#endif
 	};
 
 	struct _BEE_API simple_file_version {

@@ -32,9 +32,14 @@ namespace bee::platform {
 	}
 
 	version get_version() {
-		OSVERSIONINFOW osvi = { sizeof OSVERSIONINFOW };
+		OSVERSIONINFOW osvi = {  };
+        osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
+#if defined(_MSC_VER)
 #pragma warning(suppress:4996)
 		::GetVersionExW(&osvi);
+#else
+        ::GetVersionExW(&osvi);
+#endif
 
 		uint32_t major = osvi.dwMajorVersion;
 		uint32_t minor = osvi.dwMinorVersion;

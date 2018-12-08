@@ -46,8 +46,7 @@
             "program": "${workspaceFolder}/test/test.lua",
             "stopOnEntry": false,
             "arg": [
-                "x86",
-                "Debug"
+                "msvc_x86_Debug",
             ]
         }
     ]

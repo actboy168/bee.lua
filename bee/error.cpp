@@ -2,7 +2,6 @@
 #if defined(_WIN32)
 #include <Windows.h>
 #include <bee/error/windows_category.h>
-#pragma comment(lib, "Ws2_32.lib")
 #else
 #include <errno.h>
 #endif

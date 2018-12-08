@@ -10,30 +10,6 @@
 
 namespace bee::registry {
 
-    namespace open_option 
-    {
-        enum  open_option
-        {
-            none,
-            fail_if_not_exists = none,
-            create_if_not_exists,
-        };                      
-        typedef open_option t;
-    }
-
-    namespace open_access 
-    {
-        enum open_access
-        {
-            none = 0,
-            read = KEY_READ,
-            write = KEY_READ | KEY_WRITE,
-            w32key = KEY_WOW64_32KEY,
-            w64key = KEY_WOW64_64KEY,
-        };
-        typedef open_access t;
-    }
-
     template <typename C, typename T = reg_traits<C>>
     class basic_key
     {
@@ -48,7 +24,7 @@ namespace bee::registry {
         typedef typename traits_type::result_type                  result_type;
         typedef std::map<string_type, std::unique_ptr<value_type>> value_map_type;
 
-        basic_key(hkey_type keybase, open_access::t accessfix = open_access::none)
+        basic_key(hkey_type keybase, open_access accessfix = open_access::none)
             : m_keybase(keybase)
             , m_keypath()
             , m_keyname()
@@ -58,7 +34,7 @@ namespace bee::registry {
             , m_valuemap()
         { }
 
-        basic_key(hkey_type keybase, const string_type& keypath, const string_type& keyname, open_access::t accessfix = open_access::none)
+        basic_key(hkey_type keybase, const string_type& keypath, const string_type& keyname, open_access accessfix = open_access::none)
             : m_keybase(keybase)
             , m_keypath(keypath)
             , m_keyname(keyname)
@@ -136,7 +112,7 @@ namespace bee::registry {
             return value(value_name);
         }
 
-        hkey_type handle(open_access::t access)
+        hkey_type handle(open_access access)
         {
             open_key_(access);
             return m_key;
@@ -160,7 +136,7 @@ namespace bee::registry {
 
         bool del()
         {
-            hkey_type key = open_key_(m_keybase, m_keypath.c_str(), open_access::write | m_accessfix, open_option::fail_if_not_exists);
+            hkey_type key = open_key_(m_keybase, m_keypath.c_str(), (REGSAM)open_access::write | (REGSAM)m_accessfix, open_option::fail_if_not_exists);
             if (key == NULL)
             {
                 return false;
@@ -182,12 +158,12 @@ namespace bee::registry {
         }
 
     protected:
-        bool open_key_(open_access::t access)
+        bool open_key_(open_access access)
         {
             hkey_type key = NULL;
             if (access == open_access::write)
             {
-                open_option::t option = open_option::create_if_not_exists;
+                open_option option = open_option::create_if_not_exists;
                 if (m_key)
                 {
                     if (m_access == open_access::write)
@@ -197,25 +173,25 @@ namespace bee::registry {
                     else
                     {
                         close_key_();
-                        key = open_key_(m_keybase, key_name_(), access | m_accessfix, option);
+                        key = open_key_(m_keybase, key_name_(), (REGSAM)access | (REGSAM)m_accessfix, option);
                     }
                 }
                 else
                 {
-                    key = open_key_(m_keybase, key_name_(), access | m_accessfix, option);
+                    key = open_key_(m_keybase, key_name_(), (REGSAM)access | (REGSAM)m_accessfix, option);
                 }
             }
             else
             {
                 assert(access == open_access::read);
-                open_option::t option = open_option::fail_if_not_exists;
+                open_option option = open_option::fail_if_not_exists;
                 if (m_key)
                 {
                     key = m_key;
                 }
                 else
                 {
-                    key = open_key_(m_keybase, key_name_(), access | m_accessfix, option);
+                    key = open_key_(m_keybase, key_name_(), (REGSAM)access | (REGSAM)m_accessfix, option);
                 }
             }
 
@@ -239,7 +215,7 @@ namespace bee::registry {
             m_access = open_access::read;
         }
 
-        static hkey_type open_key_(hkey_type key_parent, const string_type& key_name, REGSAM access_mask, open_option::t option)
+        static hkey_type open_key_(hkey_type key_parent, const string_type& key_name, REGSAM access_mask, open_option option)
         {
             if (option == open_option::fail_if_not_exists)
             {
@@ -262,7 +238,7 @@ namespace bee::registry {
             }
         }
 
-        static hkey_type dup_key_(hkey_type hkey, open_access::t access_mask)
+        static hkey_type dup_key_(hkey_type hkey, open_access access_mask)
         {
             if (NULL == hkey) return NULL;
             result_type res;
@@ -276,8 +252,8 @@ namespace bee::registry {
         string_type    m_keypath;
         string_type    m_keyname;
         hkey_type      m_key;
-        open_access::t m_access;
-        open_access::t m_accessfix;
+        open_access m_access;
+        open_access m_accessfix;
         value_map_type m_valuemap;
     };
 

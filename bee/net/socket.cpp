@@ -1,12 +1,9 @@
-#pragma once
-
 #if defined _WIN32
 #    include <winsock2.h>
 #    include <mswsock.h>
 #    include <mstcpip.h>
 #    include <bee/utility/unicode.h>
 #    include <bee/net/unixsocket.h>
-#    pragma comment(lib, "Ws2_32.lib")
 #else
 #    include <fcntl.h>
 #    include <netinet/tcp.h>
@@ -143,6 +140,7 @@ namespace bee::net::socket {
     void keepalive(fd_t s, int keepalive, int keepalive_cnt, int keepalive_idle, int keepalive_intvl)
     {
 #if defined _WIN32
+        (void)keepalive_cnt;
         if (keepalive != -1)
         {
             tcp_keepalive keepaliveopts;

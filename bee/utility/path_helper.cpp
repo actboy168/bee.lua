@@ -7,7 +7,7 @@
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
 namespace bee::path_helper {
-    auto module(HMODULE module_handle) ->nonstd::expected<fs::path, std::exception> {
+    auto module(HMODULE module_handle)->nonstd::expected<fs::path, std::exception> {
         wchar_t buffer[MAX_PATH];
         DWORD path_len = ::GetModuleFileNameW(module_handle, buffer, _countof(buffer));
         if (path_len == 0) {
@@ -26,7 +26,7 @@ namespace bee::path_helper {
                 return std::move(fs::path(buf.data(), buf.data() + path_len));
             }
         }
-        return nonstd::make_unexpected(std::exception("::GetModuleFileNameW return too long."));
+        return nonstd::make_unexpected(std::runtime_error("::GetModuleFileNameW return too long."));
     }
 
     auto exe_path()->nonstd::expected<fs::path, std::exception> {

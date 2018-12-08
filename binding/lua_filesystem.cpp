@@ -32,13 +32,6 @@ namespace bee::lua_filesystem {
             return 1;
         }
 
-        static int constructor_(lua_State* L, const fs::path::string_type& path)
-        {
-            void* storage = newudata(L);
-            new (storage)fs::path(path);
-            return 1;
-        }
-
         static int constructor_(lua_State* L, fs::path::string_type&& path)
         {
             void* storage = newudata(L);

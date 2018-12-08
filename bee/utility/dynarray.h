@@ -90,7 +90,7 @@ namespace std {
 
         ~dynarray()
         {
-            for (auto i : *this) {
+            for (auto& i : *this) {
                 i.~T();
             }
             delete[] reinterpret_cast<char*>(mybase::data());

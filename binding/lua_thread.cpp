@@ -10,7 +10,7 @@
 #include <bee/lua/binding.h>
 
 extern "C" {
-#include "lua-seri.h"
+#include <lua-seri.h>
 }
 
 namespace bee::lua_thread {

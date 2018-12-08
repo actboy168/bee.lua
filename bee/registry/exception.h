@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bee/config.h>
+#include <system_error>
 
 namespace bee::registry {
 

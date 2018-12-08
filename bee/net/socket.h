@@ -16,7 +16,7 @@ namespace bee::net::socket {
 #else
     typedef int fd_t;
 #endif
-    enum { retired_fd = -1 };
+    inline static const fd_t retired_fd = -1;
 
     enum class protocol {
         none,

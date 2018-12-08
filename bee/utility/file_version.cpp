@@ -2,21 +2,23 @@
 #include <bee/utility/format.h>
 #include <vector>
 
-#pragma comment(lib, "version.lib")
-
 namespace bee {
 	file_version::file_version()
-		: fixed_file_info_(nullptr)
-		, vaild_(false)
-		, current_(0)
+		: vaild_(false)
+		, fixed_file_info_(nullptr)
 		, translation_size_(0)
+		, current_(0)
+		, translation_()
+		, version_info_()
 	{ }
 
 	file_version::file_version(const wchar_t* module_path)
-		: version_info_()
-		, vaild_(create(module_path))
-		, current_(0)
+		: vaild_(create(module_path))
+		, fixed_file_info_(nullptr)
 		, translation_size_(0)
+		, current_(0)
+		, translation_()
+		, version_info_()
 	{ }
 
 	const wchar_t* file_version::operator[] (const wchar_t* key) const {
@@ -67,13 +69,13 @@ namespace bee {
 		}
 		TRANSLATION* translate_ptr = nullptr;
 		if (!::VerQueryValueW(version_info_.get(), L"\\VarFileInfo\\Translation", (LPVOID*)&translate_ptr, &length)
-			|| (length < sizeof TRANSLATION)) {
+			|| (length < sizeof(TRANSLATION))) {
 			return false;
 		}
 		current_ = 0;
-		translation_size_ = length / sizeof TRANSLATION;
+		translation_size_ = length / sizeof(TRANSLATION);
 		translation_.reset(new TRANSLATION[translation_size_]);
-		memcpy(translation_.get(), translate_ptr, translation_size_ * sizeof TRANSLATION);
+		memcpy(translation_.get(), translate_ptr, translation_size_ * sizeof(TRANSLATION));
 		select_language(::GetUserDefaultLangID());
 		return true;
 	}

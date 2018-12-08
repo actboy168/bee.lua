@@ -12,6 +12,22 @@
 
 namespace bee::registry {
 
+    enum class open_option
+    {
+        none,
+        fail_if_not_exists = none,
+        create_if_not_exists,
+    };
+
+    enum class open_access
+    {
+        none = 0,
+        read = KEY_READ,
+        write = KEY_READ | KEY_WRITE,
+        w32key = KEY_WOW64_32KEY,
+        w64key = KEY_WOW64_64KEY,
+    };
+
     template <class char_type, class T>
     struct is_stringable { static const bool value = false; };
 
@@ -67,6 +83,8 @@ namespace bee::registry {
             return std::move(reg_dispatch<Result>(get_string()));
         }
 
+        // TODO
+#if defined(_MSC_VER)
         template <class Result>
         Result get(typename std::enable_if<
             !is_stringable<char_type, typename std::decay<Result>::type>::value
@@ -74,6 +92,7 @@ namespace bee::registry {
         {
             return get_<Result>();
         }
+#endif
 
         template <typename Result> operator Result () const { return get<Result>(); }
 
@@ -116,12 +135,15 @@ namespace bee::registry {
 
         template <typename Source> class_type& operator =(Source s) { set(s); return *this; }
 
+        // TODO
+#if defined(_MSC_VER)
     protected:
         template <class R> R    get_() const;
         template <> string_type get_<string_type>() const { return get_string(); }
         template <> uint32_t    get_<uint32_t>() const { return get_uint32_t(); }
         template <> uint64_t    get_<uint64_t>() const { return get_uint64_t(); }
         template <> blob_type   get_<blob_type>() const { return get_binary(); }
+#endif
 
     protected:
         key_type&        m_key;
@@ -129,7 +151,6 @@ namespace bee::registry {
         mutable uint32_t m_type;
         mutable bool     m_bTypeRetrieved;
     };
-
 
     template <typename C, typename T, typename K>
     inline basic_value<C, T, K>::basic_value(key_type& key, const string_type& name)
@@ -148,7 +169,7 @@ namespace bee::registry {
     { }
 
     template <typename C, typename T, typename K>
-    inline basic_value<C, T, K>::~basic_value() throw()
+    inline basic_value<C, T, K>::~basic_value()
     { }
 
     template <typename C, typename T, typename K>
