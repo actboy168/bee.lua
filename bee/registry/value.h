@@ -83,17 +83,6 @@ namespace bee::registry {
             return std::move(reg_dispatch<Result>(get_string()));
         }
 
-        // TODO
-#if defined(_MSC_VER)
-        template <class Result>
-        Result get(typename std::enable_if<
-            !is_stringable<char_type, typename std::decay<Result>::type>::value
-            , int>::type* = 0) const
-        {
-            return get_<Result>();
-        }
-#endif
-
         template <typename Result> operator Result () const { return get<Result>(); }
 
     public:
@@ -134,16 +123,6 @@ namespace bee::registry {
         }
 
         template <typename Source> class_type& operator =(Source s) { set(s); return *this; }
-
-        // TODO
-#if defined(_MSC_VER)
-    protected:
-        template <class R> R    get_() const;
-        template <> string_type get_<string_type>() const { return get_string(); }
-        template <> uint32_t    get_<uint32_t>() const { return get_uint32_t(); }
-        template <> uint64_t    get_<uint64_t>() const { return get_uint64_t(); }
-        template <> blob_type   get_<blob_type>() const { return get_binary(); }
-#endif
 
     protected:
         key_type&        m_key;
