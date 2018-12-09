@@ -427,7 +427,7 @@ namespace bee::win::subprocess {
             if (PeekNamedPipe((HANDLE)_get_osfhandle(_fileno(f)), 0, 0, 0, &rlen, 0)) {
                 return rlen;
             }
-            return 0;
+            return -1;
         }
     }
 }
