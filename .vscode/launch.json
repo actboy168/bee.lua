@@ -9,9 +9,8 @@
             "type": "lua",
             "request": "launch",
             "stopOnEntry": true,
-            "luaexe": "${workspaceFolder}/bin/msvc_x86_Debug/lua.exe",
-            "luadll": "${workspaceFolder}/bin/msvc_x86_Debug/lua54.dll",
-            "program": "${workspaceFolder}/make/embed.lua",
+            "luaexe": "${workspaceFolder}/make/luamake.exe",
+            "program": "${workspaceFolder}/project/msvc/embed.lua",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "arg": [
@@ -23,9 +22,9 @@
             "type": "lua",
             "request": "launch",
             "name": "Make",
-            "luaexe": "${workspaceFolder}/make/luamake/lua.exe",
+            "luaexe": "${workspaceFolder}/make/luamake.exe",
             "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/make/make.lua",
+            "program": "${workspaceFolder}/project/msvc/make.lua",
             "path": [
                 "${workspaceFolder}/script/?.lua",
                 "${workspaceFolder}/make/luamake/?.lua",
