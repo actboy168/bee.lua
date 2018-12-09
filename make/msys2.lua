@@ -1,6 +1,5 @@
 local fs = require 'bee.filesystem'
 local sp = require 'bee.subprocess'
-local thread = require 'bee.thread'
 
 local function convertpath(s)
     return s:gsub("\\", "/"):gsub("([a-zA-z]):", "/%1")
