@@ -18,13 +18,22 @@ function mt:exec(cmd, cwd)
         convertpath(cwd),
         convertpath(cmd)
     )
-    local procees, stdout, stderr = sp.spawn {
+    local process, stdout, stderr = sp.spawn {
         self.bash,
         "-lc",
         command,
         stderr = true,
         stdout = true,
     }
+    if not process then
+        error(stdout)
+    end
+    sp.filemode(stdout, 'b')
+    sp.filemode(stderr, 'b')
+    stdout:setvbuf 'no'
+    stderr:setvbuf 'no'
+    io.stdout:setvbuf 'no'
+    io.stderr:setvbuf 'no'
     for l in stdout:lines() do
         io.stdout:write(l .. '\n')
     end
@@ -33,7 +42,7 @@ function mt:exec(cmd, cwd)
         io.stderr:write(l .. '\n')
     end
     stderr:close()
-    local code = procees:wait()
+    local code = process:wait()
     if code ~= 0 then
         os.exit(code, true)
     end
