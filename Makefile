@@ -2,7 +2,7 @@ include project/make/init.mk
 
 BINDIR = bin/$(PLAT)_$(BUILD_CONFIG)
 TMPDIR = tmp/$(PLAT)_$(BUILD_CONFIG)
-LUACFLAGS := CFLAGS
+LUACFLAGS := $(CFLAGS)
 CFLAGS += -DBEE_EXPORTS
 
 default : $(BINDIR)/bee.dll
