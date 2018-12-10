@@ -79,7 +79,7 @@ namespace bee::lua_socket {
     static int accept(lua_State* L) {
         luafd& self = checkfd(L, 1);
         socket::fd_t newfd;
-        if (socket::accept(self.fd, newfd)) {
+        if (socket::status::success != socket::accept(self.fd, newfd)) {
             return push_neterror(L, "accept");
         }
         constructor(L, newfd, self.protocol);
@@ -94,35 +94,41 @@ namespace bee::lua_socket {
         luaL_Buffer b;
         luaL_buffinit(L, &b);
         char* buf = luaL_prepbuffsize(&b, (size_t)len);
-        int rc = socket::recv(self.fd, buf, (int)len);
-        switch (rc) {
-        case -3:
+        int rc;
+        switch (socket::recv(self.fd, rc, buf, (int)len)) {
+        case socket::status::close:
             lua_pushnil(L);
             return 1;
-        case -2:
+        case socket::status::wait:
             lua_pushboolean(L, 0);
             return 1;
-        case -1:
-            return push_neterror(L, "recv");
-        default:
+        case socket::status::success:
             luaL_pushresultsize(&b, rc);
             return 1;
+        default:
+            assert(false);
+            [[fallthrough]];
+        case socket::status::failed:
+            return push_neterror(L, "recv");
         }
     }
     static int send(lua_State* L) {
         luafd& self = checkfd(L, 1);
         size_t len;
         const char* buf = luaL_checklstring(L, 2, &len);
-        int rc = socket::send(self.fd, buf, (int)len);
-        switch (rc) {
-        case -2:
+        int rc;
+        switch (socket::send(self.fd, rc, buf, (int)len)) {
+        case socket::status::wait:
             lua_pushboolean(L, 0);
             return 1;
-        case -1:
-            return push_neterror(L, "send");
-        default:
+        case socket::status::success:
             lua_pushinteger(L, rc);
             return 1;
+        default:
+            assert(false);
+            [[fallthrough]];
+        case socket::status::failed:
+            return push_neterror(L, "send");
         }
     }
     static int recvfrom(lua_State* L) {
@@ -135,23 +141,26 @@ namespace bee::lua_socket {
         luaL_Buffer b;
         luaL_buffinit(L, &b);
         char* buf = luaL_prepbuffsize(&b, (size_t)len);
-        int rc = socket::recvfrom(self.fd, buf, (int)len, ep);
-        switch (rc) {
-        case -3:
+        int rc;
+        switch (socket::recvfrom(self.fd, rc, buf, (int)len, ep)) {
+        case socket::status::close:
             lua_pushnil(L);
             return 1;
-        case -2:
+        case socket::status::wait:
             lua_pushboolean(L, 0);
             return 1;
-        case -1:
-            return push_neterror(L, "recv");
-        default: {
+        case socket::status::success: {
             luaL_pushresultsize(&b, rc);
             auto[ip, port] = ep.info();
             lua_pushlstring(L, ip.data(), ip.size());
             lua_pushinteger(L, port);
             return 3;
         }
+        default:
+            assert(false);
+            [[fallthrough]];
+        case socket::status::failed:
+            return push_neterror(L, "recvfrom");
         }
     }
     static int sendto(lua_State* L) {
@@ -165,16 +174,19 @@ namespace bee::lua_socket {
             lua_pushlstring(L, ep.error().data(), ep.error().size());
             return lua_error(L);
         }
-        int rc = socket::sendto(self.fd, buf, (int)len, ep.value());
-        switch (rc) {
-        case -2:
+        int rc;
+        switch (socket::sendto(self.fd, rc, buf, (int)len, ep.value())) {
+        case socket::status::wait:
             lua_pushboolean(L, 0);
             return 1;
-        case -1:
-            return push_neterror(L, "send");
-        default:
+        case socket::status::success:
             lua_pushinteger(L, rc);
             return 1;
+        default:
+            assert(false);
+            [[fallthrough]];
+        case socket::status::failed:
+            return push_neterror(L, "sendto");
         }
     }
     static int close(lua_State* L) {
@@ -314,14 +326,16 @@ namespace bee::lua_socket {
         luafd& self = constructor(L, fd, protocol);
         self.connect = true;
         switch (socket::connect(fd, *ep)) {
-        case 0:
+        case socket::status::success:
             lua_pushboolean(L, true);
             return 2;
-        case -2:
+        case socket::status::wait:
             lua_pushboolean(L, false);
             return 2;
-        case -1:
         default:
+            assert(false);
+            [[fallthrough]];
+        case socket::status::failed:
             return push_neterror(L, "connect");
         }
     }
@@ -339,7 +353,7 @@ namespace bee::lua_socket {
             return push_neterror(L, "socket");
         }
         luafd& self = constructor(L, fd, protocol);
-        if (socket::bind(fd, *ep)) {
+        if (socket::status::success != socket::bind(fd, *ep)) {
             return push_neterror(L, "bind");
         }
 #if defined _WIN32
@@ -349,7 +363,7 @@ namespace bee::lua_socket {
 		}
 #endif
         if (protocol != socket::protocol::udp) {
-            if (socket::listen(fd, backlog)) {
+            if (socket::status::success != socket::listen(fd, backlog)) {
                 return push_neterror(L, "listen");
             }
         }

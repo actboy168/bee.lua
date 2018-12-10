@@ -5,6 +5,6 @@
 
 namespace bee::net::socket {
 	bool u_enable();
-	int  u_connect(fd_t s, const endpoint& ep);
-	int  u_bind(fd_t s, const endpoint& ep);
+    status u_connect(fd_t s, const endpoint& ep);
+    status u_bind(fd_t s, const endpoint& ep);
 }

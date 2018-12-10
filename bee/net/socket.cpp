@@ -204,7 +204,7 @@ namespace bee::net::socket {
         net_assert_success(rc);
     }
 
-    int connect(fd_t s, const endpoint& ep)
+    status connect(fd_t s, const endpoint& ep)
     {
 #if defined _WIN32
 		if (u_enable() && ep.family() == AF_UNIX) {
@@ -214,120 +214,121 @@ namespace bee::net::socket {
 
         int rc = ::connect(s, ep.addr(), (int)ep.addrlen());
         if (rc == 0)
-            return 0;
+            return status::success;
 
 #if defined _WIN32
         const int error_code = ::WSAGetLastError();
         if (error_code == WSAEINPROGRESS || error_code == WSAEWOULDBLOCK)
-            return -2;
+            return status::wait;
 #else
         if (errno == EINTR || errno == EINPROGRESS)
-            return -2;
+            return status::wait;
 #endif
-        return -1;
+        return status::failed;
     }
 
-    int bind(fd_t s, const endpoint& ep)
+    status bind(fd_t s, const endpoint& ep)
     {
 #if defined _WIN32
 		if (u_enable() && ep.family() == AF_UNIX) {
 			return u_bind(s, ep);
 		}
 #endif
-        return ::bind(s, ep.addr(), ep.addrlen());
+        int ok = ::bind(s, ep.addr(), ep.addrlen());
+        return ok == 0 ? status::success : status::failed;
     }
 
-    int listen(fd_t s, int backlog)
+    status listen(fd_t s, int backlog)
     {
         if (::listen(s, backlog) == -1)
         {
-            return -2;
+            return status::failed;
         }
-        return 0;
+        return status::success;
     }
 
-    int accept(fd_t s, fd_t& fd)
+    status accept(fd_t s, fd_t& fd)
     {
         fd = ::accept(s, NULL, NULL);
         if (fd == retired_fd)
         {
 #if defined _WIN32
-            return -1;
+            return status::failed;
 #else 
             if (errno != EAGAIN && errno != ECONNABORTED && errno != EPROTO && errno != EINTR)
             {
-                return -1;
+                return status::failed;
             }
             else
             {
-                return -2;
+                return status::wait;
             }
 #endif
         }
-        return 0;
+        return status::success;
     }
 
-    int accept(fd_t s, fd_t& fd, endpoint& ep)
+    status accept(fd_t s, fd_t& fd, endpoint& ep)
     {
         socklen_t addrlen = ep.addrlen();
         fd = ::accept(s, ep.addr(), &addrlen);
         if (fd == retired_fd)
         {
 #if defined _WIN32
-            return -1;
+            return status::failed;
 #else 
             if (errno != EAGAIN && errno != ECONNABORTED && errno != EPROTO && errno != EINTR)
             {
-                return -1;
+                return status::failed;
             }
             else 
             {
-                return -2;
+                return status::wait;
             }
 #endif
         }
         ep.resize(addrlen);
-        return 0;
+        return status::success;
     }
 
-    int recv(fd_t s, char* buf, int len) {
-        int rc = ::recv(s, buf, len, 0);
+    status recv(fd_t s, int& rc, char* buf, int len) {
+        rc = ::recv(s, buf, len, 0);
         if (rc == 0) {
-            return -3;
+            return status::close;
         }
         if (rc < 0) {
-            return wait_finish() ? -2 : -1;
+            return wait_finish() ? status::wait : status::failed;
         }
-        return rc;
+        return status::success;
     }
 
-    int send(fd_t s, const char* buf, int len) {
-        int rc = ::send(s, buf, len, 0);
+    status send(fd_t s, int& rc, const char* buf, int len) {
+        rc = ::send(s, buf, len, 0);
         if (rc < 0) {
-            return wait_finish() ? -2 : -1;
+            return wait_finish() ? status::wait : status::failed;
         }
-        return rc;
+        return status::success;
     }
 
-    int  recvfrom(fd_t s, char* buf, int len, endpoint& ep) {
+    status  recvfrom(fd_t s, int& rc, char* buf, int len, endpoint& ep) {
         socklen_t addrlen = ep.addrlen();
-        int rc = ::recvfrom(s, buf, len, 0, ep.addr(), &addrlen);
+        rc = ::recvfrom(s, buf, len, 0, ep.addr(), &addrlen);
         if (rc == 0) {
-            return -3;
+            return status::close;
         }
         if (rc < 0) {
-            return wait_finish() ? -2 : -1;
+            return wait_finish() ? status::wait : status::failed;
         }
         ep.resize(addrlen);
-        return rc;
+        return status::success;
     }
 
-    int  sendto(fd_t s, const char* buf, int len, const endpoint& ep) {
-        int rc = ::sendto(s, buf, len, 0, ep.addr(), ep.addrlen());
+    status  sendto(fd_t s, int& rc, const char* buf, int len, const endpoint& ep) {
+        rc = ::sendto(s, buf, len, 0, ep.addr(), ep.addrlen());
         if (rc < 0) {
-            return wait_finish() ? -2 : -1;
+            return wait_finish() ? status::wait : status::failed;
         }
-        return rc;
+        return status::success;
     }
 
     bool getpeername(fd_t s, endpoint& ep) {

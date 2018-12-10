@@ -83,32 +83,32 @@ namespace bee::net::socket {
 		return enable;
 	}
 
-	int u_connect(fd_t s, const endpoint& ep) {
+    status u_connect(fd_t s, const endpoint& ep) {
 		int tcpport = 0;
 		if (!read_tcp_port(ep, tcpport)) {
 			::WSASetLastError(WSAECONNREFUSED);
-			return - 1;
+			return status::failed;
 		}
 		auto newep = endpoint::from_hostname("127.0.0.1", tcpport);
 		if (!newep) {
 			::WSASetLastError(WSAECONNREFUSED);
-			return -1;
+			return status::failed;
 		}
 		return socket::connect(s, *newep);
 	}
-	int u_bind(fd_t s, const endpoint& ep) {
+    status u_bind(fd_t s, const endpoint& ep) {
 		auto newep = endpoint::from_hostname("127.0.0.1", 0);
 		if (!newep) {
-			return -1;
+			return status::failed;
 		}
-		int ok = socket::bind(s, *newep);
-		if (ok < 0) {
+		status ok = socket::bind(s, *newep);
+		if (ok != status::success) {
 			return ok;
 		}
 		if (!write_tcp_port(ep, s)) {
 			::WSASetLastError(WSAENETDOWN);
-			return -1;
+            return status::failed;
 		}
-		return ok;
+		return status::success;
 	}
 }

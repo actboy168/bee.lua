@@ -31,6 +31,13 @@ namespace bee::net::socket {
         write,
     };
 
+    enum class status {
+        success,
+        wait,
+        close,
+        failed,
+    };
+ 
     void initialize();
     fd_t open(int family, protocol protocol);
     bool close(fd_t s);
@@ -41,17 +48,17 @@ namespace bee::net::socket {
     void send_buffer(fd_t s, int bufsize);
     void recv_buffer(fd_t s, int bufsize);
     void reuse(fd_t s);
-    int  connect(fd_t s, const endpoint& ep);
-    int  bind(fd_t s, const endpoint& ep);
-    int  listen(fd_t s, int backlog);
-    int  accept(fd_t s, fd_t& sock);
-    int  accept(fd_t s, fd_t& fd, endpoint& ep);
-    int  recv(fd_t s, char* buf, int len);
-    int  send(fd_t s, const char* buf, int len);
-    int  recvfrom(fd_t s, char* buf, int len, endpoint& ep);
-    int  sendto(fd_t s, const char* buf, int len, const endpoint& ep);
-    bool getpeername(fd_t s, endpoint& ep);
-    bool getsockname(fd_t s, endpoint& ep);
-    bool unlink(fd_t s);
-    int  errcode(fd_t s);
+    status connect(fd_t s, const endpoint& ep);
+    status bind(fd_t s, const endpoint& ep);
+    status listen(fd_t s, int backlog);
+    status accept(fd_t s, fd_t& sock);
+    status accept(fd_t s, fd_t& fd, endpoint& ep);
+    status recv(fd_t s, int& rc, char* buf, int len);
+    status send(fd_t s, int& rc, const char* buf, int len);
+    status recvfrom(fd_t s, int& rc, char* buf, int len, endpoint& ep);
+    status sendto(fd_t s, int& rc, const char* buf, int len, const endpoint& ep);
+    bool   getpeername(fd_t s, endpoint& ep);
+    bool   getsockname(fd_t s, endpoint& ep);
+    bool   unlink(fd_t s);
+    int    errcode(fd_t s);
 }
