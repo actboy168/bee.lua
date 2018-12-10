@@ -207,4 +207,4 @@ assert(msg == 'response')
 request:push('quit')
 thd:wait()
 
-channel.reset()
+thread.reset()
