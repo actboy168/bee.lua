@@ -254,7 +254,6 @@ namespace bee::lua_subprocess {
 
         static int spawn(lua_State* L) {
             luaL_checktype(L, 1, LUA_TTABLE);
-            int retn = 0;
             subprocess::spawn spawn;
             native_args args = cast_args(L);
             if (args.size() == 0) {
@@ -269,17 +268,14 @@ namespace bee::lua_subprocess {
             FILE* f_stdin = cast_stdio(L, "stdin");
             if (f_stdin) {
                 spawn.redirect(subprocess::stdio::eInput, f_stdin);
-                retn++;
             }
             FILE* f_stdout = cast_stdio(L, "stdout");
             if (f_stdout) {
                 spawn.redirect(subprocess::stdio::eOutput, f_stdout);
-                retn++;
             }
             FILE* f_stderr = cast_stdio(L, "stderr");
             if (f_stderr) {
                 spawn.redirect(subprocess::stdio::eError, f_stderr);
-                retn++;
             }
             if (!spawn.exec(args, cwd ? cwd->c_str() : 0)) {
                 lua_pushnil(L);
@@ -287,9 +283,22 @@ namespace bee::lua_subprocess {
                 return 2;
             }
             process::constructor(L, spawn);
-            retn += 1;
-            lua_insert(L, -retn);
-            return retn;
+            if (f_stderr) {
+                lua_pushstring(L, "stderr");
+                lua_pushvalue(L, -3);
+                lua_rawset(L, -3);
+            }
+            if (f_stdout) {
+                lua_pushstring(L, "stdout");
+                lua_pushvalue(L, -3);
+                lua_rawset(L, -3);
+            }
+            if (f_stdin) {
+                lua_pushstring(L, "stdin");
+                lua_pushvalue(L, -3);
+                lua_rawset(L, -3);
+            }
+            return 1;
         }
     }
 
