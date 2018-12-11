@@ -318,15 +318,15 @@ namespace bee::lua_subprocess {
             }
             process::constructor(L, spawn);
             if (f_stderr) {
-                lua_pushvalue(L, -2);
+                lua_insert(L, -2);
                 lua_setfield(L, -2, "stderr");
             }
             if (f_stdout) {
-                lua_pushvalue(L, -2);
+                lua_insert(L, -2);
                 lua_setfield(L, -2, "stdout");
             }
             if (f_stdin) {
-                lua_pushvalue(L, -2);
+                lua_insert(L, -2);
                 lua_setfield(L, -2, "stdin");
             }
             return 1;
