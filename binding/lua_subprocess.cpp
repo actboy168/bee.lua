@@ -65,6 +65,34 @@ namespace bee::lua_subprocess {
             return 1;
         }
 
+        static int index(lua_State* L) {
+            lua_pushvalue(L, 2);
+            if (LUA_TNIL != lua_rawget(L, lua_upvalueindex(1))) {
+                return 1;
+            }
+            if (LUA_TTABLE == lua_getuservalue(L, 1)) {
+                lua_pushvalue(L, 2);
+                if (LUA_TNIL != lua_rawget(L, -2)) {
+                    return 1;
+                }
+            }
+            return 0;
+        }
+
+        static int newindex(lua_State* L) {
+            if (LUA_TTABLE != lua_getuservalue(L, 1)) {
+                lua_pop(L, 1);
+                lua_newtable(L);
+                lua_pushvalue(L, -1);
+                if (!lua_setuservalue(L, 1)) {
+                    return 0;
+                }
+            }
+            lua_insert(L, -3);
+            lua_rawset(L, -3);
+            return 0;
+        }
+
         static int constructor(lua_State* L, subprocess::spawn& spawn) {
             void* storage = lua_newuserdata(L, sizeof(subprocess::process));
 
@@ -80,8 +108,14 @@ namespace bee::lua_subprocess {
                     { NULL, NULL }
                 };
                 luaL_setfuncs(L, mt, 0);
+
+                static luaL_Reg mt2[] = {
+                    { "__index", process::index },
+                    { "__newindex", process::newindex },
+                    { NULL, NULL }
+                };
                 lua_pushvalue(L, -1);
-                lua_setfield(L, -2, "__index");
+                luaL_setfuncs(L, mt2, 1);
             }
             lua_setmetatable(L, -2);
             new (storage)subprocess::process(spawn);
@@ -284,19 +318,16 @@ namespace bee::lua_subprocess {
             }
             process::constructor(L, spawn);
             if (f_stderr) {
-                lua_pushstring(L, "stderr");
-                lua_pushvalue(L, -3);
-                lua_rawset(L, -3);
+                lua_pushvalue(L, -2);
+                lua_setfield(L, -2, "stderr");
             }
             if (f_stdout) {
-                lua_pushstring(L, "stdout");
-                lua_pushvalue(L, -3);
-                lua_rawset(L, -3);
+                lua_pushvalue(L, -2);
+                lua_setfield(L, -2, "stdout");
             }
             if (f_stdin) {
-                lua_pushstring(L, "stdin");
-                lua_pushvalue(L, -3);
-                lua_rawset(L, -3);
+                lua_pushvalue(L, -2);
+                lua_setfield(L, -2, "stdin");
             }
             return 1;
         }
