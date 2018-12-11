@@ -295,6 +295,13 @@ namespace bee::lua_subprocess {
 
     static int peek(lua_State* L) {
         luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, 1, LUA_FILEHANDLE);
+        int n = subprocess::pipe::peek(p->f);
+        if (n < 0) {
+            auto error = make_syserror("peek");
+            lua_pushnil(L);
+            lua_pushfstring(L, "%s (%d)", error.what(), error.code().value());
+            return 2;
+        }
         lua_pushinteger(L, subprocess::pipe::peek(p->f));
         return 1;
     }
