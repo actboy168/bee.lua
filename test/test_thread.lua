@@ -2,13 +2,13 @@ local thread = require "bee.thread"
 
 local cpath_template = ("package.cpath = [[%s]]\n"):format(package.cpath)
 
-thread.thread(cpath_template .. [[
-    local thread = require "bee.thread"
+local function assert_thread_error()
     local err = thread.channel "errlog"
-    while true do
-        print(errlog:bpop())
+    local ok, msg = err:pop()
+    if ok then
+        error(msg)
     end
-]])
+end
 
 local function eq2(a, b)
     local delta = a - b
@@ -34,10 +34,11 @@ assert(eq2(os.clock() - clock, 0.1))
 os.remove('temp')
 thread.sleep(0.1)
 assert(file_exists('temp') == false)
-thread.thread(cpath_template .. [[
+local thd = thread.thread(cpath_template .. [[
     io.open('temp', 'w'):close()
 ]])
-thread.sleep(0.1)
+thd:wait()
+assert_thread_error()
 assert(file_exists('temp') == true)
 os.remove('temp')
 
@@ -51,6 +52,7 @@ local thd = thread.thread(cpath_template .. [[
 assert(file_exists('temp') == false)
 local clock = os.clock()
 thd:wait()
+assert_thread_error()
 assert(eq2(os.clock() - clock, 0.1))
 assert(file_exists('temp') == true)
 os.remove('temp')
@@ -99,6 +101,7 @@ request:push('request')
 local msg = response:bpop()
 assert(msg == 'response')
 thd:wait()
+assert_thread_error()
 
 local thd = thread.thread(cpath_template .. [[
     local thread = require "bee.thread"
@@ -117,6 +120,7 @@ local msg = response:bpop()
 assert(msg == 'response')
 assert(eq2(os.clock() - clock, 0.1))
 thd:wait()
+assert_thread_error()
 
 local thd = thread.thread(cpath_template .. [[
     local thread = require "bee.thread"
@@ -160,6 +164,7 @@ assert(result == 7)
 request:push('quit')
 
 thd:wait()
+assert_thread_error()
 thread.reset()
 
 -- pop
@@ -206,5 +211,6 @@ assert(msg == 'response')
 
 request:push('quit')
 thd:wait()
+assert_thread_error()
 
-channel.reset()
+thread.reset()
