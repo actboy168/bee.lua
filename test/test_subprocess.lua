@@ -17,7 +17,7 @@ local lua = subprocess.spawn {
     '-e', 'io.open("temp", "w"):close()'
 }
 assert(lua ~= nil)
-thread.sleep(0.1)
+lua:wait()
 assert(fs.exists(fs.path 'temp') == true)
 fs.remove(fs.path 'temp')
 
