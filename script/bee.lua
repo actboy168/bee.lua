@@ -2,7 +2,8 @@ local sp = require 'bee.subprocess'
 local fs = require 'bee.filesystem'
 local thd = require 'bee.thread'
 
-local function fork(script, args, options)
+local function fork(name, args, options)
+    local script = assert(package.searchpath(name, package.path))
     local init = {
         fs.exe_path(),
         '-E',
@@ -19,7 +20,7 @@ local function fork(script, args, options)
             end
         end
     end
-    return sp.swapn(init)
+    return sp.spawn(init)
 end
 
 local function thread(script, cfunction)
