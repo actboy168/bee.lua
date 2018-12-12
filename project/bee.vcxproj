@@ -204,6 +204,7 @@ $(ProjectDir)..\make\luamake.exe $(ProjectDir)..\project\msvc\embed.lua $(Projec
     <ClCompile Include="..\binding\lua_embed.cpp" />
     <ClCompile Include="..\binding\lua_filesystem.cpp" />
     <ClCompile Include="..\binding\lua_filewatch.cpp" />
+    <ClCompile Include="..\binding\lua_serialization.cpp" />
     <ClCompile Include="..\binding\lua_socket.cpp" />
     <ClCompile Include="..\binding\lua_registry.cpp" />
     <ClCompile Include="..\binding\lua_subprocess.cpp" />

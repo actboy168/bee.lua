@@ -108,6 +108,9 @@
     <ClCompile Include="..\bee\utility\file_version.cpp">
       <Filter>bee\utility</Filter>
     </ClCompile>
+    <ClCompile Include="..\binding\lua_serialization.cpp">
+      <Filter>binding</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\bee\subprocess\subprocess_posix.h">
