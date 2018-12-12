@@ -5,18 +5,18 @@ TMPDIR = tmp/$(PLAT)_$(BUILD_CONFIG)
 LUACFLAGS := $(CFLAGS)
 CFLAGS += -DBEE_EXPORTS
 
-default : $(BINDIR)/bee.dll
+default : alllua $(BINDIR)/bee.dll
 
 include project/make/deps.mk
 include project/make/bee.mk
 
-lua : | $(BINDIR)
+alllua : | $(BINDIR)
 	@cd $(LUADIR) && $(MAKE) --no-print-directory "PLAT=$(PLAT)" "CC=$(CC)" "CFLAGS=$(LUACFLAGS) $(SYSCFLAGS)"
 	@cp $(LUADIR)/liblua.a  $(BINDIR)
 	@cp $(LUADIR)/lua.exe   $(BINDIR)
 	@cp $(LUADIR)/lua54.dll $(BINDIR)
 
-$(BINDIR)/bee.dll : $(BEE_ALL) | lua
+$(BINDIR)/bee.dll : $(BEE_ALL)
 	$(CC) $(LDSHARED) $(CFLAGS) -o $@ $^ $(LUALIB) -lstdc++fs -lstdc++ -lws2_32 -lversion
 	$(STRIP) $@
 
@@ -26,6 +26,8 @@ $(BINDIR) :
 $(TMPDIR) :
 	mkdir -p $@
 
-clean :
+lua_clean :
 	cd $(LUADIR) && $(MAKE) clean
+
+clean : lua_clean
 	rm -rf $(TMPDIR)
