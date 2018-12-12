@@ -65,6 +65,34 @@ namespace bee::lua_subprocess {
             return 1;
         }
 
+        static int index(lua_State* L) {
+            lua_pushvalue(L, 2);
+            if (LUA_TNIL != lua_rawget(L, lua_upvalueindex(1))) {
+                return 1;
+            }
+            if (LUA_TTABLE == lua_getuservalue(L, 1)) {
+                lua_pushvalue(L, 2);
+                if (LUA_TNIL != lua_rawget(L, -2)) {
+                    return 1;
+                }
+            }
+            return 0;
+        }
+
+        static int newindex(lua_State* L) {
+            if (LUA_TTABLE != lua_getuservalue(L, 1)) {
+                lua_pop(L, 1);
+                lua_newtable(L);
+                lua_pushvalue(L, -1);
+                if (!lua_setuservalue(L, 1)) {
+                    return 0;
+                }
+            }
+            lua_insert(L, -3);
+            lua_rawset(L, -3);
+            return 0;
+        }
+
         static int constructor(lua_State* L, subprocess::spawn& spawn) {
             void* storage = lua_newuserdata(L, sizeof(subprocess::process));
 
@@ -80,8 +108,14 @@ namespace bee::lua_subprocess {
                     { NULL, NULL }
                 };
                 luaL_setfuncs(L, mt, 0);
+
+                static luaL_Reg mt2[] = {
+                    { "__index", process::index },
+                    { "__newindex", process::newindex },
+                    { NULL, NULL }
+                };
                 lua_pushvalue(L, -1);
-                lua_setfield(L, -2, "__index");
+                luaL_setfuncs(L, mt2, 1);
             }
             lua_setmetatable(L, -2);
             new (storage)subprocess::process(spawn);
@@ -254,7 +288,6 @@ namespace bee::lua_subprocess {
 
         static int spawn(lua_State* L) {
             luaL_checktype(L, 1, LUA_TTABLE);
-            int retn = 0;
             subprocess::spawn spawn;
             native_args args = cast_args(L);
             if (args.size() == 0) {
@@ -269,17 +302,14 @@ namespace bee::lua_subprocess {
             FILE* f_stdin = cast_stdio(L, "stdin");
             if (f_stdin) {
                 spawn.redirect(subprocess::stdio::eInput, f_stdin);
-                retn++;
             }
             FILE* f_stdout = cast_stdio(L, "stdout");
             if (f_stdout) {
                 spawn.redirect(subprocess::stdio::eOutput, f_stdout);
-                retn++;
             }
             FILE* f_stderr = cast_stdio(L, "stderr");
             if (f_stderr) {
                 spawn.redirect(subprocess::stdio::eError, f_stderr);
-                retn++;
             }
             if (!spawn.exec(args, cwd ? cwd->c_str() : 0)) {
                 lua_pushnil(L);
@@ -287,9 +317,19 @@ namespace bee::lua_subprocess {
                 return 2;
             }
             process::constructor(L, spawn);
-            retn += 1;
-            lua_insert(L, -retn);
-            return retn;
+            if (f_stderr) {
+                lua_insert(L, -2);
+                lua_setfield(L, -2, "stderr");
+            }
+            if (f_stdout) {
+                lua_insert(L, -2);
+                lua_setfield(L, -2, "stdout");
+            }
+            if (f_stdin) {
+                lua_insert(L, -2);
+                lua_setfield(L, -2, "stdin");
+            }
+            return 1;
         }
     }
 

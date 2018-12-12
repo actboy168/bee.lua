@@ -71,49 +71,33 @@ assert(buf:find(exe:filename():string(), 1, true) ~= nil)
 -- native_handle TODO
 
 -- stdout
-local lua, stdout = subprocess.spawn {
+local lua = subprocess.spawn {
     exe,
     '-e', 'io.write("ok")',
     stdout = true
 }
 lua:wait()
---assert(stdout:read 'a') TODO
+assert("ok" == lua.stdout:read 'a')
 
 -- subprocess.peek
-local lua, stdout = subprocess.spawn {
+local lua = subprocess.spawn {
     exe,
     '-e', 'io.write("ok")',
     stdout = true
 }
 lua:wait()
-assert(subprocess.peek(stdout) == 2)
+assert(subprocess.peek(lua.stdout) == 2)
 
--- TODO
---[[
 -- subprocess.filemode
-local lua, stdin, stdout = subprocess.spawn {
+local lua = subprocess.spawn {
     exe,
     '-e', 'io.write(io.read "a")',
     stdin = true,
     stdout = true,
 }
-stdin:setvbuf 'no'
-stdout:setvbuf 'no'
-stdin:write '\r\n'
+subprocess.filemode(lua.stdin, 'b')
+subprocess.filemode(lua.stdout, 'b')
+lua.stdin:write '\r\n'
+lua.stdin:close()
 lua:wait()
-assert(subprocess.peek(stdout) == 1)
-
-local lua, stdin, stdout = subprocess.spawn {
-    exe,
-    '-e', 'io.write(io.read "a")',
-    stdin = true,
-    stdout = true,
-}
-subprocess.filemode(stdin, 'b')
-subprocess.filemode(stdout, 'b')
-stdin:setvbuf 'no'
-stdout:setvbuf 'no'
-stdin:write '\r\n'
-lua:wait()
-assert(subprocess.peek(stdout) == 2)
-]]--
+assert(subprocess.peek(lua.stdout) == 2)
