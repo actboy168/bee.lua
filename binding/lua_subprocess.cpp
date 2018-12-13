@@ -201,28 +201,28 @@ namespace bee::lua_subprocess {
             return args;
         }
 
-        static FILE* cast_stdio(lua_State* L, const char* name) {
+        static subprocess::pipe::handle cast_stdio(lua_State* L, const char* name) {
             switch (lua_getfield(L, 1, name)) {
             case LUA_TUSERDATA: {
                 luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, -1, LUA_FILEHANDLE);
-                return p->f;
+                return subprocess::pipe::to_handle(p->f);
             }
             case LUA_TBOOLEAN: {
                 if (!lua_toboolean(L, -1)) {
                     break;
                 }
-                auto[rd, wr] = subprocess::pipe::open();
-                if (!rd || !wr) {
+                auto pipe = subprocess::pipe::open();
+                if (!pipe) {
                     break;
                 }
                 lua_pop(L, 1);
                 if (strcmp(name, "stdin") == 0) {
-                    newfile(L, wr);
-                    return rd;
+                    newfile(L, pipe.open_file(subprocess::pipe::mode::eWrite));
+                    return pipe.rd;
                 }
                 else {
-                    newfile(L, rd);
-                    return wr;
+                    newfile(L, pipe.open_file(subprocess::pipe::mode::eRead));
+                    return pipe.wr;
                 }
             }
             default:
@@ -299,15 +299,15 @@ namespace bee::lua_subprocess {
             cast_suspended(L, spawn);
             cast_option(L, spawn);
 
-            FILE* f_stdin = cast_stdio(L, "stdin");
+            subprocess::pipe::handle f_stdin = cast_stdio(L, "stdin");
             if (f_stdin) {
                 spawn.redirect(subprocess::stdio::eInput, f_stdin);
             }
-            FILE* f_stdout = cast_stdio(L, "stdout");
+            subprocess::pipe::handle f_stdout = cast_stdio(L, "stdout");
             if (f_stdout) {
                 spawn.redirect(subprocess::stdio::eOutput, f_stdout);
             }
-            FILE* f_stderr = cast_stdio(L, "stderr");
+            subprocess::pipe::handle f_stderr = cast_stdio(L, "stderr");
             if (f_stderr) {
                 spawn.redirect(subprocess::stdio::eError, f_stderr);
             }
