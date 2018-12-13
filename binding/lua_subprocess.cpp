@@ -346,7 +346,7 @@ namespace bee::lua_subprocess {
             lua_pushfstring(L, "%s (%d)", error.what(), error.code().value());
             return 2;
         }
-        lua_pushinteger(L, subprocess::pipe::peek(p->f));
+        lua_pushinteger(L, n);
         return 1;
     }
 
