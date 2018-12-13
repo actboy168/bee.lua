@@ -1,4 +1,12 @@
-local plat = ...
+local function getplat()
+    local i = 0
+    while arg[i] ~= nil do
+        i = i - 1
+    end
+    return arg[i + 1]:match("(.+)[/\\][%w_.-]+$"):match("[/\\]?([%w_.-]+)$")
+end
+
+local plat = getplat()
 
 package.path = './test/?.lua'
 package.cpath = ('./bin/%s/?.dll'):format(plat)
