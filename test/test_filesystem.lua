@@ -1,94 +1,195 @@
+local lu = require 'luaunit'
+
 local fs = require 'bee.filesystem'
-local uni = require 'bee.unicode'
 local thread = require 'bee.thread'
 
--- fs.path
-local path = fs.path('test')
-assert(type(path) == 'userdata')
+local shell = {}
+function shell:add_readonly(filename)
+    os.execute(('attrib +r %q'):format(filename))
+end
+function shell:del_readonly(filename)
+    os.execute(('attrib -r %q'):format(filename))
+end
 
--- string
-local path = fs.path('test')
-assert(path:string() == 'test')
+test_fs = {}
 
--- filename
-local path = fs.path('dir/filename')
-assert(path:filename():string() == 'filename')
+function test_fs:test_path()
+    lu.assertUserdata(fs.path(''))
+end
 
--- parent_path
-local path = fs.path('dir/filename')
-assert(path:parent_path():string() == 'dir')
+function test_fs:test_string()
+    lu.assertEquals(fs.path('a\\b'):string(), 'a\\b')
+    lu.assertEquals(fs.path('a/b'):string(), 'a/b')
+end
 
--- stem
-local path = fs.path('dir/filename.lua')
-assert(path:stem():string() == 'filename')
+function test_fs:test_filename()
+    local function get_filename(path)
+        return fs.path(path):filename():string()
+    end
+    lu.assertEquals(get_filename('a/b'), 'b')
+    lu.assertEquals(get_filename('a/b/'), '')
+    lu.assertEquals(get_filename('a\\b'), 'b')
+    lu.assertEquals(get_filename('a\\b\\'), '')
+end
 
--- extension
-local path = fs.path('dir/filename.lua')
-assert(path:extension():string() == '.lua')
+function test_fs:test_parent_path()
+    local function get_parent_path(path)
+        return fs.path(path):parent_path():string()
+    end
+    lu.assertEquals(get_parent_path('a/b/c'), 'a/b')
+    lu.assertEquals(get_parent_path('a/b/'), 'a/b')
+    lu.assertEquals(get_parent_path('a\\b\\c'), 'a\\b')
+    lu.assertEquals(get_parent_path('a\\b\\'), 'a\\b')
+end
 
--- is_absolute
-local path = fs.path('dir/filename.lua')
-assert(path:is_absolute() == false)
-local path = fs.path('D:/dir/filename.lua')
-assert(path:is_absolute() == true)
+function test_fs:test_stem()
+    local function get_stem(path)
+        return fs.path(path):stem():string()
+    end
+    lu.assertEquals(get_stem('a/b/c.ext'), 'c')
+    lu.assertEquals(get_stem('a/b/c'), 'c')
+    lu.assertEquals(get_stem('a/b/.ext'), '.ext')
+    lu.assertEquals(get_stem('a\\b\\c.ext'), 'c')
+    lu.assertEquals(get_stem('a\\b\\c'), 'c')
+    lu.assertEquals(get_stem('a\\b\\.ext'), '.ext')
+end
 
--- is_relative
-local path = fs.path('dir/filename.lua')
-assert(path:is_relative() == true)
-local path = fs.path('D:/dir/filename.lua')
-assert(path:is_relative() == false)
+function test_fs:test_extension()
+    local function get_extension(path)
+        return fs.path(path):extension():string()
+    end
+    lu.assertEquals(get_extension('a/b/c.ext'), '.ext')
+    lu.assertEquals(get_extension('a/b/c'), '')
+    lu.assertEquals(get_extension('a/b/.ext'), '')
+    lu.assertEquals(get_extension('a\\b\\c.ext'), '.ext')
+    lu.assertEquals(get_extension('a\\b\\c'), '')
+    lu.assertEquals(get_extension('a\\b\\.ext'), '')
+    
+    lu.assertEquals(get_extension('a/b/c.'), '.')
+    lu.assertEquals(get_extension('a/b/c..'), '.')
+    lu.assertEquals(get_extension('a/b/c..lua'), '.lua')
+end
 
--- remove_filename
-local path = fs.path('dir/filename.lua')
-assert(path:remove_filename():string() == 'dir/')
+function test_fs:test_absolute_relative()
+    local function assertIsAbsolute(path)
+        lu.assertIsTrue(fs.path(path):is_absolute(), path)
+        lu.assertIsFalse(fs.path(path):is_relative(), path)
+    end
+    local function assertIsRelative(path)
+        lu.assertIsFalse(fs.path(path):is_absolute(), path)
+        lu.assertIsTrue(fs.path(path):is_relative(), path)
+    end
+    assertIsAbsolute('c:/a/b')
+    assertIsAbsolute('//a/b')
+    --assertIsAbsolute('/a/b') --msvc bug?
+    assertIsRelative('./a/b')
+    assertIsRelative('a/b')
+    assertIsRelative('../a/b')
+end
 
--- replace_extension
-local path = fs.path('dir/filename.lua')
-local ext = '.json'
-assert(path:replace_extension(ext):string() == 'dir/filename.json')
+function test_fs:test_remove_filename()
+    local function remove_filename(path)
+        return fs.path(path):remove_filename():string()
+    end
+    lu.assertEquals(remove_filename('a/b/c'), 'a/b/')
+    lu.assertEquals(remove_filename('a/b/'), 'a/b/')
+    lu.assertEquals(remove_filename('a\\b\\c'), 'a\\b\\')
+    lu.assertEquals(remove_filename('a\\b\\'), 'a\\b\\')
+end
 
-local path = fs.path('dir/filename.lua')
-local ext = fs.path('.json')
-assert(path:replace_extension(ext):string() == 'dir/filename.json')
+function test_fs:test_replace_extension()
+    local function replace_extension(path, ext)
+        return fs.path(path):replace_extension(ext):string()
+    end
+    lu.assertEquals(replace_extension('a/b/c.ext', '.lua'), 'a/b/c.lua')
+    lu.assertEquals(replace_extension('a/b/c', '.lua'), 'a/b/c.lua')
+    lu.assertEquals(replace_extension('a/b/.ext', '.lua'), 'a/b/.ext.lua')
+    lu.assertEquals(replace_extension('a\\b\\c.ext', '.lua'), 'a\\b\\c.lua')
+    lu.assertEquals(replace_extension('a\\b\\c', '.lua'), 'a\\b\\c.lua')
+    lu.assertEquals(replace_extension('a\\b\\.ext', '.lua'), 'a\\b\\.ext.lua')
+
+    lu.assertEquals(replace_extension('a/b/c.ext', 'lua'), 'a/b/c.lua')
+    lu.assertEquals(replace_extension('a/b/c.ext', '..lua'), 'a/b/c..lua')
+end
+
+local ALLOW_WRITE = 0x92
+
+function test_fs:test_permissions()
+    local filename = 'temp.txt'
+    io.open(filename, 'w'):close()
+
+    lu.assertEquals(fs.path(filename):permissions() & ALLOW_WRITE, ALLOW_WRITE)
+    shell:add_readonly(filename)
+    lu.assertEquals(fs.path(filename):permissions() & ALLOW_WRITE, 0)
+    shell:del_readonly(filename)
+
+    os.remove(filename)
+end
+
+function test_fs:test_add_remove_permissions()
+    local filename = 'temp.txt'
+    io.open(filename, 'w'):close()
+    
+    lu.assertEquals(fs.path(filename):permissions() & ALLOW_WRITE, ALLOW_WRITE)
+    fs.path(filename):remove_permissions(ALLOW_WRITE)
+    lu.assertEquals(fs.path(filename):permissions() & ALLOW_WRITE, 0)
+    fs.path(filename):add_permissions(ALLOW_WRITE)
+    lu.assertEquals(fs.path(filename):permissions() & ALLOW_WRITE, ALLOW_WRITE)
+
+    os.remove(filename)
+end
+
+function test_fs:test_div()
+    local function div(A, B)
+        return (fs.path(A) / B):string()
+    end
+    lu.assertEquals(div('a', 'b'), 'a\\b')
+    lu.assertEquals(div('a\\b', 'c'), 'a\\b\\c')
+    lu.assertEquals(div('a/b', 'c'), 'a/b\\c')
+    lu.assertEquals(div('a/', 'b'), 'a/b')
+    lu.assertEquals(div('a\\', 'b'), 'a\\b')
+    lu.assertEquals(div('a', '/b'), '/b')
+    lu.assertEquals(div('a/', '\\b'), '\\b')
+    lu.assertEquals(div('c:/a', '/b'), 'c:/b')
+    lu.assertEquals(div('c:/a/', '\\b'), 'c:\\b')
+    lu.assertEquals(div('c:/a', 'd:/b'), 'd:/b')
+    lu.assertEquals(div('c:/a/', 'd:\\b'), 'd:\\b')
+end
+
+function test_fs:test_absolute()
+    local function eq_absolute1(path)
+        return lu.assertEquals(fs.absolute(fs.path(path)):string(), (fs.current_path() / path):string())
+    end
+    local function eq_absolute2(path1, path2)
+        return lu.assertEquals(fs.absolute(fs.path(path1)):string(), (fs.current_path() / path2):string())
+    end
+    eq_absolute1('a\\')
+    eq_absolute1('a\\b')
+    eq_absolute1('a\\b\\')
+    eq_absolute2('a/b', 'a\\b')
+    eq_absolute2('./b', 'b')
+    eq_absolute2('a/../b', 'b')
+    eq_absolute2('a/b/../', 'a\\')
+end
+
+function test_fs:test_eq()
+    local function eq(A, B)
+        return lu.assertEquals(fs.path(A), fs.path(B))
+    end
+    eq('a/b', 'a/b')
+    eq('a/b', 'a\\b')
+    eq('a/B', 'a/b')
+    eq('a/./b', 'a/b')
+    eq('a/b/../c', 'a/c')
+    eq('a/b/../c', 'a/d/../c')
+end
+
+--[==[
 
 -- list_directory
 --TODO
 
-local ALLOW_WRITE = 0x92
 
--- permissions
-local path = fs.path('temp.txt')
-io.open(path:string(), 'w'):close()
-assert(path:permissions() & ALLOW_WRITE ~= 0)
-os.execute('attrib +r temp.txt')
-assert(path:permissions() & ALLOW_WRITE == 0)
-os.execute('attrib -r temp.txt')
-os.remove(path:string())
-
--- add_permissions
-local path = fs.path('temp.txt')
-io.open(path:string(), 'w'):close()
-assert(path:permissions() & ALLOW_WRITE ~= 0)
-os.execute('attrib +r temp.txt')
-assert(path:permissions() & ALLOW_WRITE == 0)
-path:add_permissions(ALLOW_WRITE)
-os.remove(path:string())
-
--- remove_permissions
-local path = fs.path('temp.txt')
-io.open(path:string(), 'w'):close()
-assert(path:permissions() & ALLOW_WRITE ~= 0)
-path:remove_permissions(ALLOW_WRITE)
-assert(path:permissions() & ALLOW_WRITE == 0)
-os.execute('attrib -r temp.txt')
-os.remove(path:string())
-
--- __div
-local path = fs.path('dir') / 'filename'
-assert(path:string() == 'dir\\filename')
-
--- __eq
-assert(fs.path('test') == fs.path('test'))
 
 -- fs.exists
 local path = fs.path('temp.txt')
@@ -196,10 +297,10 @@ fs.copy_file(path1, path2)
 io.open(path2:string(), 'wb'):close()
 assert(fs.exists(path1) == true)
 assert(fs.exists(path2) == true)
-local suc = pcall(fs.copy_file, path1, path2)
-assert(suc == false)
-local suc = pcall(fs.copy_file, path1, path2, true)
-assert(suc == true)
+local suc, err  = pcall(fs.copy_file, path1, path2)
+assert(suc == false, err)
+local suc, err = pcall(fs.copy_file, path1, path2, true)
+assert(suc == true, err)
 local f = io.open(path1:string(), 'rb')
 assert(f:read 'a' == content)
 f:close()
@@ -255,3 +356,4 @@ local function getexe()
     return fs.absolute(fs.path(arg[i + 1]))
 end
 assert(fs.exe_path() == getexe())
+]==]

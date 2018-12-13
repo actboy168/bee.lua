@@ -15,9 +15,12 @@ if plat:sub(1, 4) == "msvc" then
     dofile './3rd/luaffi/src/test.lua'
 end
 
+local lu = require 'luaunit'
+
 require 'test_serialization'
 require 'test_filesystem'
-require 'test_thread'
-require 'test_subprocess'
-require 'test_registry'
-print 'ok'
+--require 'test_thread'
+--require 'test_subprocess'
+--require 'test_registry'
+
+os.exit(lu.LuaUnit.run())
