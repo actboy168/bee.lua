@@ -34,6 +34,23 @@ namespace bee::win::subprocess {
         eError,
     };
 
+    namespace pipe {
+        typedef HANDLE handle;
+        enum class mode {
+            eRead,
+            eWrite,
+        };
+        struct open_result {
+            handle rd;
+            handle wr;
+            FILE*  open_file(mode m);
+            operator bool() { return rd && wr; }
+        };
+        handle to_handle(FILE* f);
+        _BEE_API open_result open();
+        _BEE_API int         peek(FILE* f);
+    }
+
     class spawn;
     class _BEE_API process : public PROCESS_INFORMATION {
     public:
@@ -61,7 +78,7 @@ namespace bee::win::subprocess {
         bool set_console(console type);
         bool hide_window();
         void suspended();
-        void redirect(stdio type, FILE* f);
+        void redirect(stdio type, pipe::handle h);
         void env_set(const std::wstring& key, const std::wstring& value);
         void env_del(const std::wstring& key);
         bool exec(const std::vector<std::wstring>& args, const wchar_t* cwd);
@@ -76,13 +93,4 @@ namespace bee::win::subprocess {
         bool                    inherit_handle_;
         DWORD                   flags_;
     };
-
-    namespace pipe {
-        struct open_result {
-            FILE* rd;
-            FILE* wr;
-        };
-        _BEE_API open_result open();
-        _BEE_API int         peek(FILE* f);
-    }
 }

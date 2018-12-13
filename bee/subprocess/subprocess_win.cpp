@@ -228,10 +228,9 @@ namespace bee::win::subprocess {
         flags_ |= CREATE_SUSPENDED;
     }
     
-    void spawn::redirect(stdio type, FILE* f) {
+    void spawn::redirect(stdio type, pipe::handle h) {
         si_.dwFlags |= STARTF_USESTDHANDLES;
         inherit_handle_ = true;
-        HANDLE h = (HANDLE)_get_osfhandle(_fileno(f));
         ::SetHandleInformation(h, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
         switch (type) {
         case stdio::eInput:
@@ -408,6 +407,22 @@ namespace bee::win::subprocess {
     }
 
     namespace pipe {
+        FILE* open_result::open_file(mode m) {
+            switch (m) {
+            case mode::eRead:
+                return _fdopen(_open_osfhandle((intptr_t)rd, _O_RDONLY | _O_BINARY), "rb");
+            case mode::eWrite:
+                return _fdopen(_open_osfhandle((intptr_t)wr, _O_WRONLY | _O_BINARY), "wb");
+            default:
+                assert(false);
+                return 0;
+            }
+        }
+
+        handle to_handle(FILE* f) {
+            return (HANDLE)_get_osfhandle(_fileno(f));
+        }
+
         open_result open() {
             SECURITY_ATTRIBUTES sa;
             sa.nLength = sizeof(SECURITY_ATTRIBUTES);
@@ -417,14 +432,12 @@ namespace bee::win::subprocess {
             if (!::CreatePipe(&read_pipe, &write_pipe, &sa, 0)) {
                 return { NULL, NULL };
             }
-            FILE* rd = _fdopen(_open_osfhandle((intptr_t)read_pipe, _O_RDONLY | _O_BINARY), "rb");
-            FILE* wr = _fdopen(_open_osfhandle((intptr_t)write_pipe, _O_WRONLY | _O_BINARY), "wb");
-            return { rd, wr };
+            return { read_pipe, write_pipe };
         }
 
         int peek(FILE* f) {
             DWORD rlen = 0;
-            if (PeekNamedPipe((HANDLE)_get_osfhandle(_fileno(f)), 0, 0, 0, &rlen, 0)) {
+            if (PeekNamedPipe(to_handle(f), 0, 0, 0, &rlen, 0)) {
                 return rlen;
             }
             return -1;

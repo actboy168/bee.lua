@@ -52,20 +52,7 @@ local ext = fs.path('.json')
 assert(path:replace_extension(ext):string() == 'dir/filename.json')
 
 -- list_directory
-local path = fs.path('C:/')
-local founded = {}
-for filename in path:list_directory() do
-    local string = filename:filename():string()
-    founded[string] = true
-end
-
-local os_list = io.popen([[dir C:\ /A /B]], 'r'):read 'a'
-for filename in os_list:gmatch '[^\r\n]+' do
-    filename = uni.a2u(filename)
-    assert(founded[filename] == true)
-    founded[filename] = nil
-end
-assert(next(founded) == nil)
+--TODO
 
 local ALLOW_WRITE = 0x92
 
