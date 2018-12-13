@@ -40,6 +40,10 @@ BEE_UNICODE = \
 	$(TMPDIR)/binding_lua_unicode.o \
 	$(BEE_COMMON)
 
+BEE_SERIALIZATION = \
+	$(TMPDIR)/binding_lua_serialization.o \
+	$(BEE_COMMON)
+
 BEE_ALL = \
 	$(BEE_FILESYSTEM) \
 	$(BEE_FILEWATCH) \
@@ -47,4 +51,5 @@ BEE_ALL = \
 	$(BEE_SOCKET) \
 	$(BEE_SUBPROCESS) \
 	$(BEE_THREAD) \
-	$(BEE_UNICODE)
+	$(BEE_UNICODE) \
+	$(BEE_SERIALIZATION)

@@ -27,7 +27,7 @@ local res = {}
 local alldeps = {}
 
 local function cpp_to_o(path)
-    return path:gsub("\\", "_"):gsub("%.cpp", "")
+    return path:gsub("/", "_"):gsub("%.cpp", "")
 end
 
 local function deps_dir(dir)
@@ -76,8 +76,8 @@ local function calc_deps()
 end
 
 local function gen_file(path)
-    path = path:string()
-    local deps, sysdeps = alldeps[path:gsub("\\", "/")][1], alldeps[path:gsub("\\", "/")][2]
+    path = path:string():gsub("\\", "/")
+    local deps, sysdeps = alldeps[path][1], alldeps[path][2]
     res[#res + 1] = ("$(TMPDIR)/%s.o : %s %s | $(TMPDIR)"):format(cpp_to_o(path), path, table.concat(deps, " "))
     local inc = ""
     if sysdeps["lua.hpp"] then
