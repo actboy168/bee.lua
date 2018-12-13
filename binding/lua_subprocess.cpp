@@ -84,9 +84,13 @@ namespace bee::lua_subprocess {
                 lua_pop(L, 1);
                 lua_newtable(L);
                 lua_pushvalue(L, -1);
+#if LUA_VERSION_NUM >= 504
                 if (!lua_setuservalue(L, 1)) {
                     return 0;
                 }
+#else
+                lua_setuservalue(L, 1);
+#endif
             }
             lua_insert(L, -3);
             lua_rawset(L, -3);
