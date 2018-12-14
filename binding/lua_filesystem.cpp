@@ -374,14 +374,18 @@ namespace bee::lua_filesystem {
 
     static int last_write_time(lua_State* L)
     {
+        // TODDO: need file_clock http://wg21.link/p0355r7
+        using namespace std::chrono;
         LUA_TRY;
         const fs::path& p = path::to(L, 1);
         if (lua_gettop(L) == 1) {
             fs::file_time_type time = fs::last_write_time(p);
-            lua_pushinteger(L, time.time_since_epoch().count());
+            auto system_time = system_clock::now() + duration_cast<seconds>(time - fs::file_time_type::clock::now());
+            lua_pushinteger(L, duration_cast<seconds>(system_time.time_since_epoch()).count());
             return 1;
         }
-        fs::last_write_time(p, fs::file_time_type() + fs::file_time_type::duration(luaL_checkinteger(L, 2)));
+        auto system_duration = system_clock::time_point() + seconds(luaL_checkinteger(L, 2)) - system_clock::now();
+        fs::last_write_time(p, fs::file_time_type::clock::now() + duration_cast<fs::file_time_type::duration>(system_duration));
         return 0;
         LUA_TRY_END;
     }
