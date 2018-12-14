@@ -65,21 +65,22 @@ namespace bee::lua_thread {
             std::unique_lock<std::mutex> lk(mutex);
             channels.clear();
         }
-        channel* query(const std::string& name) {
+        std::shared_ptr<channel> query(const std::string& name) {
             std::unique_lock<std::mutex> lk(mutex);
             auto it = channels.find(name);
             if (it != channels.end()) {
-                return it->second.get();
+                return it->second;
             }
             return nullptr;
         }
     private:
-        std::map<std::string, std::unique_ptr<channel>> channels;
+        std::map<std::string, std::shared_ptr<channel>> channels;
         std::mutex mutex;
     };
 
     struct boxchannel {
-        channel* c;
+        std::shared_ptr<channel> c;
+        boxchannel(std::shared_ptr<channel> c_) : c(c_) {}
     };
 
     channelmgr       g_channel;
@@ -94,34 +95,31 @@ namespace bee::lua_thread {
 
     static int lchannel_push(lua_State* L) {
         boxchannel* bc = (boxchannel*)getObject(L, 1, "channel");
-        channel* c = bc->c;
         void* buffer = seri_pack(L, 1);
-        c->push(buffer);
+        bc->c->push(buffer);
         return 0;
     }
 
     static int lchannel_bpop(lua_State* L) {
         boxchannel* bc = (boxchannel*)getObject(L, 1, "channel");
-        channel* c = bc->c;
         void* data;
-        c->blocked_pop(data);
+        bc->c->blocked_pop(data);
         return seri_unpack(L, data);
     }
 
     static int lchannel_pop(lua_State* L) {
         boxchannel* bc = (boxchannel*)getObject(L, 1, "channel");
-        channel* c = bc->c;
         void* data;
         lua_settop(L, 2);
         lua_Number sec = lua_tonumber(L, 2);
         if (sec == 0) {
-            if (!c->pop(data)) {
+            if (!bc->c->pop(data)) {
 				lua_pushboolean(L, 0);
                 return 1;
             }
         }
         else {
-            if (!c->timed_pop(data, std::chrono::duration<double>(sec))) {
+            if (!bc->c->timed_pop(data, std::chrono::duration<double>(sec))) {
 				lua_pushboolean(L, 0);
                 return 1;
             }
@@ -130,28 +128,35 @@ namespace bee::lua_thread {
         return 1 + seri_unpack(L, data);
     }
 
+    static int lchannel_gc(lua_State* L) {
+        boxchannel* bc = (boxchannel*)getObject(L, 1, "channel");
+        bc->~boxchannel();
+        return 0;
+    }
+
     static int lnewchannel(lua_State* L) {
         std::string name = checkstring(L, 1);
         if (!g_channel.create(name)) {
-            return luaL_error(L, "Duplicate channel %s", name.c_str());
+            return luaL_error(L, "Duplicate channel '%s'", name.c_str());
         }
         return 0;
     }
 
     static int lchannel(lua_State* L) {
         std::string name = checkstring(L, 1);
-        channel* c = g_channel.query(name);
-        if (c == NULL) {
-            return luaL_error(L, "Can't query channel %s", name.c_str());
+        std::shared_ptr<channel> c = g_channel.query(name);
+        if (!c) {
+            return luaL_error(L, "Can't query channel '%s'", name.c_str());
         }
 
         boxchannel* bc = (boxchannel*)lua_newuserdata(L, sizeof(boxchannel));
-        bc->c = c;
+        new (bc) boxchannel(c);
         if (newObject(L, "channel")) {
             luaL_Reg mt[] = {
                 { "push", lchannel_push },
                 { "pop", lchannel_pop },
                 { "bpop", lchannel_bpop },
+                { "__gc", lchannel_gc },
                 { NULL, NULL },
             };
             luaL_setfuncs(L, mt, 0);
@@ -215,7 +220,7 @@ namespace bee::lua_thread {
         lua_pushcfunction(L, thread_luamain);
         lua_pushlightuserdata(L, ud);
         if (lua_pcall(L, 1, 0, 1) != LUA_OK) {
-            channel* errlog = g_channel.query("errlog");
+            std::shared_ptr<channel> errlog = g_channel.query("errlog");
             if (errlog) {
                 size_t sz;
                 const char* str = lua_tolstring(L, -1, &sz);
