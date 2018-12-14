@@ -14,12 +14,27 @@ end
 
 function shell:pwd()
     local command
-    if platform:os() == "Windows" then
+    if platform.OS == "Windows" then
         command = 'echo %cd%'
     else
         command = 'pwd'
     end
     return (io.popen(command):read 'a'):gsub('[\n\r]*$', '')
+end
+
+local function create_file(filename, content)
+    os.remove(filename)
+    local f = assert(io.open(filename, 'wb'))
+    if content ~= nil then
+        f:write(content)
+    end
+    f:close()
+end
+local function read_file(filename)
+    local f = assert(io.open(filename, 'rb'))
+    local content = f:read 'a'
+    f:close()
+    return content
 end
 
 test_fs = {}
@@ -95,7 +110,7 @@ function test_fs:test_absolute_relative()
     assertIsRelative('./a/b')
     assertIsRelative('a/b')
     assertIsRelative('../a/b')
-    if platform.os() == 'Windows' then
+    if platform.OS == 'Windows' then
         assertIsRelative('/a/b')
     else
         assertIsAbsolute('/a/b')
@@ -131,7 +146,7 @@ local ALLOW_WRITE = 0x92
 
 function test_fs:test_permissions()
     local filename = 'temp.txt'
-    io.open(filename, 'w'):close()
+    create_file(filename)
 
     lu.assertEquals(fs.path(filename):permissions() & ALLOW_WRITE, ALLOW_WRITE)
     shell:add_readonly(filename)
@@ -143,7 +158,7 @@ end
 
 function test_fs:test_add_remove_permissions()
     local filename = 'temp.txt'
-    io.open(filename, 'w'):close()
+    create_file(filename)
     
     lu.assertEquals(fs.path(filename):permissions() & ALLOW_WRITE, ALLOW_WRITE)
     fs.path(filename):remove_permissions(ALLOW_WRITE)
@@ -221,7 +236,7 @@ function test_fs:test_exists()
     local filename = 'temp.txt'
     os.remove(filename)
     is_exists(filename, false)
-    io.open(filename, 'w'):close()
+    create_file(filename)
     is_exists(filename, true)
     os.remove(filename)
     is_exists(filename, false)
@@ -241,23 +256,26 @@ function test_fs:test_remove()
 
     local filename = 'temp.txt'
     os.remove(filename)
-    io.open(filename, 'w'):close()
+    create_file(filename)
     remove_ok(filename, true)
     remove_ok(filename, false)
 
     local filename = 'temp'
+    fs.remove_all(fs.path(filename))
     fs.create_directories(fs.path(filename))
     remove_ok(filename, true)
     remove_ok(filename, false)
 
     local filename = 'temp/temp'
+    fs.remove_all(fs.path(filename))
     fs.create_directories(fs.path(filename))
     remove_ok(filename, true)
     remove_ok(filename, false)
     
     local filename = 'temp'
+    fs.remove_all(fs.path(filename))
     fs.create_directories(fs.path(filename))
-    io.open('temp/temp.txt', 'w'):close()
+    create_file('temp/temp.txt')
     remove_failed(filename)
     remove_ok('temp/temp.txt', true)
     remove_ok(filename, true)
@@ -273,23 +291,26 @@ function test_fs:test_remove_all()
 
     local filename = 'temp.txt'
     os.remove(filename)
-    io.open(filename, 'w'):close()
+    create_file(filename)
     remove_all(filename, 1)
     remove_all(filename, 0)
 
     local filename = 'temp'
+    fs.remove_all(fs.path(filename))
     fs.create_directories(fs.path(filename))
     remove_all(filename, 1)
     remove_all(filename, 0)
 
     local filename = 'temp/temp'
+    fs.remove_all(fs.path(filename))
     fs.create_directories(fs.path(filename))
     remove_all(filename, 1)
     remove_all(filename, 0)
     
     local filename = 'temp'
+    fs.remove_all(fs.path(filename))
     fs.create_directories(fs.path(filename))
-    io.open('temp/temp.txt', 'w'):close()
+    create_file('temp/temp.txt')
     remove_all(filename, 2)
     remove_all(filename, 0)
 end
@@ -301,7 +322,7 @@ function test_fs:test_is_directory()
     local filename = 'temp.txt'
     is_directory('./test', true)
     is_directory('.', true)
-    io.open(filename, 'w'):close()
+    create_file(filename)
     is_directory(filename, false)
     os.remove(filename)
     is_directory(filename, false)
@@ -368,7 +389,7 @@ function test_fs:test_rename()
     end
     os.remove('temp1.txt')
     os.remove('temp2.txt')
-    io.open('temp1.txt', 'w'):close()
+    create_file('temp1.txt')
     rename_ok('temp1.txt', 'temp2.txt')
     
     fs.remove_all(fs.path('temp1'))
@@ -387,74 +408,118 @@ function test_fs:test_current_path()
     lu.assertEquals(fs.current_path():string(), shell:pwd())
 end
 
---[==[
-
--- list_directory
---TODO
-
--- copy_file
-local path1 = fs.path('temp1')
-local path2 = fs.path('temp2')
-local content = tostring(os.time())
-
-local f = io.open(path1:string(), 'wb')
-f:write(content)
-f:close()
-fs.copy_file(path1, path2)
-assert(fs.exists(path1) == true)
-assert(fs.exists(path2) == true)
-local f = io.open(path1:string(), 'rb')
-assert(f:read 'a' == content)
-f:close()
-local f = io.open(path2:string(), 'rb')
-assert(f:read 'a' == content)
-f:close()
-fs.remove(path1)
-fs.remove(path2)
-assert(fs.exists(path1) == false)
-assert(fs.exists(path2) == false)
-
-local f = io.open(path1:string(), 'wb')
-f:write(content)
-f:close()
-fs.copy_file(path1, path2)
-io.open(path2:string(), 'wb'):close()
-assert(fs.exists(path1) == true)
-assert(fs.exists(path2) == true)
-local suc, err  = pcall(fs.copy_file, path1, path2)
-assert(suc == false, err)
-local suc, err = pcall(fs.copy_file, path1, path2, true)
-assert(suc == true, err)
-local f = io.open(path1:string(), 'rb')
-assert(f:read 'a' == content)
-f:close()
-local f = io.open(path2:string(), 'rb')
-assert(f:read 'a' == content)
-f:close()
-fs.remove(path1)
-fs.remove(path2)
-assert(fs.exists(path1) == false)
-assert(fs.exists(path2) == false)
-
-
--- last_write_time
-local path = fs.path('temp')
-local f = io.open(path:string(), 'wb')
-local time1 = fs.last_write_time(path)
-thread.sleep(0.1)
-f:write('a')
-f:close()
-local time2 = fs.last_write_time(path)
-fs.remove(path)
-assert(time2 > time1)
-
--- exe_path
-local function getexe()
-    local i = 0
-    while arg[i] ~= nil do
-        i = i - 1
+function test_fs:test_copy_file()
+    local function copy_file_ok(from, to, flag)
+        fs.copy_file(fs.path(from), fs.path(to), flag)
+        lu.assertIsTrue(fs.exists(fs.path(from)), from)
+        lu.assertIsTrue(fs.exists(fs.path(to)), to)
+        lu.assertEquals(read_file(from), read_file(to))
+        fs.remove_all(fs.path(from))
+        fs.remove_all(fs.path(to))
+        lu.assertIsFalse(fs.exists(fs.path(from)), from)
+        lu.assertIsFalse(fs.exists(fs.path(to)), to)
     end
-    return fs.absolute(fs.path(arg[i + 1]))
+    local function copy_file_failed(from, to)
+        lu.assertError(fs.copy_file, fs.path(from), fs.path(to), flag)
+        fs.remove_all(fs.path(from))
+        fs.remove_all(fs.path(to))
+        lu.assertIsFalse(fs.exists(fs.path(from)), from)
+        lu.assertIsFalse(fs.exists(fs.path(to)), to)
+    end
+    create_file('temp1.txt', tostring(os.time()))
+    os.remove('temp2.txt')
+    copy_file_ok('temp1.txt', 'temp2.txt', false)
+
+    create_file('temp1.txt', tostring(os.time()))
+    os.remove('temp2.txt')
+    copy_file_ok('temp1.txt', 'temp2.txt', true)
+
+    create_file('temp1.txt', tostring(os.time()))
+    create_file('temp2.txt', tostring(os.clock()))
+    copy_file_ok('temp1.txt', 'temp2.txt', true)
+
+    create_file('temp1.txt', tostring(os.time()))
+    create_file('temp2.txt', tostring(os.clock()))
+    copy_file_failed('temp1.txt', 'temp2.txt', false)
 end
-assert(fs.exe_path() == getexe())
-]==]
+
+function test_fs:test_list_directory()
+    local function list_directory_ok(dir, expected)
+        local result = {}
+        for path in fs.path(dir):list_directory() do
+            result[path:string()] = true
+        end
+        lu.assertEquals(result, expected)
+        fs.remove_all(fs.path(dir))
+    end
+    local function list_directory_failed(dir)
+        local fsdir = fs.path(dir)
+        lu.assertError(fsdir.list_directory, fsdir)
+    end
+
+    fs.remove_all(fs.path('temp'))
+    fs.create_directories(fs.path('temp'))
+    create_file('temp/temp1.txt')
+    create_file('temp/temp2.txt')
+    list_directory_ok('temp', {
+        ['temp\\temp1.txt'] = true,
+        ['temp\\temp2.txt'] = true,
+    })
+
+    fs.remove_all(fs.path('temp'))
+    fs.create_directories(fs.path('temp'))
+    fs.create_directories(fs.path('temp/temp'))
+    create_file('temp/temp1.txt')
+    create_file('temp/temp2.txt')
+    create_file('temp/temp/temp1.txt')
+    create_file('temp/temp/temp2.txt')
+    list_directory_ok('temp', {
+        ['temp\\temp1.txt'] = true,
+        ['temp\\temp2.txt'] = true,
+        ['temp\\temp'] = true,
+    })
+
+    fs.remove_all(fs.path('temp.txt'))
+    fs.remove_all(fs.path('temp'))
+    list_directory_failed('temp.txt')
+    list_directory_failed('temp')
+    list_directory_failed('temp.txt')
+    create_file('temp.txt')
+    list_directory_failed('temp.txt')
+    fs.remove_all(fs.path('temp.txt'))
+end
+
+function test_fs:test_last_write_time()
+    local function last_write_time(filename)
+        os.remove(filename)
+        local t1 = os.time()
+        create_file(filename)
+        local tf = fs.last_write_time(fs.path(filename))
+        local t2 = os.time()
+        os.remove(filename)
+        lu.assertIsTrue(tf >= t1 and tf <= t2, ('start=%d, end=%d, write=%d'):format(t1, t2, tf))
+    end
+    last_write_time('temp.txt')
+end
+
+function test_fs:test_exe_path()
+    local function getexe()
+        local i = 0
+        while arg[i] ~= nil do
+            i = i - 1
+        end
+        return fs.absolute(fs.path(arg[i + 1])):string()
+    end
+    lu.assertEquals(fs.exe_path():string(), getexe())
+end
+
+function test_fs:test_dll_path()
+    local function getdll()
+        local i = 0
+        while arg[i] ~= nil do
+            i = i - 1
+        end
+        return fs.absolute(fs.path(arg[i + 1]):parent_path() / 'bee.dll'):string()
+    end
+    lu.assertEquals(fs.dll_path():string(), getdll())
+end
