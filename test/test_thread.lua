@@ -1,216 +1,277 @@
+local lu = require 'luaunit'
+
 local thread = require "bee.thread"
+local fs = require "bee.filesystem"
+local err = thread.channel "errlog"
 
 local cpath_template = ("package.cpath = [[%s]]\n"):format(package.cpath)
 
-local function assert_thread_error()
-    local err = thread.channel "errlog"
+local function createThread(script)
+    return thread.thread(cpath_template .. script)
+end
+
+local function assertNotThreadError()
+    lu.assertIsFalse(err:pop())
+end
+
+local function assertHasThreadError(m)
     local ok, msg = err:pop()
-    if ok then
-        error(msg)
-    end
+    lu.assertIsTrue(ok)
+    lu.assertErrorMsgContains(m, error, msg)
 end
 
-local function eq2(a, b)
-    local delta = a - b
-    return delta < 0.01 and delta > -0.01
+test_thread = {}
+
+function test_thread:test_thread_1()
+    assertNotThreadError()
+    fs.remove(fs.path('temp.txt'))
+    lu.assertIsFalse(fs.exists(fs.path('temp.txt')))
+    local thd = createThread [[
+        io.open('temp.txt', 'w'):close()
+    ]]
+    thd:wait()
+    lu.assertIsTrue(fs.exists(fs.path('temp.txt')))
+    fs.remove(fs.path('temp.txt'))
+    assertNotThreadError()
 end
 
-local function file_exists(name)
-    local f = io.open(name, 'r')
-    if f then
-        f:close()
-        return true
-    else
-        return false
-    end
+function test_thread:test_thread_2()
+    assertNotThreadError()
+    GLOBAL = true
+    THREAD = nil
+    lu.assertNotNil(GLOBAL)
+    lu.assertIsNil(THREAD)
+    local thd = createThread [[
+        THREAD = true
+        assert(GLOBAL == nil)
+    ]]
+    thd:wait()
+    assertNotThreadError()
+    lu.assertNotNil(GLOBAL)
+    lu.assertIsNil(THREAD)
+    GLOBAL = nil
+    THREAD = nil
 end
 
--- thread.sleep
-local clock = os.clock()
-thread.sleep(0.1)
-assert(eq2(os.clock() - clock, 0.1))
+function test_thread:test_thread_3()
+    assertNotThreadError()
+    local thd = createThread [[
+        error('Test thread error.')
+    ]]
+    thd:wait()
+    assertHasThreadError('Test thread error.')
+    assertNotThreadError()
+end
 
--- thread.thread
-os.remove('temp')
-thread.sleep(0.1)
-assert(file_exists('temp') == false)
-local thd = thread.thread(cpath_template .. [[
-    io.open('temp', 'w'):close()
-]])
-thd:wait()
-assert_thread_error()
-assert(file_exists('temp') == true)
-os.remove('temp')
+function test_thread:test_channel_1()
+    thread.reset()
+    lu.assertErrorMsgEquals("Can't query channel 'test'", thread.channel, 'test')
+    thread.newchannel 'test'
+    lu.assertIsUserdata(thread.channel 'test')
+    lu.assertIsUserdata(thread.channel 'test')
+    thread.reset()
+end
 
--- wait
-os.remove('temp')
-local thd = thread.thread(cpath_template .. [[
-    local thread = require 'bee.thread'
-    thread.sleep(0.1)
-    io.open('temp', 'w'):close()
-]])
-assert(file_exists('temp') == false)
-local clock = os.clock()
-thd:wait()
-assert_thread_error()
-assert(eq2(os.clock() - clock, 0.1))
-assert(file_exists('temp') == true)
-os.remove('temp')
+function test_thread:test_channel_2()
+    thread.reset()
+    thread.newchannel 'test'
+    lu.assertErrorMsgEquals("Duplicate channel 'test'", thread.newchannel, 'test')
+    thread.reset()
+end
 
--- thread.newchannel
--- thread.channel
-local suc, c = pcall(thread.channel, 'test')
-assert(suc == false)
+function test_thread:test_id_1()
+    assertNotThreadError()
+    lu.assertEquals(thread.id, 0)
+    local thd = createThread [[
+        local thread = require "bee.thread"
+        assert(thread.id ~= 0)
+    ]]
+    thd:wait()
+    assertNotThreadError()
+end
 
-thread.newchannel 'test'
-local suc, c = pcall(thread.channel, 'test')
-assert(suc == true)
-assert(c ~= nil)
+function test_thread:test_id_2()
+    assertNotThreadError()
+    lu.assertEquals(thread.id, 0)
+    thread.reset()
+    lu.assertEquals(thread.id, 0)
+    local thd = createThread [[
+        local thread = require "bee.thread"
+        assert(thread.id ~= 0)
+    ]]
+    thd:wait()
+    assertNotThreadError()
+end
 
-local suc = pcall(thread.newchannel, 'test')
-assert(suc == false)
+function test_thread:test_reset_1()
+    thread.reset()
+    lu.assertErrorMsgEquals("Can't query channel 'test'", thread.channel, 'test')
+    thread.newchannel 'test'
+    lu.assertIsUserdata(thread.channel 'test')
+    thread.reset()
+    lu.assertErrorMsgEquals("Can't query channel 'test'", thread.channel, 'test')
+    thread.newchannel 'test'
+    lu.assertIsUserdata(thread.channel 'test')
+    thread.reset()
+end
 
--- thread.reset
-thread.newchannel 'reset'
-local suc, c = pcall(thread.channel, 'reset')
-assert(suc == true)
-assert(c ~= nil)
+function test_thread:test_reset_2()
+    assertNotThreadError()
+    local thd = createThread [[
+        local thread = require "bee.thread"
+        thread.reset()
+    ]]
+    thd:wait()
+    assertHasThreadError('reset must call from main thread')
+    assertNotThreadError()
+end
 
-thread.reset()
+local function TestSuit(f)
+    f(1)
+    f(0.0001)
+    f('TEST')
+    f(true)
+    f(false)
+    f({})
+    f({1, 2})
+    f(1, {1, 2})
+    f(1, 2, {A={B={C='D'}}})
+    f(1, nil, 2)
+end
 
-local suc, c = pcall(thread.channel, 'reset')
-assert(suc == false)
-
--- push
--- bpop
-thread.newchannel 'bpop_request'
-thread.newchannel 'bpop_response'
-local thd = thread.thread(cpath_template .. [[
-    local thread = require "bee.thread"
-    local request = thread.channel 'bpop_request'
-    local response = thread.channel 'bpop_response'
-    local msg = request:bpop()
-    if msg == 'request' then
-        response:push('response')
+function test_thread:test_pop_1()
+    thread.reset()
+    thread.newchannel 'test'
+    local channel = thread.channel 'test'
+    local function pack_pop(ok, ...)
+        lu.assertIsTrue(ok)
+        return table.pack(...)
     end
-]])
-
-local request = thread.channel 'bpop_request'
-local response = thread.channel 'bpop_response'
-request:push('request')
-local msg = response:bpop()
-assert(msg == 'response')
-thd:wait()
-assert_thread_error()
-
-local thd = thread.thread(cpath_template .. [[
-    local thread = require "bee.thread"
-    local request = thread.channel 'bpop_request'
-    local response = thread.channel 'bpop_response'
-    local msg = request:bpop()
-    if msg == 'request' then
-        thread.sleep(0.1)
-        response:push('response')
+    local function test_ok(...)
+        channel:push(...)
+        lu.assertEquals(pack_pop(channel:pop()), table.pack(...))
+        channel:push(...)
+        lu.assertEquals(table.pack(channel:bpop()), table.pack(...))
     end
-]])
+    TestSuit(test_ok)
+    -- 基本和serialization的测试重复，所以failed就不测了
+end
 
-local clock = os.clock()
-request:push('request')
-local msg = response:bpop()
-assert(msg == 'response')
-assert(eq2(os.clock() - clock, 0.1))
-thd:wait()
-assert_thread_error()
+function test_thread:test_pop_2()
+    thread.reset()
+    thread.newchannel 'test'
+    local channel = thread.channel 'test'
 
-local thd = thread.thread(cpath_template .. [[
-    local thread = require "bee.thread"
-    local request = thread.channel 'bpop_request'
-    local response = thread.channel 'bpop_response'
-    while true do
-        local op, data = request:bpop()
-        if op == 'echo' then
-            response:push(data)
-        elseif op == 'plus' then
-            response:push(data[1] + data[2])
-        elseif op == 'quit' then
+    local function assertIs(expected)
+        local ok, v = channel:pop()
+        lu.assertIsTrue(ok)
+        lu.assertEquals(v, expected)
+    end
+    local function assertEmpty()
+        local ok, v = channel:pop()
+        lu.assertIsFalse(ok)
+        lu.assertIsNil(v)
+    end
+
+    assertEmpty()
+
+    channel:push(1024)
+    assertIs(1024)
+    assertEmpty()
+
+    channel:push(1024)
+    channel:push(1025)
+    channel:push(1026)
+    assertIs(1024)
+    assertIs(1025)
+    assertIs(1026)
+    assertEmpty()
+
+    channel:push(1024)
+    channel:push(1025)
+    assertIs(1024)
+    channel:push(1026)
+    assertIs(1025)
+    assertIs(1026)
+    assertEmpty()
+
+    thread.reset()
+end
+
+function test_thread:test_thread_bpop()
+    assertNotThreadError()
+    thread.reset()
+    thread.newchannel 'testReq'
+    thread.newchannel 'testRes'
+    local thd = createThread [[
+        local thread = require "bee.thread"
+        local req = thread.channel 'testReq'
+        local res = thread.channel 'testRes'
+        local function dispatch(what, ...)
+            if what == 'exit' then
+                return true
+            end
+            res:push(what, ...)
+        end
+        while not dispatch(req:bpop()) do
+        end
+    ]]
+    local req = thread.channel 'testReq'
+    local res = thread.channel 'testRes'
+    local function test_ok(...)
+        req:push(...)
+        lu.assertEquals(table.pack(res:bpop()), table.pack(...))
+    end
+    TestSuit(test_ok)
+    req:push 'exit'
+    thd:wait()
+    assertNotThreadError()
+end
+
+function test_thread:test_thread_pop()
+    assertNotThreadError()
+    thread.reset()
+    thread.newchannel 'testReq'
+    thread.newchannel 'testRes'
+    local thd = createThread [[
+        local thread = require "bee.thread"
+        local req = thread.channel 'testReq'
+        local res = thread.channel 'testRes'
+        local function dispatch(ok, what, ...)
+            if not ok then
+                thread.sleep(0)
+                return
+            end
+            if what == 'exit' then
+                return true
+            end
+            res:push(what, ...)
+        end
+        while not dispatch(req:pop()) do
+        end
+    ]]
+    local req = thread.channel 'testReq'
+    local res = thread.channel 'testRes'
+    local function pack_pop(ok, ...)
+        if not ok then
             return
         end
+        return table.pack(...)
     end
-]])
-
-request:push('echo', nil)
-local result = response:bpop()
-assert(result == nil)
-
-request:push('echo', 5)
-local result = response:bpop()
-assert(result == 5)
-
-request:push('echo', 'test')
-local result = response:bpop()
-assert(result == 'test')
-
-request:push('plus', {1, 2})
-local result = response:bpop()
-assert(result == 3)
-
-request:push('echo', 6)
-request:push('echo', 7)
-local result = response:bpop()
-assert(result == 6)
-local result = response:bpop()
-assert(result == 7)
-
-request:push('quit')
-
-thd:wait()
-assert_thread_error()
-thread.reset()
-
--- pop
-thread.newchannel 'pop_request'
-thread.newchannel 'pop_response'
-local thd = thread.thread(cpath_template .. [[
-    local thread = require "bee.thread"
-    local request = thread.channel 'pop_request'
-    local response = thread.channel 'pop_response'
-    while true do
-        local who, delay = request:bpop()
-        if who == 'quit' then
-            return
+    local function test_ok(...)
+        req:push(...)
+        local t
+        while true do
+            t = pack_pop(res:pop())
+            if t then
+                break
+            end
+            thread.sleep(0)
         end
-        thread.sleep(delay)
-        response:push('response')
+        lu.assertEquals(t, table.pack(...))
     end
-]])
-
-local request = thread.channel 'pop_request'
-local response = thread.channel 'pop_response'
-
-request:push('request', 0.1)
-local ok, msg = response:pop()
-assert(ok == false)
-thread.sleep(0.15)
-local ok, msg = response:pop()
-assert(ok == true)
-assert(msg == 'response')
-
-request:push('request', 0.2)
-local clock = os.clock()
-local ok, msg = response:pop(0.1)
-assert(ok == false)
-local passed = os.clock() - clock
-assert(eq2(passed, 0.1))
-
-local clock = os.clock()
-local ok, msg = response:pop(0.2)
-local passed = os.clock() - clock
-assert(eq2(passed, 0.1))
-assert(ok == true)
-assert(msg == 'response')
-
-request:push('quit')
-thd:wait()
-assert_thread_error()
-
-thread.reset()
+    TestSuit(test_ok)
+    req:push 'exit'
+    thd:wait()
+    assertNotThreadError()
+end
