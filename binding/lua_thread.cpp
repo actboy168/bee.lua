@@ -63,7 +63,15 @@ namespace bee::lua_thread {
         }
         void clear() {
             std::unique_lock<std::mutex> lk(mutex);
-            channels.clear();
+            auto it = channels.find("errlog");
+            if (it != channels.end()) {
+                auto errlog = it->second;
+                channels.clear();
+                channels.emplace(std::make_pair("errlog", std::move(errlog)));
+            }
+            else {
+                channels.clear();
+            }
         }
         std::shared_ptr<channel> query(const std::string& name) {
             std::unique_lock<std::mutex> lk(mutex);
@@ -277,12 +285,6 @@ namespace bee::lua_thread {
         return 1;
     }
 
-    static void create_errlog_channel(lua_State* L) {
-        lua_pushcfunction(L, lnewchannel);
-        lua_pushstring(L, "errlog");
-        lua_call(L, 1, 0);
-    }
-
     static int lreset(lua_State* L) {
         lua_rawgetp(L, LUA_REGISTRYINDEX, &THREADID);
         int threadid = (int)lua_tointeger(L, -1);
@@ -292,7 +294,6 @@ namespace bee::lua_thread {
         }
         g_channel.clear();
         g_thread_id = 0;
-        create_errlog_channel(L);
         return 0;
     }
 
@@ -306,7 +307,9 @@ namespace bee::lua_thread {
             if (g_thread_id.compare_exchange_weak(id, id + 1)) {
                 id++;
                 if (id == 0) {
-                    create_errlog_channel(L);
+                    lua_pushcfunction(L, lnewchannel);
+                    lua_pushstring(L, "errlog");
+                    lua_call(L, 1, 0);
                 }
                 lua_pushinteger(L, id);
                 lua_pushvalue(L, -1);
