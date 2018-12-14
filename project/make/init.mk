@@ -6,7 +6,7 @@ CXX = g++ -std=c++17
 ifeq "$(BUILD_CONFIG)" "Release"
 DEBUG_INFO = -O2
 else
-DEBUG_INFO = -g
+DEBUG_INFO = -g -D_DEBUG
 endif
 
 LUADIR = 3rd/lua/src

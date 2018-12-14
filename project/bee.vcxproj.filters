@@ -111,6 +111,9 @@
     <ClCompile Include="..\binding\lua_serialization.cpp">
       <Filter>binding</Filter>
     </ClCompile>
+    <ClCompile Include="..\binding\lua_platform.cpp">
+      <Filter>binding</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\bee\subprocess\subprocess_posix.h">
@@ -214,6 +217,9 @@
     </ClInclude>
     <ClInclude Include="..\bee\nonstd\enum.h">
       <Filter>bee\nonstd</Filter>
+    </ClInclude>
+    <ClInclude Include="..\bee\platform.h">
+      <Filter>bee</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

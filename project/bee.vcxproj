@@ -96,7 +96,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(projectDir)..\;$(projectDir)..\3rd\lua\src\;$(projectDir)..\3rd\lua-seri\;$(projectDir)..\bee\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>BEE_EXPORTS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BEE_EXPORTS;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <PreBuildEvent>
@@ -116,7 +116,7 @@ $(ProjectDir)..\make\luamake.exe $(ProjectDir)..\project\msvc\embed.lua $(Projec
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(projectDir)..\;$(projectDir)..\3rd\lua\src\;$(projectDir)..\3rd\lua-seri\;$(projectDir)..\bee\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>BEE_EXPORTS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BEE_EXPORTS;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <PreBuildEvent>
@@ -138,7 +138,7 @@ $(ProjectDir)..\make\luamake.exe $(ProjectDir)..\project\msvc\embed.lua $(Projec
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(projectDir)..\;$(projectDir)..\3rd\lua\src\;$(projectDir)..\3rd\lua-seri\;$(projectDir)..\bee\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>BEE_EXPORTS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BEE_EXPORTS;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -161,7 +161,7 @@ $(ProjectDir)..\make\luamake.exe $(ProjectDir)..\project\msvc\embed.lua $(Projec
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(projectDir)..\;$(projectDir)..\3rd\lua\src\;$(projectDir)..\3rd\lua-seri\;$(projectDir)..\bee\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>BEE_EXPORTS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BEE_EXPORTS;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -204,6 +204,7 @@ $(ProjectDir)..\make\luamake.exe $(ProjectDir)..\project\msvc\embed.lua $(Projec
     <ClCompile Include="..\binding\lua_embed.cpp" />
     <ClCompile Include="..\binding\lua_filesystem.cpp" />
     <ClCompile Include="..\binding\lua_filewatch.cpp" />
+    <ClCompile Include="..\binding\lua_platform.cpp" />
     <ClCompile Include="..\binding\lua_serialization.cpp" />
     <ClCompile Include="..\binding\lua_socket.cpp" />
     <ClCompile Include="..\binding\lua_registry.cpp" />
@@ -234,6 +235,7 @@ $(ProjectDir)..\make\luamake.exe $(ProjectDir)..\project\msvc\embed.lua $(Projec
     <ClInclude Include="..\bee\nonstd\enum.h" />
     <ClInclude Include="..\bee\nonstd\expected.h" />
     <ClInclude Include="..\bee\nonstd\span.h" />
+    <ClInclude Include="..\bee\platform.h" />
     <ClInclude Include="..\bee\platform\version.h" />
     <ClInclude Include="..\bee\registry\exception.h" />
     <ClInclude Include="..\bee\registry\key.h" />

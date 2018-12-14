@@ -44,6 +44,10 @@ BEE_SERIALIZATION = \
 	$(TMPDIR)/binding_lua_serialization.o \
 	$(BEE_COMMON)
 
+BEE_PLATFORM = \
+	$(TMPDIR)/binding_lua_platform.o \
+	$(BEE_COMMON)
+
 BEE_ALL = \
 	$(BEE_FILESYSTEM) \
 	$(BEE_FILEWATCH) \
@@ -52,4 +56,5 @@ BEE_ALL = \
 	$(BEE_SUBPROCESS) \
 	$(BEE_THREAD) \
 	$(BEE_UNICODE) \
-	$(BEE_SERIALIZATION)
+	$(BEE_SERIALIZATION) \
+	$(BEE_PLATFORM)

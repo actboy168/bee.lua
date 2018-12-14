@@ -1,13 +1,15 @@
 # bee.lua
 
-[![Build status](https://actboy168.visualstudio.com/bee.lua/_apis/build/status/bee.lua-CI)](https://actboy168.visualstudio.com/bee.lua/_build/latest?definitionId=2)
+| MSVC 15.8 | MinGW 8.2 |
+| ------ | ------ |
+| [![Build status](https://actboy168.visualstudio.com/bee.lua/_apis/build/status/msvc)](https://actboy168.visualstudio.com/bee.lua/_build/latest?definitionId=2) | [![Build status](https://actboy168.visualstudio.com/bee.lua/_apis/build/status/mingw)](https://actboy168.visualstudio.com/bee.lua/_build/latest?definitionId=3) |
 
 Lua runtime and toolset
 
 ## Compiler
 
-* msvc 2017+
-* mingw 8.2+
+* MSVC 15.8+
+* MinGW 8.2+
 
 ## Lua patch
 

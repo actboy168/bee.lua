@@ -11,7 +11,8 @@ local plat = getplat()
 package.path = './test/?.lua'
 package.cpath = ('./bin/%s/?.dll'):format(plat)
 
-if plat:sub(1, 4) == "msvc" then
+local platform = require 'bee.platform'
+if platform.compiler() == 'msvc' then
     dofile './3rd/luaffi/src/test.lua'
 end
 

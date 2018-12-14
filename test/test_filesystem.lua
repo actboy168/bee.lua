@@ -1,6 +1,7 @@
 local lu = require 'luaunit'
 
 local fs = require 'bee.filesystem'
+local platform = require 'bee.platform'
 local thread = require 'bee.thread'
 
 local shell = {}
@@ -81,10 +82,14 @@ function test_fs:test_absolute_relative()
     end
     assertIsAbsolute('c:/a/b')
     assertIsAbsolute('//a/b')
-    --assertIsAbsolute('/a/b') --msvc bug?
     assertIsRelative('./a/b')
     assertIsRelative('a/b')
     assertIsRelative('../a/b')
+    if platform.os() == 'Windows' then
+        assertIsRelative('/a/b')
+    else
+        assertIsAbsolute('/a/b')
+    end
 end
 
 function test_fs:test_remove_filename()
