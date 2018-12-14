@@ -1,7 +1,6 @@
 #include <winsock2.h>
 #include <bee/net/unixsocket.h>
 #include <bee/utility/unicode.h>
-#include <bee/platform/version.h>
 #include <fstream>
 #include <charconv>
 #include <limits>
@@ -70,11 +69,6 @@ namespace bee::net::socket {
 		}
 		auto[path, port] = ep.info();
 		return file::write_all(path, portstr.data());
-	}
-
-	static bool supportUnixDomainSocket() {
-		auto[ver, build] = bee::platform::get_version();
-		return ver == +bee::platform::WinVer::Win10 && build >= 17763;
 	}
 
 	bool u_enable() {

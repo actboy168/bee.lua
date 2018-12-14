@@ -100,6 +100,17 @@ namespace bee::net::socket {
 #endif
     }
 
+    bool supportUnixDomainSocket() {
+#if defined _WIN32
+        fd_t fd = ::socket(AF_UNIX, SOCK_STREAM, 0);
+        bool ok = (fd != retired_fd);
+        ::closesocket(fd);
+        return ok;
+#else
+        return true;
+#endif
+    }
+
     bool shutdown(fd_t s, shutdown_flag flag)
     {
         assert(s != retired_fd);

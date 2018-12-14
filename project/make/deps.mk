@@ -22,7 +22,7 @@ $(TMPDIR)/bee_net_endpoint.o : bee/net/endpoint.cpp bee/net/endpoint.cpp bee/net
 $(TMPDIR)/bee_net_socket.o : bee/net/socket.cpp bee/net/socket.cpp bee/utility/unicode.h bee/config.h bee/net/unixsocket.h bee/net/socket.h bee/net/endpoint.h bee/utility/dynarray.h bee/nonstd/span.h bee/nonstd/expected.h bee/error.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I.
 
-$(TMPDIR)/bee_net_unixsocket.o : bee/net/unixsocket.cpp bee/net/unixsocket.cpp bee/net/unixsocket.h bee/net/socket.h bee/net/endpoint.h bee/utility/dynarray.h bee/nonstd/span.h bee/nonstd/expected.h bee/utility/unicode.h bee/config.h bee/platform/version.h bee/nonstd/enum.h | $(TMPDIR)
+$(TMPDIR)/bee_net_unixsocket.o : bee/net/unixsocket.cpp bee/net/unixsocket.cpp bee/net/unixsocket.h bee/net/socket.h bee/net/endpoint.h bee/utility/dynarray.h bee/nonstd/span.h bee/nonstd/expected.h bee/utility/unicode.h bee/config.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I.
 
 $(TMPDIR)/bee_platform_version.o : bee/platform/version.cpp bee/platform/version.cpp bee/platform/version.h bee/config.h bee/nonstd/enum.h bee/utility/file_version.h | $(TMPDIR)

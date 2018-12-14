@@ -61,4 +61,5 @@ namespace bee::net::socket {
     bool   getsockname(fd_t s, endpoint& ep);
     bool   unlink(fd_t s);
     int    errcode(fd_t s);
+    bool   supportUnixDomainSocket();
 }
