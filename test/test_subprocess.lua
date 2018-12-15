@@ -1,103 +1,125 @@
+local lu = require 'luaunit'
+
 local subprocess = require 'bee.subprocess'
 local fs = require 'bee.filesystem'
-local thread = require 'bee.thread'
 
-local exe = fs.exe_path()
+local function createLua(script, option)
+    option = option or {}
+    option[1] = {
+        fs.exe_path(),
+        '-e', script,
+    }
+    return subprocess.spawn(option)
+end
 
--- subprocess.spawn
-local lua = subprocess.spawn {
-    exe,
-    '-e', ' '
-}
-assert(lua ~= nil)
+test_subprocess = {}
 
-fs.remove(fs.path 'temp')
-local lua = subprocess.spawn {
-    exe,
-    '-e', 'io.open("temp", "w"):close()'
-}
-assert(lua ~= nil)
-lua:wait()
-assert(fs.exists(fs.path 'temp') == true)
-fs.remove(fs.path 'temp')
+function test_subprocess:test_spawn()
+    lu.assertUserdata(createLua ' ')
 
--- wait
-fs.remove(fs.path 'temp')
-assert(fs.exists(fs.path 'temp') ~= true)
-local lua = subprocess.spawn {
-    exe,
-    '-e', 'io.open("temp", "w"):close()'
-}
-assert(lua ~= nil)
-lua:wait()
-assert(fs.exists(fs.path 'temp') == true)
-fs.remove(fs.path 'temp')
+    local process = createLua(' ', { stdin = true })
+    lu.assertUserdata(process)
+    lu.assertUserdata(process.stdin)
+    lu.assertIsNil(process.stdout)
+    lu.assertIsNil(process.stderr)
+    
+    local process = createLua(' ', { stdout = true })
+    lu.assertUserdata(process)
+    lu.assertIsNil(process.stdin)
+    lu.assertUserdata(process.stdout)
+    lu.assertIsNil(process.stderr)
 
--- is_running
-local lua = subprocess.spawn {
-    exe,
-    '-e', ' '
-}
-assert(lua ~= nil)
-assert(lua:is_running() == true)
+    local process = createLua(' ', { stderr = true })
+    lu.assertUserdata(process)
+    lu.assertIsNil(process.stdin)
+    lu.assertIsNil(process.stdout)
+    lu.assertUserdata(process.stderr)
+end
 
--- kill
-local lua = subprocess.spawn {
-    exe,
-    '-e', ' '
-}
-assert(lua ~= nil)
-assert(lua:is_running() == true)
-assert(lua:kill() == true)
-assert(lua:is_running() == false)
-assert(lua:kill() == false)
+function test_subprocess:test_wait()
+    local process = createLua ' '
+    lu.assertEquals(process:wait(), 0)
 
--- get_id
-local lua = subprocess.spawn {
-    exe,
-    console = 'new',
-    hideWindow = true
-}
-assert(lua ~= nil)
-local id = lua:get_id()
-local f = io.popen(('tasklist /FI "PID eq %d"'):format(id), 'r')
-local buf = f:read 'a'
-f:close()
-lua:kill()
-assert(buf:find(exe:filename():string(), 1, true) ~= nil)
+    local process = createLua 'os.exit(true)'
+    lu.assertEquals(process:wait(), 0)
 
--- resume TODO
+    local process = createLua 'os.exit(false)'
+    lu.assertEquals(process:wait(), 1)
 
--- native_handle TODO
+    local process = createLua 'os.exit(10203)'
+    lu.assertEquals(process:wait(), 10203)
+end
 
--- stdout
-local lua = subprocess.spawn {
-    exe,
-    '-e', 'io.write("ok")',
-    stdout = true
-}
-lua:wait()
-assert("ok" == lua.stdout:read 'a')
+function test_subprocess:test_is_running()
+    local process = createLua('io.read "a"', { stdin = true })
+    lu.assertIsTrue(process:is_running())
+    lu.assertUserdata(process.stdin)
+    process.stdin:close()
+    lu.assertEquals(process:wait(), 0)
+    lu.assertIsFalse(process:is_running())
+end
 
--- subprocess.peek
-local lua = subprocess.spawn {
-    exe,
-    '-e', 'io.write("ok")',
-    stdout = true
-}
-lua:wait()
-assert(subprocess.peek(lua.stdout) == 2)
+function test_subprocess:test_kill()
+    local process = createLua('io.read "a"', { stdin = true })
+    lu.assertIsTrue(process:is_running())
+    lu.assertIsTrue(process:kill())
+    lu.assertIsFalse(process:is_running())
+    lu.assertEquals(process:wait(), 1)
 
--- subprocess.filemode
-local lua = subprocess.spawn {
-    exe,
-    '-e', 'io.write(io.read "a")',
-    stdin = true,
-    stdout = true,
-}
-subprocess.filemode(lua.stdin, 'b')
-subprocess.filemode(lua.stdout, 'b')
-lua.stdin:write '\r\n'
-lua.stdin:close()
-lua:wait()
-assert(subprocess.peek(lua.stdout) == 2)
+    local process = createLua('io.read "a"', { stdin = true })
+    lu.assertIsTrue(process:is_running())
+    lu.assertIsTrue(process:kill(0))
+    lu.assertIsTrue(process:is_running())
+    lu.assertUserdata(process.stdin)
+    process.stdin:close()
+    lu.assertEquals(process:wait(), 0)
+    lu.assertIsFalse(process:is_running())
+    lu.assertIsFalse(process:kill(0))
+end
+
+function test_subprocess:test_stdio()
+    local process = createLua('io.stdout:write("ok")', { stdout = true })
+    lu.assertEquals(process:wait(), 0)
+    lu.assertUserdata(process.stdout)
+    lu.assertEquals(process.stdout:read(2), "ok")
+    lu.assertIsNil(process.stdout:read(2))
+
+    local process = createLua('io.stderr:write("ok")', { stderr = true })
+    lu.assertEquals(process:wait(), 0)
+    lu.assertUserdata(process.stderr)
+    lu.assertEquals(process.stderr:read(2), "ok")
+    lu.assertIsNil(process.stderr:read(2))
+
+    local process = createLua('io.write(io.read "a")', { stdin = true, stdout = true, stderr = true })
+    lu.assertUserdata(process.stdin)
+    lu.assertUserdata(process.stdout)
+    lu.assertUserdata(process.stderr)
+    lu.assertIsTrue(process:is_running())
+    process.stdin:write "ok"
+    process.stdin:close()
+    lu.assertEquals(process:wait(), 0)
+    lu.assertEquals(process.stdout:read(2), "ok")
+    lu.assertIsNil(process.stdout:read(2))
+
+    local process = createLua('error "Test subprocess error."', { stderr = true })
+    lu.assertEquals(process:wait(), 1)
+    lu.assertErrorMsgContains("Test subprocess error.", error, process.stderr:read "a")
+end
+
+function test_subprocess:test_peek()
+    local process = createLua('io.write "ok"', { stdout = true })
+    lu.assertEquals(process:wait(), 0)
+    lu.assertUserdata(process.stdout)
+    lu.assertEquals(subprocess.peek(process.stdout), 2)
+    lu.assertEquals(subprocess.peek(process.stdout), 2)
+    lu.assertEquals(process.stdout:read(2), "ok")
+    lu.assertIsNil(subprocess.peek(process.stdout))
+
+    local process = createLua('io.write "ok"', { stdout = true })
+    lu.assertEquals(process:wait(), 0)
+    lu.assertUserdata(process.stdout)
+    lu.assertEquals(subprocess.peek(process.stdout), 2)
+    process.stdout:close()
+    lu.assertError("attempt to use a closed file", process.stdout.read, process.stdout, 2)
+    lu.assertIsNil(subprocess.peek(process.stdout))
+end

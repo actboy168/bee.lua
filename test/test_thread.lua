@@ -56,7 +56,7 @@ end
 function test_thread:test_thread_3()
     assertNotThreadError()
     local thd = createThread [[
-        error('Test thread error.')
+        error 'Test thread error.'
     ]]
     thd:wait()
     assertHasThreadError('Test thread error.')
