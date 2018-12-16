@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <type_traits>
 #include <memory>
+#include <memory.h>
 
 namespace bee {
 

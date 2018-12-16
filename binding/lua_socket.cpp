@@ -1,8 +1,6 @@
 #include <lua.hpp>
 #if defined _WIN32
 #include <winsock.h>
-#else
-#include <sys/socket.h>
 #endif
 #include <bee/lua/binding.h>
 #include <bee/net/socket.h>

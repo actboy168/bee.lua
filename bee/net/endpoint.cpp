@@ -1,10 +1,19 @@
 #include <bee/net/endpoint.h>
 #if defined(_WIN32)
-#include <Ws2tcpip.h>
+#   include <Ws2tcpip.h>
+#else
+#   include <netdb.h>
+#   include <sys/un.h>
+#   include <arpa/inet.h>
+#   ifndef UNIX_PATH_MAX
+#       define UNIX_PATH_MAX (sizeof(sockaddr_un::sun_path) / sizeof(sockaddr_un::sun_path[0]))
+#   endif
 #endif
 #include <bee/utility/format.h>
 #include <bee/error.h>
-#include <charconv>
+#if __has_include(<charconv>)
+#   include <charconv>
+#endif
 
 //
 // need Windows SDK >= 17063
@@ -12,7 +21,7 @@
 //
 #if defined(_WIN32)
     // TODO: Windows SDK 16299 has a wrong `afunix.h`
-	#if __has_include("afunix.h")
+	#if __has_include(<afunix.h>)
 		#include <afunix.h>
 	#else
 		#define UNIX_PATH_MAX 108
@@ -86,6 +95,7 @@ namespace bee::net {
         if (needsnolookup(ip)) {
             hint.ai_flags = AI_NUMERICHOST;
         }
+#if __has_include(<charconv>)
         std::array<char, 10> portstr;
         if (auto[p, ec] = std::to_chars(portstr.data(), portstr.data() + portstr.size() - 1, port); ec != std::errc()) {
             return nonstd::make_unexpected(make_error_code(ec).message());
@@ -94,6 +104,9 @@ namespace bee::net {
             p[0] = '\0';
         }
         auto info = gethostaddr(hint, ip, portstr.data());
+#else
+        auto info = gethostaddr(hint, ip, bee::format("%d", port).c_str());
+#endif
         if (!info) {
             return nonstd::make_unexpected(make_neterror("getaddrinfo").what());
         }
@@ -106,7 +119,7 @@ namespace bee::net {
         return std::move(ep);
     }
     endpoint endpoint::from_empty() {
-        return std::move(endpoint(endpoint::kMaxSize));
+        return endpoint(endpoint::kMaxSize);
     }
 
     endpoint::endpoint(size_t n) : mybase(n)

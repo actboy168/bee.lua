@@ -5,6 +5,10 @@
 #include <bee/utility/dynarray.h>
 #include <bee/nonstd/expected.h>
 
+#if !defined(_WIN32)
+#include <sys/socket.h>
+#endif
+
 struct sockaddr;
 
 namespace bee::net {
