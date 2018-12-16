@@ -46,7 +46,6 @@ BEE_SERIALIZATION = \
 
 BEE_PLATFORM = \
 	$(TMPDIR)/binding_lua_platform.o \
-	$(BEE_COMMON)
 
 BEE_ALL = \
 	$(BEE_FILESYSTEM) \
@@ -58,3 +57,9 @@ BEE_ALL = \
 	$(BEE_UNICODE) \
 	$(BEE_SERIALIZATION) \
 	$(BEE_PLATFORM)
+
+
+ifeq "$(PLAT)" "linux"
+BEE_ALL = \
+	$(BEE_PLATFORM)
+endif

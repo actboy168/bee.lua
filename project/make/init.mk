@@ -26,21 +26,21 @@ CFLAGS = $(DEBUG_INFO) -Wall -Wextra
 ifeq "$(PLAT)" "mingw"
 
 LUAFLAGS = -DLUA_BUILD_AS_DLL
-LUALIB = -L$(LUADIR) -llua54
+LUALIB = -llua54
 LDSHARED = --shared
 STRIP = strip --strip-unneeded
 
 else ifeq "$(PLAT)" "linux"
 
 LUA_FLAGS = -DLUA_USE_LINUX -DLUA_USE_READLINE
-LUALIB = -L$(LUADIR) -llua
+LUALIB = -llua
 LDSHARED = --shared
 STRIP = strip --strip-unneeded
 
 else ifeq "$(PLAT)" "macosx"
 
 LUA_FLAGS = -DLUA_USE_MACOSX
-LUALIB = -L$(LUADIR) -llua
+LUALIB = -llua
 LDSHARED = -fPIC -dynamiclib -Wl,-undefined,dynamic_lookup
 STRIP = strip -u -r -x
 

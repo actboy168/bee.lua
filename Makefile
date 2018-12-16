@@ -3,16 +3,26 @@ include project/make/init.mk
 BINDIR = bin/$(PLAT)_$(BUILD_CONFIG)
 TMPDIR = tmp/$(PLAT)_$(BUILD_CONFIG)
 LUACFLAGS := $(CFLAGS)
-CFLAGS += -DBEE_EXPORTS
+LUALIB += -L$(BINDIR)
 
-default : alllua $(BINDIR)/bee.dll
+ifeq "$(PLAT)" "mingw"
+CFLAGS += -DBEE_EXPORTS
+BEE_TARGET= bee.dll
+BEE_LIBS= -lws2_32 -lversion -lstdc++fs -lstdc++
+else
+BEE_TARGET= bee.so
+BEE_LIBS=
+LUALIB=
+endif
+
+default : alllua $(BINDIR)/$(BEE_TARGET)
 
 include project/make/deps.mk
 include project/make/bee.mk
 include project/make/lua.mk
 
-$(BINDIR)/bee.dll : $(BEE_ALL)
-	$(CC) $(LDSHARED) $(CFLAGS) -o $@ $^ $(LUALIB) -lstdc++fs -lstdc++ -lws2_32 -lversion
+$(BINDIR)/$(BEE_TARGET) : $(BEE_ALL)
+	$(CC) $(LDSHARED) -o $@ $^ $(LUALIB) $(BEE_LIBS)
 	$(STRIP) $@
 
 $(BINDIR) :

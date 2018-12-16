@@ -7,8 +7,9 @@ local function getTarget()
 end
 __Target__ = getTarget()
 
+local ext = package.cpath:match '[/\\]%?%.([a-z]+)'
 package.path = './test/?.lua'
-package.cpath = ('./bin/%s/?.dll'):format(__Target__)
+package.cpath = ('./bin/%s/?.%s'):format(__Target__, ext)
 
 local platform = require 'bee.platform'
 if platform.Compiler == 'msvc' then
@@ -18,10 +19,12 @@ end
 local lu = require 'luaunit'
 
 require 'test_platform'
+if platform.OS == 'Windows' then
 require 'test_serialization'
 require 'test_filesystem'
 require 'test_thread'
 require 'test_subprocess'
 --require 'test_registry'
+end
 
 os.exit(lu.LuaUnit.run(), true)

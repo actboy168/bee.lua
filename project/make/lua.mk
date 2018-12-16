@@ -1,8 +1,8 @@
 ifeq "$(PLAT)" "mingw"
-alllua : $(BINDIR)/lua.exe $(BINDIR)/lua54.dll
+alllua :  $(BINDIR)/lua54.dll $(BINDIR)/lua.exe
 else
 alllua : $(BINDIR)/lua
-LUALDFLAGS = -lm -ldl -lreadline
+LUALDFLAGS = -Wl,-E -lm -ldl -lreadline
 endif
 
 CORE_O=	lapi.o lcode.o lctype.o ldebug.o ldo.o ldump.o lfunc.o lgc.o llex.o lmem.o lobject.o lopcodes.o lparser.o lstate.o lstring.o ltable.o ltm.o lundump.o lvm.o lzio.o
@@ -20,12 +20,15 @@ $(foreach v, $(ALL_O), $(eval $(call build_lua,$(v))))
 
 $(BINDIR)/lua : $(TMPDIR)/lua/lua.o $(foreach v, $(BASE_O), $(TMPDIR)/lua/$(v)) | $(BINDIR)
 	gcc -o $@ $^ $(LUALDFLAGS)
-
-$(BINDIR)/lua.exe : $(TMPDIR)/lua/utf8_lua.o $(foreach v, $(BASE_O), $(TMPDIR)/lua/$(v)) | $(BINDIR)
-	gcc -o $@ $^ $(LUALIB)
+	$(STRIP) $@
 
 $(BINDIR)/lua54.dll : $(TMPDIR)/lua/utf8_crt.o $(foreach v, $(BASE_O), $(TMPDIR)/lua/$(v)) | $(BINDIR)
 	gcc -o $@ $^ $(LDSHARED)
+	$(STRIP) $@
+
+$(BINDIR)/lua.exe : $(TMPDIR)/lua/utf8_lua.o $(foreach v, $(BASE_O), $(TMPDIR)/lua/$(v)) | $(BINDIR)
+	gcc -o $@ $^ $(LUALIB)
+	$(STRIP) $@
 
 $(TMPDIR)/lua :
 	mkdir -p $@

@@ -1,47 +1,34 @@
-local support = {
-    msvc_x86_Debug = {
+local support = {}
+for _, config in ipairs {'Debug', 'Release'} do
+    support['msvc_x86_' .. config] = {
         OS = 'Windows',
         Arch = '32',
         Compiler = 'msvc',
         CRT = 'msvc',
-        DEBUG = true,
-    },
-    msvc_x86_Release = {
-        OS = 'Windows',
-        Arch = '32',
-        Compiler = 'msvc',
-        CRT = 'msvc',
-        DEBUG = false,
-    },
-    msvc_x64_Debug = {
+        DEBUG = (config == 'Debug'),
+    }
+    support['msvc_x64_' .. config] = {
         OS = 'Windows',
         Arch = '64',
         Compiler = 'msvc',
         CRT = 'msvc',
-        DEBUG = true,
-    },
-    msvc_x64_Release = {
-        OS = 'Windows',
-        Arch = '64',
-        Compiler = 'msvc',
-        CRT = 'msvc',
-        DEBUG = false,
-    },
-    mingw_Debug = {
+        DEBUG = (config == 'Debug'),
+    }
+    support['mingw_' .. config] = {
         OS = 'Windows',
         Arch = '64',
         Compiler = 'gcc',
         CRT = 'mingw',
-        DEBUG = true,
-    },
-    mingw_Release = {
-        OS = 'Windows',
+        DEBUG = (config == 'Debug'),
+    }
+    support['linux_' .. config] = {
+        OS = 'Linux',
         Arch = '64',
         Compiler = 'gcc',
-        CRT = 'mingw',
-        DEBUG = false,
-    },
-}
+        CRT = 'glibc',
+        DEBUG = (config == 'Debug'),
+    }
+end
 
 local lu = require 'luaunit'
 local platform = require 'bee.platform'
