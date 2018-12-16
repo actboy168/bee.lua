@@ -1,18 +1,14 @@
 # bee.lua
 
-| MSVC 15.8 | MinGW 8.2 |
+Lua runtime and toolset
+
+| MSVC 15.8 (Windows) | MinGW 8.2 (Windows) |
 | ------ | ------ |
 | [![Build status](https://actboy168.visualstudio.com/bee.lua/_apis/build/status/msvc)](https://actboy168.visualstudio.com/bee.lua/_build/latest?definitionId=2) | [![Build status](https://actboy168.visualstudio.com/bee.lua/_apis/build/status/mingw)](https://actboy168.visualstudio.com/bee.lua/_build/latest?definitionId=3) |
 
-Lua runtime and toolset
-
-## Compiler
-
-* MSVC 15.8+
-* MinGW 8.2+
-
 ## Lua patch
 
+* Enable ansi escape code on windows
 * String encoding on windows using utf8
 * Remove randomness when traversing the array
 * Disable load binary chunk (for security)
