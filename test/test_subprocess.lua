@@ -1,12 +1,19 @@
 local lu = require 'luaunit'
 
 local subprocess = require 'bee.subprocess'
-local fs = require 'bee.filesystem'
+
+local function getexe()
+    local i = 0
+    while arg[i] ~= nil do
+        i = i - 1
+    end
+    return arg[i + 1]
+end
 
 local function createLua(script, option)
     option = option or {}
     option[1] = {
-        fs.exe_path(),
+        getexe(),
         '-e', script,
     }
     return subprocess.spawn(option)

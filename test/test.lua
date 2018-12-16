@@ -24,9 +24,7 @@ if platform.OS == 'Windows' then
 require 'test_filesystem'
 end
 require 'test_thread'
-if platform.OS == 'Windows' then
 require 'test_subprocess'
 --require 'test_registry'
-end
 
 os.exit(lu.LuaUnit.run(), true)

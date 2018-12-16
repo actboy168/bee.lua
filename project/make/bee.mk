@@ -30,8 +30,13 @@ BEE_SOCKET = \
 
 BEE_SUBPROCESS = \
 	$(TMPDIR)/binding_lua_subprocess.o \
-	$(TMPDIR)/bee_subprocess_subprocess_win.o \
 	$(BEE_COMMON)
+
+ifeq "$(PLAT)" "mingw"
+BEE_SUBPROCESS += $(TMPDIR)/bee_subprocess_subprocess_win.o
+else
+BEE_SUBPROCESS += $(TMPDIR)/bee_subprocess_subprocess_posix.o
+endif
 
 BEE_THREAD = \
 	$(TMPDIR)/binding_lua_thread.o \
@@ -53,7 +58,6 @@ BEE_PLATFORM = \
 BEE_ALL = \
 	$(BEE_FILESYSTEM) \
 	$(BEE_FILEWATCH) \
-	$(BEE_REGISTRY) \
 	$(BEE_SOCKET) \
 	$(BEE_SUBPROCESS) \
 	$(BEE_THREAD) \
@@ -62,11 +66,13 @@ BEE_ALL = \
 
 
 ifeq "$(PLAT)" "mingw"
+BEE_ALL += $(BEE_REGISTRY)
 BEE_ALL += $(BEE_UNICODE)
 endif
 
 ifeq "$(PLAT)" "linux"
 BEE_ALL = \
+	$(BEE_SUBPROCESS) \
 	$(BEE_THREAD) \
 	$(BEE_SERIALIZATION) \
 	$(BEE_PLATFORM)
