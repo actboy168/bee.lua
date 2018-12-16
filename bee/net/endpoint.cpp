@@ -1,5 +1,7 @@
 #include <bee/net/endpoint.h>
+#if defined(_WIN32)
 #include <Ws2tcpip.h>
+#endif
 #include <bee/utility/format.h>
 #include <bee/error.h>
 #include <charconv>
@@ -9,6 +11,7 @@
 // see the https://blogs.msdn.microsoft.com/commandline/2017/12/19/af_unix-comes-to-windows/
 //
 #if defined(_WIN32)
+    // TODO: Windows SDK 16299 has a wrong `afunix.h`
 	#if __has_include("afunix.h")
 		#include <afunix.h>
 	#else

@@ -1,5 +1,9 @@
 #include <lua.hpp>
+#if defined _WIN32
 #include <winsock.h>
+#else
+#include <sys/socket.h>
+#endif
 #include <bee/lua/binding.h>
 #include <bee/net/socket.h>
 #include <bee/net/endpoint.h>
@@ -352,7 +356,10 @@ namespace bee::lua_socket {
         if (fd == socket::retired_fd) {
             return push_neterror(L, "socket");
         }
-        luafd& self = constructor(L, fd, protocol);
+#if defined _WIN32
+        luafd& self =
+#endif
+        constructor(L, fd, protocol);
         if (socket::status::success != socket::bind(fd, *ep)) {
             return push_neterror(L, "bind");
         }
@@ -441,7 +448,7 @@ namespace bee::lua_socket {
                     break;
                 }
                 luafd& self = checkfd(L, -1);
-                MAXFD_SET(fd);
+                MAXFD_SET(self.fd);
                 FD_SET(self.fd, &writefds);
                 EXFDS_SET(self.connect, self.fd);
                 lua_pop(L, 1);

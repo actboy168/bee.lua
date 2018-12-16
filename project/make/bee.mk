@@ -56,9 +56,6 @@ BEE_PLATFORM = \
 	$(TMPDIR)/binding_lua_platform.o \
 
 BEE_ALL = \
-	$(BEE_FILESYSTEM) \
-	$(BEE_FILEWATCH) \
-	$(BEE_SOCKET) \
 	$(BEE_SUBPROCESS) \
 	$(BEE_THREAD) \
 	$(BEE_SERIALIZATION) \
@@ -68,12 +65,10 @@ BEE_ALL = \
 ifeq "$(PLAT)" "mingw"
 BEE_ALL += $(BEE_REGISTRY)
 BEE_ALL += $(BEE_UNICODE)
-endif
 
-ifeq "$(PLAT)" "linux"
-BEE_ALL = \
-	$(BEE_SUBPROCESS) \
-	$(BEE_THREAD) \
-	$(BEE_SERIALIZATION) \
-	$(BEE_PLATFORM)
+# TODO
+BEE_ALL += \
+	$(BEE_FILESYSTEM) \
+	$(BEE_FILEWATCH) \
+	$(BEE_SOCKET)
 endif

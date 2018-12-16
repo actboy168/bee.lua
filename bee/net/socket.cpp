@@ -8,10 +8,7 @@
 #    include <fcntl.h>
 #    include <netinet/tcp.h>
 #    include <signal.h>
-#    include <sys/types.h>
-#    include <sys/socket.h>
 #    include <netinet/in.h>
-#    include <arpa/inet.h>
 #    include <unistd.h>
 #endif
 
@@ -34,9 +31,9 @@
 
 
 namespace bee::net::socket {
-
+#if defined(_WIN32)
     static_assert(sizeof(SOCKET) == sizeof(fd_t));
-
+#endif
     void initialize()
     {
         static bool initialized = false;
@@ -63,7 +60,9 @@ namespace bee::net::socket {
 #else
         case EAGAIN:
         case EINTR:
+#if EAGAIN != EWOULDBLOCK
         case EWOULDBLOCK:
+#endif
 #endif
             return true;
         default:
@@ -138,14 +137,13 @@ namespace bee::net::socket {
 #if defined _WIN32
         unsigned long nonblock = 1;
         int rc = ioctlsocket(s, FIONBIO, &nonblock);
-        net_assert_success(rc);
 #else
         int flags = fcntl(s, F_GETFL, 0);
         if (flags == -1)
             flags = 0;
         int rc = fcntl(s, F_SETFL, flags | O_NONBLOCK);
-        net_assert(rc != -1);
 #endif
+        net_assert_success(rc);
     }
 
     void keepalive(fd_t s, int keepalive, int keepalive_cnt, int keepalive_idle, int keepalive_intvl)
@@ -166,7 +164,7 @@ namespace bee::net::socket {
         if (keepalive != -1)
         {
             int rc = setsockopt(s, SOL_SOCKET, SO_KEEPALIVE, (char*) &keepalive, sizeof (int));
-            net_assert(rc == 0);
+            net_assert_success(rc);
 
             if (keepalive_cnt != -1)
             {
@@ -193,6 +191,8 @@ namespace bee::net::socket {
         DWORD byte_retruned = 0;
         bool new_be = false;
         WSAIoctl(s, SIO_UDP_CONNRESET, &new_be, sizeof(new_be), NULL, 0, &byte_retruned, NULL, NULL);
+#else
+        (void)s;
 #endif
     }
 
@@ -369,6 +369,7 @@ namespace bee::net::socket {
             return false;
         }
         auto[path, port] = ep.info();
+        (void)port;
         if (path.size() == 0) {
             return false;
         }
