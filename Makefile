@@ -9,12 +9,7 @@ default : alllua $(BINDIR)/bee.dll
 
 include project/make/deps.mk
 include project/make/bee.mk
-
-alllua : | $(BINDIR)
-	@cd $(LUADIR) && $(MAKE) --no-print-directory "PLAT=$(PLAT)" "CC=$(CC)" "CFLAGS=$(LUACFLAGS) $(SYSCFLAGS)"
-	@cp $(LUADIR)/liblua.a  $(BINDIR)
-	@cp $(LUADIR)/lua.exe   $(BINDIR)
-	@cp $(LUADIR)/lua54.dll $(BINDIR)
+include project/make/lua.mk
 
 $(BINDIR)/bee.dll : $(BEE_ALL)
 	$(CC) $(LDSHARED) $(CFLAGS) -o $@ $^ $(LUALIB) -lstdc++fs -lstdc++ -lws2_32 -lversion
@@ -26,8 +21,5 @@ $(BINDIR) :
 $(TMPDIR) :
 	mkdir -p $@
 
-lua_clean :
-	cd $(LUADIR) && $(MAKE) clean
-
-clean : lua_clean
+clean :
 	rm -rf $(TMPDIR)
