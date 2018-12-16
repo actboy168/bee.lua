@@ -20,14 +20,14 @@ namespace bee::lua_thread {
 
         void push(void* data) {
             mybase::push(data);
-            semaphore.signal();
+            sem.signal();
         }
         void blocked_pop(void*& data) {
             for (;;) {
                 if (mybase::pop(data)) {
                     return;
                 }
-                semaphore.wait();
+                sem.wait();
             }
         }
 		template<class Rep, class Period>
@@ -36,18 +36,18 @@ namespace bee::lua_thread {
 			if (mybase::pop(data)) {
 				return true;
 			}
-			if (!semaphore.wait_for(timeout)) {
+			if (!sem.wait_for(timeout)) {
 				return false;
 			}
 			while (!mybase::pop(data)) {
-				if (!semaphore.wait_until(now + timeout)) {
+				if (!sem.wait_until(now + timeout)) {
 					return false;
 				}
 			}
 			return true;
 		}
     private:
-        semaphore semaphore;
+        semaphore sem;
     };
 
     class channelmgr {

@@ -1,7 +1,9 @@
-BEE_COMMON = \
-	$(TMPDIR)/bee_error_windows_category.o \
-	$(TMPDIR)/bee_utility_unicode.o \
-	$(TMPDIR)/bee_error.o
+BEE_COMMON = $(TMPDIR)/bee_error.o
+
+ifeq "$(PLAT)" "mingw"
+BEE_COMMON += $(TMPDIR)/bee_error_windows_category.o
+BEE_COMMON += $(TMPDIR)/bee_utility_unicode.o
+endif
 
 BEE_FILESYSTEM = \
 	$(TMPDIR)/binding_lua_filesystem.o \
@@ -42,6 +44,7 @@ BEE_UNICODE = \
 
 BEE_SERIALIZATION = \
 	$(TMPDIR)/binding_lua_serialization.o \
+	$(TMPDIR)/lua-seri.o \
 	$(BEE_COMMON)
 
 BEE_PLATFORM = \
@@ -54,12 +57,17 @@ BEE_ALL = \
 	$(BEE_SOCKET) \
 	$(BEE_SUBPROCESS) \
 	$(BEE_THREAD) \
-	$(BEE_UNICODE) \
 	$(BEE_SERIALIZATION) \
 	$(BEE_PLATFORM)
 
 
+ifeq "$(PLAT)" "mingw"
+BEE_ALL += $(BEE_UNICODE)
+endif
+
 ifeq "$(PLAT)" "linux"
 BEE_ALL = \
+	$(BEE_THREAD) \
+	$(BEE_SERIALIZATION) \
 	$(BEE_PLATFORM)
 endif

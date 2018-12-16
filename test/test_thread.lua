@@ -1,7 +1,6 @@
 local lu = require 'luaunit'
 
 local thread = require "bee.thread"
-local fs = require "bee.filesystem"
 local err = thread.channel "errlog"
 
 local cpath_template = ("package.cpath = [[%s]]\n"):format(package.cpath)
@@ -23,15 +22,23 @@ end
 test_thread = {}
 
 function test_thread:test_thread_1()
+    local function file_exists(filename)
+        local f = io.open(filename, 'r')
+        if f then
+            f:close()
+            return true
+        end
+        return false
+    end
     assertNotThreadError()
-    fs.remove(fs.path('temp.txt'))
-    lu.assertIsFalse(fs.exists(fs.path('temp.txt')))
+    os.remove('temp.txt')
+    lu.assertIsFalse(file_exists('temp.txt'))
     local thd = createThread [[
         io.open('temp.txt', 'w'):close()
     ]]
     thd:wait()
-    lu.assertIsTrue(fs.exists(fs.path('temp.txt')))
-    fs.remove(fs.path('temp.txt'))
+    lu.assertIsTrue(file_exists('temp.txt'))
+    os.remove('temp.txt')
     assertNotThreadError()
 end
 

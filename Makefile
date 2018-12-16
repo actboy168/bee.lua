@@ -8,10 +8,10 @@ LUALIB += -L$(BINDIR)
 ifeq "$(PLAT)" "mingw"
 CFLAGS += -DBEE_EXPORTS
 BEE_TARGET= bee.dll
-BEE_LIBS= -lws2_32 -lversion -lstdc++fs -lstdc++
+BEE_LIBS= -lws2_32 -lversion
 else
 BEE_TARGET= bee.so
-BEE_LIBS=
+BEE_LIBS= -lpthread
 LUALIB=
 endif
 
@@ -22,7 +22,7 @@ include project/make/bee.mk
 include project/make/lua.mk
 
 $(BINDIR)/$(BEE_TARGET) : $(BEE_ALL)
-	$(CC) $(LDSHARED) -o $@ $^ $(LUALIB) $(BEE_LIBS)
+	$(CC) $(LDSHARED) -o $@ $^ $(LUALIB) $(BEE_LIBS) -lstdc++fs -lstdc++
 	$(STRIP) $@
 
 $(BINDIR) :

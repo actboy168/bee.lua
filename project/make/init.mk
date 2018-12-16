@@ -32,6 +32,7 @@ STRIP = strip --strip-unneeded
 
 else ifeq "$(PLAT)" "linux"
 
+CFLAGS += -fPIC
 LUA_FLAGS = -DLUA_USE_LINUX -DLUA_USE_READLINE
 LUALIB = -llua
 LDSHARED = --shared
