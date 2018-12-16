@@ -9,9 +9,15 @@ ifeq "$(PLAT)" ""
 	endif
 endif
 
-BUILD_CONFIG = Release
+ifeq "$(PLAT)" "mingw"
 CC = gcc -std=c11
 CXX = g++ -std=c++17
+else
+CC = clang -std=c11
+CXX = clang -std=c++17
+endif
+
+BUILD_CONFIG = Release
 ifeq "$(BUILD_CONFIG)" "Release"
 DEBUG_INFO = -O2
 else

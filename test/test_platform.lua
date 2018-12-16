@@ -24,7 +24,7 @@ for _, config in ipairs {'Debug', 'Release'} do
     support['linux_' .. config] = {
         OS = 'Linux',
         Arch = '64',
-        Compiler = 'gcc',
+        Compiler = 'clang',
         CRT = 'glibc',
         DEBUG = (config == 'Debug'),
     }
