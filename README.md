@@ -17,14 +17,17 @@ Lua runtime and toolset
 
 ## Feature
 
-* filesystem
-* thread
-* socket
-* subprocess
-* filewatch
-* registry
+|            | Windows | Linux | macOS |
+| ---------- | ------- | ----- |------ |
+| filesystem |   Yes   | No<sup>[1]</sup> | No<sup>[1]</sup> |
+| thread     |   Yes   |  Yes  |  Yes  |
+| socket     |   Yes   |  Yes  |  Yes  |
+| subprocess |   Yes   |  Yes  |  Yes  |
+| filewatch  |   Yes   | TODO  |  Yes  |
+| registry   |   Yes   |  N/A  |  N/A  |
+
+[1] Requires compiler support, gcc8+ or clang7+. But most distribution are still using gcc7- or clang6-.
 
 ## TODO
 
-* macOS, Linux support
 * High-level network library
