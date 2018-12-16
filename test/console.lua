@@ -29,29 +29,25 @@ local function escape_code(option)
     if type(option) == 'string' then
         option = parse(option)
     end
-    local escape  = '\x1b[0'
-    for k, v in pairs(option) do
-        if k == 'font-weight' then
-            if v == 'bold' then
-                escape = escape .. ';1'
-            end
-        elseif k == 'text-decoration' then
-            if v == 'underline' then
-                escape = escape .. ';4'
-            end
-        elseif k == 'background' then
-            local background = ansi16[v:lower()]
-            if background then
-                escape = escape .. ';' .. (background + 10)
-            end
-        elseif k == 'color' then
-            local color = ansi16[v:lower()]
-            if color then
-                escape = escape .. ';' .. color
-            end
+    local escape = ''
+    if option.color then
+        local v = option.color
+        local color = ansi16[v:lower()]
+        if color then
+            escape = escape .. ';' .. (color + 60)
         end
     end
-    return escape .. 'm'
+    if option.background then
+        local v = option.background
+        local color = ansi16[v:lower()]
+        if color then
+            escape = escape .. ';' .. (color + 10)
+        end
+    end
+    if escape == '' then
+        return  '\x1b[0m'
+    end
+    return  '\x1b[0m\x1b[' .. escape:sub(2) .. 'm'
 end
 
 local function fmt(...)
@@ -78,7 +74,7 @@ local function log(...)
 end
 
 local function set(option)
-    io.stdout:write(escape_code(option))
+    io.write(escape_code(option))
 end
 
 return {
