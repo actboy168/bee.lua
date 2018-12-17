@@ -268,8 +268,18 @@ namespace bee::posix::subprocess {
             return { fds[0], fds[1] };
         }
         int peek(FILE* f) {
-            int count;
-            return (ioctl(to_handle(f), FIONREAD, (char *) &count) < 0 ? -1 : count);
+            char tmp[256];
+            int rc = recv(to_handle(f), tmp, sizeof(tmp), MSG_PEEK | MSG_DONTWAIT);
+            if (rc == 0) {
+                return -1;
+            }
+            else if (rc < 0) {
+                if (errno == EAGAIN || errno == EINTR) {
+                    return 0;
+                }
+                return -1;
+            }
+            return rc;
         }
     }
 }

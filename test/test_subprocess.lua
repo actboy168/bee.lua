@@ -1,6 +1,7 @@
 local lu = require 'luaunit'
 
 local subprocess = require 'bee.subprocess'
+local thread = require 'bee.thread'
 
 local function getexe()
     local i = 0
@@ -129,4 +130,22 @@ function test_subprocess:test_peek()
     process.stdout:close()
     lu.assertError("attempt to use a closed file", process.stdout.read, process.stdout, 2)
     lu.assertIsNil(subprocess.peek(process.stdout))
+
+    local process = createLua('io.stdout:setvbuf "no" io.write "start" io.write(io.read "a")', { stdin = true, stdout = true })
+    lu.assertUserdata(process.stdin)
+    lu.assertUserdata(process.stdout)
+    lu.assertIsTrue(process:is_running())
+    while true do
+        local n = subprocess.peek(process.stdout)
+        if n >= 5 then
+            process.stdout:read(5)
+            break
+        end
+        thread.sleep(0)
+    end
+    process.stdin:write "ok"
+    process.stdin:close()
+    lu.assertEquals(process:wait(), 0)
+    lu.assertEquals(process.stdout:read(2), "ok")
+    lu.assertIsNil(process.stdout:read(2))
 end
