@@ -1,4 +1,3 @@
-
 steps:
 - task: VSBuild@1
   displayName: Compile
