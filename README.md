@@ -4,7 +4,7 @@ Lua runtime and toolset
 
 | MSVC 15.8 (Windows) | MinGW 8.2 (Windows) |
 | ------ | ------ |
-| [![Build status](https://actboy168.visualstudio.com/bee.lua/_apis/build/status/msvc)](https://dev.azure.com/actboy168/bee.lua/_apis/build/status/bee.lua?branchName=master&jobName=Windows_MSVC_x64) | [![Build status](https://actboy168.visualstudio.com/bee.lua/_apis/build/status/mingw)](https://dev.azure.com/actboy168/bee.lua/_apis/build/status/bee.lua?branchName=master&jobName=Windows_MinGW) |
+| [![Build Status](https://dev.azure.com/actboy168/bee.lua/_apis/build/status/bee.lua?branchName=master&jobName=Windows_MSVC_x64)](https://dev.azure.com/actboy168/bee.lua/_build/latest?definitionId=5?branchName=master) | [![Build Status](https://dev.azure.com/actboy168/bee.lua/_apis/build/status/bee.lua?branchName=master&jobName=Windows_MinGW)](https://dev.azure.com/actboy168/bee.lua/_build/latest?definitionId=5?branchName=master) |
 
 ## Lua patch
 
