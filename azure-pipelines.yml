@@ -1,12 +1,24 @@
-trigger:
-- master
+jobs:
+- job: Windows MSVC x86
+  pool:
+    vmImage: 'VS2017-Win2016'
+  steps:
+  - template: project/azure-pipelines/msvc_x86.yml
 
-pool:
-  vmImage: 'Ubuntu-16.04'
+- job: Windows MSVC x64
+  pool:
+    vmImage: 'VS2017-Win2016'
+  steps:
+  - template: project/azure-pipelines/msvc_x64.yml
+  
+- job: Windows MinGW
+  pool:
+    vmImage: 'VS2017-Win2016'
+  steps:
+  - template: project/azure-pipelines/mingw.yml
 
-steps:
-- script: |
-    ./configure
-    make
-  displayName: 'Compile'
-
+#- job: Linux Clang
+#  pool:
+#    vmImage: 'Ubuntu-16.04'
+#  steps:
+#  - template: project/azure-pipelines/linux.yml

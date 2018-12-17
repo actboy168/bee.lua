@@ -1,0 +1,16 @@
+
+steps:
+- task: VSBuild@1
+  displayName: Compile
+  inputs:
+    solution: bee.sln
+    vsVersion: 15.0
+    platform: x86
+    configuration: Release
+    clean: true
+    maximumCpuCount: true
+    createLogFile: true
+
+- script:  |
+    .\bin\msvc_x86_Release\lua.exe test\test.lua
+  displayName: Test

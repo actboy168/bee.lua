@@ -1,0 +1,14 @@
+steps:
+- bash: |
+   sudo apt-get update
+   sudo apt-get install -y libreadline-dev
+  displayName: Update
+
+- bash: |
+   ./configure
+   make
+  displayName: Compile
+
+- bash: |
+   bin/linux_Release/lua test/test.lua
+  displayName: Test

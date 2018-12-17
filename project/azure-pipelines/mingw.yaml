@@ -1,0 +1,26 @@
+steps:
+- script: |
+   choco install -y msys2
+   refreshenv
+   c:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -Syu"
+   exit
+  displayName: 'Install msys2'
+
+- script: |
+   c:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -Syu mingw-w64-x86_64-gcc make"
+   c:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -Su"
+   exit
+  displayName: 'Update mingw'
+
+- script: |
+   cd make
+   luamake mingw-init.lua c:\tools\msys64
+   luamake mingw.lua gcc --version
+   luamake mingw.lua ./configure
+   luamake mingw.lua make
+  displayName: Compile
+
+- script: |
+   cd make
+   luamake mingw.lua .\bin\mingw_Release\lua.exe .\test\test.lua
+  displayName: Test
