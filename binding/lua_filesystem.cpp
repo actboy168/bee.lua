@@ -226,7 +226,8 @@ namespace bee::lua_filesystem {
         {
             LUA_TRY;
             const fs::path& self = path::to(L, 1);
-            lua::push_string(L, self.native());
+            auto res = self.generic_u8string();
+            lua_pushlstring(L, res.data(), res.size());
             return 1;
             LUA_TRY_END;
         }

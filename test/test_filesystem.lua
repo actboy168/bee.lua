@@ -20,6 +20,16 @@ function shell:del_readonly(filename)
     end
 end
 
+function shell:pwd()
+    local command
+    if platform.OS == "Windows" then
+        command = 'echo %cd%'
+    else
+        command = 'pwd'
+    end
+    return (io.popen(command):read 'a'):gsub('[\n\r]*$', ''):gsub('\\', '/')
+end
+
 local C
 local D
 if platform.OS == 'Windows' then
@@ -28,16 +38,6 @@ if platform.OS == 'Windows' then
 else
     C = '/mnt/c/'
     D = '/mnt/d/'
-end
-
-function shell:pwd()
-    local command
-    if platform.OS == "Windows" then
-        command = 'echo %cd%'
-    else
-        command = 'pwd'
-    end
-    return (io.popen(command):read 'a'):gsub('[\n\r]*$', '')
 end
 
 local function create_file(filename, content)
@@ -64,7 +64,7 @@ end
 function test_fs:test_string()
     lu.assertEquals(fs.path('a/b'):string(), 'a/b')
     if platform.OS == 'Windows' then
-        lu.assertEquals(fs.path('a\\b'):string(), 'a\\b')
+        lu.assertEquals(fs.path('a\\b'):string(), 'a/b')
     end
 end
 
@@ -87,8 +87,8 @@ function test_fs:test_parent_path()
     lu.assertEquals(get_parent_path('a/b/c'), 'a/b')
     lu.assertEquals(get_parent_path('a/b/'), 'a/b')
     if platform.OS == 'Windows' then
-        lu.assertEquals(get_parent_path('a\\b\\c'), 'a\\b')
-        lu.assertEquals(get_parent_path('a\\b\\'), 'a\\b')
+        lu.assertEquals(get_parent_path('a\\b\\c'), 'a/b')
+        lu.assertEquals(get_parent_path('a\\b\\'), 'a/b')
     end
 end
 
@@ -152,8 +152,8 @@ function test_fs:test_remove_filename()
     lu.assertEquals(remove_filename('a/b/c'), 'a/b/')
     lu.assertEquals(remove_filename('a/b/'), 'a/b/')
     if platform.OS == 'Windows' then
-        lu.assertEquals(remove_filename('a\\b\\c'), 'a\\b\\')
-        lu.assertEquals(remove_filename('a\\b\\'), 'a\\b\\')
+        lu.assertEquals(remove_filename('a\\b\\c'), 'a/b/')
+        lu.assertEquals(remove_filename('a\\b\\'), 'a/b/')
     end
 end
 
@@ -165,9 +165,9 @@ function test_fs:test_replace_extension()
     lu.assertEquals(replace_extension('a/b/c', '.lua'), 'a/b/c.lua')
     lu.assertEquals(replace_extension('a/b/.ext', '.lua'), 'a/b/.ext.lua')
     if platform.OS == 'Windows' then
-        lu.assertEquals(replace_extension('a\\b\\c.ext', '.lua'), 'a\\b\\c.lua')
-        lu.assertEquals(replace_extension('a\\b\\c', '.lua'), 'a\\b\\c.lua')
-        lu.assertEquals(replace_extension('a\\b\\.ext', '.lua'), 'a\\b\\.ext.lua')
+        lu.assertEquals(replace_extension('a\\b\\c.ext', '.lua'), 'a/b/c.lua')
+        lu.assertEquals(replace_extension('a\\b\\c', '.lua'), 'a/b/c.lua')
+        lu.assertEquals(replace_extension('a\\b\\.ext', '.lua'), 'a/b/.ext.lua')
     end
 
     lu.assertEquals(replace_extension('a/b/c.ext', 'lua'), 'a/b/c.lua')
@@ -205,29 +205,22 @@ function test_fs:test_div()
     local function div(A, B)
         return (fs.path(A) / B):string()
     end
+    lu.assertEquals(div('a', 'b'), 'a/b')
+    lu.assertEquals(div('a/b', 'c'), 'a/b/c')
+    lu.assertEquals(div('a/', 'b'), 'a/b')
+    lu.assertEquals(div('a', '/b'), '/b')
+    lu.assertEquals(div('a/', '\\b'), '/b')
+    lu.assertEquals(div(C..'a', D..'b'), D..'b')
+    lu.assertEquals(div(C..'a/', D..'b'), D..'b')
     if platform.OS == 'Windows' then
-        lu.assertEquals(div('a', 'b'), 'a\\b')
-        lu.assertEquals(div('a\\b', 'c'), 'a\\b\\c')
-        lu.assertEquals(div('a/b', 'c'), 'a/b\\c')
-        lu.assertEquals(div('a/', 'b'), 'a/b')
-        lu.assertEquals(div('a\\', 'b'), 'a\\b')
-        lu.assertEquals(div('a', '/b'), '/b')
-        lu.assertEquals(div('a/', '\\b'), '\\b')
-        lu.assertEquals(div('c:/a', '/b'), 'c:/b')
-        lu.assertEquals(div('c:/a/', '\\b'), 'c:\\b')
-        lu.assertEquals(div('c:/a', 'd:/b'), 'd:/b')
-        lu.assertEquals(div('c:/a/', 'd:\\b'), 'd:\\b')
+        lu.assertEquals(div('a\\b', 'c'), 'a/b/c')
+        lu.assertEquals(div('a\\', 'b'), 'a/b')
+        lu.assertEquals(div(C..'a', '/b'), C..'b')
+        lu.assertEquals(div(C..'a/', '\\b'), C..'b')
     else
-        lu.assertEquals(div('a', 'b'), 'a/b')
         lu.assertEquals(div('a/b', 'c'), 'a/b/c')
-        lu.assertEquals(div('a/b', 'c'), 'a/b/c')
-        lu.assertEquals(div('a/', 'b'), 'a/b')
-        lu.assertEquals(div('a', '/b'), '/b')
-        lu.assertEquals(div('a/', '/b'), '/b')
         lu.assertEquals(div(C..'a', '/b'), '/b')
         lu.assertEquals(div(C..'a/', '/b'), '/b')
-        lu.assertEquals(div(C..'a', D..'b'), D..'b')
-        lu.assertEquals(div(C..'a/', D..'b'), D..'b')
     end
 end
 
@@ -264,20 +257,18 @@ function test_fs:test_relative()
     end
     relative(C..'a/b/c', C..'a/b', 'c')
     relative(C..'a/b', C..'a/b/c',  '..')
+    relative(C..'a/b/c', C..'a',  'b/c')
+    relative(C..'a/d/e', C..'a/b/c',  '../../d/e')
     if platform.OS == 'Windows' then
         relative(D..'a/b/c', C..'a',  '')
         relative('a', C..'a/b/c',  '')
         relative(C..'a/b', 'a/b/c',  '')
-        relative(C..'a/b/c', C..'a',  'b\\c')
-        relative(C..'a/d/e', C..'a/b/c',  '..\\..\\d\\e')
-        relative(C..'a\\b\\c', C..'a',  'b\\c')
+        relative(C..'a\\b\\c', C..'a',  'b/c')
     else
         -- TODO
         --relative(D..'a/b/c', C..'a',  '')
         --relative('a', C..'a/b/c',  '')
         --relative(C..'a/b', 'a/b/c',  '')
-        relative(C..'a/b/c', C..'a',  'b/c')
-        relative(C..'a/d/e', C..'a/b/c',  '../../d/e')
     end
 end
 
@@ -527,17 +518,10 @@ function test_fs:test_list_directory()
     fs.create_directories(fs.path('temp'))
     create_file('temp/temp1.txt')
     create_file('temp/temp2.txt')
-    if platform.OS == 'Windows' then
-        list_directory_ok('temp', {
-            ['temp\\temp1.txt'] = true,
-            ['temp\\temp2.txt'] = true,
-        })
-    else
-        list_directory_ok('temp', {
-            ['temp/temp1.txt'] = true,
-            ['temp/temp2.txt'] = true,
-        })
-    end
+    list_directory_ok('temp', {
+        ['temp/temp1.txt'] = true,
+        ['temp/temp2.txt'] = true,
+    })
 
     fs.remove_all(fs.path('temp'))
     fs.create_directories(fs.path('temp'))
@@ -546,19 +530,11 @@ function test_fs:test_list_directory()
     create_file('temp/temp2.txt')
     create_file('temp/temp/temp1.txt')
     create_file('temp/temp/temp2.txt')
-    if platform.OS == 'Windows' then
-        list_directory_ok('temp', {
-            ['temp\\temp1.txt'] = true,
-            ['temp\\temp2.txt'] = true,
-            ['temp\\temp'] = true,
-        })
-    else
-        list_directory_ok('temp', {
-            ['temp/temp1.txt'] = true,
-            ['temp/temp2.txt'] = true,
-            ['temp/temp'] = true,
-        })
-    end
+    list_directory_ok('temp', {
+        ['temp/temp1.txt'] = true,
+        ['temp/temp2.txt'] = true,
+        ['temp/temp'] = true,
+    })
 
     fs.remove_all(fs.path('temp.txt'))
     fs.remove_all(fs.path('temp'))
