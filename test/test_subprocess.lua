@@ -53,8 +53,8 @@ function test_subprocess:test_wait()
     local process = createLua 'os.exit(false)'
     lu.assertEquals(process:wait(), 1)
 
-    local process = createLua 'os.exit(10203)'
-    lu.assertEquals(process:wait(), 10203)
+    local process = createLua 'os.exit(197)'
+    lu.assertEquals(process:wait(), 197)
 end
 
 function test_subprocess:test_is_running()
@@ -71,7 +71,7 @@ function test_subprocess:test_kill()
     lu.assertIsTrue(process:is_running())
     lu.assertIsTrue(process:kill())
     lu.assertIsFalse(process:is_running())
-    lu.assertEquals(process:wait(), 1)
+    lu.assertEquals(process:wait(), 0xF00)
 
     local process = createLua('io.read "a"', { stdin = true })
     lu.assertIsTrue(process:is_running())

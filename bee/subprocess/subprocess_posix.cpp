@@ -15,6 +15,31 @@ extern char **environ;
 
 namespace bee::posix::subprocess {
 
+    static void sigalrm_handler (int) {
+        // Nothing to do
+    }
+    static bool wait_with_timeout(pid_t pid, int *status, int timeout) {
+        assert(pid > 0);
+        assert(timeout >= -1);
+        if (timeout == 0) {
+            return pid = ::waitpid(pid, status, WNOHANG);
+        }
+        else if (timeout == -1) {
+            return pid = ::waitpid(pid, status, 0);
+        }
+        pid_t err;
+        struct sigaction sa, old_sa;
+        sa.sa_handler = sigalrm_handler;
+        ::sigemptyset(&sa.sa_mask);
+        sa.sa_flags = 0;
+        ::sigaction(SIGALRM, &sa, &old_sa);
+        ::alarm(timeout);
+        err = ::waitpid(pid, status, 0);
+        ::alarm(0);
+        ::sigaction(SIGALRM, &old_sa, NULL);
+        return err == pid;
+    }
+
     template <class T>
     struct allocarray {
         size_t size;
@@ -181,15 +206,22 @@ namespace bee::posix::subprocess {
     }
 
     bool     process::kill(int signum) {
-        return ::kill(pid, signum);
+        if (0 == ::kill(pid, signum)) {
+            if (signum == 0) {
+                return true;
+            }
+            return wait_with_timeout(pid, &status, 5);
+        }
+        return false;
     }
 
     uint32_t process::wait() {
-        int status = 0;
-        if (-1 == ::waitpid(pid, &status, 0)) {
+        if (!wait_with_timeout(pid, &status, -1)) {
             return 0;
         }
-        return WIFEXITED(status)? WEXITSTATUS(status): 0;
+        int exit_status = WIFEXITED(status)? WEXITSTATUS(status) : 0;
+        int term_signal = WIFSIGNALED(status)? WTERMSIG(status) : 0;
+        return (term_signal << 8) | exit_status;
     }
 
     bool process::resume() {
