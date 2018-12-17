@@ -251,10 +251,9 @@ function test_fs:test_absolute()
         eq_absolute1('a/b')
         eq_absolute1('a/b/')
         eq_absolute2('a/b', 'a/b')
-        -- TODO
-        --eq_absolute2('./b', 'b')
-        --eq_absolute2('a/../b', 'b')
-        --eq_absolute2('a/b/../', 'a/')
+        eq_absolute2('./b', 'b')
+        eq_absolute2('a/../b', 'b')
+        eq_absolute2('a/b/../', 'a/')
     end
 end
 
@@ -287,13 +286,12 @@ function test_fs:test_eq()
         return lu.assertEquals(fs.path(A), fs.path(B))
     end
     eq('a/b', 'a/b')
+    eq('a/./b', 'a/b')
+    eq('a/b/../c', 'a/c')
+    eq('a/b/../c', 'a/d/../c')
     if platform.OS == 'Windows' then
         eq('a/B', 'a/b')
         eq('a/b', 'a\\b')
-        --TODO
-        eq('a/./b', 'a/b')
-        eq('a/b/../c', 'a/c')
-        eq('a/b/../c', 'a/d/../c')
     end
 end
 

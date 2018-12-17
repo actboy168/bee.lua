@@ -64,8 +64,8 @@ namespace bee::path_helper {
     }
 
     bool equal(fs::path const& lhs, fs::path const& rhs) {
-        fs::path lpath = fs::absolute(lhs);
-        fs::path rpath = fs::absolute(rhs);
+        fs::path lpath = fs::absolute(lhs).lexically_normal();
+        fs::path rpath = fs::absolute(rhs).lexically_normal();
         return lpath.native() == rpath.native();
     }
 }

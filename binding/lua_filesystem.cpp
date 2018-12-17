@@ -353,13 +353,19 @@ namespace bee::lua_filesystem {
 
     static int absolute(lua_State* L)
     {
+#if defined(_WIN32)
+#define FS_ABSOLUTE(path) fs::absolute(path)
+#else
+#define FS_ABSOLUTE(path) fs::absolute(path).lexically_normal()
+#endif
         LUA_TRY;
         const fs::path& p = path::to(L, 1);
         if (lua_gettop(L) == 1) {
-            return path::constructor_(L, std::move(fs::absolute(p)));
+            return path::constructor_(L, std::move(FS_ABSOLUTE(p)));
         }
         const fs::path& base = path::to(L, 2);
-        return path::constructor_(L, std::move(fs::absolute(base / p)));
+        return path::constructor_(L, std::move(FS_ABSOLUTE(base / p)));
+
         LUA_TRY_END;
     }
 
