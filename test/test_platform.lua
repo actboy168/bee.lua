@@ -24,7 +24,7 @@ for _, config in ipairs {'Debug', 'Release'} do
     support['linux_' .. config] = {
         OS = 'Linux',
         Arch = '64',
-        Compiler = 'gcc',
+        Compiler = 'clang',
         CRT = 'glibc',
         DEBUG = (config == 'Debug'),
     }
@@ -37,5 +37,9 @@ test_plat = {}
 
 function test_plat:test_1()
     lu.assertNotNil(__Target__)
+    if platform.OS == 'linux' then
+        lu.assertIsTrue(platform.Compiler == 'gcc' or platform.Compiler == 'clang')
+        support[__Target__].Compiler = platform.Compiler
+    end
     lu.assertEquals(support[__Target__], platform)
 end

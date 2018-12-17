@@ -74,7 +74,7 @@ namespace bee::lua_filesystem {
         {
             LUA_TRY;
             const fs::path& self = path::to(L, 1);
-            return constructor_(L, std::move(self.filename()));
+            return constructor_(L, self.filename());
             LUA_TRY_END;
         }
 
@@ -82,7 +82,7 @@ namespace bee::lua_filesystem {
         {
             LUA_TRY;
             const fs::path& self = path::to(L, 1);
-            return constructor_(L, std::move(self.parent_path()));
+            return constructor_(L, self.parent_path());
             LUA_TRY_END;
         }
 
@@ -90,7 +90,7 @@ namespace bee::lua_filesystem {
         {
             LUA_TRY;
             const fs::path& self = path::to(L, 1);
-            return constructor_(L, std::move(self.stem()));
+            return constructor_(L, self.stem());
             LUA_TRY_END;
         }
 
@@ -98,7 +98,7 @@ namespace bee::lua_filesystem {
         {
             LUA_TRY;
             const fs::path& self = path::to(L, 1);
-            return constructor_(L, std::move(self.extension()));
+            return constructor_(L, self.extension());
             LUA_TRY_END;
         }
 
@@ -194,9 +194,9 @@ namespace bee::lua_filesystem {
             const fs::path& self = path::to(L, 1);
             switch (lua_type(L, 2)) {
             case LUA_TSTRING:
-                return constructor_(L, std::move(self / lua::to_string(L, 2)));
+                return constructor_(L, self / lua::to_string(L, 2));
             case LUA_TUSERDATA:
-                return constructor_(L, std::move(self / to(L, 2)));
+                return constructor_(L, self / to(L, 2));
             }
             luaL_checktype(L, 2, LUA_TSTRING);
             return 0;
@@ -333,7 +333,7 @@ namespace bee::lua_filesystem {
     {
         LUA_TRY;
         if (lua_gettop(L) == 0) {
-            return path::constructor_(L, std::move(fs::current_path()));
+            return path::constructor_(L, fs::current_path());
         }
         const fs::path& p = path::to(L, 1);
         fs::current_path(p);
@@ -362,10 +362,10 @@ namespace bee::lua_filesystem {
         LUA_TRY;
         const fs::path& p = path::to(L, 1);
         if (lua_gettop(L) == 1) {
-            return path::constructor_(L, std::move(FS_ABSOLUTE(p)));
+            return path::constructor_(L, FS_ABSOLUTE(p));
         }
         const fs::path& base = path::to(L, 2);
-        return path::constructor_(L, std::move(FS_ABSOLUTE(base / p)));
+        return path::constructor_(L, FS_ABSOLUTE(base / p));
 
         LUA_TRY_END;
     }
@@ -375,7 +375,7 @@ namespace bee::lua_filesystem {
         LUA_TRY;
         const fs::path& p = path::to(L, 1);
         const fs::path& base = path::to(L, 2);
-        return path::constructor_(L, std::move(fs::relative(p, base)));
+        return path::constructor_(L, fs::relative(p, base));
         LUA_TRY_END;
     }
 
