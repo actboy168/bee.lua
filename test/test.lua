@@ -6,10 +6,9 @@ local function getTarget()
     return arg[i + 1]:match("(.+)[/\\][%w_.-]+$"):match("[/\\]?([%w_.-]+)$")
 end
 __Target__ = getTarget()
-
-local ext = package.cpath:match '[/\\]%?%.([a-z]+)'
+__EXT__ = package.cpath:match '[/\\]%?%.([a-z]+)'
 package.path = './test/?.lua'
-package.cpath = ('./bin/%s/?.%s'):format(__Target__, ext)
+package.cpath = ('./bin/%s/?.%s'):format(__Target__, __EXT__)
 
 local platform = require 'bee.platform'
 if platform.Compiler == 'msvc' then

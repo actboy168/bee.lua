@@ -10,9 +10,9 @@
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
 namespace bee::path_helper {
-    static auto module(HMODULE module_handle)->nonstd::expected<fs::path, std::exception> {
+    static auto module(void* module_handle)->nonstd::expected<fs::path, std::exception> {
         wchar_t buffer[MAX_PATH];
-        DWORD path_len = ::GetModuleFileNameW(module_handle, buffer, _countof(buffer));
+        DWORD path_len = ::GetModuleFileNameW((HMODULE)module_handle, buffer, _countof(buffer));
         if (path_len == 0) {
             return nonstd::make_unexpected(make_syserror("GetModuleFileNameW"));
         }
@@ -21,7 +21,7 @@ namespace bee::path_helper {
         }
         for (DWORD buf_len = 0x200; buf_len <= 0x10000; buf_len <<= 1) {
             std::dynarray<wchar_t> buf(buf_len);
-            DWORD path_len = ::GetModuleFileNameW(module_handle, buf.data(), buf_len);
+            DWORD path_len = ::GetModuleFileNameW((HMODULE)module_handle, buf.data(), buf_len);
             if (path_len == 0) {
                 return nonstd::make_unexpected(make_syserror("GetModuleFileNameW"));
             }
@@ -37,12 +37,12 @@ namespace bee::path_helper {
     }
 
     auto dll_path()->nonstd::expected<fs::path, std::exception> {
-        return module(reinterpret_cast<HMODULE>(&__ImageBase));
+        return module(reinterpret_cast<void*>(&__ImageBase));
     }
 
     bool equal(fs::path const& lhs, fs::path const& rhs) {
-        fs::path lpath = fs::absolute(lhs);
-        fs::path rpath = fs::absolute(rhs);
+        fs::path lpath = lhs.lexically_normal();
+        fs::path rpath = rhs.lexically_normal();
         const fs::path::value_type* l(lpath.c_str());
         const fs::path::value_type* r(rpath.c_str());
         while ((towlower(*l) == towlower(*r) || (*l == L'\\' && *r == L'/') || (*l == L'/' && *r == L'\\')) && *l) { 
@@ -54,19 +54,30 @@ namespace bee::path_helper {
 
 #else
 
+#include <dlfcn.h>
+#include <lua.hpp>
+
 namespace bee::path_helper {
+    static auto module(void* module_handle)->nonstd::expected<fs::path, std::exception> {
+        ::Dl_info dl_info;
+        dl_info.dli_fname = 0;
+        int const ret = ::dladdr(module_handle, &dl_info);
+        if (0 != ret && dl_info.dli_fname != NULL) {
+            return fs::absolute(dl_info.dli_fname).lexically_normal();
+        }
+        return nonstd::make_unexpected(std::runtime_error("::dladdr failed."));
+    }
+
     auto exe_path()->nonstd::expected<fs::path, std::exception> {
-        return nonstd::make_unexpected(std::runtime_error("TODO"));
+        return module((void*)&lua_newstate);
     }
 
     auto dll_path()->nonstd::expected<fs::path, std::exception> {
-        return nonstd::make_unexpected(std::runtime_error("TODO"));
+        return module((void*)&exe_path);
     }
 
     bool equal(fs::path const& lhs, fs::path const& rhs) {
-        fs::path lpath = fs::absolute(lhs).lexically_normal();
-        fs::path rpath = fs::absolute(rhs).lexically_normal();
-        return lpath.native() == rpath.native();
+        return lhs.lexically_normal() == rhs.lexically_normal();
     }
 }
 

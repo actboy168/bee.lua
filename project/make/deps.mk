@@ -38,7 +38,7 @@ $(TMPDIR)/bee_utility_file_version.o : bee/utility/file_version.cpp bee/utility/
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I.
 
 $(TMPDIR)/bee_utility_path_helper.o : bee/utility/path_helper.cpp bee/utility/path_helper.cpp bee/utility/path_helper.h bee/config.h bee/nonstd/expected.h bee/utility/dynarray.h bee/nonstd/span.h bee/error.h | $(TMPDIR)
-	$(CXX) -c $(CFLAGS) -o $@ $<  -I.
+	$(CXX) -c $(CFLAGS) -o $@ $<  -I$(LUADIR) -I.
 
 $(TMPDIR)/bee_utility_unicode.o : bee/utility/unicode.cpp bee/utility/unicode.cpp bee/utility/unicode.h bee/config.h bee/utility/dynarray.h bee/nonstd/span.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I.

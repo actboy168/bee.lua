@@ -589,7 +589,7 @@ function test_fs:test_dll_path()
         while arg[i] ~= nil do
             i = i - 1
         end
-        return fs.absolute(fs.path(arg[i + 1]):parent_path() / 'bee.dll'):string()
+        return fs.absolute(fs.path(arg[i + 1]):parent_path() / ('bee.' .. __EXT__)):string()
     end
     lu.assertEquals(fs.dll_path():string(), getdll())
 end
