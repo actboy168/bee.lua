@@ -433,7 +433,6 @@ end
 function test_fs:test_rename()
     local function rename_ok(from, to)
         lu.assertIsTrue(fs.exists(fs.path(from)), from)
-        lu.assertIsFalse(fs.exists(fs.path(to)), to)
         fs.rename(fs.path(from), fs.path(to))
         lu.assertIsFalse(fs.exists(fs.path(from)), from)
         lu.assertIsTrue(fs.exists(fs.path(to)), to)
@@ -461,6 +460,17 @@ function test_fs:test_rename()
     fs.remove_all(fs.path('temp2'))
     fs.create_directories(fs.path('temp1'))
     fs.create_directories(fs.path('temp2'))
+    if platform.OS == 'Windows' then
+        rename_failed('temp1', 'temp2')
+    else
+        rename_ok('temp1', 'temp2')
+    end
+
+    fs.remove_all(fs.path('temp1'))
+    fs.remove_all(fs.path('temp2'))
+    fs.create_directories(fs.path('temp1'))
+    fs.create_directories(fs.path('temp2'))
+    create_file('temp2/temp.txt')
     rename_failed('temp1', 'temp2')
 end
 
