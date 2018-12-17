@@ -1,24 +1,24 @@
 jobs:
-- job: 'Windows MSVC x86'
+- job: Windows_MSVC_x86
   pool:
-    vmImage: 'VS2017-Win2016'
+    vmImage: VS2017-Win2016
   steps:
   - template: project/azure-pipelines/msvc_x86.yml
 
-- job: 'Windows MSVC x64'
+- job: Windows_MSVC_x64
   pool:
-    vmImage: 'VS2017-Win2016'
+    vmImage: VS2017-Win2016
   steps:
   - template: project/azure-pipelines/msvc_x64.yml
   
-- job: 'Windows MinGW'
+- job: Windows_MinGW
   pool:
-    vmImage: 'VS2017-Win2016'
+    vmImage: VS2017-Win2016
   steps:
   - template: project/azure-pipelines/mingw.yml
 
-#- job: 'Linux Clang'
+#- job: Linux_Clang
 #  pool:
-#    vmImage: 'Ubuntu-16.04'
+#    vmImage: Ubuntu-16.04
 #  steps:
 #  - template: project/azure-pipelines/linux.yml
