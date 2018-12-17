@@ -20,9 +20,7 @@ local lu = require 'luaunit'
 
 require 'test_platform'
 require 'test_serialization'
-if platform.OS == 'Windows' then
 require 'test_filesystem'
-end
 require 'test_thread'
 require 'test_subprocess'
 --require 'test_registry'

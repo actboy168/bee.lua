@@ -193,7 +193,7 @@ namespace bee::lua_subprocess {
 #if defined(_WIN32)
                     args.push_back(topath(L, -1).wstring());
 #else
-                    args.push_back(topath(L, -1).c_str());
+                    args.push_back((char*)topath(L, -1).c_str());
 #endif
                     break;
 #endif

@@ -21,11 +21,11 @@ namespace bee::posix::subprocess {
     static bool wait_with_timeout(pid_t pid, int *status, int timeout) {
         assert(pid > 0);
         assert(timeout >= -1);
-        if (timeout == 0) {
-            return pid = ::waitpid(pid, status, WNOHANG);
-        }
-        else if (timeout == -1) {
-            return pid = ::waitpid(pid, status, 0);
+        if (timeout <= 0) {
+            if (timeout == -1) {
+                ::waitpid(pid, status, 0);
+            }
+            return 0 != ::waitpid(pid, status, WNOHANG);
         }
         pid_t err;
         struct sigaction sa, old_sa;
