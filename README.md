@@ -30,4 +30,6 @@ Lua runtime and toolset
 
 ## TODO
 
+* Linux filewatch
+* Linux and macOS filesystem
 * High-level network library
