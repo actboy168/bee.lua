@@ -9,12 +9,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\3rd\luaffi\src\test_includes.sh">
+    <None Include="..\..\3rd\luaffi\src\test_includes.sh">
       <Filter>include</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\3rd\luaffi\src\test.c">
+    <ClCompile Include="..\..\3rd\luaffi\src\test.c">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

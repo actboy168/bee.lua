@@ -3,17 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2046
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bee", "bee.vcxproj", "{355C2493-0A78-490B-971A-BBDB0E2819EF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bee", "project/msvc/bee.vcxproj", "{355C2493-0A78-490B-971A-BBDB0E2819EF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lua", "lua.vcxproj", "{76338556-5419-494A-A4C6-D79090629054}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lua", "project/msvc/lua.vcxproj", "{76338556-5419-494A-A4C6-D79090629054}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lua54", "lua54.vcxproj", "{316B33ED-1056-48B0-ABF0-CE3CE55F7A17}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lua54", "project/msvc/lua54.vcxproj", "{316B33ED-1056-48B0-ABF0-CE3CE55F7A17}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3rd", "3rd", "{5D187F0E-FB26-4C09-9900-8C2E201FFBFD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ffi", "ffi.vcxproj", "{076A366B-6B75-4D35-A6A9-CA680F0771E3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ffi", "project/msvc/ffi.vcxproj", "{076A366B-6B75-4D35-A6A9-CA680F0771E3}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ffi_test_cdecl", "ffi_test_cdecl.vcxproj", "{B74E8082-49A4-493F-8955-DE4DB1B1E592}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ffi_test_cdecl", "project/msvc/ffi_test_cdecl.vcxproj", "{B74E8082-49A4-493F-8955-DE4DB1B1E592}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

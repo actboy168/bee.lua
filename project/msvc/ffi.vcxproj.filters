@@ -12,42 +12,42 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\3rd\luaffi\src\call.c">
+    <ClCompile Include="..\..\3rd\luaffi\src\call.c">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\3rd\luaffi\src\ctype.c">
+    <ClCompile Include="..\..\3rd\luaffi\src\ctype.c">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\3rd\luaffi\src\ffi.c">
+    <ClCompile Include="..\..\3rd\luaffi\src\ffi.c">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\3rd\luaffi\src\parser.c">
+    <ClCompile Include="..\..\3rd\luaffi\src\parser.c">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\3rd\luaffi\src\call_arm.h">
+    <ClInclude Include="..\..\3rd\luaffi\src\call_arm.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\3rd\luaffi\src\call_x64.h">
+    <ClInclude Include="..\..\3rd\luaffi\src\call_x64.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\3rd\luaffi\src\call_x64win.h">
+    <ClInclude Include="..\..\3rd\luaffi\src\call_x64win.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\3rd\luaffi\src\call_x86.h">
+    <ClInclude Include="..\..\3rd\luaffi\src\call_x86.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\3rd\luaffi\src\ffi.h">
+    <ClInclude Include="..\..\3rd\luaffi\src\ffi.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\3rd\luaffi\src\msvc\inttypes.h">
+    <ClInclude Include="..\..\3rd\luaffi\src\msvc\inttypes.h">
       <Filter>include\msvc</Filter>
     </ClInclude>
-    <ClInclude Include="..\3rd\luaffi\src\msvc\stdbool.h">
+    <ClInclude Include="..\..\3rd\luaffi\src\msvc\stdbool.h">
       <Filter>include\msvc</Filter>
     </ClInclude>
-    <ClInclude Include="..\3rd\luaffi\src\msvc\stdint.h">
+    <ClInclude Include="..\..\3rd\luaffi\src\msvc\stdint.h">
       <Filter>include\msvc</Filter>
     </ClInclude>
   </ItemGroup>

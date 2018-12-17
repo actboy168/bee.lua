@@ -12,4 +12,4 @@ local property = {
     Configuration = configuration,
     Platform = platform,
 }
-msvc:compile('build', root / 'project' / 'bee.sln', property)
+msvc:compile('build', root / 'bee.sln', property)

@@ -19,22 +19,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\3rd\luaffi\src\call.c" />
-    <ClCompile Include="..\3rd\luaffi\src\ctype.c" />
-    <ClCompile Include="..\3rd\luaffi\src\ffi.c" />
-    <ClCompile Include="..\3rd\luaffi\src\parser.c" />
+    <ClCompile Include="..\..\3rd\luaffi\src\test.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\3rd\luaffi\src\call_arm.h" />
-    <ClInclude Include="..\3rd\luaffi\src\call_x64.h" />
-    <ClInclude Include="..\3rd\luaffi\src\call_x64win.h" />
-    <ClInclude Include="..\3rd\luaffi\src\call_x86.h" />
-    <ClInclude Include="..\3rd\luaffi\src\ffi.h" />
-    <ClInclude Include="..\3rd\luaffi\src\msvc\inttypes.h" />
-    <ClInclude Include="..\3rd\luaffi\src\msvc\stdbool.h" />
-    <ClInclude Include="..\3rd\luaffi\src\msvc\stdint.h" />
+    <None Include="..\..\3rd\luaffi\src\test_includes.sh" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="ffi.vcxproj">
+      <Project>{076a366b-6b75-4d35-a6a9-ca680f0771e3}</Project>
+    </ProjectReference>
     <ProjectReference Include="lua.vcxproj">
       <Project>{76338556-5419-494a-a4c6-d79090629054}</Project>
     </ProjectReference>
@@ -43,9 +36,10 @@
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{076A366B-6B75-4D35-A6A9-CA680F0771E3}</ProjectGuid>
+    <ProjectGuid>{B74E8082-49A4-493F-8955-DE4DB1B1E592}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <ProjectName>ffi_test_cdecl</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -92,9 +86,9 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(projectDir)..\..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(projectDir)..\..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(projectDir)..\..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
@@ -107,20 +101,20 @@
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(projectDir)..\..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(ProjectDir)..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(projectDir)..\..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
+    <IntDir>$(projectDir)..\..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(ProjectDir)..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(projectDir)..\..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
+    <IntDir>$(projectDir)..\..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\3rd\luaffi\src\msvc;$(ProjectDir)..\3rd\lua\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>LUA_FFI_BUILD_AS_DLL;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(projectDir)..\..\3rd\luaffi\src\msvc;$(projectDir)..\..\3rd\lua\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;LUA_FFI_BUILD_AS_DLL;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
@@ -128,20 +122,15 @@
     </ClCompile>
     <Lib />
     <Link>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\..\Lua\build\bin\$(ConfigurationName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(projectDir)..\..\..\Lua\build\bin\$(ConfigurationName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <PreBuildEvent>
-      <Command>"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(ProjectDir)..\3rd\luaffi\src\call_x86.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -D X64WIN -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64win.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -o  "$(ProjectDir)..\3rd\luaffi\src\call_arm.h"  "$(ProjectDir)..\3rd\luaffi\src\call_arm.dasc"</Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\3rd\luaffi\src\msvc;$(ProjectDir)..\3rd\lua\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>LUA_FFI_BUILD_AS_DLL;_WIN64;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(projectDir)..\..\3rd\luaffi\src\msvc;$(projectDir)..\..\3rd\lua\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;LUA_FFI_BUILD_AS_DLL;_WIN64;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
@@ -149,21 +138,16 @@
     </ClCompile>
     <Lib />
     <Link>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\..\Lua\build\bin\$(ConfigurationName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(projectDir)..\..\..\Lua\build\bin\$(ConfigurationName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <PreBuildEvent>
-      <Command>"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(ProjectDir)..\3rd\luaffi\src\call_x86.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -D X64WIN -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64win.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -o  "$(ProjectDir)..\3rd\luaffi\src\call_arm.h"  "$(ProjectDir)..\3rd\luaffi\src\call_arm.dasc"</Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\3rd\luaffi\src\msvc;$(ProjectDir)..\3rd\lua\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>LUA_FFI_BUILD_AS_DLL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(projectDir)..\..\3rd\luaffi\src\msvc;$(projectDir)..\..\3rd\lua\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;LUA_FFI_BUILD_AS_DLL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
@@ -172,21 +156,16 @@
     </ClCompile>
     <Lib />
     <Link>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\..\Lua\build\bin\$(ConfigurationName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(projectDir)..\..\..\Lua\build\bin\$(ConfigurationName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <PreBuildEvent>
-      <Command>"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(ProjectDir)..\3rd\luaffi\src\call_x86.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -D X64WIN -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64win.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -o  "$(ProjectDir)..\3rd\luaffi\src\call_arm.h"  "$(ProjectDir)..\3rd\luaffi\src\call_arm.dasc"</Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\3rd\luaffi\src\msvc;$(ProjectDir)..\3rd\lua\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>LUA_FFI_BUILD_AS_DLL;_WIN64;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(projectDir)..\..\3rd\luaffi\src\msvc;$(projectDir)..\..\3rd\lua\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;LUA_FFI_BUILD_AS_DLL;_WIN64;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
@@ -195,15 +174,10 @@
     </ClCompile>
     <Lib />
     <Link>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\..\Lua\build\bin\$(ConfigurationName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(projectDir)..\..\..\Lua\build\bin\$(ConfigurationName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <PreBuildEvent>
-      <Command>"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(ProjectDir)..\3rd\luaffi\src\call_x86.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -D X64WIN -o  "$(ProjectDir)..\3rd\luaffi\src\call_x64win.h"  "$(ProjectDir)..\3rd\luaffi\src\call_x86.dasc"
-"$(ProjectDir)..\make\luamake.exe" "$(ProjectDir)..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -o  "$(ProjectDir)..\3rd\luaffi\src\call_arm.h"  "$(ProjectDir)..\3rd\luaffi\src\call_arm.dasc"</Command>
-    </PreBuildEvent>
+    <PreBuildEvent />
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
