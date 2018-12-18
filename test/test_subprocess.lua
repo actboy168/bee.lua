@@ -2,6 +2,7 @@ local lu = require 'luaunit'
 
 local subprocess = require 'bee.subprocess'
 local thread = require 'bee.thread'
+local platform = require 'bee.platform'
 
 local function getexe()
     local i = 0
@@ -30,7 +31,7 @@ function test_subprocess:test_spawn()
     lu.assertUserdata(process.stdin)
     lu.assertIsNil(process.stdout)
     lu.assertIsNil(process.stderr)
-    
+
     local process = createLua(' ', { stdout = true })
     lu.assertUserdata(process)
     lu.assertIsNil(process.stdin)

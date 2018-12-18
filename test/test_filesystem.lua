@@ -2,7 +2,6 @@ local lu = require 'luaunit'
 
 local fs = require 'bee.filesystem'
 local platform = require 'bee.platform'
-local thread = require 'bee.thread'
 
 local shell = {}
 function shell:add_readonly(filename)
@@ -118,7 +117,7 @@ function test_fs:test_extension()
         lu.assertEquals(get_extension('a\\b\\c'), '')
         lu.assertEquals(get_extension('a\\b\\.ext'), '')
     end
-    
+
     lu.assertEquals(get_extension('a/b/c.'), '.')
     lu.assertEquals(get_extension('a/b/c..'), '.')
     lu.assertEquals(get_extension('a/b/c..lua'), '.lua')
@@ -194,7 +193,7 @@ end
 function test_fs:test_add_remove_permissions()
     local filename = 'temp.txt'
     create_file(filename)
-    
+
     lu.assertEquals(fs.path(filename):permissions() & ALLOW_WRITE, ALLOW_WRITE)
     fs.path(filename):remove_permissions(ALLOW_WRITE)
     lu.assertEquals(fs.path(filename):permissions() & ALLOW_WRITE, 0)
@@ -331,7 +330,7 @@ function test_fs:test_remove()
     fs.create_directories(fs.path(filename))
     remove_ok(filename, true)
     remove_ok(filename, false)
-    
+
     local filename = 'temp'
     fs.remove_all(fs.path(filename))
     fs.create_directories(fs.path(filename))
@@ -366,7 +365,7 @@ function test_fs:test_remove_all()
     fs.create_directories(fs.path(filename))
     remove_all(filename, 1)
     remove_all(filename, 0)
-    
+
     local filename = 'temp'
     fs.remove_all(fs.path(filename))
     fs.create_directories(fs.path(filename))
@@ -450,7 +449,7 @@ function test_fs:test_rename()
     os.remove('temp2.txt')
     create_file('temp1.txt')
     rename_ok('temp1.txt', 'temp2.txt')
-    
+
     fs.remove_all(fs.path('temp1'))
     fs.remove_all(fs.path('temp2'))
     fs.create_directories(fs.path('temp1'))
@@ -490,7 +489,7 @@ function test_fs:test_copy_file()
         lu.assertIsFalse(fs.exists(fs.path(to)), to)
     end
     local function copy_file_failed(from, to)
-        lu.assertError(fs.copy_file, fs.path(from), fs.path(to), flag)
+        lu.assertError(fs.copy_file, fs.path(from), fs.path(to))
         fs.remove_all(fs.path(from))
         fs.remove_all(fs.path(to))
         lu.assertIsFalse(fs.exists(fs.path(from)), from)
@@ -614,7 +613,6 @@ if platform.CRT == 'mingw' then
 
     local path_mt = debug.getmetatable(fs.path())
     local path_is_absolute = path_mt.is_absolute
-    local path_is_relative = path_mt.is_relative
     function path_mt.is_absolute(path)
         print(path:string())
         if path:string():sub(1, 2):match '[/\\][/\\]' then
