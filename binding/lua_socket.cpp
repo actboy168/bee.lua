@@ -40,7 +40,7 @@ namespace bee::lua_socket {
             return socket::protocol::unix;
         }
         else {
-            luaL_error(L, "invalid protocol `%s`.", type);
+            luaL_error(L, "invalid protocol `%s`.", type.data());
             return socket::protocol::none;
         }
     }
