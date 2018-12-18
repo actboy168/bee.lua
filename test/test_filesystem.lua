@@ -183,9 +183,9 @@ function test_fs:test_permissions()
     local filename = 'temp.txt'
     create_file(filename)
 
-    lu.assertEquals(fs.path(filename):permissions() & ALLOW_WRITE, ALLOW_WRITE)
+    lu.assertEquals(fs.path(filename):permissions() & USER_WRITE, USER_WRITE)
     shell:add_readonly(filename)
-    lu.assertEquals(fs.path(filename):permissions() & ALLOW_WRITE, 0)
+    lu.assertEquals(fs.path(filename):permissions() & USER_WRITE, 0)
     shell:del_readonly(filename)
 
     os.remove(filename)
