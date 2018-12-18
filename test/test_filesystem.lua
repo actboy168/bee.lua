@@ -176,7 +176,8 @@ function test_fs:test_replace_extension()
     lu.assertEquals(replace_extension('a/b/c.ext', '..lua'), 'a/b/c..lua')
 end
 
-local ALLOW_WRITE = 0x92
+--local ALLOW_WRITE = 0x92
+local ALLOW_WRITE = 0x80
 
 function test_fs:test_permissions()
     local filename = 'temp.txt'
