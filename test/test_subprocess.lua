@@ -88,7 +88,7 @@ function test_subprocess:test_kill()
     lu.assertIsFalse(process:kill(0))
 end
 
-function test_subprocess:test_stdio()
+function test_subprocess:test_stdio_1()
     local process = createLua('io.stdout:write("ok")', { stdout = true })
     lu.assertEquals(process:wait(), 0)
     lu.assertUserdata(process.stdout)
@@ -115,6 +115,39 @@ function test_subprocess:test_stdio()
     local process = createLua('error "Test subprocess error."', { stderr = true })
     lu.assertEquals(process:wait(), 1)
     lu.assertErrorMsgContains("Test subprocess error.", error, process.stderr:read "a")
+end
+
+function test_subprocess:test_stdio_2()
+    os.remove 'temp.txt'
+    local f = io.open('temp.txt', 'w')
+    lu.assertUserdata(f)
+    local process = createLua('io.write "ok"', { stdout = f })
+    lu.assertEquals(process.stdout, f)
+    f:close()
+    lu.assertEquals(process:wait(), 0)
+    local f = io.open('temp.txt', 'r')
+    lu.assertUserdata(f)
+    lu.assertEquals(f:read 'a', "ok")
+    f:close()
+
+    os.remove 'temp.txt'
+    local wr = io.open('temp.txt', 'w')
+    local rd = io.open('temp.txt', 'r')
+    lu.assertUserdata(wr)
+    lu.assertUserdata(rd)
+    local process = createLua('io.write "ok"', { stdout = wr })
+    wr:close()
+    lu.assertEquals(process.stdout, wr)
+    lu.assertEquals(process:wait(), 0)
+    lu.assertEquals(rd:read 'a', "ok")
+    rd:close()
+    os.remove 'test.txt'
+
+    local process1 = createLua('io.write "ok"', { stdout = true })
+    local process2 = createLua('io.write(io.read "a")', { stdin = process1.stdout, stdout = true })
+    lu.assertEquals(process1:wait(), 0)
+    lu.assertEquals(process2:wait(), 0)
+    lu.assertEquals(process2.stdout:read 'a', "ok")
 end
 
 function test_subprocess:test_peek()
