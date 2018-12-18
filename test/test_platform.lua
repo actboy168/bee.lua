@@ -28,6 +28,13 @@ for _, config in ipairs {'Debug', 'Release'} do
         CRT = 'glibc',
         DEBUG = (config == 'Debug'),
     }
+    support['macosx_' .. config] = {
+        OS = 'macOS',
+        Arch = '64',
+        Compiler = 'clang',
+        CRT = 'libc++',
+        DEBUG = (config == 'Debug'),
+    }
 end
 
 local lu = require 'luaunit'

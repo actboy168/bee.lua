@@ -1,8 +1,11 @@
 ifeq "$(PLAT)" "mingw"
 alllua :  $(BINDIR)/lua54.dll $(BINDIR)/lua.exe
-else
+else ifeq "$(PLAT)" "linux"
 alllua : $(BINDIR)/lua
 LUALDFLAGS = -Wl,-E -lm -ldl -lreadline
+else
+alllua : $(BINDIR)/lua
+LUALDFLAGS = -lreadline
 endif
 
 CORE_O=	lapi.o lcode.o lctype.o ldebug.o ldo.o ldump.o lfunc.o lgc.o llex.o lmem.o lobject.o lopcodes.o lparser.o lstate.o lstring.o ltable.o ltm.o lundump.o lvm.o lzio.o

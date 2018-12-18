@@ -55,7 +55,7 @@ BEE_SUBPROCESS += $(TMPDIR)/bee_subprocess_subprocess_posix.o
 
 ifeq "$(PLAT)" "linux"
 #TODO
-else ifeq "$(PLAT)" "macos"
+else ifeq "$(PLAT)" "macosx"
 BEE_FILEWATCH += $(TMPDIR)/bee_fsevent_fsevent_osx.o
 endif
 
@@ -63,7 +63,6 @@ endif
 
 
 BEE_ALL = \
-	$(BEE_FILESYSTEM) \
 	$(BEE_SOCKET) \
 	$(BEE_SUBPROCESS) \
 	$(BEE_THREAD) \
@@ -73,7 +72,12 @@ BEE_ALL = \
 ifeq "$(PLAT)" "mingw"
 BEE_ALL += $(BEE_REGISTRY)
 BEE_ALL += $(BEE_UNICODE)
+BEE_ALL += $(BEE_FILESYSTEM)
 
 # TODO
 BEE_ALL += $(BEE_FILEWATCH)
+endif
+
+ifeq "$(PLAT)" "linux"
+BEE_ALL += $(BEE_FILESYSTEM)
 endif

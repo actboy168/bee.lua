@@ -3,15 +3,6 @@
 #include <bee/nonstd/span.h>
 
 namespace std {
-    class bad_array_length : public bad_alloc {
-    public:
-        bad_array_length() throw() { }
-        virtual ~bad_array_length() throw() { }
-        virtual const char* what() const throw() { 
-            return "std::bad_array_length"; 
-        }
-    };
-
     template <class T>
     class dynarray : public nonstd::span<T> {
     public:
@@ -118,6 +109,15 @@ namespace std {
         }
 
     private:
+        class bad_array_length : public bad_alloc {
+        public:
+            bad_array_length() throw() { }
+            virtual ~bad_array_length() throw() { }
+            virtual const char* what() const throw() { 
+                return "std::bad_array_length"; 
+            }
+        };
+
         pointer alloc(size_type n)
         { 
             if (n > (std::numeric_limits<size_type>::max)()/sizeof(T))

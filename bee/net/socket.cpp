@@ -147,39 +147,42 @@ namespace bee::net::socket {
 
     void keepalive(fd_t s, int keepalive, int keepalive_cnt, int keepalive_idle, int keepalive_intvl)
     {
+        // TODO
+        if (keepalive == -1) {
+            return;
+        }
 #if defined _WIN32
         (void)keepalive_cnt;
-        if (keepalive != -1)
-        {
-            tcp_keepalive keepaliveopts;
-            keepaliveopts.onoff = keepalive;
-            keepaliveopts.keepalivetime = keepalive_idle != -1 ? keepalive_idle * 1000 : 7200000;
-            keepaliveopts.keepaliveinterval = keepalive_intvl != -1 ? keepalive_intvl * 1000 : 1000;
-            DWORD num_bytes_returned;
-            int rc = WSAIoctl(s, SIO_KEEPALIVE_VALS, &keepaliveopts, sizeof(keepaliveopts), NULL, 0, &num_bytes_returned, NULL, NULL);
+        tcp_keepalive keepaliveopts;
+        keepaliveopts.onoff = keepalive;
+        keepaliveopts.keepalivetime = keepalive_idle != -1 ? keepalive_idle * 1000 : 7200000;
+        keepaliveopts.keepaliveinterval = keepalive_intvl != -1 ? keepalive_intvl * 1000 : 1000;
+        DWORD num_bytes_returned;
+        int rc = WSAIoctl(s, SIO_KEEPALIVE_VALS, &keepaliveopts, sizeof(keepaliveopts), NULL, 0, &num_bytes_returned, NULL, NULL);
+        net_assert_success(rc);
+#elif defined __linux__
+        int rc = setsockopt(s, SOL_SOCKET, SO_KEEPALIVE, (char*) &keepalive, sizeof (int));
+        net_assert_success(rc);
+        if (keepalive_cnt != -1) {
+            int rc = setsockopt(s, IPPROTO_TCP, TCP_KEEPCNT, &keepalive_cnt, sizeof (int));
+            net_assert_success(rc);
+        }
+        if (keepalive_idle != -1) {
+            int rc = setsockopt(s, IPPROTO_TCP, TCP_KEEPIDLE, &keepalive_idle, sizeof (int));
+            net_assert_success(rc);
+        }
+        if (keepalive_intvl != -1) {
+            int rc = setsockopt(s, IPPROTO_TCP, TCP_KEEPINTVL, &keepalive_intvl, sizeof (int));
             net_assert_success(rc);
         }
 #else
-        if (keepalive != -1)
-        {
-            int rc = setsockopt(s, SOL_SOCKET, SO_KEEPALIVE, (char*) &keepalive, sizeof (int));
+        (void)keepalive_cnt;
+        (void)keepalive_intvl;
+        int rc = setsockopt(s, SOL_SOCKET, SO_KEEPALIVE, (char*) &keepalive, sizeof (int));
+        net_assert_success(rc);
+        if (keepalive_idle != -1) {
+            int rc = setsockopt(s, IPPROTO_TCP, TCP_KEEPALIVE, &keepalive_idle, sizeof (int));
             net_assert_success(rc);
-
-            if (keepalive_cnt != -1)
-            {
-                int rc = setsockopt(s, IPPROTO_TCP, TCP_KEEPCNT, &keepalive_cnt, sizeof (int));
-                net_assert_success(rc);
-            }
-            if (keepalive_idle != -1)
-            {
-                int rc = setsockopt(s, IPPROTO_TCP, TCP_KEEPIDLE, &keepalive_idle, sizeof (int));
-                net_assert_success(rc);
-            }
-            if (keepalive_intvl != -1)
-            {
-                int rc = setsockopt(s, IPPROTO_TCP, TCP_KEEPINTVL, &keepalive_intvl, sizeof (int));
-                net_assert_success(rc);
-            }
         }
 #endif
     }

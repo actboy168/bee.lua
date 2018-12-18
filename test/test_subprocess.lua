@@ -13,9 +13,11 @@ local function getexe()
 end
 
 local function createLua(script, option)
+    local init = ("package.cpath = [[%s]]"):format(package.cpath)
     option = option or {}
     option[1] = {
         getexe(),
+        '-e', init,
         '-e', script,
     }
     return subprocess.spawn(option)

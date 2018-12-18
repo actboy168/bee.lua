@@ -1,15 +1,15 @@
 #include <lua.hpp>
 #if defined _WIN32
-#include <winsock.h>
+#   include <winsock.h>
+#   include <bee/net/unixsocket.h>
+#else
+#   include <sys/select.h>
 #endif
 #include <bee/lua/binding.h>
 #include <bee/net/socket.h>
 #include <bee/net/endpoint.h>
 #include <bee/error.h>
 #include <limits>
-#if defined _WIN32
-#include <bee/net/unixsocket.h>
-#endif
 
 namespace bee::lua_socket {
     using namespace bee::net;
