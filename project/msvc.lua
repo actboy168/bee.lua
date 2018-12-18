@@ -9,7 +9,7 @@ end
 
 local root = fs.absolute(fs.path './')
 local property = {
-    Configuration = configuration,
-    Platform = platform,
+    Configuration = configuration or 'Release',
+    Platform = platform or 'x64',
 }
 msvc:compile('build', root / 'bee.sln', property)

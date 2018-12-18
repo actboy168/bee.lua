@@ -366,7 +366,6 @@ namespace bee::lua_filesystem {
         }
         const fs::path& base = path::to(L, 2);
         return path::constructor_(L, FS_ABSOLUTE(base / p));
-
         LUA_TRY_END;
     }
 

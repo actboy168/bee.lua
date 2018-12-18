@@ -149,3 +149,24 @@ function test_subprocess:test_peek()
     lu.assertEquals(process.stdout:read(2), "ok")
     lu.assertIsNil(process.stdout:read(2))
 end
+
+function test_subprocess:test_filemode()
+    if platform.OS == 'Windows' then
+        local process = createLua([[
+            assert(io.read "a" == "\n")
+        ]], { stdin = true, stderr = true })
+        process.stdin:write "\r\n"
+        process.stdin:close()
+        process:wait()
+        lu.assertEquals(process.stderr:read "a", "")
+    end
+    local process = createLua([[
+        local sp = require "bee.subprocess"
+        sp.filemode(io.stdin, 'b')
+        assert(io.read "a" == "\r\n")
+    ]], { stdin = true, stderr = true })
+    process.stdin:write "\r\n"
+    process.stdin:close()
+    process:wait()
+    lu.assertEquals(process.stderr:read "a", "")
+end

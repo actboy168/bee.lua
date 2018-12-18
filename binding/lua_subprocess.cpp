@@ -375,7 +375,7 @@ namespace bee::lua_subprocess {
     static int filemode(lua_State* L) {
         luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, 1, LUA_FILEHANDLE);
         const char* mode = luaL_checkstring(L, 2);
-        if (p && !p->closef && p->f) {
+        if (p && p->closef && p->f) {
             if (mode[0] == 'b') {
                 _setmode(_fileno(p->f), _O_BINARY);
             }
