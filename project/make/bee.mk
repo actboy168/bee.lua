@@ -17,6 +17,8 @@ BEE_SOCKET = \
 	$(TMPDIR)/binding_lua_socket.o \
 	$(TMPDIR)/bee_net_socket.o \
 	$(TMPDIR)/bee_net_endpoint.o \
+	$(TMPDIR)/bee_utility_file_version.o \
+	$(TMPDIR)/bee_platform_version.o \
 	$(BEE_COMMON)
 
 BEE_SUBPROCESS = \
