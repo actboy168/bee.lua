@@ -25,7 +25,7 @@ namespace bee::lua_socket {
     static int push_neterror(lua_State* L, const char* msg) {
         auto error = make_neterror(msg);
         lua_pushnil(L);
-        lua_pushfstring(L, "%s (%d)", error.what(), error.code().value());
+        lua_pushfstring(L, "(%d) %s", error.code().value(), error.what());
         return 2;
     }
     static socket::protocol read_protocol(lua_State* L, int idx) {
@@ -240,6 +240,15 @@ namespace bee::lua_socket {
         lua_pushstring(L, "invalid flag");
         return 2;
     }
+    static int tostring(lua_State* L) {
+        luafd& self = checkfd(L, 1);
+        if (self.fd == socket::retired_fd) {
+            lua_pushstring(L, "socket (closed)");
+            return 1;
+        }
+        lua_pushfstring(L, "socket (%d)", self.fd);
+        return 1;
+    }
     static int gc(lua_State* L) {
         luafd& self = checkfd(L, 1);
         if (self.fd == socket::retired_fd) {
@@ -262,7 +271,7 @@ namespace bee::lua_socket {
         }
         auto error = make_error(err);
         lua_pushnil(L);
-        lua_pushfstring(L, "%s (%d)", err, error.what());
+        lua_pushfstring(L, "(%d) %s", err, error.what());
         return 2;
     }
     static int info(lua_State* L) {
@@ -304,6 +313,7 @@ namespace bee::lua_socket {
                 { "shutdown", shutdown },
                 { "status",   status },
                 { "info",     info },
+                { "__tostring", tostring },
                 { "__gc",     gc },
                 { NULL, NULL },
             };
