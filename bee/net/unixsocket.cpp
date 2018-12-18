@@ -71,11 +71,6 @@ namespace bee::net::socket {
 		return file::write_all(path, portstr.data());
 	}
 
-	bool u_enable() {
-		static bool enable = !supportUnixDomainSocket();
-		return enable;
-	}
-
     status u_connect(fd_t s, const endpoint& ep) {
 		int tcpport = 0;
 		if (!read_tcp_port(ep, tcpport)) {

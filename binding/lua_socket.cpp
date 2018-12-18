@@ -201,7 +201,7 @@ namespace bee::lua_socket {
         self.fd = socket::retired_fd;
         if (self.protocol == socket::protocol::unix) {
 #if defined _WIN32
-			if (socket::u_enable()) {
+			if (!socket::supportUnixDomainSocket()) {
 				::DeleteFileW(u2w(self.path).c_str());
 			}
 			else {
@@ -362,7 +362,7 @@ namespace bee::lua_socket {
             return push_neterror(L, "bind");
         }
 #if defined _WIN32
-		if (socket::u_enable()) {
+		if (!socket::supportUnixDomainSocket()) {
 			auto[path, port] = ep->info();
 			self.path = path;
 		}

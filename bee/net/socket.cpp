@@ -80,7 +80,7 @@ namespace bee::net::socket {
             return ::socket(family, SOCK_DGRAM, IPPROTO_UDP);
         case protocol::unix:
 #if defined _WIN32
-			if (u_enable()) {
+			if (!supportUnixDomainSocket()) {
 				return ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 			}
 #endif
@@ -100,10 +100,17 @@ namespace bee::net::socket {
 #endif
     }
 
+#if defined _WIN32
+    static bool supportUnixDomainSocket_() {
+        auto[ver, build] = bee::platform::get_version();
+        return ver == +bee::platform::WinVer::Win10 && build >= 17763;
+    }
+#endif
+
     bool supportUnixDomainSocket() {
 #if defined _WIN32
-		auto[ver, build] = bee::platform::get_version();
-		return ver == +bee::platform::WinVer::Win10 && build >= 17763;
+        static bool support = supportUnixDomainSocket_();
+        return support;
 #else
         return true;
 #endif
@@ -220,7 +227,7 @@ namespace bee::net::socket {
     status connect(fd_t s, const endpoint& ep)
     {
 #if defined _WIN32
-		if (u_enable() && ep.family() == AF_UNIX) {
+		if (!supportUnixDomainSocket() && ep.family() == AF_UNIX) {
 			return u_connect(s, ep);
 		}
 #endif
@@ -243,7 +250,7 @@ namespace bee::net::socket {
     status bind(fd_t s, const endpoint& ep)
     {
 #if defined _WIN32
-		if (u_enable() && ep.family() == AF_UNIX) {
+		if (!supportUnixDomainSocket() && ep.family() == AF_UNIX) {
 			return u_bind(s, ep);
 		}
 #endif

@@ -25,6 +25,7 @@ if platform.OS ~= 'macOS' then
 end
 require 'test_thread'
 require 'test_subprocess'
+require 'test_socket'
 --require 'test_registry'
 
 os.exit(lu.LuaUnit.run(), true)

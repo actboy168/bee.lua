@@ -4,7 +4,6 @@
 #include <bee/net/endpoint.h>
 
 namespace bee::net::socket {
-	bool u_enable();
     status u_connect(fd_t s, const endpoint& ep);
     status u_bind(fd_t s, const endpoint& ep);
 }
