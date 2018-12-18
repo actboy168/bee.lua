@@ -17,6 +17,7 @@ end
 
 local lu = require 'luaunit'
 
+require 'test_lua'
 require 'test_platform'
 require 'test_serialization'
 if platform.OS ~= 'macOS' then
