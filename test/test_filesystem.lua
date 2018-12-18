@@ -176,7 +176,8 @@ function test_fs:test_replace_extension()
     lu.assertEquals(replace_extension('a/b/c.ext', '..lua'), 'a/b/c..lua')
 end
 
-local ALLOW_WRITE = platform.OS == 'Windows' and 0x92 or 0x80
+local ALLOW_WRITE = 0x92
+local USER_WRITE = 0x80
 
 function test_fs:test_permissions()
     local filename = 'temp.txt'
@@ -194,11 +195,11 @@ function test_fs:test_add_remove_permissions()
     local filename = 'temp.txt'
     create_file(filename)
 
-    lu.assertEquals(fs.path(filename):permissions() & ALLOW_WRITE, ALLOW_WRITE)
+    lu.assertEquals(fs.path(filename):permissions() & USER_WRITE, USER_WRITE)
     fs.path(filename):remove_permissions(ALLOW_WRITE)
-    lu.assertEquals(fs.path(filename):permissions() & ALLOW_WRITE, 0)
+    lu.assertEquals(fs.path(filename):permissions() & USER_WRITE, 0)
     fs.path(filename):add_permissions(ALLOW_WRITE)
-    lu.assertEquals(fs.path(filename):permissions() & ALLOW_WRITE, ALLOW_WRITE)
+    lu.assertEquals(fs.path(filename):permissions() & USER_WRITE, USER_WRITE)
 
     os.remove(filename)
 end
