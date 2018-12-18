@@ -19,7 +19,7 @@ $(TMPDIR)/bee_fsevent_fsevent_win.o : bee/fsevent/fsevent_win.cpp bee/fsevent/fs
 $(TMPDIR)/bee_net_endpoint.o : bee/net/endpoint.cpp bee/net/endpoint.cpp bee/net/endpoint.h bee/utility/dynarray.h bee/nonstd/span.h bee/nonstd/expected.h bee/utility/format.h bee/utility/hybrid_array.h bee/utility/unicode.h bee/config.h bee/error.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I.
 
-$(TMPDIR)/bee_net_socket.o : bee/net/socket.cpp bee/net/socket.cpp bee/utility/unicode.h bee/config.h bee/net/unixsocket.h bee/net/socket.h bee/net/endpoint.h bee/utility/dynarray.h bee/nonstd/span.h bee/nonstd/expected.h bee/error.h | $(TMPDIR)
+$(TMPDIR)/bee_net_socket.o : bee/net/socket.cpp bee/net/socket.cpp bee/utility/unicode.h bee/config.h bee/net/unixsocket.h bee/net/socket.h bee/net/endpoint.h bee/utility/dynarray.h bee/nonstd/span.h bee/nonstd/expected.h bee/platform/version.h bee/nonstd/enum.h bee/error.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I.
 
 $(TMPDIR)/bee_net_unixsocket.o : bee/net/unixsocket.cpp bee/net/unixsocket.cpp bee/net/unixsocket.h bee/net/socket.h bee/net/endpoint.h bee/utility/dynarray.h bee/nonstd/span.h bee/nonstd/expected.h bee/utility/unicode.h bee/config.h | $(TMPDIR)

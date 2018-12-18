@@ -4,6 +4,7 @@
 #    include <mstcpip.h>
 #    include <bee/utility/unicode.h>
 #    include <bee/net/unixsocket.h>
+#    include <bee/platform/version.h>
 #else
 #    include <fcntl.h>
 #    include <netinet/tcp.h>
@@ -101,10 +102,8 @@ namespace bee::net::socket {
 
     bool supportUnixDomainSocket() {
 #if defined _WIN32
-        fd_t fd = ::socket(AF_UNIX, SOCK_STREAM, 0);
-        bool ok = (fd != retired_fd);
-        ::closesocket(fd);
-        return ok;
+		auto[ver, build] = bee::platform::get_version();
+		return ver == +bee::platform::WinVer::Win10 && build >= 17763;
 #else
         return true;
 #endif
