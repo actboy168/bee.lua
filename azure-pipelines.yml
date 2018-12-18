@@ -17,6 +17,12 @@ jobs:
   steps:
   - template: project/azure-pipelines/mingw.yml
 
+- job: macOS
+  pool:
+    vmImage: macOS 10.13
+  steps:
+  - template: project/azure-pipelines/macosx.yml
+
 #- job: Linux_Clang
 #  pool:
 #    vmImage: Ubuntu-16.04
