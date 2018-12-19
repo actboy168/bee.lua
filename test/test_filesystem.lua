@@ -510,7 +510,7 @@ function test_fs:test_copy_file()
 
     create_file('temp1.txt', tostring(os.time()))
     create_file('temp2.txt', tostring(os.clock()))
-    copy_file_failed('temp1.txt', 'temp2.txt', false)
+    copy_file_failed('temp1.txt', 'temp2.txt')
 end
 
 function test_fs:test_list_directory()

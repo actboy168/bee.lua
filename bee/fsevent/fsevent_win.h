@@ -20,6 +20,7 @@ namespace bee::win::fsevent {
     typedef int taskid;
     enum class tasktype {
         Error,
+        Confirm,
         Create,
         Delete,
         Modify,

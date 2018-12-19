@@ -83,7 +83,6 @@ namespace bee::win::fsevent {
             FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
             NULL);
         if (m_directory == INVALID_HANDLE_VALUE) {
-            ;
             push_notify(tasktype::Error, u2w(make_syserror("CreateFileW").what()).c_str());
             return false;
         }
@@ -277,12 +276,24 @@ namespace bee::win::fsevent {
             switch (arg.m_type) {
             case apc_arg::type::Add:
                 apc_add(arg.m_id, arg.m_path);
+                m_notify.push({
+                    tasktype::Confirm,
+                    format(L"add `%d` `%s`", arg.m_id, arg.m_path)
+                });
                 break;
             case apc_arg::type::Remove:
                 apc_remove(arg.m_id);
+                m_notify.push({
+                    tasktype::Confirm,
+                    format(L"remove `%d`", arg.m_id)
+                });
                 break;
             case apc_arg::type::Terminate:
                 apc_terminate();
+                m_notify.push({
+                    tasktype::Confirm,
+                    L"terminate"
+                });
                 return;
             }
         }

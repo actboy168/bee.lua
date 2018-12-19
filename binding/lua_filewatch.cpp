@@ -35,6 +35,9 @@ namespace bee::lua_filewatch {
         case fsevent::tasktype::Error:
             lua_pushstring(L, "error");
             break;
+        case fsevent::tasktype::Confirm:
+            lua_pushstring(L, "confirm");
+            break;
         case fsevent::tasktype::Create:
             lua_pushstring(L, "create");
             break;

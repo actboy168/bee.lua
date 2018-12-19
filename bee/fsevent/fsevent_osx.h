@@ -14,6 +14,7 @@ namespace bee::osx::fsevent {
     static const taskid kInvalidTaskId = 0;
     enum class tasktype {
         Error,
+        Confirm,
         Create,
         Delete,
         Modify,
