@@ -26,7 +26,7 @@ end
 require 'test_thread'
 require 'test_subprocess'
 require 'test_socket'
-if platform.OS ~= 'Linux' then
+if platform.OS == 'Windows' then
 require 'test_filewatch'
 end
 --require 'test_registry'
