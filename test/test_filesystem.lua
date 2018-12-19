@@ -567,7 +567,7 @@ function test_fs:test_last_write_time()
         local tf = fs.last_write_time(fs.path(filename))
         local t2 = os.time()
         os.remove(filename)
-        lu.assertIsTrue(tf >= t1 and tf <= t2, ('start=%d, end=%d, write=%d'):format(t1, t2, tf))
+        lu.assertIsTrue(tf >= t1 - 10 and tf <= t2 + 10, ('start=%d, end=%d, write=%d'):format(t1, t2, tf))
     end
     last_write_time('temp.txt')
 end

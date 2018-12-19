@@ -357,7 +357,7 @@ private:
     }
 
     template <size_t Base, class T>
-    void format_cast_integer(T number
+    void format_cast_integer(T /*number*/
         , typename std::enable_if<!std::is_integral<T>::value>::type* = 0)
     {
         BEE_FORMAT_THROW_ERROR("format: Cannot convert from argument type to integer.");
