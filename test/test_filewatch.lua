@@ -80,31 +80,3 @@ function test_fw:test_2()
         assertSelect('delete', root / 'test2.txt')
     end)
 end
-
-function test_fw:test_3()
-    test(function(root)
-        create_dir 'test/test'
-        create_file 'test/test1.txt'
-        fs.rename(root / 'test' / 'test1.txt', root / 'test' / 'test2.txt')
-        fs.remove_all(root / 'test' / 'test')
-        fs.remove_all(root / 'test')
-
-        assertSelect('create', root / 'test')
-        assertSelect('create', root / 'test' / 'test')
-        assertSelect('modify', root / 'test')
-
-        assertSelect('create', root / 'test' / 'test1.txt')
-        assertSelect('modify', root / 'test')
-
-        assertSelect('rename', root / 'test' / 'test1.txt')
-        assertSelect('rename', root / 'test' / 'test2.txt')
-        assertSelect('modify', root / 'test')
-
-        assertSelect('delete', root / 'test' / 'test')
-        assertSelect('modify', root / 'test')
-
-        assertSelect('delete', root / 'test' / 'test2.txt')
-        assertSelect('modify', root / 'test')
-        assertSelect('delete', root / 'test')
-    end)
-end

@@ -369,10 +369,8 @@ private:
     {
         unsigned len = count_digits<Base>(number);
         const char* digits = ch_ ? "0123456789abcdef" : "0123456789ABCDEF";
-
         temp_.resize(len);
-        while (number >= Base) 
-        {
+        while (number >= Base) {
             unsigned index = number % Base;
             number /= Base;
             temp_[--len] = static_cast<char_t>(digits[index]);
