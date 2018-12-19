@@ -13,9 +13,9 @@ else ifeq "$(PLAT)" "linux"
 BEE_TARGET= bee.so
 BEE_LIBS= -lpthread -lstdc++fs -lstdc++
 LUALIB=
-else
+else ifeq "$(PLAT)" "macosx"
 BEE_TARGET= bee.so
-BEE_LIBS=
+BEE_LIBS= -framework CoreFoundation 
 LUALIB=
 endif
 
