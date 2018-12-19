@@ -1,10 +1,10 @@
 ifeq "$(PLAT)" "mingw"
-alllua :  $(BINDIR)/lua54.dll $(BINDIR)/lua.exe
+alllua :  $(BINDIR)/lua54.dll $(BINDIR)/bee.exe
 else ifeq "$(PLAT)" "linux"
-alllua : $(BINDIR)/lua
+alllua : $(BINDIR)/bee
 LUALDFLAGS = -Wl,-E -lm -ldl -lreadline
 else
-alllua : $(BINDIR)/lua
+alllua : $(BINDIR)/bee
 LUALDFLAGS = -lreadline
 endif
 
