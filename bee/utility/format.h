@@ -356,8 +356,16 @@ private:
         }
     }
 
-    template <size_t Base>
-    void format_cast_integer(uint64_t number) 
+    template <size_t Base, class T>
+    void format_cast_integer(T number
+        , typename std::enable_if<!std::is_integral<T>::value>::type* = 0)
+    {
+        BEE_FORMAT_THROW_ERROR("format: Cannot convert from argument type to integer.");
+    }
+
+    template <size_t Base, class T>
+    void format_cast_integer(T number
+        , typename std::enable_if<std::is_integral<T>::value>::type* = 0)
     {
         unsigned len = count_digits<Base>(number);
         const char* digits = ch_ ? "0123456789abcdef" : "0123456789ABCDEF";
@@ -540,7 +548,7 @@ private:
             {
                 flags_ |= FL_FORCEHEX;
             }
-            format_cast_integer<16>(*(uintptr_t*)&value);
+            format_cast_integer<16, T>(value);
             break;
         case 'A': case 'E': case 'F': case 'G':
         case 'a': case 'e': case 'f': case 'g':
