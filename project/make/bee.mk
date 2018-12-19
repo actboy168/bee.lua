@@ -74,12 +74,12 @@ BEE_ALL = \
 ifeq "$(PLAT)" "mingw"
 BEE_ALL += $(BEE_REGISTRY)
 BEE_ALL += $(BEE_UNICODE)
-BEE_ALL += $(BEE_FILESYSTEM)
+endif
 
-# TODO
+ifneq "$(PLAT)" "linux"
 BEE_ALL += $(BEE_FILEWATCH)
 endif
 
-ifeq "$(PLAT)" "linux"
+ifneq "$(PLAT)" "macosx"
 BEE_ALL += $(BEE_FILESYSTEM)
 endif
