@@ -1,4 +1,5 @@
 #include <bee/fsevent/fsevent_osx.h>
+#include <bee/utility/format.h>
 #include <thread>
 
 namespace bee::osx::fsevent {
@@ -9,6 +10,8 @@ namespace bee::osx::fsevent {
         const FSEventStreamEventFlags eventFlags[],
         const FSEventStreamEventId eventIds[])
     {
+        (void)streamRef;
+        (void)eventIds;
         watch* self = (watch*)info;
         self->event_cb((const char**)eventPaths, eventFlags, numEvents);
     }
@@ -36,7 +39,9 @@ namespace bee::osx::fsevent {
             return;
         }
         m_apc_queue.push ({
-            apc_arg::type::Terminate
+            apc_arg::type::Terminate,
+            kInvalidTaskId,
+            std::string()
         });
         if (!thread_signal()) {
             m_thread->detach();
@@ -50,9 +55,7 @@ namespace bee::osx::fsevent {
         if (m_thread) {
             return true;
         }
-        CFRunLoopSourceContext ctx = {0};
-        ctx.info = this;
-        ctx.perform = watch_apc_cb;
+        CFRunLoopSourceContext ctx = { 0, this, NULL, NULL, NULL, NULL, NULL, NULL, NULL, watch_apc_cb };
         m_source = CFRunLoopSourceCreate(NULL, 0, &ctx);
         if (!m_source) {
             return false;
@@ -75,8 +78,7 @@ namespace bee::osx::fsevent {
         if (m_stream) {
             return false;
         }
-        FSEventStreamContext ctx = {0};
-        ctx.info = this;
+        FSEventStreamContext ctx = { 0 , this, NULL , NULL , NULL };
 
         FSEventStreamRef ref = 
             FSEventStreamCreate(NULL,
@@ -128,7 +130,8 @@ namespace bee::osx::fsevent {
         }
         m_apc_queue.push ({
             apc_arg::type::Remove,
-            id
+            id,
+            std::string()
         });
         thread_signal();
         return true;
