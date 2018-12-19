@@ -40,7 +40,6 @@
             "request": "launch",
             "name": "Test",
             "luaexe": "${workspaceFolder}/bin/msvc_x86_Debug/bee.exe",
-            "luadll": "${workspaceFolder}/bin/msvc_x86_Debug/lua54.dll",
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/test/test.lua",
             "stopOnEntry": false
