@@ -10,5 +10,5 @@ steps:
   displayName: Compile
 
 - bash: |
-   bin/linux_Release/lua test/test.lua
+   bin/linux_Release/bee test/test.lua
   displayName: Test

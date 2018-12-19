@@ -22,5 +22,5 @@ steps:
 
 - script: |
    cd make
-   luamake mingw.lua .\bin\mingw_Release\lua.exe .\test\test.lua
+   luamake mingw.lua .\bin\mingw_Release\bee.exe .\test\test.lua
   displayName: Test

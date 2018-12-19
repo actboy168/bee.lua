@@ -21,7 +21,7 @@ $(TMPDIR)/lua/$(1) : $(LUADIR)/$(subst .o,.c,$(1))  | $(TMPDIR)/lua
 endef
 $(foreach v, $(ALL_O), $(eval $(call build_lua,$(v))))
 
-$(BINDIR)/lua : $(TMPDIR)/lua/lua.o $(foreach v, $(BASE_O), $(TMPDIR)/lua/$(v)) | $(BINDIR)
+$(BINDIR)/bee : $(TMPDIR)/lua/lua.o $(foreach v, $(BASE_O), $(TMPDIR)/lua/$(v)) | $(BINDIR)
 	gcc -o $@ $^ $(LUALDFLAGS)
 	$(STRIP) $@
 
@@ -29,7 +29,7 @@ $(BINDIR)/lua54.dll : $(TMPDIR)/lua/utf8_crt.o $(foreach v, $(BASE_O), $(TMPDIR)
 	gcc -o $@ $^ $(LDSHARED)
 	$(STRIP) $@
 
-$(BINDIR)/lua.exe : $(TMPDIR)/lua/utf8_lua.o $(foreach v, $(BASE_O), $(TMPDIR)/lua/$(v)) | $(BINDIR)
+$(BINDIR)/bee.exe : $(TMPDIR)/lua/utf8_lua.o $(foreach v, $(BASE_O), $(TMPDIR)/lua/$(v)) | $(BINDIR)
 	gcc -o $@ $^ $(LUALIB)
 	$(STRIP) $@
 
