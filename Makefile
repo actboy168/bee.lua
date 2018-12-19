@@ -15,7 +15,7 @@ BEE_LIBS= -lpthread -lstdc++fs -lstdc++
 LUALIB=
 else ifeq "$(PLAT)" "macosx"
 BEE_TARGET= bee.so
-BEE_LIBS= -framework CoreFoundation 
+BEE_LIBS= -framework CoreFoundation -framework CoreServices
 LUALIB=
 endif
 
