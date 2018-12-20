@@ -358,9 +358,16 @@ private:
 
     template <size_t Base, class T>
     void format_cast_integer(T /*number*/
-        , typename std::enable_if<!std::is_integral<T>::value>::type* = 0)
+        , typename std::enable_if<!std::is_pointer<T>::value && !std::is_integral<T>::value>::type* = 0)
     {
         BEE_FORMAT_THROW_ERROR("format: Cannot convert from argument type to integer.");
+    }
+
+    template <size_t Base, class T>
+    void format_cast_integer(T number
+        , typename std::enable_if<std::is_pointer<T>::value>::type* = 0)
+    {
+        format_cast_integer<Base, uintptr_t>((uintptr_t)number);
     }
 
     template <size_t Base, class T>
