@@ -4,7 +4,7 @@ steps:
   inputs:
     solution: bee.sln
     vsVersion: 15.0
-    platform: x86
+    platform: x86,x64
     configuration: Release
     clean: true
     maximumCpuCount: true
@@ -12,4 +12,8 @@ steps:
 
 - script:  |
     .\bin\msvc_x86_Release\bee.exe test\test.lua
-  displayName: Test
+  displayName: Test x86
+
+- script:  |
+    .\bin\msvc_x64_Release\bee.exe test\test.lua
+  displayName: Test x64
