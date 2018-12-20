@@ -1,19 +1,22 @@
+strategy:
+  maxParallel: 2
+  matrix:
+    x64:
+      PLATFORM: x64
+    x86:
+      PLATFORM: x86
 steps:
 - task: VSBuild@1
   displayName: Compile
   inputs:
     solution: bee.sln
     vsVersion: 15.0
-    platform: x86,x64
+    platform: $(PLATFORM)
     configuration: Release
     clean: true
     maximumCpuCount: true
     createLogFile: true
 
 - script:  |
-    .\bin\msvc_x86_Release\bee.exe test\test.lua
-  displayName: Test x86
-
-- script:  |
-    .\bin\msvc_x64_Release\bee.exe test\test.lua
-  displayName: Test x64
+    .\bin\msvc_$(PLATFORM)_Release\bee.exe test\test.lua
+  displayName: Test
