@@ -2,6 +2,13 @@ jobs:
 - job: windows_msvc
   pool:
     vmImage: VS2017-Win2016
+  strategy:
+    maxParallel: 2
+    matrix:
+      x64:
+        PLATFORM: x64
+      x86:
+        PLATFORM: x86
   steps:
   - template: project/azure-pipelines/msvc.yml
   
