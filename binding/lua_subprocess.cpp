@@ -250,7 +250,7 @@ namespace bee::lua_subprocess {
 
         static void cast_env(lua_State* L, subprocess::spawn& self) {
             if (LUA_TTABLE == lua_getfield(L, 1, "env")) {
-                lua_next(L, 1);
+                lua_pushnil(L);
                 while (lua_next(L, -2)) {
                     if (LUA_TSTRING == lua_type(L, -1)) {
                         self.env_set(lua::to_string(L, -2), lua::to_string(L, -1));

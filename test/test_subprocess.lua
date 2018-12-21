@@ -193,7 +193,7 @@ function test_subprocess:test_filemode()
         ]], { stdin = true, stderr = true })
         process.stdin:write "\r\n"
         process.stdin:close()
-        process:wait()
+        lu.assertEquals(process:wait(), 0)
         lu.assertEquals(process.stderr:read "a", "")
     end
     local process = createLua([[
@@ -203,6 +203,25 @@ function test_subprocess:test_filemode()
     ]], { stdin = true, stderr = true })
     process.stdin:write "\r\n"
     process.stdin:close()
-    process:wait()
+    lu.assertEquals(process:wait(), 0)
     lu.assertEquals(process.stderr:read "a", "")
+end
+
+function test_subprocess:test_env()
+    local function test_env(cond, env)
+        local script = ('assert(%s)'):format(cond)
+        lu.assertEquals(
+            createLua(
+                script,
+                {env = env}
+            ):wait(),
+            0
+        )
+    end
+    test_env('os.getenv "BEE_TEST" == nil', {})
+    test_env('os.getenv "BEE_TEST" == "ok"', { BEE_TEST = 'ok' })
+
+    lu.assertNotNil(os.getenv 'PATH')
+    test_env('os.getenv "PATH" ~= nil', {})
+    test_env('os.getenv "PATH" == nil', {PATH=false})
 end

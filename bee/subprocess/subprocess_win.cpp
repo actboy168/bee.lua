@@ -149,6 +149,7 @@ namespace bee::win::subprocess {
                 std::wstring::size_type pos = str.find(L'=');
                 std::wstring key = str.substr(0, pos);
                 if (del.find(key) != del.end()) {
+                    escp += str.length() + 1;
                     continue;
                 }
                 std::wstring val = str.substr(pos + 1, str.length());
