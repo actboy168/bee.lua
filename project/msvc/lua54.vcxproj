@@ -195,7 +195,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;WIN32;NDEBUG;_LIB;LUAI_MAXCCALLS=1800;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;WIN32;NDEBUG;_LIB;LUAI_MAXCCALLS=400;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
