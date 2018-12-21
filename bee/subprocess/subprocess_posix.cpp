@@ -70,7 +70,7 @@ namespace bee::posix::subprocess {
         void append(T t) {
             if (size + 1 > maxsize) {
                 maxsize *= 2;
-                data = (T*)realloc(data, maxsize);
+                data = (T*)realloc(data, maxsize * sizeof(T));
                 if (!data) {
                     throw std::bad_alloc();
                 }
