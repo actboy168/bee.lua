@@ -65,7 +65,7 @@ function test_fw:test_2()
     test(function(root)
         create_dir 'test1'
         assertSelect('create', root / 'test1')
-        
+
         create_file 'test1.txt'
         assertSelect('create', root / 'test1.txt')
 
