@@ -11,7 +11,12 @@
 #include <errno.h>
 #include <assert.h>
 
+#if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)
+# include <crt_externs.h>
+# define environ (*_NSGetEnviron())
+#else
 extern char **environ;
+#endif
 
 namespace bee::posix::subprocess {
 
@@ -57,11 +62,12 @@ namespace bee::posix::subprocess {
             delete[] data;
         }
         T* release() {
+            append(0);
             T* r = data;
             data = nullptr;
             return r;
         }
-        void append(T const& t) {
+        void append(T t) {
             if (size + 1 > maxsize) {
                 maxsize *= 2;
                 data = (T*)realloc(data, maxsize);
