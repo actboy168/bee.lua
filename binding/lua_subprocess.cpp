@@ -6,6 +6,9 @@
 #include <optional>
 #include <errno.h>
 #include <string.h>
+#if !defined(_WIN32)
+#include <unistd.h>
+#endif
 
 #if __has_include(<filesystem>)
 #include <filesystem>
