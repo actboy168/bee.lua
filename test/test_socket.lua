@@ -21,26 +21,26 @@ test_socket = {}
 
 function test_socket:test_bind()
     os.remove('test.unixsock')
-    local function assert_ok(fd)
-        lu.assertUserdata(fd)
+    local function assert_ok(fd, err)
+        lu.assertUserdata(fd, err)
         fd:close()
     end
     assert_ok(ls.bind('tcp', '127.0.0.1', 0))
     assert_ok(ls.bind('udp', '127.0.0.1', 0))
     lu.assertErrorMsgEquals('invalid protocol `icmp`.', ls.bind, 'icmp', '127.0.0.1', 0)
 
-    local fd = ls.bind('unix', 'test.unixsock')
-    lu.assertUserdata(fd)
+    local fd, err = ls.bind('unix', 'test.unixsock')
+    lu.assertUserdata(fd, err)
     lu.assertIsTrue(file_exists('test.unixsock'))
     fd:close()
     lu.assertIsFalse(file_exists('test.unixsock'))
 end
 
 function test_socket:test_tcp_connect()
-    local server = ls.bind('tcp', '127.0.0.1', 31234)
-    lu.assertUserdata(server)
-    local client = ls.connect('tcp', '127.0.0.1', 31234)
-    lu.assertUserdata(client)
+    local server, err = ls.bind('tcp', '127.0.0.1', 31234)
+    lu.assertUserdata(server, err)
+    local client, err = ls.connect('tcp', '127.0.0.1', 31234)
+    lu.assertUserdata(client, err)
     client:close()
     server:close()
 end
