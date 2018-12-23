@@ -232,21 +232,30 @@ namespace bee::win::subprocess {
         flags_ |= CREATE_SUSPENDED;
     }
     
-    void spawn::redirect(stdio type, pipe::handle h) {
+    bool spawn::redirect(stdio type, pipe::handle h) {
         si_.dwFlags |= STARTF_USESTDHANDLES;
         inherit_handle_ = true;
-        ::SetHandleInformation(h, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+        pipe::handle newh; 
+        if (!::SetHandleInformation(h, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT)) {
+            return false;
+        }
+        if (!::DuplicateHandle(::GetCurrentProcess(), h, ::GetCurrentProcess(), &newh, 0, TRUE, DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS)) {
+            return false;
+        }
         switch (type) {
         case stdio::eInput:
-            si_.hStdInput = h;
+            si_.hStdInput = newh;
             break;
         case stdio::eOutput:
-            si_.hStdOutput = h;
+            si_.hStdOutput = newh;
             break;
         case stdio::eError:
-            si_.hStdError = h;
+            si_.hStdError = newh;
+            break;
+        default:
             break;
         }
+        return true;
     }
 
     bool spawn::duplicate(const std::string& name, net::socket::fd_t fd) {
@@ -257,6 +266,7 @@ namespace bee::win::subprocess {
         if (newfd == net::socket::retired_fd) {
             return false;
         }
+        inherit_handle_ = true;
         sockets_[name] = newfd;
         return true;
     }
@@ -414,9 +424,21 @@ namespace bee::win::subprocess {
             }
         }
 
-        handle to_handle(FILE* f) {
+        static handle to_handle(FILE* f) {
             int n = _fileno(f);
             return (n >= 0) ? (HANDLE)_get_osfhandle(n) : INVALID_HANDLE_VALUE;
+        }
+
+        handle dup(FILE* f) {
+            handle h = to_handle(f);
+            if (h == INVALID_HANDLE_VALUE) {
+                return 0;
+            }
+            handle newh;
+            if (!::DuplicateHandle(::GetCurrentProcess(), h, ::GetCurrentProcess(), &newh, 0, FALSE, DUPLICATE_SAME_ACCESS)) {
+                return 0;
+            }
+            return newh;
         }
 
         open_result open() {

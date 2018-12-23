@@ -6,6 +6,7 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <bee/net/socket.h>
 
 namespace bee::posix::subprocess {
     enum class stdio {
@@ -26,7 +27,8 @@ namespace bee::posix::subprocess {
             FILE* open_file(mode m);
             operator bool() { return rd && wr; }
         };
-        handle to_handle(FILE* f);
+        extern std::map<std::string, net::socket::fd_t> sockets;
+        handle      dup(FILE* f);
         open_result open();
         int         peek(FILE* f);
     }
@@ -52,7 +54,8 @@ namespace bee::posix::subprocess {
         spawn();
         ~spawn();
         void suspended();
-        void redirect(stdio type, pipe::handle f);
+        bool redirect(stdio type, pipe::handle f);
+        bool duplicate(const std::string& name, net::socket::fd_t fd);
         void env_set(const std::string& key, const std::string& value);
         void env_del(const std::string& key);
         bool exec(std::vector<char*>& args, const char* cwd);

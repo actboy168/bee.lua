@@ -144,7 +144,7 @@ namespace bee::posix::subprocess {
         suspended_ = true;
     }
 
-    void spawn::redirect(stdio type, pipe::handle h) { 
+    bool spawn::redirect(stdio type, pipe::handle h) { 
         switch (type) {
         case stdio::eInput:
             fds_[0] = h;
@@ -158,6 +158,13 @@ namespace bee::posix::subprocess {
         default:
             break;
         }
+        return true;
+    }
+
+    bool spawn::duplicate(const std::string& name, net::socket::fd_t fd) {
+        (void)name;
+        (void)fd;
+        return false;
     }
 
     void spawn::env_set(const std::string& key, const std::string& value) {
@@ -261,8 +268,8 @@ namespace bee::posix::subprocess {
                 return 0;
             }
         }
-        handle to_handle(FILE* f) {
-            return fileno(f);
+        handle dup(FILE* f) {
+            return ::dup(fileno(f));
         }
         open_result open() {
             int fds[2];
@@ -275,7 +282,7 @@ namespace bee::posix::subprocess {
         }
         int peek(FILE* f) {
             char tmp[256];
-            int rc = recv(to_handle(f), tmp, sizeof(tmp), MSG_PEEK | MSG_DONTWAIT);
+            int rc = recv(fileno(f), tmp, sizeof(tmp), MSG_PEEK | MSG_DONTWAIT);
             if (rc == 0) {
                 return -1;
             }
@@ -287,5 +294,6 @@ namespace bee::posix::subprocess {
             }
             return rc;
         }
+        std::map<std::string, net::socket::fd_t> sockets;
     }
 }

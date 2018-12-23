@@ -1,6 +1,5 @@
 #include <bee/subprocess.h>
 #include <bee/utility/unicode.h>
-#include <bee/net/socket.h>
 #include <bee/lua/binding.h>
 #include <bee/error.h>
 #include <lua.hpp>
@@ -227,7 +226,7 @@ namespace bee::lua_subprocess {
                 if (!p->closef) {
                     return 0;
                 }
-                return subprocess::pipe::to_handle(p->f);
+                return subprocess::pipe::dup(p->f);
             }
             case LUA_TBOOLEAN: {
                 if (!lua_toboolean(L, -1)) {
