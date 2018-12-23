@@ -35,77 +35,65 @@ namespace bee::win::subprocess {
     }
 
     filemapping::filemapping(open_only_t, const wchar_t* name)
-        : m_handle(0)
-        , m_size(0)
-    {
-        open(name);
-    }
+        : m_handle(open(name))
+    { }
     filemapping::filemapping(create_only_t, const wchar_t* name, size_t size)
-        : m_handle(0)
-        , m_size(0)
-    {
-        create(name, size);
-    }
+        : m_handle(create(name, size))
+    { }
     filemapping::~filemapping() {
+        close();
+    }
+    bool filemapping::ok() const { 
+        return !!m_handle;
+    }
+    HANDLE filemapping::handle() const {
+        return m_handle; 
+    }
+    void* filemapping::create(const wchar_t* name, size_t size) {
+        ULARGE_INTEGER ui;
+        ui.QuadPart = static_cast<ULONGLONG>(size);
+        return ::CreateFileMappingW(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, ui.HighPart, ui.LowPart, name);
+    }
+    void* filemapping::open(const wchar_t* name) {
+        return ::OpenFileMappingW(SECTION_MAP_WRITE | SECTION_QUERY, FALSE, name);
+    }
+    void filemapping::close() {
         if (m_handle) {
             ::CloseHandle(m_handle);
             m_handle = 0;
         }
     }
-    bool filemapping::ok() const { 
-        return !!m_handle;
-    }
-    size_t filemapping::size() const { 
-        return m_size; 
-    }
-    HANDLE filemapping::handle() const {
-        return m_handle; 
-    }
-    bool filemapping::create(const wchar_t* name, size_t size) {
-        ULARGE_INTEGER ui;
-        ui.QuadPart = static_cast<ULONGLONG>(size);
-        m_handle = ::CreateFileMappingW(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, ui.HighPart, ui.LowPart, name);
-        if (!m_handle) {
-            return false;
-        }
-        if (!get_file_mapping_size(m_handle, m_size)) {
-            return false;
-        }
-        return true;
-    }
-    bool filemapping::open(const wchar_t* name) {
-        m_handle = ::OpenFileMappingW(SECTION_MAP_WRITE | SECTION_QUERY, FALSE, name);
-        if (!m_handle) {
-            return false;
-        }
-        if (!get_file_mapping_size(m_handle, m_size)) {
-            return false;
-        }
-        return true;
-    }
 
     sharedmemory::sharedmemory(open_only_t, const wchar_t* name)
         : m_mapping(open_only, name)
         , m_data(0)
+        , m_size(0)
     {
         if (m_mapping.ok()) {
-            mapview(m_mapping.size());
+            mapview();
         }
     }
     sharedmemory::sharedmemory(create_only_t, const wchar_t* name, size_t size)
         : m_mapping(create_only, name, size)
         , m_data(0)
+        , m_size(0)
     {
-        if (m_mapping.ok() && GetLastError() != ERROR_ALREADY_EXISTS) {
-            mapview(m_mapping.size());
+        if (m_mapping.ok()) {
+            if (GetLastError() == ERROR_ALREADY_EXISTS) {
+                m_mapping.close();
+            }
+            else {
+                mapview();
+            }
         }
     }
     sharedmemory::sharedmemory(open_or_create_t, const wchar_t* name, size_t size)
         : m_mapping(create_only, name, size)
         , m_data(0)
+        , m_size(0)
     {
         if (m_mapping.ok()) {
-            mapview(m_mapping.size());
+            mapview();
         }
     }
     sharedmemory::~sharedmemory() {
@@ -120,10 +108,12 @@ namespace bee::win::subprocess {
         return m_data;
     }
     size_t sharedmemory::size() const { 
-        return m_mapping.size();
+        return m_size;
     }
-    bool sharedmemory::mapview(size_t size) {
-        m_data = (std::byte*)::MapViewOfFile(m_mapping.handle(), SECTION_MAP_WRITE | SECTION_QUERY, 0, 0, size);
-        return (m_data != NULL);
+    void sharedmemory::mapview() {
+        if (!get_file_mapping_size(m_mapping.handle(), m_size)) {
+            return;
+        }
+        m_data = (std::byte*)::MapViewOfFile(m_mapping.handle(), SECTION_MAP_WRITE | SECTION_QUERY, 0, 0, m_size);
     }
 }

@@ -18,22 +18,19 @@ namespace bee::win::subprocess {
         filemapping(create_only_t, const wchar_t* name, size_t size);
         ~filemapping();
         bool   ok()     const;
-        size_t size()   const;
         void*  handle() const;
-
+        void   close();
     private:
-        bool create(const wchar_t* name, size_t size);
-        bool open(const wchar_t* name);
+        static void* create(const wchar_t* name, size_t size);
+        static void* open(const wchar_t* name);
     private:
         void*  m_handle;
-        size_t m_size;
     };
 
     class sharedmemory {
     public:
         sharedmemory(const sharedmemory& other) = delete;
         sharedmemory& operator = (const sharedmemory& other) = delete;
-
         sharedmemory(open_only_t, const wchar_t* name);
         sharedmemory(create_only_t, const wchar_t* name, size_t size);
         sharedmemory(open_or_create_t, const wchar_t* name, size_t size);
@@ -41,12 +38,11 @@ namespace bee::win::subprocess {
         bool       ok() const;
         std::byte* data();
         size_t     size() const;
-
     private:
-        bool mapview(size_t size);
-
+        void mapview();
     private:
         filemapping m_mapping;
         std::byte*  m_data;
+        size_t      m_size;
     };
 }
