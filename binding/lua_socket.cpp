@@ -73,9 +73,6 @@ namespace bee::lua_socket {
     static luafd& constructor(lua_State* L, socket::fd_t fd, socket::protocol protocol) {
         luafd& self = pushfd(L, fd, protocol);
         socket::nonblocking(fd);
-        if (protocol != socket::protocol::unix) {
-            socket::reuse(fd);
-        }
         return self;
     }
     socket::fd_t checksocket(lua_State* L, int idx) {
@@ -338,7 +335,7 @@ namespace bee::lua_socket {
             lua_pushlstring(L, ep.error().data(), ep.error().size());
             return lua_error(L);
         }
-        socket::fd_t fd = socket::open(ep->family(), protocol);
+        socket::fd_t fd = socket::open(protocol, *ep);
         if (fd == socket::retired_fd) {
             return push_neterror(L, "socket");
         }
@@ -367,7 +364,7 @@ namespace bee::lua_socket {
             return 2;
         }
         int backlog = read_backlog(L, protocol);
-        socket::fd_t fd = socket::open(ep->family(), protocol);
+        socket::fd_t fd = socket::open(protocol, *ep);
         if (fd == socket::retired_fd) {
             return push_neterror(L, "socket");
         }

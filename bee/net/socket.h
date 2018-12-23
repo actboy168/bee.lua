@@ -39,7 +39,7 @@ namespace bee::net::socket {
     };
  
     void initialize();
-    fd_t open(int family, protocol protocol);
+    fd_t open(protocol protocol, const endpoint& ep);
     bool pair(fd_t sv[2]);
     bool close(fd_t s);
     bool shutdown(fd_t s, shutdown_flag flag);

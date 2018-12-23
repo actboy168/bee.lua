@@ -83,23 +83,28 @@ namespace bee::net::socket {
 #endif
     }
 
-    fd_t open(int family, protocol protocol)
+    static fd_t createSocket(protocol protocol, int af)
     {
         switch (protocol) {
         case protocol::tcp:
-            return createSocket(family, SOCK_STREAM, IPPROTO_TCP);
+            return createSocket(af, SOCK_STREAM, IPPROTO_TCP);
         case protocol::udp:
-            return createSocket(family, SOCK_DGRAM, IPPROTO_UDP);
+            return createSocket(af, SOCK_DGRAM, IPPROTO_UDP);
         case protocol::unix:
 #if defined _WIN32
 			if (!supportUnixDomainSocket()) {
 				return createSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 			}
 #endif
-			return createSocket(family, SOCK_STREAM, 0);
+			return createSocket(AF_UNIX, SOCK_STREAM, 0);
         default:
             return retired_fd;
         }
+    }
+
+    fd_t open(protocol protocol, const endpoint& ep)
+    {
+        return createSocket(protocol, ep.family());
     }
 
     bool close(fd_t s)
@@ -411,23 +416,19 @@ namespace bee::net::socket {
 
     bool pair(fd_t sv[2]) {
 #if defined(_WIN32)
-        fd_t sfd = open(AF_INET, protocol::tcp);
-        if (sfd == retired_fd) {
-            return false;
-        }
-        fd_t cfd = open(AF_INET, protocol::tcp);
-        if (cfd == retired_fd) {
-            int err = ::WSAGetLastError();
-            close(sfd);
-            ::WSASetLastError(err);
-            return false;
-        }
+        fd_t sfd = retired_fd;
+        fd_t cfd = retired_fd;
         auto cep = endpoint::from_empty();
         auto sep = endpoint::from_hostname("127.0.0.1", 0);
         if (!sep) {
             goto failed;
         }
-        if (status::success != socket::bind(sfd, sep.value())) {
+        sfd = open(protocol::tcp, *sep);
+        if (sfd == retired_fd) {
+            goto failed;
+        }
+        nonblocking(sfd);
+        if (status::success != socket::bind(sfd, *sep)) {
             goto failed;
         }
         if (status::success != socket::listen(sfd, 5)) {
@@ -436,6 +437,11 @@ namespace bee::net::socket {
         if (!getsockname(sfd, cep)) {
             goto failed;
         }
+        cfd = open(protocol::tcp, cep);
+        if (cfd == retired_fd) {
+            goto failed;
+        }
+        nonblocking(cfd);
         if (status::failed == connect(cfd, cep)) {
             goto failed;
         }
