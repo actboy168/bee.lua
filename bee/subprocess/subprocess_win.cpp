@@ -235,22 +235,18 @@ namespace bee::win::subprocess {
     bool spawn::redirect(stdio type, pipe::handle h) {
         si_.dwFlags |= STARTF_USESTDHANDLES;
         inherit_handle_ = true;
-        pipe::handle newh; 
         if (!::SetHandleInformation(h, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT)) {
-            return false;
-        }
-        if (!::DuplicateHandle(::GetCurrentProcess(), h, ::GetCurrentProcess(), &newh, 0, TRUE, DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS)) {
             return false;
         }
         switch (type) {
         case stdio::eInput:
-            si_.hStdInput = newh;
+            si_.hStdInput = h;
             break;
         case stdio::eOutput:
-            si_.hStdOutput = newh;
+            si_.hStdOutput = h;
             break;
         case stdio::eError:
-            si_.hStdError = newh;
+            si_.hStdError = h;
             break;
         default:
             break;
