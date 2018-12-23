@@ -10,7 +10,7 @@
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
 namespace bee::path_helper {
-    static auto module(void* module_handle)->nonstd::expected<fs::path, std::exception> {
+    static auto dll_path(void* module_handle)->nonstd::expected<fs::path, std::exception> {
         wchar_t buffer[MAX_PATH];
         DWORD path_len = ::GetModuleFileNameW((HMODULE)module_handle, buffer, _countof(buffer));
         if (path_len == 0) {
@@ -33,11 +33,11 @@ namespace bee::path_helper {
     }
 
     auto exe_path()->nonstd::expected<fs::path, std::exception> {
-        return module(NULL);
+        return dll_path(NULL);
     }
 
     auto dll_path()->nonstd::expected<fs::path, std::exception> {
-        return module(reinterpret_cast<void*>(&__ImageBase));
+        return dll_path(reinterpret_cast<void*>(&__ImageBase));
     }
 
     bool equal(fs::path const& lhs, fs::path const& rhs) {
@@ -58,7 +58,7 @@ namespace bee::path_helper {
 #include <lua.hpp>
 
 namespace bee::path_helper {
-    static auto module(void* module_handle)->nonstd::expected<fs::path, std::exception> {
+    static auto dll_path(void* module_handle)->nonstd::expected<fs::path, std::exception> {
         ::Dl_info dl_info;
         dl_info.dli_fname = 0;
         int const ret = ::dladdr(module_handle, &dl_info);
@@ -69,11 +69,11 @@ namespace bee::path_helper {
     }
 
     auto exe_path()->nonstd::expected<fs::path, std::exception> {
-        return module((void*)&lua_newstate);
+        return dll_path((void*)&lua_newstate);
     }
 
     auto dll_path()->nonstd::expected<fs::path, std::exception> {
-        return module((void*)&exe_path);
+        return dll_path((void*)&exe_path);
     }
 
     bool equal(fs::path const& lhs, fs::path const& rhs) {

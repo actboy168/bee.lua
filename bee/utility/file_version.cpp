@@ -51,13 +51,13 @@ namespace bee {
 	}
 
 	bool file_version::create(const wchar_t* module_path) {
-		DWORD dummy_handle;
+		DWORD dummy_handle = 0;
 		DWORD size = ::GetFileVersionInfoSizeW(module_path, &dummy_handle);
 		if (size <= 0) {
 			return false;
 		}
 		version_info_.reset(new uint8_t[size]);
-		if (!::GetFileVersionInfoW(module_path, dummy_handle, size, version_info_.get())) {
+		if (!::GetFileVersionInfoW(module_path, 0, size, version_info_.get())) {
 			return false;
 		}
 		UINT length;
