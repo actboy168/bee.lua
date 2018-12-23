@@ -253,6 +253,23 @@ namespace bee::lua_subprocess {
             return 0;
         }
 
+        static subprocess::pipe::handle cast_stdio(lua_State* L, subprocess::spawn& self, const char* name, subprocess::stdio type) {
+            subprocess::pipe::handle f = cast_stdio(L, name);
+            if (!f) {
+                return 0;
+            }
+            if (!self.redirect(type, f)) {
+                lua_pop(L, 1);
+#if defined(_WIN32)
+                ::CloseHandle(f);
+#else
+                ::close(f);
+#endif
+                return 0;
+            }
+            return f;
+        }
+
         static void cast_env(lua_State* L, subprocess::spawn& self) {
             if (LUA_TTABLE == lua_getfield(L, 1, "env")) {
                 lua_pushnil(L);
@@ -338,18 +355,9 @@ namespace bee::lua_subprocess {
             cast_option(L, spawn);
             cast_sockets(L, spawn);
 
-            subprocess::pipe::handle f_stdin = cast_stdio(L, "stdin");
-            if (f_stdin) {
-                spawn.redirect(subprocess::stdio::eInput, f_stdin);
-            }
-            subprocess::pipe::handle f_stdout = cast_stdio(L, "stdout");
-            if (f_stdout) {
-                spawn.redirect(subprocess::stdio::eOutput, f_stdout);
-            }
-            subprocess::pipe::handle f_stderr = cast_stdio(L, "stderr");
-            if (f_stderr) {
-                spawn.redirect(subprocess::stdio::eError, f_stderr);
-            }
+            subprocess::pipe::handle f_stdin = cast_stdio(L, spawn, "stdin", subprocess::stdio::eInput);
+            subprocess::pipe::handle f_stdout = cast_stdio(L, spawn, "stdout", subprocess::stdio::eOutput);
+            subprocess::pipe::handle f_stderr = cast_stdio(L, spawn, "stderr", subprocess::stdio::eError);
             if (!spawn.exec(args, cwd ? cwd->c_str() : 0)) {
                 lua_pushnil(L);
                 lua_pushstring(L, make_syserror().what());
