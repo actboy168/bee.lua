@@ -1,4 +1,7 @@
 #include <bee/subprocess.h>
+#include <bee/subprocess/sharedmemory_win.h>
+#include <bee/nonstd/span.h>
+#include <bee/utility/format.h>
 #include <Windows.h>
 #include <memory>
 #include <deque>
@@ -246,43 +249,55 @@ namespace bee::win::subprocess {
         }
     }
 
-    bool spawn::exec(const std::vector<std::wstring>& args, const wchar_t* cwd) {
-        std::unique_ptr<wchar_t[]> environment;
-        if (!set_env_.empty() || !del_env_.empty()) {
-            environment.reset(make_env(set_env_, del_env_));
-            flags_ |= CREATE_UNICODE_ENVIRONMENT;
-        }
-
-        std::unique_ptr<wchar_t[]> command_line(make_args(args));
-        if (!::CreateProcessW(
-            args[0].c_str(),
-            command_line.get(),
-            NULL, NULL,
-            inherit_handle_,
-            flags_ | NORMAL_PRIORITY_CLASS,
-            environment.get(),
-            cwd,
-            &si_, &pi_
-        ))
-        {
+    bool spawn::duplicate(const std::string& name, net::socket::fd_t fd) {
+        if (sockets_.find(name) != sockets_.end()) {
             return false;
         }
-        ::CloseHandle(si_.hStdInput);
-        ::CloseHandle(si_.hStdOutput);
-        ::CloseHandle(si_.hStdError);
+        net::socket::fd_t newfd = net::socket::dup(fd);
+        if (newfd == net::socket::retired_fd) {
+            return false;
+        }
+        sockets_[name] = newfd;
         return true;
     }
 
-    bool spawn::exec(const std::wstring& app, const std::wstring& cmd, const wchar_t* cwd) {
+    void spawn::do_duplicate() {
+        size_t size = sizeof(size_t);
+        size_t n = 0;
+        for (auto pair : sockets_) {
+            n++;
+            size += sizeof(HANDLE) + pair.first.size() + 1;
+        }
+        sh_.reset(new sharedmemory(create_only, format(L"bee-subprocess-dup-sockets-%d", pi_.dwProcessId).c_str(), size));
+        if (!sh_->ok()) {
+            return;
+        }
+        std::byte* data = sh_->data();
+        *(size_t*)data = n;
+        data += sizeof(size_t);
+        for (auto pair : sockets_) {
+            memcpy(data, pair.first.data(), pair.first.size() + 1);
+            data += pair.first.size() + 1;
+            *(net::socket::fd_t*)data = pair.second;
+            data += sizeof(net::socket::fd_t);
+            net::socket::close(pair.second);
+        }
+    }
+
+    bool spawn::execute(const wchar_t* application, wchar_t* commandline, const wchar_t* cwd) {
+        std::unique_ptr<wchar_t[]> command_line(commandline);
         std::unique_ptr<wchar_t[]> environment;
         if (!set_env_.empty() || !del_env_.empty()) {
             environment.reset(make_env(set_env_, del_env_));
             flags_ |= CREATE_UNICODE_ENVIRONMENT;
         }
-
-        std::unique_ptr<wchar_t[]> command_line(make_args(app, cmd));
+        bool resume = false;
+        if (!sockets_.empty()) {
+            resume = !(flags_ & CREATE_SUSPENDED);
+            flags_ |= CREATE_SUSPENDED;
+        }
         if (!::CreateProcessW(
-            app.c_str(),
+            application,
             command_line.get(),
             NULL, NULL,
             inherit_handle_,
@@ -297,7 +312,21 @@ namespace bee::win::subprocess {
         ::CloseHandle(si_.hStdInput);
         ::CloseHandle(si_.hStdOutput);
         ::CloseHandle(si_.hStdError);
+        if (!sockets_.empty()) {
+            do_duplicate();
+        }
+        if (resume) {
+            ::ResumeThread(pi_.hThread);
+        }
         return true;
+    }
+   
+    bool spawn::exec(const std::vector<std::wstring>& args, const wchar_t* cwd) {
+        return execute(args[0].c_str(), make_args(args), cwd);
+    }
+
+    bool spawn::exec(const std::wstring& app, const std::wstring& cmd, const wchar_t* cwd) {
+        return execute(app.c_str(), make_args(app, cmd), cwd);
     }
 
     void spawn::env_set(const std::wstring& key, const std::wstring& value) {
@@ -308,51 +337,16 @@ namespace bee::win::subprocess {
         del_env_.insert(key);
     }
 
-    PROCESS_INFORMATION spawn::release() {
-        PROCESS_INFORMATION r = pi_;
-        memset(&pi_, 0, sizeof(PROCESS_INFORMATION));
-        return r;
-    }
-
     process::process(spawn& spawn)
-        : PROCESS_INFORMATION(spawn.release())
-    { }
-
-    process::process(process&& pi)
-        : PROCESS_INFORMATION(pi)
+        : pi_(spawn.pi_)
+        , sh_(spawn.sh_.release())
     {
-        pi.hProcess = 0;
-        pi.hThread = 0;
-        pi.dwProcessId = 0;
-        pi.dwThreadId = 0;
-    }
-
-    process::process(PROCESS_INFORMATION&& pi)
-        : PROCESS_INFORMATION(pi)
-    {
-        pi.hProcess = 0;
-        pi.hThread = 0;
-        pi.dwProcessId = 0;
-        pi.dwThreadId = 0;
+        memset(&spawn.pi_, 0, sizeof(PROCESS_INFORMATION));
     }
 
     process::~process() {
-        ::CloseHandle(hThread);
-        ::CloseHandle(hProcess);
-    }
-
-    process& process::operator=(process&& pi) {
-        if (this != &pi) {
-            hProcess = pi.hProcess;
-            hThread = pi.hThread;
-            dwProcessId = pi.dwProcessId;
-            dwThreadId = pi.dwThreadId;
-            pi.hProcess = 0;
-            pi.hThread = 0;
-            pi.dwProcessId = 0;
-            pi.dwThreadId = 0;
-        }
-        return *this;
+        ::CloseHandle(pi_.hThread);
+        ::CloseHandle(pi_.hProcess);
     }
 
     uint32_t process::wait() {
@@ -361,7 +355,7 @@ namespace bee::win::subprocess {
     }
 
     bool process::wait(uint32_t timeout) {
-        return ::WaitForSingleObject(hProcess, timeout) == WAIT_OBJECT_0;
+        return ::WaitForSingleObject(pi_.hProcess, timeout) == WAIT_OBJECT_0;
     }
     
     bool process::is_running() {
@@ -376,7 +370,7 @@ namespace bee::win::subprocess {
         case SIGTERM:
         case SIGKILL:
         case SIGINT:
-            if (TerminateProcess(hProcess, (signum << 8))) {
+            if (TerminateProcess(pi_.hProcess, (signum << 8))) {
                 return wait(5000);
             }
             return false;
@@ -388,23 +382,23 @@ namespace bee::win::subprocess {
     }
 
     bool process::resume() {
-        return (DWORD)-1 != ::ResumeThread(hThread);
+        return (DWORD)-1 != ::ResumeThread(pi_.hThread);
     }
 
     uint32_t process::exit_code() {
         DWORD ret = 0;
-        if (!::GetExitCodeProcess(hProcess, &ret)) {
+        if (!::GetExitCodeProcess(pi_.hProcess, &ret)) {
             return 0;
         }
         return (int32_t)ret;
     }
 
     uint32_t process::get_id() const {
-        return (uint32_t)dwProcessId;
+        return (uint32_t)pi_.dwProcessId;
     }
 
     uintptr_t process::native_handle() {
-        return (uintptr_t)hProcess;
+        return (uintptr_t)pi_.hProcess;
     }
 
     namespace pipe {
@@ -444,5 +438,26 @@ namespace bee::win::subprocess {
             }
             return -1;
         }
+
+        static std::map<std::string, net::socket::fd_t> init_sockets() {
+            std::map<std::string, net::socket::fd_t> sockets;
+            sharedmemory sh(open_only, format(L"bee-subprocess-dup-sockets-%d", ::GetCurrentProcessId()).c_str());
+            if (!sh.ok()) {
+                return  std::move(sockets);
+            }
+            bee::net::socket::initialize();
+            std::byte* data = sh.data();
+            size_t n = *(size_t*)data;
+            data += sizeof(size_t);
+            for (size_t i = 0; i < n; ++i) {
+                std::string name((const char*)data);
+                data += name.size() + 1;
+                auto fd = *(net::socket::fd_t*)(data);
+                data += sizeof(net::socket::fd_t);
+                sockets.emplace(name, fd);
+            }
+            return  std::move(sockets);
+        }
+        std::map<std::string, net::socket::fd_t> sockets = init_sockets();
     }
 }

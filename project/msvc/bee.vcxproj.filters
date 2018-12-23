@@ -114,6 +114,9 @@
     <ClCompile Include="..\..\binding\lua_platform.cpp">
       <Filter>binding</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\bee\subprocess\sharedmemory_win.cpp">
+      <Filter>bee\subprocess</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\bee\subprocess\subprocess_posix.h">
@@ -220,6 +223,9 @@
     </ClInclude>
     <ClInclude Include="..\..\bee\platform.h">
       <Filter>bee</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\subprocess\sharedmemory_win.h">
+      <Filter>bee\subprocess</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

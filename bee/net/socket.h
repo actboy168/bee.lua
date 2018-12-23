@@ -63,4 +63,5 @@ namespace bee::net::socket {
     bool   unlink(fd_t s);
     int    errcode(fd_t s);
     bool   supportUnixDomainSocket();
+    fd_t   dup(fd_t s);
 }

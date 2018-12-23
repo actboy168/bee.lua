@@ -78,6 +78,13 @@ namespace bee::lua_socket {
         }
         return self;
     }
+    socket::fd_t checksocket(lua_State* L, int idx) {
+        return checkfd(L, idx).fd;
+    }
+    void pushsocket(lua_State* L, socket::fd_t fd) {
+        // 鉴于protocol目前的作用，硬编码为tcp也没问题？
+        pushfd(L, fd, socket::protocol::tcp);
+    }
     static int accept(lua_State* L) {
         luafd& self = checkfd(L, 1);
         socket::fd_t newfd;

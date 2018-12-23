@@ -13,6 +13,11 @@ namespace fs = std::filesystem;
 #define ENABLE_FILESYSTEM
 #endif
 
+namespace bee::lua_socket {
+    net::socket::fd_t checksocket(lua_State* L, int idx);
+    void pushsocket(lua_State* L, net::socket::fd_t fd);
+}
+
 namespace bee::lua_subprocess {
     typedef lua::string_type nativestring;
 
@@ -302,6 +307,23 @@ namespace bee::lua_subprocess {
         { }
 #endif
 
+        static void cast_sockets(lua_State* L, subprocess::spawn& self) {
+            if (LUA_TTABLE != lua_getfield(L, 1, "sockets")) {
+                lua_pop(L, 1);
+                return;
+            }
+            lua_pushnil(L);
+            while (lua_next(L, -2)) {
+                if (lua_type(L, -2) == LUA_TSTRING && lua_type(L, -1) == LUA_TUSERDATA) {
+                    size_t len = 0;
+                    const char* str = luaL_checklstring(L, -2, &len);
+                    self.duplicate(std::string(str, len), lua_socket::checksocket(L, -1));
+                }
+                lua_pop(L, 1);
+            }
+            lua_pop(L, 1);
+        }
+
         static int spawn(lua_State* L) {
             luaL_checktype(L, 1, LUA_TTABLE);
             subprocess::spawn spawn;
@@ -314,6 +336,7 @@ namespace bee::lua_subprocess {
             cast_env(L, spawn);
             cast_suspended(L, spawn);
             cast_option(L, spawn);
+            cast_sockets(L, spawn);
 
             subprocess::pipe::handle f_stdin = cast_stdio(L, "stdin");
             if (f_stdin) {
@@ -390,6 +413,7 @@ namespace bee::lua_subprocess {
 #endif
 
     int luaopen(lua_State* L) {
+        net::socket::initialize();
         static luaL_Reg lib[] = {
             { "spawn", spawn::spawn },
             { "peek", peek },
@@ -397,6 +421,14 @@ namespace bee::lua_subprocess {
             { NULL, NULL }
         };
         luaL_newlib(L, lib);
+
+        lua_newtable(L);
+        for (auto pair : subprocess::pipe::sockets) {
+            lua_pushlstring(L, pair.first.data(), pair.first.size());
+            lua_socket::pushsocket(L, pair.second);
+            lua_rawset(L, -3);
+        }
+        lua_setfield(L, -2, "sockets");
         return 1;
     }
 }

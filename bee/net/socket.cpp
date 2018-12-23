@@ -71,20 +71,28 @@ namespace bee::net::socket {
         }
     }
 
+    static fd_t createSocket(int af, int type, int protocol) {
+#if defined(_WIN32)
+        return ::WSASocketW(af, type, protocol, 0, 0, WSA_FLAG_NO_HANDLE_INHERIT);
+#else
+        return ::socket(af, type, protocol);
+#endif
+    }
+
     fd_t open(int family, protocol protocol)
     {
         switch (protocol) {
         case protocol::tcp:
-            return ::socket(family, SOCK_STREAM, IPPROTO_TCP);
+            return createSocket(family, SOCK_STREAM, IPPROTO_TCP);
         case protocol::udp:
-            return ::socket(family, SOCK_DGRAM, IPPROTO_UDP);
+            return createSocket(family, SOCK_DGRAM, IPPROTO_UDP);
         case protocol::unix:
 #if defined _WIN32
 			if (!supportUnixDomainSocket()) {
-				return ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+				return createSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 			}
 #endif
-			return ::socket(family, SOCK_STREAM, 0);
+			return createSocket(family, SOCK_STREAM, 0);
         default:
             return retired_fd;
         }
@@ -460,6 +468,18 @@ namespace bee::net::socket {
         return false;
 #else
         return 0 == ::socketpair(AF_UNIX, SOCK_STREAM, 0, sv);
+#endif
+    }
+
+    fd_t dup(fd_t s) {
+#if defined(_WIN32)
+        WSAPROTOCOL_INFOW shinfo;
+        if (0 == ::WSADuplicateSocketW(s, ::GetCurrentProcessId(), &shinfo)) {
+            return ::WSASocketW(FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, FROM_PROTOCOL_INFO, &shinfo, 0, 0);
+        }
+        return retired_fd;
+#else
+        return retired_fd;
 #endif
     }
 }
