@@ -7,6 +7,15 @@
 #include <assert.h>
 #include <Windows.h>
 
+#if __has_include(<filesystem>)
+#include <filesystem>
+namespace fs = std::filesystem;
+#elif __has_include(<experimental/filesystem>)
+namespace fs = std::experimental::filesystem;
+#else
+#   error "Need filesystem"
+#endif
+
 namespace bee::win::fsevent {
     class task : public OVERLAPPED {
         static const size_t kBufSize = 16 * 1024;
