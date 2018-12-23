@@ -80,7 +80,7 @@ namespace bee::net {
     }
     nonstd::expected<endpoint, std::string> endpoint::from_unixpath(const std::string_view& path) {
         if (path.size() >= UNIX_PATH_MAX) {
-            return nonstd::make_unexpected("unix domain path too long");
+            return nonstd::make_unexpected("unix domain sockect: pathname too long");
         };
         endpoint ep(offsetof(struct sockaddr_un, sun_path) + path.size() + 1);
         struct sockaddr_un* su = (struct sockaddr_un*)ep.data();
@@ -145,7 +145,17 @@ namespace bee::net {
             return { std::string(s), ntohs(((struct sockaddr_in6*)sa)->sin6_port) };
         }
         else if (sa->sa_family == AF_UNIX) {
-            return { ((struct sockaddr_un*)sa)->sun_path, 0 };
+            const char* path = ((struct sockaddr_un*)sa)->sun_path;
+            int len = addrlen() - offsetof(struct sockaddr_un, sun_path) - 1;
+            if (path[0] != 0) {
+                return { std::string(path, len), 0 };
+            }
+            else if (len > 1) {
+                return { std::string(path + 1, len - 1), 1 };
+            }
+            else {
+                return { std::string(), 1 };
+            }
         }
         return { "", 0 };
     }

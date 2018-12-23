@@ -107,6 +107,17 @@ function test_socket:test_unix_accept()
     lu.assertIsFalse(file_exists('test.unixsock'))
 end
 
+function test_socket:test_pair()
+    local server, client = ls.pair()
+    if not server then
+        print(client)
+    end
+    lu.assertUserdata(server)
+    lu.assertUserdata(client)
+    client:close()
+    server:close()
+end
+
 local function createEchoThread(name, address)
 return thread.thread(([=[
     -- %s

@@ -373,8 +373,10 @@ namespace bee::lua_socket {
         }
 #if defined _WIN32
 		if (!socket::supportUnixDomainSocket()) {
-			auto[path, port] = ep->info();
-			self.path = path;
+			auto[path, type] = ep->info();
+            if (type == 0) {
+                self.path = path;
+            }
 		}
 #endif
         if (protocol != socket::protocol::udp) {
@@ -383,6 +385,15 @@ namespace bee::lua_socket {
             }
         }
         return 1;
+    }
+    static int pair(lua_State* L) {
+        socket::fd_t sv[2];
+        if (!socket::pair(sv)) {
+            return push_neterror(L, "socketpair");
+        }
+        constructor(L, sv[0], socket::protocol::unix);
+        constructor(L, sv[1], socket::protocol::unix);
+        return 2;
     }
 #if defined(_WIN32)
 #define MAXFD_INIT()
@@ -493,6 +504,7 @@ namespace bee::lua_socket {
         luaL_Reg lib[] = {
             { "connect",  connect },
             { "bind",     bind },
+            { "pair",     pair },
             { "select",   select },
             { NULL, NULL }
         };

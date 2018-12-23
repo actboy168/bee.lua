@@ -377,9 +377,8 @@ namespace bee::net::socket {
         if (ep.family() != AF_UNIX) {
             return false;
         }
-        auto[path, port] = ep.info();
-        (void)port;
-        if (path.size() == 0) {
+        auto[path, type] = ep.info();
+        if (path.size() == 0 || type != 0) {
             return false;
         }
 #if defined _WIN32
@@ -396,5 +395,71 @@ namespace bee::net::socket {
             return err;
         }
         return last_neterror();
+    }
+
+    bool pair(fd_t sv[2]) {
+#if defined(_WIN32)
+        fd_t sfd = open(AF_INET, protocol::tcp);
+        if (sfd == retired_fd) {
+            return false;
+        }
+        fd_t cfd = open(AF_INET, protocol::tcp);
+        if (cfd == retired_fd) {
+            int err = ::WSAGetLastError();
+            close(sfd);
+            ::WSASetLastError(err);
+            return false;
+        }
+        auto cep = endpoint::from_empty();
+        auto sep = endpoint::from_hostname("127.0.0.1", 0);
+        if (!sep) {
+            goto failed;
+        }
+        if (status::success != socket::bind(sfd, sep.value())) {
+            goto failed;
+        }
+        if (status::success != socket::listen(sfd, 5)) {
+            goto failed;
+        }
+        if (!getsockname(sfd, cep)) {
+            goto failed;
+        }
+        if (status::failed == connect(cfd, cep)) {
+            goto failed;
+        }
+
+        fd_set readfds, writefds, exceptfds;
+        FD_ZERO(&readfds);
+        FD_ZERO(&writefds);
+        FD_ZERO(&exceptfds);
+        FD_SET(sfd, &readfds);
+        FD_SET(cfd, &writefds);
+        FD_SET(cfd, &exceptfds);
+        if (::select(0, &readfds, 0, 0, 0) <= 0) {
+            goto failed;
+        }
+        if (::select(0, 0, &writefds, &exceptfds, 0) <= 0) {
+            goto failed;
+        }
+        if (0 != errcode(cfd)) {
+            goto failed;
+        }
+        fd_t newfd;
+        if (status::success != accept(sfd, newfd)) {
+            goto failed;
+        }
+        close(sfd);
+        sv[0] = newfd;
+        sv[1] = cfd;
+        return true;
+    failed:
+        int err = ::WSAGetLastError();
+        if (sfd != retired_fd) close(sfd);
+        if (cfd != retired_fd) close(cfd);
+        ::WSASetLastError(err);
+        return false;
+#else
+        return 0 == ::socketpair(AF_UNIX, SOCK_STREAM, 0, sv);
+#endif
     }
 }

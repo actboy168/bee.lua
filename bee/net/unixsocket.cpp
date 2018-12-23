@@ -40,7 +40,10 @@ namespace bee::net::socket {
 	};
 
 	static bool read_tcp_port(const endpoint& ep, int& tcpport) {
-		auto[path, port] = ep.info();
+		auto[path, type] = ep.info(); 
+        if (type != 0) {
+            return false;
+        }
 		auto unixpath = file::read_all(path);
 		if (unixpath.empty()) {
 			return false;
@@ -67,7 +70,10 @@ namespace bee::net::socket {
 		else {
 			p[0] = '\0';
 		}
-		auto[path, port] = ep.info();
+		auto[path, type] = ep.info();
+        if (type != 0) {
+            return true;
+        }
 		return file::write_all(path, portstr.data());
 	}
 
