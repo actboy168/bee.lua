@@ -108,10 +108,7 @@ function test_socket:test_unix_accept()
 end
 
 function test_socket:test_pair()
-    local server, client = ls.pair()
-    if not server then
-        print(client)
-    end
+    local server, client = assert(ls.pair())
     lu.assertUserdata(server)
     lu.assertUserdata(client)
     client:close()
