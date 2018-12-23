@@ -147,7 +147,7 @@ namespace bee::net {
         else if (sa->sa_family == AF_UNIX) {
             const char* path = ((struct sockaddr_un*)sa)->sun_path;
             int len = addrlen() - offsetof(struct sockaddr_un, sun_path) - 1;
-            if (path[0] != 0) {
+            if (len > 0 && path[0] != 0) {
                 return { std::string(path, len), 0 };
             }
             else if (len > 1) {
