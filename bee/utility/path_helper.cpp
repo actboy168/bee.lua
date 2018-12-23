@@ -10,7 +10,7 @@
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
 namespace bee::path_helper {
-    static auto dll_path(void* module_handle)->nonstd::expected<fs::path, std::exception> {
+    auto dll_path(void* module_handle)->nonstd::expected<fs::path, std::exception> {
         wchar_t buffer[MAX_PATH];
         DWORD path_len = ::GetModuleFileNameW((HMODULE)module_handle, buffer, _countof(buffer));
         if (path_len == 0) {
@@ -58,7 +58,7 @@ namespace bee::path_helper {
 #include <lua.hpp>
 
 namespace bee::path_helper {
-    static auto dll_path(void* module_handle)->nonstd::expected<fs::path, std::exception> {
+    auto dll_path(void* module_handle)->nonstd::expected<fs::path, std::exception> {
         ::Dl_info dl_info;
         dl_info.dli_fname = 0;
         int const ret = ::dladdr(module_handle, &dl_info);
