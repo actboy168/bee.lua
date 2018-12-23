@@ -6,15 +6,8 @@
 #include <functional>
 #include <assert.h>
 #include <Windows.h>
-
-#if __has_include(<filesystem>)
 #include <filesystem>
 namespace fs = std::filesystem;
-#elif __has_include(<experimental/filesystem>)
-namespace fs = std::experimental::filesystem;
-#else
-#   error "Need filesystem"
-#endif
 
 namespace bee::win::fsevent {
     class task : public OVERLAPPED {
@@ -69,21 +62,13 @@ namespace bee::win::fsevent {
             return true;
         }
         
-#if defined(__MINGW32__)
-        try {
-            m_path = fs::absolute(path);
-        } catch (std::exception& e) {
-            push_notify(tasktype::Error, u2w(e.what()));
-            return false;
-        }
-#else
         std::error_code ec;
         m_path = fs::absolute(path, ec);
         if (ec) {
             push_notify(tasktype::Error, format(L"`std::filesystem::absolute` failed: %s", ec.message()));
             return false;
         }
-#endif
+
         m_directory = ::CreateFileW(m_path.c_str(),
             FILE_LIST_DIRECTORY,
             FILE_SHARE_READ | FILE_SHARE_WRITE,
