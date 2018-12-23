@@ -48,6 +48,7 @@ BEE_COMMON += $(TMPDIR)/bee_utility_unicode.o
 BEE_FILEWATCH += $(TMPDIR)/bee_fsevent_fsevent_win.o
 BEE_SUBPROCESS += $(TMPDIR)/bee_net_unixsocket.o
 BEE_SUBPROCESS += $(TMPDIR)/bee_subprocess_subprocess_win.o
+BEE_SUBPROCESS += $(TMPDIR)/bee_subprocess_sharedmemory_win.o
 BEE_SOCKET += $(TMPDIR)/bee_utility_file_version.o
 BEE_SOCKET += $(TMPDIR)/bee_platform_version.o
 

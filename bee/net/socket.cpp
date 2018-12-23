@@ -31,6 +31,10 @@
     } while (0)
 
 
+#if defined(__MINGW32__)
+#define WSA_FLAG_NO_HANDLE_INHERIT 0x80
+#endif
+
 namespace bee::net::socket {
 #if defined(_WIN32)
     static_assert(sizeof(SOCKET) == sizeof(fd_t));
@@ -479,6 +483,7 @@ namespace bee::net::socket {
         }
         return retired_fd;
 #else
+        (void)s;
         return retired_fd;
 #endif
     }

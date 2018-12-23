@@ -18,7 +18,7 @@ namespace bee::win::subprocess {
         if (HMODULE dll = GetModuleHandleW(L"ntdll.dll")) {
             NTQUERYSECTION pNtQuerySection = (NTQUERYSECTION)GetProcAddress(dll, "NtQuerySection");
             if (pNtQuerySection) {
-                SECTION_BASIC_INFORMATION SectionInfo = { 0 };
+                SECTION_BASIC_INFORMATION SectionInfo;
                 DWORD ntstatus = pNtQuerySection(handle, SectionBasicInformation, &SectionInfo, sizeof(SectionInfo), 0);
 #if defined(_WIN64)
                 size = SectionInfo.size.QuadPart;

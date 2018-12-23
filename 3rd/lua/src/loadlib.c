@@ -206,14 +206,7 @@ static void *lsys_load (lua_State *L, const char *path, int seeglb) {
 
 
 static lua_CFunction lsys_sym (lua_State *L, void *lib, const char *sym) {
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-function-type"
-#endif
   lua_CFunction f = (lua_CFunction)GetProcAddress((HMODULE)lib, sym);
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
   if (f == NULL) pusherror(L);
   return f;
 }

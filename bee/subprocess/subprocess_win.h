@@ -5,6 +5,7 @@
 #include <set>
 #include <vector>
 #include <string>
+#include <memory>
 #include <bee/net/socket.h>
 
 namespace bee::win::subprocess {

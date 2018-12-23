@@ -1,5 +1,6 @@
 #include <bee/subprocess.h>
 #include <bee/utility/unicode.h>
+#include <bee/net/socket.h>
 #include <bee/lua/binding.h>
 #include <bee/error.h>
 #include <lua.hpp>

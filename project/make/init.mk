@@ -35,6 +35,7 @@ LUAFLAGS = -DLUA_BUILD_AS_DLL
 LUALIB = -llua54
 LDSHARED = --shared
 STRIP = strip --strip-unneeded
+CFLAGS += -Wno-cast-function-type
 
 else ifeq "$(PLAT)" "linux"
 
