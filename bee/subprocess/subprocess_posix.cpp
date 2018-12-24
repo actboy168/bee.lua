@@ -306,7 +306,7 @@ namespace bee::posix::subprocess {
             std::vector<net::socket::fd_t> sockets;
             const char* fds = getenv("bee-subprocess-dup-sockets");
             if (!fds) {
-                return  std::move(sockets);
+                return sockets;
             }
             const char* last = fds;
             const char* cur = strchr(last, ',');
@@ -322,7 +322,7 @@ namespace bee::posix::subprocess {
                 cur = strchr(last, ',');
             }
             unsetenv("bee-subprocess-dup-sockets");
-            return std::move(sockets);
+            return sockets;
         }
         std::vector<net::socket::fd_t> sockets = init_sockets();
     }

@@ -478,7 +478,7 @@ namespace bee::win::subprocess {
                 , format(L"bee-subprocess-dup-sockets-%d", ::GetCurrentProcessId()).c_str()
             );
             if (!sh.ok()) {
-                return  std::move(sockets);
+                return sockets;
             }
             std::byte* data = sh.data();
             HANDLE mapping = *(HANDLE*)data;
@@ -490,7 +490,7 @@ namespace bee::win::subprocess {
             for (size_t i = 0; i < n; ++i) {
                 sockets.push_back(*fds++);
             }
-            return std::move(sockets);
+            return sockets;
         }
         std::vector<net::socket::fd_t> sockets = init_sockets();
     }
