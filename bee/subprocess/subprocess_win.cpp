@@ -293,7 +293,6 @@ namespace bee::win::subprocess {
             return;
         }
         std::byte* data = sh.data();
-        HANDLE newh = 0;
         if (!::DuplicateHandle(
             ::GetCurrentProcess(),
             sh.handle(),
