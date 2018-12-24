@@ -144,7 +144,7 @@ namespace bee::posix::subprocess {
         suspended_ = true;
     }
 
-    bool spawn::redirect(stdio type, pipe::handle h) { 
+    void spawn::redirect(stdio type, pipe::handle h) { 
         switch (type) {
         case stdio::eInput:
             fds_[0] = h;
@@ -158,13 +158,10 @@ namespace bee::posix::subprocess {
         default:
             break;
         }
-        return true;
     }
 
-    bool spawn::duplicate(const std::string& name, net::socket::fd_t fd) {
-        (void)name;
+    void spawn::duplicate(net::socket::fd_t fd) {
         (void)fd;
-        return false;
     }
 
     void spawn::env_set(const std::string& key, const std::string& value) {
@@ -292,6 +289,6 @@ namespace bee::posix::subprocess {
             }
             return rc;
         }
-        std::map<std::string, net::socket::fd_t> sockets;
+        std::vector<net::socket::fd_t> sockets;
     }
 }

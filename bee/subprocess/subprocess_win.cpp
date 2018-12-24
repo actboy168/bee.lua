@@ -232,7 +232,7 @@ namespace bee::win::subprocess {
         flags_ |= CREATE_SUSPENDED;
     }
     
-    bool spawn::redirect(stdio type, pipe::handle h) {
+    void spawn::redirect(stdio type, pipe::handle h) {
         si_.dwFlags |= STARTF_USESTDHANDLES;
         inherit_handle_ = true;
         switch (type) {
@@ -248,16 +248,11 @@ namespace bee::win::subprocess {
         default:
             break;
         }
-        return true;
     }
 
-    bool spawn::duplicate(const std::string& name, net::socket::fd_t fd) {
-        if (sockets_.find(name) != sockets_.end()) {
-            return false;
-        }
+    void spawn::duplicate(net::socket::fd_t fd) {
         inherit_handle_ = true;
-        sockets_[name] = fd;
-        return true;
+        sockets_.push_back(fd);
     }
 
     void spawn::do_duplicate_start(bool& resume) {
@@ -269,8 +264,8 @@ namespace bee::win::subprocess {
         }
         resume = !(flags_ & CREATE_SUSPENDED);
         flags_ |= CREATE_SUSPENDED;
-        for (auto& pair : sockets_) {
-            pair.second = net::socket::dup(pair.second);
+        for (auto& fd : sockets_) {
+            fd = net::socket::dup(fd);
         }
     }
 
@@ -278,10 +273,10 @@ namespace bee::win::subprocess {
         ::CloseHandle(si_.hStdInput);
         ::CloseHandle(si_.hStdOutput);
         ::CloseHandle(si_.hStdError);
-        for (auto pair : sockets_) {
-            if (pair.second != net::socket::retired_fd) {
-                net::socket::close(pair.second);
-                pair.second = net::socket::retired_fd;
+        for (auto& fd : sockets_) {
+            if (fd != net::socket::retired_fd) {
+                net::socket::close(fd);
+                fd = net::socket::retired_fd;
             }
         }
     }
@@ -290,15 +285,10 @@ namespace bee::win::subprocess {
         if (sockets_.empty()) {
             return;
         }
-        size_t size = sizeof(HANDLE) + sizeof(size_t);
-        size_t n = 0;
-        for (auto pair : sockets_) {
-            if (pair.second != net::socket::retired_fd) {
-                n++;
-                size += sizeof(HANDLE) + pair.first.size() + 1;
-            }
-        }
-        sharedmemory sh(create_only, format(L"bee-subprocess-dup-sockets-%d", pi_.dwProcessId).c_str(), size);
+        sharedmemory sh(create_only
+            , format(L"bee-subprocess-dup-sockets-%d", pi_.dwProcessId).c_str()
+            , sizeof(HANDLE) + sizeof(size_t) + sockets_.size() * sizeof(net::socket::fd_t)
+        );
         if (!sh.ok()) {
             return;
         }
@@ -314,15 +304,11 @@ namespace bee::win::subprocess {
             return;
         }
         data += sizeof(HANDLE);
-        *(size_t*)data = n;
+        *(size_t*)data = sockets_.size();
         data += sizeof(size_t);
-        for (auto pair : sockets_) {
-            if (pair.second != net::socket::retired_fd) {
-                memcpy(data, pair.first.data(), pair.first.size() + 1);
-                data += pair.first.size() + 1;
-                *(net::socket::fd_t*)data = pair.second;
-                data += sizeof(net::socket::fd_t);
-            }
+        net::socket::fd_t* fds = (net::socket::fd_t*)data;
+        for (auto& fd : sockets_) {
+            *fds++ = fd;
         }
     }
 
@@ -486,9 +472,11 @@ namespace bee::win::subprocess {
             return -1;
         }
 
-        static std::map<std::string, net::socket::fd_t> init_sockets() {
-            std::map<std::string, net::socket::fd_t> sockets;
-            sharedmemory sh(open_only, format(L"bee-subprocess-dup-sockets-%d", ::GetCurrentProcessId()).c_str());
+        static std::vector<net::socket::fd_t> init_sockets() {
+            std::vector<net::socket::fd_t> sockets;
+            sharedmemory sh(open_only
+                , format(L"bee-subprocess-dup-sockets-%d", ::GetCurrentProcessId()).c_str()
+            );
             if (!sh.ok()) {
                 return  std::move(sockets);
             }
@@ -499,15 +487,12 @@ namespace bee::win::subprocess {
             data += sizeof(HANDLE);
             size_t n = *(size_t*)data;
             data += sizeof(size_t);
+            net::socket::fd_t* fds = (net::socket::fd_t*)data;
             for (size_t i = 0; i < n; ++i) {
-                std::string name((const char*)data);
-                data += name.size() + 1;
-                auto fd = *(net::socket::fd_t*)(data);
-                data += sizeof(net::socket::fd_t);
-                sockets.emplace(name, fd);
+                sockets.push_back(*fds++);
             }
-            return  std::move(sockets);
+            return std::move(sockets);
         }
-        std::map<std::string, net::socket::fd_t> sockets = init_sockets();
+        std::vector<net::socket::fd_t> sockets = init_sockets();
     }
 }

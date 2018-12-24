@@ -235,8 +235,8 @@ if platform.OS == "Windows" then
             local socket = require 'bee.socket'
             local thread = require 'bee.thread'
             assert(type(subprocess.sockets) == 'table')
-            assert(type(subprocess.sockets.test) == 'userdata')
-            local cfd = subprocess.sockets.test
+            assert(type(subprocess.sockets[1]) == 'userdata')
+            local cfd = subprocess.sockets[1]
             socket.select({cfd})
             assert(cfd:recv(1) == 'A')
             socket.select({cfd})
@@ -246,7 +246,7 @@ if platform.OS == "Windows" then
             socket.select({cfd})
             assert(cfd:recv() == nil)
             cfd:close()
-        ]], { sockets = {test = cfd}, stderr = true })
+        ]], { sockets = {cfd}, stderr = true })
         cfd:close()
         socket.select(nil, {sfd})
         sfd:send 'A'

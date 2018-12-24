@@ -261,15 +261,7 @@ namespace bee::lua_subprocess {
             if (!f) {
                 return 0;
             }
-            if (!self.redirect(type, f)) {
-                lua_pop(L, 1);
-#if defined(_WIN32)
-                ::CloseHandle(f);
-#else
-                ::close(f);
-#endif
-                return 0;
-            }
+            self.redirect(type, f);
             return f;
         }
 
@@ -332,12 +324,10 @@ namespace bee::lua_subprocess {
                 lua_pop(L, 1);
                 return;
             }
-            lua_pushnil(L);
-            while (lua_next(L, -2)) {
-                if (lua_type(L, -2) == LUA_TSTRING && lua_type(L, -1) == LUA_TUSERDATA) {
-                    size_t len = 0;
-                    const char* str = luaL_checklstring(L, -2, &len);
-                    self.duplicate(std::string(str, len), lua_socket::checksocket(L, -1));
+            lua_Integer n = luaL_len(L, -1);
+            for (lua_Integer i = 1; i <= n; ++i) {
+                if (LUA_TUSERDATA == lua_rawgeti(L, -1, i)) {
+                    self.duplicate(lua_socket::checksocket(L, -1));
                 }
                 lua_pop(L, 1);
             }
@@ -434,10 +424,10 @@ namespace bee::lua_subprocess {
         luaL_newlib(L, lib);
 
         lua_newtable(L);
-        for (auto pair : subprocess::pipe::sockets) {
-            lua_pushlstring(L, pair.first.data(), pair.first.size());
-            lua_socket::pushsocket(L, pair.second);
-            lua_rawset(L, -3);
+        lua_Integer n = 1;
+        for (auto& fd : subprocess::pipe::sockets) {
+            lua_socket::pushsocket(L, fd);
+            lua_rawseti(L, -2, n++);
         }
         lua_setfield(L, -2, "sockets");
         return 1;

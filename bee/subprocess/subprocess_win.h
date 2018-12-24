@@ -48,7 +48,7 @@ namespace bee::win::subprocess {
             FILE*  open_file(mode m);
             operator bool() { return rd && wr; }
         };
-        extern std::map<std::string, net::socket::fd_t> sockets;
+        extern std::vector<net::socket::fd_t> sockets;
         handle dup(FILE* f);
         _BEE_API open_result open();
         _BEE_API int         peek(FILE* f);
@@ -83,8 +83,8 @@ namespace bee::win::subprocess {
         bool set_console(console type);
         bool hide_window();
         void suspended();
-        bool redirect(stdio type, pipe::handle h);
-        bool duplicate(const std::string& name, net::socket::fd_t fd);
+        void redirect(stdio type, pipe::handle h);
+        void duplicate(net::socket::fd_t fd);
         void env_set(const std::wstring& key, const std::wstring& value);
         void env_del(const std::wstring& key);
         bool exec(const std::vector<std::wstring>& args, const wchar_t* cwd);
@@ -99,7 +99,7 @@ namespace bee::win::subprocess {
     private:
         std::map<std::wstring, std::wstring, ignore_case::less<std::wstring>> set_env_;
         std::set<std::wstring, ignore_case::less<std::wstring>>               del_env_;
-        std::map<std::string, net::socket::fd_t>                              sockets_;
+        std::vector<net::socket::fd_t>                                        sockets_;
         STARTUPINFOW            si_;
         PROCESS_INFORMATION     pi_;
         bool                    inherit_handle_;
