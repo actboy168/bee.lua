@@ -514,8 +514,8 @@ namespace bee::net::socket {
         ::WSASetLastError(err);
         return false;
 #elif defined(__APPLE__)
-        int ok = ::socketpair(AF_UNIX, SOCK_STREAM, 0, sv);
-        if (0 == ok) {
+        bool ok = 0 == ::socketpair(AF_UNIX, SOCK_STREAM, 0, sv);
+        if (ok) {
             no_inherit(sv[0]);
             no_inherit(sv[1]);
             if (nonblock) {
