@@ -77,6 +77,14 @@ namespace bee::win::subprocess {
         PROCESS_INFORMATION           pi_;
     };
 
+    struct args_t : public std::vector<std::wstring> {
+        enum class type {
+            string,
+            array,
+        };
+        type type;
+    };
+
     class _BEE_API spawn {
         friend class process;
     public:
@@ -89,11 +97,10 @@ namespace bee::win::subprocess {
         void duplicate(net::socket::fd_t fd);
         void env_set(const std::wstring& key, const std::wstring& value);
         void env_del(const std::wstring& key);
-        bool exec(const std::vector<std::wstring>& args, const wchar_t* cwd);
-        bool exec(const std::wstring& app, const std::wstring& cmd, const wchar_t* cwd);
+        bool exec(const args_t& args, const wchar_t* cwd);
 
     private:
-        bool execute(const wchar_t* application, wchar_t* commandline, const wchar_t* cwd);
+        bool raw_exec(const wchar_t* application, wchar_t* commandline, const wchar_t* cwd);
         void do_duplicate_start(bool& resume);
         void do_duplicate_shutdown();
         void do_duplicate_finish();

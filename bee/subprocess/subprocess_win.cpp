@@ -311,7 +311,7 @@ namespace bee::win::subprocess {
         }
     }
 
-    bool spawn::execute(const wchar_t* application, wchar_t* commandline, const wchar_t* cwd) {
+    bool spawn::raw_exec(const wchar_t* application, wchar_t* commandline, const wchar_t* cwd) {
         std::unique_ptr<wchar_t[]> command_line(commandline);
         std::unique_ptr<wchar_t[]> environment;
         if (!set_env_.empty() || !del_env_.empty()) {
@@ -341,13 +341,16 @@ namespace bee::win::subprocess {
         }
         return true;
     }
-   
-    bool spawn::exec(const std::vector<std::wstring>& args, const wchar_t* cwd) {
-        return execute(args[0].c_str(), make_args(args), cwd);
-    }
 
-    bool spawn::exec(const std::wstring& app, const std::wstring& cmd, const wchar_t* cwd) {
-        return execute(app.c_str(), make_args(app, cmd), cwd);
+    bool spawn::exec(const args_t& args, const wchar_t* cwd) {
+        switch (args.type) {
+        case args_t::type::array:
+            return raw_exec(args[0].c_str(), make_args(args), cwd);
+        case args_t::type::string:
+            return raw_exec(args[0].c_str(), make_args(args[0], args[1]), cwd);
+        default:
+            return false;
+        }
     }
 
     void spawn::env_set(const std::wstring& key, const std::wstring& value) {

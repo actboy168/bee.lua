@@ -202,7 +202,7 @@ namespace bee::posix::subprocess {
         del_env_.insert(key);
     }
 
-    bool spawn::exec(std::vector<char*>& args, const char* cwd) {
+    bool spawn::raw_exec(char* const args[], const char* cwd) {
         pid_t pid = fork();
         if (pid == -1) {
             return false;
@@ -218,13 +218,25 @@ namespace bee::posix::subprocess {
             if (suspended_) {
                 ::kill(getpid(), SIGSTOP);
             }
-            args.push_back(nullptr);
-            execvp(args[0], args.data());
+            execvp(args[0], args);
             _exit(127);
         }
         pid_ = pid;
         do_duplicate_shutdown();
         return true;
+
+    }
+
+    bool spawn::exec(args_t& args, const char* cwd) {
+        switch (args.type) {
+        case args_t::type::array:
+            args.push_back(nullptr);
+            return raw_exec(args.data(), cwd);
+        case args_t::type::string:
+            return false;
+        default:
+            return false;
+        }
     }
 
     process::process(spawn& spawn)

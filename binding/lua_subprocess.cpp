@@ -183,13 +183,12 @@ namespace bee::lua_subprocess {
         }
 
 #if defined(_WIN32)
-        typedef std::vector<nativestring> native_args;
 #   define LOAD_ARGS(L, idx) lua::to_string((L), (idx))
 #else
-        typedef std::vector<char*> native_args;
 #   define LOAD_ARGS(L, idx) (char*)luaL_checkstring((L), (idx))
 #endif
-        static void cast_args(lua_State* L, int idx, native_args& args) {
+        static void cast_args_array(lua_State* L, int idx, subprocess::args_t& args) {
+            args.type = subprocess::args_t::type::array;
             lua_Integer n = luaL_len(L, idx);
             for (lua_Integer i = 1; i <= n; ++i) {
                 switch (lua_geti(L, idx, i)) {
@@ -206,7 +205,7 @@ namespace bee::lua_subprocess {
                     break;
 #endif
                 case LUA_TTABLE:
-                    cast_args(L, lua_absindex(L, -1), args);
+                    cast_args_array(L, lua_absindex(L, -1), args);
                     break;
                 default:
                     luaL_error(L, "Unsupported type: %s.", lua_typename(L, lua_type(L, -1)));
@@ -216,9 +215,43 @@ namespace bee::lua_subprocess {
             }
         }
 
-        static native_args cast_args(lua_State* L) {
-            native_args args;
-            cast_args(L, 1, args);
+        static void cast_args_string(lua_State* L, int idx, subprocess::args_t& args) {
+            args.type = subprocess::args_t::type::string;
+            for (lua_Integer i = 1; i <= 2; ++i) {
+                switch (lua_geti(L, idx, i)) {
+                case LUA_TSTRING:
+                    args.push_back(LOAD_ARGS(L, -1));
+                    break;
+#ifdef ENABLE_FILESYSTEM
+                case LUA_TUSERDATA:
+#if defined(_WIN32)
+                    args.push_back(topath(L, -1).wstring());
+#else
+                    args.push_back((char*)topath(L, -1).c_str());
+#endif
+                    break;
+#endif
+                default:
+                    luaL_error(L, "Unsupported type: %s.", lua_typename(L, lua_type(L, -1)));
+                    return;
+                }
+                lua_pop(L, 1);
+            }
+        }
+
+        static subprocess::args_t cast_args(lua_State* L) {
+            bool as_string = false;
+            if (LUA_TSTRING == lua_getfield(L, 1, "argsStyle")) {
+                as_string = (strcmp(lua_tostring(L, -1), "string") == 0);
+            }
+            lua_pop(L, 1);
+            subprocess::args_t args;
+            if (as_string) {
+                cast_args_string(L, 1, args);
+            }
+            else {
+                cast_args_array(L, 1, args);
+            }
             return args;
         }
 
@@ -337,7 +370,7 @@ namespace bee::lua_subprocess {
         static int spawn(lua_State* L) {
             luaL_checktype(L, 1, LUA_TTABLE);
             subprocess::spawn spawn;
-            native_args args = cast_args(L);
+            subprocess::args_t args = cast_args(L);
             if (args.size() == 0) {
                 return 0;
             }

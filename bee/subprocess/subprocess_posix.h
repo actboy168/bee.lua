@@ -48,6 +48,14 @@ namespace bee::posix::subprocess {
         int status = 0;
     };
 
+    struct args_t : public std::vector<char*> {
+        enum class type {
+            string,
+            array,
+        };
+        type type;
+    };
+
     class spawn {
         friend class process;
     public:
@@ -58,8 +66,9 @@ namespace bee::posix::subprocess {
         void duplicate(net::socket::fd_t fd);
         void env_set(const std::string& key, const std::string& value);
         void env_del(const std::string& key);
-        bool exec(std::vector<char*>& args, const char* cwd);
+        bool exec(args_t& args, const char* cwd);
     private:
+        bool raw_exec(char* const args[], const char* cwd);
         void do_duplicate();
         void do_duplicate_shutdown();
     private:
