@@ -112,7 +112,7 @@ namespace bee::net::socket {
         }
         return fd;
 #elif defined(__APPLE__)
-        fd_t fd = ::socket(af, type, protocol)
+        fd_t fd = ::socket(af, type, protocol);
         if (fd != retired_fd) {
             no_inherit(fd);
             if (nonblock) {
