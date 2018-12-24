@@ -44,7 +44,7 @@ namespace bee::net::socket {
         static bool initialized = false;
         if (!initialized) {
             initialized = true;
-#if defined _WIN32
+#if defined(_WIN32)
             WSADATA wd;
             int rc = WSAStartup(MAKEWORD(2, 2), &wd);
             assert(rc >= 0);
@@ -59,7 +59,7 @@ namespace bee::net::socket {
     static bool wait_finish()
     {
         switch (last_neterror()) {
-#if defined _WIN32
+#if defined(_WIN32)
         case WSAEINPROGRESS:
         case WSAEWOULDBLOCK:
 #else
@@ -75,13 +75,37 @@ namespace bee::net::socket {
         }
     }
 
+#if defined(_WIN32)
+    static void no_blocking(fd_t s) {
+        unsigned long nonblock = 1;
+        int rc = ioctlsocket(s, FIONBIO, &nonblock);
+        net_assert_success(rc);
+    }
+    static bool no_inherit(fd_t fd) {
+        DWORD flags = 0;
+        assert(::GetHandleInformation((HANDLE)fd, &flags) && (flags & HANDLE_FLAG_INHERIT) == 0);
+        return true;
+    }
+#elif defined(__APPLE__)
+    static void no_blocking(fd_t s) {
+        int flags = fcntl(s, F_GETFL, 0);
+        int rc = fcntl(s, F_SETFL, flags | O_NONBLOCK);
+        net_assert_success(rc);
+    }
+    static bool no_inherit(fd_t fd) {
+        int r;
+        do
+            r = ioctl(fd, FIOCLEX);
+        while (r == -1 && errno == EINTR);
+        return !r;
+    }
+#endif
+
     static fd_t createSocket(int af, int type, int protocol, bool nonblock) {
 #if defined(_WIN32)
         fd_t fd = ::WSASocketW(af, type, protocol, 0, 0, WSA_FLAG_NO_HANDLE_INHERIT);
         if (nonblock && fd != retired_fd) {
-            unsigned long nonblock = 1;
-            int rc = ioctlsocket(fd, FIONBIO, &nonblock);
-            net_assert_success(rc);
+            no_blocking(fd);
         }
         return fd;
 #else
@@ -274,9 +298,22 @@ namespace bee::net::socket {
         return status::success;
     }
 
+    static fd_t acceptEx(fd_t s, struct sockaddr* addr, socklen_t* addrlen) {
+#if defined(_WIN32) || defined(__APPLE__)
+        fd_t fd = ::accept(s, addr, addrlen);
+        if (fd != retired_fd) {
+            no_blocking(fd);
+            no_inherit(fd);
+        }
+        return fd;
+#else
+        return ::accept4(s, addr, addrlen, SOCK_NONBLOCK | SOCK_CLOEXEC);
+#endif
+    }
+
     status accept(fd_t s, fd_t& fd)
     {
-        fd = ::accept(s, NULL, NULL);
+        fd = acceptEx(s, NULL, NULL);
         if (fd == retired_fd)
         {
 #if defined _WIN32
@@ -298,7 +335,7 @@ namespace bee::net::socket {
     status accept(fd_t s, fd_t& fd, endpoint& ep)
     {
         socklen_t addrlen = ep.addrlen();
-        fd = ::accept(s, ep.addr(), &addrlen);
+        fd = acceptEx(s, ep.addr(), &addrlen);
         if (fd == retired_fd)
         {
 #if defined _WIN32
