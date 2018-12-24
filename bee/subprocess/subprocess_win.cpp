@@ -268,17 +268,28 @@ namespace bee::win::subprocess {
     }
 
     void spawn::do_duplicate() {
-        size_t size = sizeof(size_t);
+        size_t size = sizeof(HANDLE) + sizeof(size_t);
         size_t n = 0;
         for (auto pair : sockets_) {
             n++;
             size += sizeof(HANDLE) + pair.first.size() + 1;
         }
-        sh_.reset(new sharedmemory(create_only, format(L"bee-subprocess-dup-sockets-%d", pi_.dwProcessId).c_str(), size));
-        if (!sh_->ok()) {
+        sharedmemory sh(create_only, format(L"bee-subprocess-dup-sockets-%d", pi_.dwProcessId).c_str(), size);
+        if (!sh.ok()) {
             return;
         }
-        std::byte* data = sh_->data();
+        std::byte* data = sh.data();
+        HANDLE newh = 0;
+        if (!::DuplicateHandle(
+            ::GetCurrentProcess(),
+            sh.handle(),
+            pi_.hProcess,
+            (HANDLE*)data,
+            0, FALSE, DUPLICATE_SAME_ACCESS)
+            ) {
+            return;
+        }
+        data += sizeof(HANDLE);
         *(size_t*)data = n;
         data += sizeof(size_t);
         for (auto pair : sockets_) {
@@ -345,7 +356,6 @@ namespace bee::win::subprocess {
 
     process::process(spawn& spawn)
         : pi_(spawn.pi_)
-        , sh_(spawn.sh_.release())
     {
         memset(&spawn.pi_, 0, sizeof(PROCESS_INFORMATION));
     }
@@ -465,6 +475,9 @@ namespace bee::win::subprocess {
             }
             bee::net::socket::initialize();
             std::byte* data = sh.data();
+            HANDLE mapping = *(HANDLE*)data;
+            ::CloseHandle(mapping);
+            data += sizeof(HANDLE);
             size_t n = *(size_t*)data;
             data += sizeof(size_t);
             for (size_t i = 0; i < n; ++i) {

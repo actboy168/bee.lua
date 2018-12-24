@@ -73,7 +73,6 @@ namespace bee::win::subprocess {
 
     private:
         PROCESS_INFORMATION           pi_;
-        std::unique_ptr<sharedmemory> sh_;
     };
 
     class _BEE_API spawn {
@@ -103,6 +102,5 @@ namespace bee::win::subprocess {
         PROCESS_INFORMATION     pi_;
         bool                    inherit_handle_;
         DWORD                   flags_;
-        std::unique_ptr<sharedmemory> sh_;
     };
 }

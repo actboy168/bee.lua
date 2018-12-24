@@ -104,6 +104,9 @@ namespace bee::win::subprocess {
     bool sharedmemory::ok()   const { 
         return !!m_data; 
     }
+    void* sharedmemory::handle() const {
+        return m_mapping.handle();
+    }
     std::byte* sharedmemory::data() { 
         return m_data;
     }

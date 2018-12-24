@@ -36,6 +36,7 @@ namespace bee::win::subprocess {
         sharedmemory(open_or_create_t, const wchar_t* name, size_t size);
         ~sharedmemory();
         bool       ok() const;
+        void*      handle() const;
         std::byte* data();
         size_t     size() const;
     private:
