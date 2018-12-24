@@ -59,6 +59,7 @@ namespace bee::win::subprocess {
     class _BEE_API process {
     public:
         process(spawn& spawn);
+        process(PROCESS_INFORMATION&& pi) { pi_ = std::move(pi); }
         ~process();
         bool      is_running();
         bool      kill(int signum);
@@ -66,6 +67,7 @@ namespace bee::win::subprocess {
         uint32_t  get_id() const;
         bool      resume();
         uintptr_t native_handle();
+        PROCESS_INFORMATION const& info() const { return pi_; }
 
     private:
         bool     wait(uint32_t timeout);
