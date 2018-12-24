@@ -235,9 +235,6 @@ namespace bee::win::subprocess {
     bool spawn::redirect(stdio type, pipe::handle h) {
         si_.dwFlags |= STARTF_USESTDHANDLES;
         inherit_handle_ = true;
-        if (!::SetHandleInformation(h, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT)) {
-            return false;
-        }
         switch (type) {
         case stdio::eInput:
             si_.hStdInput = h;
@@ -258,21 +255,48 @@ namespace bee::win::subprocess {
         if (sockets_.find(name) != sockets_.end()) {
             return false;
         }
-        net::socket::fd_t newfd = net::socket::dup(fd);
-        if (newfd == net::socket::retired_fd) {
-            return false;
-        }
         inherit_handle_ = true;
-        sockets_[name] = newfd;
+        sockets_[name] = fd;
         return true;
     }
 
-    void spawn::do_duplicate() {
+    void spawn::do_duplicate_start(bool& resume) {
+        ::SetHandleInformation(si_.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+        ::SetHandleInformation(si_.hStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+        ::SetHandleInformation(si_.hStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+        if (sockets_.empty()) {
+            return;
+        }
+        resume = !(flags_ & CREATE_SUSPENDED);
+        flags_ |= CREATE_SUSPENDED;
+        for (auto& pair : sockets_) {
+            pair.second = net::socket::dup(pair.second);
+        }
+    }
+
+    void spawn::do_duplicate_shutdown() {
+        ::CloseHandle(si_.hStdInput);
+        ::CloseHandle(si_.hStdOutput);
+        ::CloseHandle(si_.hStdError);
+        for (auto pair : sockets_) {
+            if (pair.second != net::socket::retired_fd) {
+                net::socket::close(pair.second);
+                pair.second = net::socket::retired_fd;
+            }
+        }
+    }
+
+    void spawn::do_duplicate_finish() {
+        if (sockets_.empty()) {
+            return;
+        }
         size_t size = sizeof(HANDLE) + sizeof(size_t);
         size_t n = 0;
         for (auto pair : sockets_) {
-            n++;
-            size += sizeof(HANDLE) + pair.first.size() + 1;
+            if (pair.second != net::socket::retired_fd) {
+                n++;
+                size += sizeof(HANDLE) + pair.first.size() + 1;
+            }
         }
         sharedmemory sh(create_only, format(L"bee-subprocess-dup-sockets-%d", pi_.dwProcessId).c_str(), size);
         if (!sh.ok()) {
@@ -293,11 +317,12 @@ namespace bee::win::subprocess {
         *(size_t*)data = n;
         data += sizeof(size_t);
         for (auto pair : sockets_) {
-            memcpy(data, pair.first.data(), pair.first.size() + 1);
-            data += pair.first.size() + 1;
-            *(net::socket::fd_t*)data = pair.second;
-            data += sizeof(net::socket::fd_t);
-            net::socket::close(pair.second);
+            if (pair.second != net::socket::retired_fd) {
+                memcpy(data, pair.first.data(), pair.first.size() + 1);
+                data += pair.first.size() + 1;
+                *(net::socket::fd_t*)data = pair.second;
+                data += sizeof(net::socket::fd_t);
+            }
         }
     }
 
@@ -309,10 +334,7 @@ namespace bee::win::subprocess {
             flags_ |= CREATE_UNICODE_ENVIRONMENT;
         }
         bool resume = false;
-        if (!sockets_.empty()) {
-            resume = !(flags_ & CREATE_SUSPENDED);
-            flags_ |= CREATE_SUSPENDED;
-        }
+        do_duplicate_start(resume);
         if (!::CreateProcessW(
             application,
             command_line.get(),
@@ -324,14 +346,11 @@ namespace bee::win::subprocess {
             &si_, &pi_
         ))
         {
+            do_duplicate_shutdown();
             return false;
         }
-        ::CloseHandle(si_.hStdInput);
-        ::CloseHandle(si_.hStdOutput);
-        ::CloseHandle(si_.hStdError);
-        if (!sockets_.empty()) {
-            do_duplicate();
-        }
+        do_duplicate_finish();
+        do_duplicate_shutdown();
         if (resume) {
             ::ResumeThread(pi_.hThread);
         }

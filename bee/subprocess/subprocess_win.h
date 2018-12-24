@@ -92,7 +92,9 @@ namespace bee::win::subprocess {
 
     private:
         bool execute(const wchar_t* application, wchar_t* commandline, const wchar_t* cwd);
-        void do_duplicate();
+        void do_duplicate_start(bool& resume);
+        void do_duplicate_shutdown();
+        void do_duplicate_finish();
 
     private:
         std::map<std::wstring, std::wstring, ignore_case::less<std::wstring>> set_env_;
