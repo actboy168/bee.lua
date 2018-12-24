@@ -39,11 +39,10 @@ namespace bee::net::socket {
     };
  
     void initialize();
-    fd_t open(protocol protocol, const endpoint& ep);
-    bool pair(fd_t sv[2]);
+    fd_t open(protocol protocol, const endpoint& ep, bool nonblock = true);
+    bool pair(fd_t sv[2], bool nonblock = true);
     bool close(fd_t s);
     bool shutdown(fd_t s, shutdown_flag flag);
-    void nonblocking(fd_t s);
     void keepalive(fd_t s, int keepalive, int keepalive_cnt, int keepalive_idle, int keepalive_intvl);
     void udp_connect_reset(fd_t s);
     void send_buffer(fd_t s, int bufsize);

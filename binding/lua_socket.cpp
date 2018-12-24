@@ -70,11 +70,6 @@ namespace bee::lua_socket {
         return *(luafd*)getObject(L, idx, "socket");
     }
     static luafd& pushfd(lua_State* L, socket::fd_t fd, socket::protocol protocol);
-    static luafd& constructor(lua_State* L, socket::fd_t fd, socket::protocol protocol) {
-        luafd& self = pushfd(L, fd, protocol);
-        socket::nonblocking(fd);
-        return self;
-    }
     socket::fd_t checksocket(lua_State* L, int idx) {
         return checkfd(L, idx).fd;
     }
@@ -88,7 +83,7 @@ namespace bee::lua_socket {
         if (socket::status::success != socket::accept(self.fd, newfd)) {
             return push_neterror(L, "accept");
         }
-        constructor(L, newfd, self.protocol);
+        pushfd(L, newfd, self.protocol);
         return 1;
     }
     static int recv(lua_State* L) {
@@ -339,7 +334,7 @@ namespace bee::lua_socket {
         if (fd == socket::retired_fd) {
             return push_neterror(L, "socket");
         }
-        luafd& self = constructor(L, fd, protocol);
+        luafd& self = pushfd(L, fd, protocol);
         self.connect = true;
         switch (socket::connect(fd, *ep)) {
         case socket::status::success:
@@ -371,7 +366,7 @@ namespace bee::lua_socket {
 #if defined _WIN32
         luafd& self =
 #endif
-        constructor(L, fd, protocol);
+        pushfd(L, fd, protocol);
         if (socket::status::success != socket::bind(fd, *ep)) {
             return push_neterror(L, "bind");
         }
@@ -395,8 +390,8 @@ namespace bee::lua_socket {
         if (!socket::pair(sv)) {
             return push_neterror(L, "socketpair");
         }
-        constructor(L, sv[0], socket::protocol::unix);
-        constructor(L, sv[1], socket::protocol::unix);
+        pushfd(L, sv[0], socket::protocol::unix);
+        pushfd(L, sv[1], socket::protocol::unix);
         return 2;
     }
 #if defined(_WIN32)

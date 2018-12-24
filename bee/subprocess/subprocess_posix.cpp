@@ -273,11 +273,9 @@ namespace bee::posix::subprocess {
         }
         open_result open() {
             int fds[2];
-            if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds)) {
+            if (!net::socket::pair(fds, false)) {
                 return { 0, 0 };
             }
-            cloexec(fds[0], true);
-            cloexec(fds[1], true);
             return { fds[0], fds[1] };
         }
         int peek(FILE* f) {
