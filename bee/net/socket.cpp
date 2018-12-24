@@ -84,9 +84,9 @@ namespace bee::net::socket {
         int rc = ioctlsocket(s, FIONBIO, &nonblock);
         net_assert_success(rc);
     }
-    static bool no_inherit(fd_t fd) {
+    static bool no_inherit(fd_t s) {
         DWORD flags = 0;
-        assert(::GetHandleInformation((HANDLE)fd, &flags) && (flags & HANDLE_FLAG_INHERIT) == 0);
+        assert(::GetHandleInformation((HANDLE)s, &flags) && (flags & HANDLE_FLAG_INHERIT) == 0);
         return true;
     }
 #elif defined(__APPLE__)
@@ -95,19 +95,19 @@ namespace bee::net::socket {
         int rc = fcntl(s, F_SETFL, flags | O_NONBLOCK);
         net_assert_success(rc);
     }
-    static bool no_inherit(fd_t fd) {
+    static bool no_inherit(fd_t s) {
         int r;
         do
-            r = ioctl(fd, FIOCLEX);
+            r = ioctl(s, FIOCLEX);
         while (r == -1 && errno == EINTR);
         return !r;
     }
 #endif
 
-    static fd_t createSocket(int af, int type, int protocol, bool nonblock) {
+    static fd_t createSocket(int af, int type, int protocol) {
 #if defined(_WIN32)
         fd_t fd = ::WSASocketW(af, type, protocol, 0, 0, WSA_FLAG_NO_HANDLE_INHERIT);
-        if (nonblock && fd != retired_fd) {
+        if (fd != retired_fd) {
             no_blocking(fd);
         }
         return fd;
@@ -115,33 +115,28 @@ namespace bee::net::socket {
         fd_t fd = ::socket(af, type, protocol);
         if (fd != retired_fd) {
             no_inherit(fd);
-            if (nonblock) {
-                no_blocking(fd);
-            }
+            no_blocking(fd);
         }
         return fd;
 #else
-        if (nonblock) {
-            return ::socket(af, type | SOCK_NONBLOCK | SOCK_CLOEXEC, protocol);
-        }
-        return ::socket(af, type | SOCK_CLOEXEC, protocol);
+        return ::socket(af, type | SOCK_NONBLOCK | SOCK_CLOEXEC, protocol);
 #endif
     }
 
-    fd_t open(protocol protocol, const endpoint& ep, bool nonblock)
+    fd_t open(protocol protocol, const endpoint& ep)
     {
         switch (protocol) {
         case protocol::tcp:
-            return createSocket(ep.family(), SOCK_STREAM, IPPROTO_TCP, nonblock);
+            return createSocket(ep.family(), SOCK_STREAM, IPPROTO_TCP);
         case protocol::udp:
-            return createSocket(ep.family(), SOCK_DGRAM, IPPROTO_UDP, nonblock);
+            return createSocket(ep.family(), SOCK_DGRAM, IPPROTO_UDP);
         case protocol::unix:
 #if defined _WIN32
             if (!supportUnixDomainSocket()) {
-                return createSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, nonblock);
+                return createSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
             }
 #endif
-            return createSocket(AF_UNIX, SOCK_STREAM, 0, nonblock);
+            return createSocket(AF_UNIX, SOCK_STREAM, 0);
         default:
             return retired_fd;
         }
@@ -314,8 +309,8 @@ namespace bee::net::socket {
 #if defined(_WIN32) || defined(__APPLE__)
         fd_t fd = ::accept(s, addr, addrlen);
         if (fd != retired_fd) {
-            no_blocking(fd);
             no_inherit(fd);
+            no_blocking(fd);
         }
         return fd;
 #else
@@ -453,7 +448,22 @@ namespace bee::net::socket {
         return last_neterror();
     }
 
-    bool pair(fd_t sv[2], bool nonblock) {
+#if !defined(_WIN32)
+    bool blockpair(fd_t sv[2]) {
+#if defined(__APPLE__)
+        bool ok = 0 == ::socketpair(AF_UNIX, SOCK_STREAM, 0, sv);
+        if (ok) {
+            no_inherit(sv[0]);
+            no_inherit(sv[1]);
+        }
+        return ok;
+#else
+        return 0 == ::socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, sv);
+#endif
+    }
+#endif
+
+    bool pair(fd_t sv[2]) {
 #if defined(_WIN32)
         fd_t sfd = retired_fd;
         fd_t cfd = retired_fd;
@@ -462,7 +472,7 @@ namespace bee::net::socket {
         if (!sep) {
             goto failed;
         }
-        sfd = open(protocol::tcp, *sep, nonblock);
+        sfd = open(protocol::tcp, *sep);
         if (sfd == retired_fd) {
             goto failed;
         }
@@ -475,7 +485,7 @@ namespace bee::net::socket {
         if (!getsockname(sfd, cep)) {
             goto failed;
         }
-        cfd = open(protocol::tcp, cep, nonblock);
+        cfd = open(protocol::tcp, cep);
         if (cfd == retired_fd) {
             goto failed;
         }
@@ -514,21 +524,14 @@ namespace bee::net::socket {
         ::WSASetLastError(err);
         return false;
 #elif defined(__APPLE__)
-        bool ok = 0 == ::socketpair(AF_UNIX, SOCK_STREAM, 0, sv);
-        if (ok) {
-            no_inherit(sv[0]);
-            no_inherit(sv[1]);
-            if (nonblock) {
-                no_blocking(sv[0]);
-                no_blocking(sv[1]);
-            }
+        if (!blockpair(sv)) {
+            return false;
         }
-        return ok;
+        no_blocking(sv[0]);
+        no_blocking(sv[1]);
+        return true;
 #else
-        if (nonblock) {
-            return 0 == ::socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0, sv);
-        }
-        return 0 == ::socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, sv);
+        return 0 == ::socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0, sv);
 #endif
     }
 

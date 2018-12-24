@@ -273,7 +273,7 @@ namespace bee::posix::subprocess {
         }
         open_result open() {
             int fds[2];
-            if (!net::socket::pair(fds, false)) {
+            if (!net::socket::blockpair(fds)) {
                 return { 0, 0 };
             }
             return { fds[0], fds[1] };
