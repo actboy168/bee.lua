@@ -227,35 +227,33 @@ function test_subprocess:test_env()
     test_env('os.getenv "PATH" == nil', {PATH=false})
 end
 
-if platform.OS == "Windows" then
-    function test_subprocess:test_sockets()
-        local sfd, cfd = assert(socket.pair())
-        local process = createLua([[
-            local subprocess = require 'bee.subprocess'
-            local socket = require 'bee.socket'
-            local thread = require 'bee.thread'
-            assert(type(subprocess.sockets) == 'table')
-            assert(type(subprocess.sockets[1]) == 'userdata')
-            local cfd = subprocess.sockets[1]
-            socket.select({cfd})
-            assert(cfd:recv(1) == 'A')
-            socket.select({cfd})
-            assert(cfd:recv(1) == 'B')
-            socket.select({cfd})
-            assert(cfd:recv(1) == 'C')
-            socket.select({cfd})
-            assert(cfd:recv() == nil)
-            cfd:close()
-        ]], { sockets = {cfd}, stderr = true })
+function test_subprocess:test_sockets()
+    local sfd, cfd = assert(socket.pair())
+    local process = createLua([[
+        local subprocess = require 'bee.subprocess'
+        local socket = require 'bee.socket'
+        local thread = require 'bee.thread'
+        assert(type(subprocess.sockets) == 'table')
+        assert(type(subprocess.sockets[1]) == 'userdata')
+        local cfd = subprocess.sockets[1]
+        socket.select({cfd})
+        assert(cfd:recv(1) == 'A')
+        socket.select({cfd})
+        assert(cfd:recv(1) == 'B')
+        socket.select({cfd})
+        assert(cfd:recv(1) == 'C')
+        socket.select({cfd})
+        assert(cfd:recv() == nil)
         cfd:close()
-        socket.select(nil, {sfd})
-        sfd:send 'A'
-        socket.select(nil, {sfd})
-        sfd:send 'B'
-        socket.select(nil, {sfd})
-        sfd:send 'C'
-        sfd:close()
-        lu.assertEquals(process.stderr:read 'a', '')
-        lu.assertEquals(process:wait(), 0)
-    end
+    ]], { sockets = {cfd}, stderr = true })
+    cfd:close()
+    socket.select(nil, {sfd})
+    sfd:send 'A'
+    socket.select(nil, {sfd})
+    sfd:send 'B'
+    socket.select(nil, {sfd})
+    sfd:send 'C'
+    sfd:close()
+    lu.assertEquals(process.stderr:read 'a', '')
+    lu.assertEquals(process:wait(), 0)
 end

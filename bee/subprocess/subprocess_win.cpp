@@ -480,7 +480,6 @@ namespace bee::win::subprocess {
             if (!sh.ok()) {
                 return  std::move(sockets);
             }
-            bee::net::socket::initialize();
             std::byte* data = sh.data();
             HANDLE mapping = *(HANDLE*)data;
             ::CloseHandle(mapping);

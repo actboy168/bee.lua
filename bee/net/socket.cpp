@@ -543,8 +543,7 @@ namespace bee::net::socket {
         }
         return retired_fd;
 #else
-        (void)s;
-        return retired_fd;
+        return ::dup(s);
 #endif
     }
 }

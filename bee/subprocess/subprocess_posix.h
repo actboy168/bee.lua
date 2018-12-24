@@ -59,10 +59,13 @@ namespace bee::posix::subprocess {
         void env_set(const std::string& key, const std::string& value);
         void env_del(const std::string& key);
         bool exec(std::vector<char*>& args, const char* cwd);
-
+    private:
+        void do_duplicate();
+        void do_duplicate_shutdown();
     private:
         std::map<std::string, std::string> set_env_;
         std::set<std::string>              del_env_;
+        std::vector<net::socket::fd_t>     sockets_;
         int                                fds_[3];
         int                                pid_;
         bool                               suspended_;

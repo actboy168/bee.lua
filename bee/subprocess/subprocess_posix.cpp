@@ -1,4 +1,5 @@
 #include <bee/subprocess.h>
+#include <bee/utility/format.h>
 #include <deque>
 #include <memory.h>
 
@@ -161,7 +162,36 @@ namespace bee::posix::subprocess {
     }
 
     void spawn::duplicate(net::socket::fd_t fd) {
-        (void)fd;
+        sockets_.push_back(fd);
+    }
+
+    void spawn::do_duplicate() {
+        for (int i = 0; i < 3; ++i) {
+            if (fds_[i] > 0) {
+                if (dup2(fds_[i], i) == -1) {
+                    _exit(127);
+                }
+            }
+        }
+        
+        std::string fds;
+        for (auto& fd : sockets_) {
+            int newfd = net::socket::dup(fd);
+            fds.append(format("%d,", newfd));
+        }
+        set_env_["bee-subprocess-dup-sockets"] = fds;
+    }
+
+    void spawn::do_duplicate_shutdown() {
+        for (int i = 0; i < 3; ++i) {
+            if (fds_[i] > 0) {
+                close(fds_[i]);
+            }
+        }
+        for (auto& fd : sockets_) {
+            net::socket::close(fd);
+            fd = net::socket::retired_fd;
+        }
     }
 
     void spawn::env_set(const std::string& key, const std::string& value) {
@@ -178,13 +208,7 @@ namespace bee::posix::subprocess {
             return false;
         }
         if (pid == 0) {
-            for (int i = 0; i < 3; ++i) {
-                if (fds_[i] > 0) {
-                    if (dup2(fds_[i], i) == -1) {
-                        _exit(127);
-                    }
-                }
-            }
+            do_duplicate();
             if (!set_env_.empty() || !del_env_.empty()) {
                 environ = make_env(set_env_, del_env_);
             }
@@ -199,11 +223,7 @@ namespace bee::posix::subprocess {
             _exit(127);
         }
         pid_ = pid;
-        for (int i = 0; i < 3; ++i) {
-            if (fds_[i] > 0) {
-                close(fds_[i]);
-            }
-        }
+        do_duplicate_shutdown();
         return true;
     }
 
@@ -247,13 +267,6 @@ namespace bee::posix::subprocess {
     }
 
     namespace pipe {
-        static bool cloexec(int fd, bool set) {
-            int r;
-            do
-                r = ioctl(fd, set ? FIOCLEX : FIONCLEX);
-            while (r == -1 && errno == EINTR);
-            return !r;
-        }
         FILE* open_result::open_file(mode m) {
             switch (m) {
             case mode::eRead:
@@ -289,6 +302,28 @@ namespace bee::posix::subprocess {
             }
             return rc;
         }
-        std::vector<net::socket::fd_t> sockets;
+        std::vector<net::socket::fd_t> init_sockets() {
+            std::vector<net::socket::fd_t> sockets;
+            const char* fds = getenv("bee-subprocess-dup-sockets");
+            if (!fds) {
+                return  std::move(sockets);
+            }
+            const char* last = fds;
+            const char* cur = strchr(last, ',');
+            while (cur) {
+                try {
+                    int fd = std::stoi(std::string(last, cur - last));
+                    sockets.push_back(fd);
+                }
+                catch (...) {
+                    sockets.push_back(-1);
+                }
+                last = cur + 1;
+                cur = strchr(last, ',');
+            }
+            unsetenv("bee-subprocess-dup-sockets");
+            return std::move(sockets);
+        }
+        std::vector<net::socket::fd_t> sockets = init_sockets();
     }
 }
