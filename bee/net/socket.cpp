@@ -1,16 +1,19 @@
 #if defined _WIN32
-#    include <winsock2.h>
-#    include <mswsock.h>
-#    include <mstcpip.h>
-#    include <bee/utility/unicode.h>
-#    include <bee/net/unixsocket.h>
-#    include <bee/platform/version.h>
+#   include <winsock2.h>
+#   include <mswsock.h>
+#   include <mstcpip.h>
+#   include <bee/utility/unicode.h>
+#   include <bee/net/unixsocket.h>
+#   include <bee/platform/version.h>
 #else
-#    include <fcntl.h>
-#    include <netinet/tcp.h>
-#    include <signal.h>
-#    include <netinet/in.h>
-#    include <unistd.h>
+#   include <fcntl.h>
+#   include <netinet/tcp.h>
+#   include <signal.h>
+#   include <netinet/in.h>
+#   include <unistd.h>
+#   if defined(__APPLE__)
+#       include <sys/ioctl.h>
+#   endif
 #endif
 
 #include <bee/net/socket.h>
@@ -18,7 +21,7 @@
 #include <bee/error.h>
 #include <assert.h>
 
-#if defined _WIN32
+#if defined(_WIN32)
 #    define net_success(x) ((x) != SOCKET_ERROR)
 #else
 #    define net_success(x) ((x) == 0)
@@ -106,6 +109,15 @@ namespace bee::net::socket {
         fd_t fd = ::WSASocketW(af, type, protocol, 0, 0, WSA_FLAG_NO_HANDLE_INHERIT);
         if (nonblock && fd != retired_fd) {
             no_blocking(fd);
+        }
+        return fd;
+#elif defined(__APPLE__)
+        fd_t fd = ::socket(af, type, protocol)
+        if (fd != retired_fd) {
+            no_inherit(fd);
+            if (nonblock) {
+                no_blocking(fd);
+            }
         }
         return fd;
 #else
@@ -501,6 +513,17 @@ namespace bee::net::socket {
         if (cfd != retired_fd) close(cfd);
         ::WSASetLastError(err);
         return false;
+#elif defined(__APPLE__)
+        int ok = ::socketpair(AF_UNIX, SOCK_STREAM, 0, sv);
+        if (0 == ok) {
+            no_inherit(sv[0]);
+            no_inherit(sv[1]);
+            if (nonblock) {
+                no_blocking(sv[0]);
+                no_blocking(sv[1]);
+            }
+        }
+        return ok;
 #else
         if (nonblock) {
             return 0 == ::socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0, sv);
