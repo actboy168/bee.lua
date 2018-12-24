@@ -24,6 +24,57 @@ local function createLua(script, option)
     return subprocess.spawn(option)
 end
 
+
+local function createTestArgsFile(tbl)
+    local s = {}
+    for _, v in ipairs(tbl) do
+        s[#s+1] = ('%q'):format(v)
+    end
+    local f = assert(io.open('test/temp.lua', 'wb'))
+    f:write(([=[
+        package.cpath = [[%s]]
+        local function eq(a, b)
+            assert(#a == #b)
+            for i, v in ipairs(a) do
+                assert(v == b[i], b[i])
+            end
+        end
+        local t = {%s}
+        eq(arg, t)
+    ]=]):format(package.cpath, table.concat(s, ',')))
+    f:close()
+end
+
+local function testArrayArgs(...)
+    local args = table.pack(...)
+    createTestArgsFile(args)
+    local option = {}
+    option.stderr = true
+    option.argsStyle = 'array'
+    option[1] = getexe()
+    option[2] = 'test/temp.lua'
+    table.move(args, 1, args.n, 3, option)
+    local process = subprocess.spawn(option)
+    lu.assertUserdata(process)
+    lu.assertUserdata(process.stderr)
+    lu.assertEquals(process.stderr:read 'a', '')
+    lu.assertEquals(process:wait(), 0)
+end
+
+local function testStringArgs(args, ...)
+    createTestArgsFile(table.pack(...))
+    local option = {}
+    option.stderr = true
+    option.argsStyle = 'string'
+    option[1] = getexe()
+    option[2] = 'test/temp.lua ' .. args
+    local process = subprocess.spawn(option)
+    lu.assertUserdata(process)
+    lu.assertUserdata(process.stderr)
+    lu.assertEquals(process.stderr:read 'a', '')
+    lu.assertEquals(process:wait(), 0)
+end
+
 test_subprocess = {}
 
 function test_subprocess:test_spawn()
@@ -256,4 +307,25 @@ function test_subprocess:test_sockets()
     sfd:close()
     lu.assertEquals(process.stderr:read 'a', '')
     lu.assertEquals(process:wait(), 0)
+end
+
+function test_subprocess:test_args()
+    testArrayArgs('A')
+    testArrayArgs('A', 'B')
+    testArrayArgs('A B')
+    testArrayArgs('A', 'B C')
+    testArrayArgs([["A"]])
+    testArrayArgs([["A]])
+    testArrayArgs([["A\]])
+    testArrayArgs([["A\"]])
+    testArrayArgs([[A" B]])
+    testStringArgs([[A]], 'A')
+    testStringArgs([[A B]], 'A', 'B')
+    testStringArgs([["A B"]], 'A B')
+    testStringArgs([[A "B C"]], 'A', 'B C')
+    testStringArgs([[\"A\"]], [["A"]])
+    testStringArgs([[\"A]], [["A]])
+    testStringArgs([[\"A\]], [["A\]])
+    testStringArgs([[\"A\\\"]], [["A\"]])
+    testStringArgs([["A\" B"]], [[A" B]])
 end

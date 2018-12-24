@@ -54,6 +54,7 @@ namespace bee::posix::subprocess {
             array,
         };
         type type;
+        ~args_t();
     };
 
     class spawn {
