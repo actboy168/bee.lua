@@ -54,6 +54,9 @@ namespace bee::posix::subprocess {
             array,
         };
         type type;
+        args_t();
+        args_t(const char* app);
+        args_t(const char* app, const char* cmd);
         ~args_t();
     };
 

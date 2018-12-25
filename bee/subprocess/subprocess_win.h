@@ -83,6 +83,9 @@ namespace bee::win::subprocess {
             array,
         };
         type type;
+        args_t();
+        args_t(const std::wstring& app);
+        args_t(const std::wstring& app, const std::wstring& cmd);
     };
 
     class _BEE_API spawn {

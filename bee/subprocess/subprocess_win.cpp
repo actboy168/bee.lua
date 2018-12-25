@@ -14,6 +14,16 @@
 
 namespace bee::win::subprocess {
 
+    args_t::args_t() : type(type::array)
+    { }
+    args_t::args_t(const std::wstring& app) : type(type::string) {
+        push_back(app);
+    }
+    args_t::args_t(const std::wstring& app, const std::wstring& cmd) : type(type::string) {
+        push_back(app);
+        push_back(cmd);
+    }
+
     struct strbuilder {
         struct node {
             size_t size;
@@ -343,10 +353,16 @@ namespace bee::win::subprocess {
     }
 
     bool spawn::exec(const args_t& args, const wchar_t* cwd) {
+        if (args.size() == 0) {
+            return false;
+        }
         switch (args.type) {
         case args_t::type::array:
             return raw_exec(args[0].c_str(), make_args(args), cwd);
         case args_t::type::string:
+            if (args.size() == 1) {
+                return raw_exec(args[0].c_str(), 0, cwd);
+            }
             return raw_exec(args[0].c_str(), make_args(args[0], args[1]), cwd);
         default:
             return false;
