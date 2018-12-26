@@ -1,6 +1,5 @@
 local lu = require 'luaunit'
 
-require 'bee'
 local subprocess = require 'bee.subprocess'
 local socket = require 'bee.socket'
 local thread = require 'bee.thread'
@@ -364,6 +363,12 @@ local function quote_arg(s)
     end
     return table.concat(t)
 end
+
+if platform.OS == 'macOS' then
+    return
+end
+
+require 'bee'
 
 function test_subprocess:test_shell()
     local process, err = subprocess.shell {'echo', 'ok', stdout = true, stderr = true}
