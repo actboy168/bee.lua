@@ -346,6 +346,13 @@ namespace bee::lua_subprocess {
                 }
             }
             lua_pop(L, 1);
+
+            if (LUA_TBOOLEAN == lua_getfield(L, 1, "searchPath")) {
+                if (lua_toboolean(L, -1)) {
+                    self.search_path();
+                }
+            }
+            lua_pop(L, 1);
         }
 #else
         static void cast_option(lua_State*, subprocess::spawn&)

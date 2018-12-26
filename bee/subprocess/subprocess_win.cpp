@@ -2,6 +2,7 @@
 #include <bee/subprocess/sharedmemory_win.h>
 #include <bee/nonstd/span.h>
 #include <bee/utility/format.h>
+#include <bee/subprocess/args_helper.h>
 #include <Windows.h>
 #include <memory>
 #include <deque>
@@ -14,123 +15,11 @@
 
 namespace bee::win::subprocess {
 
-    args_t::args_t() : type(type::array)
-    { }
-    args_t::args_t(const std::wstring& app) : type(type::string) {
-        push_back(app);
-    }
-    args_t::args_t(const std::wstring& app, const std::wstring& cmd) : type(type::string) {
-        push_back(app);
-        push_back(cmd);
-    }
-
-    struct strbuilder {
-        struct node {
-            size_t size;
-            size_t maxsize;
-            wchar_t* data;
-            node(size_t maxsize)
-                : size(0)
-                , maxsize(maxsize)
-                , data(new wchar_t[maxsize])
-            { }
-            ~node() {
-                delete[] data;
-            }
-            wchar_t* release() {
-                wchar_t* r = data;
-                data = nullptr;
-                return r;
-            }
-            bool append(const wchar_t* str, size_t n) {
-                if (size + n > maxsize) {
-                    return false;
-                }
-                memcpy(data + size, str, n * sizeof(wchar_t));
-                size += n;
-                return true;
-            }
-            template <class T, size_t n>
-            void operator +=(T(&str)[n]) {
-                append(str, n - 1);
-            }
-        };
-        strbuilder() : size(0) { }
-        void clear() {
-            size = 0;
-            data.clear();
+    static wchar_t* make_array_args(const std::vector<std::wstring>& args, std::wstring_view prefix = std::wstring_view()) {
+        strbuilder<wchar_t> res;
+        if (!prefix.empty()) {
+            res += prefix;
         }
-        bool append(const wchar_t* str, size_t n) {
-            if (!data.empty() && data.back().append(str, n)) {
-                size += n;
-                return true;
-            }
-            size_t m = 1024;
-            while (m < n) {
-                m *= 2;
-            }
-            data.emplace_back(m).append(str, n);
-            size += n;
-            return true;
-        }
-        template <class T, size_t n>
-        strbuilder& operator +=(T(&str)[n]) {
-            append(str, n - 1);
-            return *this;
-        }
-        strbuilder& operator +=(const std::wstring& s) {
-            append(s.data(), s.size());
-            return *this;
-        }
-        wchar_t* string() {
-            node r(size + 1);
-            for (auto& s : data) {
-                r.append(s.data, s.size);
-            }
-            r += L"\0";
-            return r.release();
-        }
-        std::deque<node> data;
-        size_t size;
-    };
-
-    static std::wstring quote_arg(const std::wstring& source) {
-        size_t len = source.size();
-        if (len == 0) {
-            return L"\"\"";
-        }
-        if (std::wstring::npos == source.find_first_of(L" \t\"")) {
-            return source;
-        }
-        if (std::wstring::npos == source.find_first_of(L"\"\\")) {
-            return L"\"" + source + L"\"";
-        }
-        std::wstring target;
-        target += L'"';
-        int quote_hit = 1;
-        for (size_t i = len; i > 0; --i) {
-            target += source[i - 1];
-
-            if (quote_hit && source[i - 1] == L'\\') {
-                target += L'\\';
-            }
-            else if (source[i - 1] == L'"') {
-                quote_hit = 1;
-                target += L'\\';
-            }
-            else {
-                quote_hit = 0;
-            }
-        }
-        target += L'"';
-        for (size_t i = 0; i < target.size() / 2; ++i) {
-            std::swap(target[i], target[target.size() - i - 1]);
-        }
-        return target;
-    }
-
-    static wchar_t* make_args(const std::vector<std::wstring>& args) {
-        strbuilder res; 
         for (size_t i = 0; i < args.size(); ++i) {
             res += quote_arg(args[i]);
             if (i + 1 != args.size()) {
@@ -140,12 +29,26 @@ namespace bee::win::subprocess {
         return res.string();
     }
 
-    static wchar_t* make_args(const std::wstring& app, const std::wstring& cmd) {
-        strbuilder res;
+    static wchar_t* make_string_args(const std::wstring& app, const std::wstring& cmd, std::wstring_view prefix = std::wstring_view()) {
+        strbuilder<wchar_t> res;
+        if (!prefix.empty()) {
+            res += prefix;
+        }
         res += quote_arg(app);
         res += L" ";
         res += cmd;
         return res.string();
+    }
+
+    static wchar_t* make_args(const args_t& args, std::wstring_view prefix = std::wstring_view()) {
+        switch (args.type) {
+        case args_t::type::array:
+            return make_array_args(args, prefix);
+        case args_t::type::string:
+            return make_string_args(args[0], args[1], prefix);
+        default:
+            return 0;
+        }
     }
 
     static wchar_t* make_env(std::map<std::wstring, std::wstring, ignore_case::less<std::wstring>>& set, std::set<std::wstring, ignore_case::less<std::wstring>>& del)
@@ -155,7 +58,7 @@ namespace bee::win::subprocess {
             return nullptr;
         }
         try {
-            strbuilder res;
+            strbuilder<wchar_t> res;
             wchar_t* escp = es;
             while (*escp != L'\0') {
                 std::wstring str = escp;
@@ -198,8 +101,6 @@ namespace bee::win::subprocess {
     }
 
     spawn::spawn()
-        : inherit_handle_(false)
-        , flags_(0)
     {
         memset(&si_, 0, sizeof(STARTUPINFOW));
         memset(&pi_, 0, sizeof(PROCESS_INFORMATION));
@@ -215,6 +116,10 @@ namespace bee::win::subprocess {
         ::CloseHandle(pi_.hProcess);
     }
 
+    void spawn::search_path() {
+        search_path_ = true;
+    }
+    
     bool spawn::set_console(console type) {
         flags_ &= ~(CREATE_NO_WINDOW | CREATE_NEW_CONSOLE);
         switch (type) {
@@ -356,17 +261,11 @@ namespace bee::win::subprocess {
         if (args.size() == 0) {
             return false;
         }
-        switch (args.type) {
-        case args_t::type::array:
-            return raw_exec(args[0].c_str(), make_args(args), cwd);
-        case args_t::type::string:
-            if (args.size() == 1) {
-                return raw_exec(args[0].c_str(), 0, cwd);
-            }
-            return raw_exec(args[0].c_str(), make_args(args[0], args[1]), cwd);
-        default:
+        wchar_t* command = make_args(args);
+        if (!command) {
             return false;
         }
+        return raw_exec(search_path_? 0 : args[0].c_str(), command, cwd);
     }
 
     void spawn::env_set(const std::wstring& key, const std::wstring& value) {

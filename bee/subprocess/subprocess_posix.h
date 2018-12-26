@@ -53,10 +53,7 @@ namespace bee::posix::subprocess {
             string,
             array,
         };
-        type type;
-        args_t();
-        args_t(char* app);
-        args_t(char* app, char* cmd);
+        type type = type::array;
         ~args_t();
     };
 
@@ -80,7 +77,7 @@ namespace bee::posix::subprocess {
         std::set<std::string>              del_env_;
         std::vector<net::socket::fd_t>     sockets_;
         int                                fds_[3];
-        int                                pid_;
-        bool                               suspended_;
+        int                                pid_ = -1;
+        bool                               suspended_ = false;
     };
 }

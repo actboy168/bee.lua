@@ -227,5 +227,11 @@
     <ClInclude Include="..\..\bee\subprocess\sharedmemory_win.h">
       <Filter>bee\subprocess</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\bee\subprocess\args_helper.h">
+      <Filter>bee\subprocess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\binding\incbin.h">
+      <Filter>binding</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

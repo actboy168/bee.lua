@@ -66,6 +66,7 @@ endif
 
 
 BEE_ALL = \
+	$(TMPDIR)/binding_lua_embed.o \
 	$(BEE_SOCKET) \
 	$(BEE_SUBPROCESS) \
 	$(BEE_THREAD) \

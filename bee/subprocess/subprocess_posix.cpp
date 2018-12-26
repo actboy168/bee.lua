@@ -21,15 +21,6 @@ extern char **environ;
 
 namespace bee::posix::subprocess {
 
-    args_t::args_t() : type(type::array)
-    { }
-    args_t::args_t(char* app) : type(type::array) {
-        push_back(app);
-    }
-    args_t::args_t(char* app, char* cmd) : type(type::string) {
-        push_back(app);
-        push_back(cmd);
-    }
     args_t::~args_t() {
         if (type == type::string) {
             for (size_t i = 3; i < size(); ++i) {
@@ -147,12 +138,11 @@ namespace bee::posix::subprocess {
         return nullptr;
     }
 
-    spawn::spawn() {
+    spawn::spawn()
+    {
         fds_[0] = -1;
         fds_[1] = -1;
         fds_[2] = -1;
-        pid_ = -1;
-        suspended_ = false;
     }
 
     spawn::~spawn()
@@ -336,6 +326,9 @@ namespace bee::posix::subprocess {
         split_next(args, args[1]);
     }
     bool spawn::exec(args_t& args, const char* cwd) {
+        if (args.size() == 0) {
+            return false;
+        }
         switch (args.type) {
         case args_t::type::array:
             args.push_back(nullptr);

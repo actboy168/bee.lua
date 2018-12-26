@@ -244,6 +244,7 @@ $(projectDir)..\..\make\luamake.exe $(projectDir)..\..\project\embed.lua $(proje
     <ClInclude Include="..\..\bee\registry\traits.h" />
     <ClInclude Include="..\..\bee\registry\value.h" />
     <ClInclude Include="..\..\bee\subprocess.h" />
+    <ClInclude Include="..\..\bee\subprocess\args_helper.h" />
     <ClInclude Include="..\..\bee\subprocess\sharedmemory_win.h" />
     <ClInclude Include="..\..\bee\subprocess\subprocess_posix.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -260,6 +261,7 @@ $(projectDir)..\..\make\luamake.exe $(projectDir)..\..\project\embed.lua $(proje
     <ClInclude Include="..\..\bee\utility\path_helper.h" />
     <ClInclude Include="..\..\bee\utility\semaphore.h" />
     <ClInclude Include="..\..\bee\utility\unicode.h" />
+    <ClInclude Include="..\..\binding\incbin.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="lua54.vcxproj">

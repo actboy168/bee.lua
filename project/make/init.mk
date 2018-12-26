@@ -24,8 +24,8 @@ else
 DEBUG_INFO = -g -D_DEBUG
 endif
 
-LUADIR = 3rd/lua/src
-LUASERIDIR = 3rd/lua-seri
+3RD = 3rd
+LUADIR = $(3RD)/lua/src
 
 CFLAGS = $(DEBUG_INFO) -Wall -Wextra
 

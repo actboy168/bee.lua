@@ -82,10 +82,7 @@ namespace bee::win::subprocess {
             string,
             array,
         };
-        type type;
-        args_t();
-        args_t(const std::wstring& app);
-        args_t(const std::wstring& app, const std::wstring& cmd);
+        type type = type::array;
     };
 
     class _BEE_API spawn {
@@ -93,6 +90,7 @@ namespace bee::win::subprocess {
     public:
         spawn();
         ~spawn();
+        void search_path();
         bool set_console(console type);
         bool hide_window();
         void suspended();
@@ -114,7 +112,8 @@ namespace bee::win::subprocess {
         std::vector<net::socket::fd_t>                                        sockets_;
         STARTUPINFOW            si_;
         PROCESS_INFORMATION     pi_;
-        bool                    inherit_handle_;
-        DWORD                   flags_;
+        DWORD                   flags_ = 0;
+        bool                    inherit_handle_ = false;
+        bool                    search_path_ = false;
     };
 }

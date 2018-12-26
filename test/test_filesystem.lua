@@ -2,32 +2,7 @@ local lu = require 'luaunit'
 
 local fs = require 'bee.filesystem'
 local platform = require 'bee.platform'
-
-local shell = {}
-function shell:add_readonly(filename)
-    if platform.OS == 'Windows' then
-        os.execute(('attrib +r %q'):format(filename))
-    else
-        os.execute(('chmod a-w %q'):format(filename))
-    end
-end
-function shell:del_readonly(filename)
-    if platform.OS == 'Windows' then
-        os.execute(('attrib -r %q'):format(filename))
-    else
-        os.execute(('chmod a+w %q'):format(filename))
-    end
-end
-
-function shell:pwd()
-    local command
-    if platform.OS == "Windows" then
-        command = 'echo %cd%'
-    else
-        command = 'pwd'
-    end
-    return (io.popen(command):read 'a'):gsub('[\n\r]*$', ''):gsub('\\', '/')
-end
+local shell = require 'shell'
 
 local C
 local D
@@ -615,7 +590,6 @@ if platform.CRT == 'mingw' then
     local path_mt = debug.getmetatable(fs.path())
     local path_is_absolute = path_mt.is_absolute
     function path_mt.is_absolute(path)
-        print(path:string())
         if path:string():sub(1, 2):match '[/\\][/\\]' then
             return true
         end

@@ -78,13 +78,20 @@ end
 local function gen_file(path)
     path = path:string():gsub("\\", "/")
     local deps, sysdeps = alldeps[path][1], alldeps[path][2]
+    if path == 'binding/lua_embed.cpp' then
+        res[#res + 1] = ("$(TMPDIR)/%s.o : %s %s script/bee.lua | $(TMPDIR)"):format(cpp_to_o(path), path, table.concat(deps, " "))
+    else
     res[#res + 1] = ("$(TMPDIR)/%s.o : %s %s | $(TMPDIR)"):format(cpp_to_o(path), path, table.concat(deps, " "))
+    end
     local inc = ""
     if sysdeps["lua.hpp"] then
         inc = inc .. " -I$(LUADIR)"
     end
     if sysdeps["lua-seri.h"] then
-        inc = inc .. " -I$(LUASERIDIR)"
+        inc = inc .. " -I$(3RD)/lua-seri"
+    end
+    if path == 'binding/lua_embed.cpp' then
+        inc = inc .. " -I$(3RD)/incbin"
     end
     res[#res + 1] = ("\t$(CXX) -c $(CFLAGS) -o $@ $< %s -I."):format(inc)
     res[#res + 1] = ""
@@ -99,7 +106,7 @@ local function gen_dir(dir)
     end)
 end
 
-res[#res + 1] = "$(TMPDIR)/lua-seri.o : $(LUASERIDIR)/lua-seri.c $(LUASERIDIR)/lua-seri.h | $(TMPDIR)"
+res[#res + 1] = "$(TMPDIR)/lua-seri.o : $(3RD)/lua-seri/lua-seri.c $(3RD)/lua-seri/lua-seri.h | $(TMPDIR)"
 res[#res + 1] = "\t$(CC) -c $(CFLAGS) -o $@ $< -I$(LUADIR) "
 res[#res + 1] = ""
 
