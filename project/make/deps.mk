@@ -46,7 +46,7 @@ $(TMPDIR)/bee_utility_path_helper.o : bee/utility/path_helper.cpp bee/utility/pa
 $(TMPDIR)/bee_utility_unicode.o : bee/utility/unicode.cpp bee/utility/unicode.cpp bee/utility/unicode.h bee/config.h bee/utility/dynarray.h bee/nonstd/span.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I.
 
-$(TMPDIR)/binding_lua_embed.o : binding/lua_embed.cpp binding/lua_embed.cpp bee/lua/binding.h bee/utility/unicode.h bee/config.h bee/nonstd/embed.h bee/nonstd/span.h bee/nonstd/embed_detail.h script/bee.lua | $(TMPDIR)
+$(TMPDIR)/binding_lua_embed.o : binding/lua_embed.cpp bee/lua/binding.h bee/utility/unicode.h bee/config.h bee/nonstd/embed.h bee/nonstd/span.h script/bee.lua | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I$(LUADIR) -I$(3RD)/incbin -I.
 
 $(TMPDIR)/binding_lua_filesystem.o : binding/lua_filesystem.cpp binding/lua_filesystem.cpp bee/utility/path_helper.h bee/config.h bee/nonstd/expected.h bee/utility/unicode.h bee/lua/range.h bee/lua/binding.h | $(TMPDIR)
