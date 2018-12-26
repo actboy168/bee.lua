@@ -3,25 +3,23 @@ local fs = require 'bee.filesystem'
 local thd = require 'bee.thread'
 local platform = require 'bee.platform'
 
-local function fork(name, args, options)
-    local script = assert(package.searchpath(name, package.path))
-    local init = {
+local function fork(option)
+    if type(option[1]) == 'table' then
+        option[1][1] = assert(package.searchpath(option[1][1], package.path))
+    else
+        option[1] = assert(package.searchpath(option[1], package.path))
+    end
+    local args = {
         fs.exe_path(),
         '-E',
-        '-e', ('package.path=[[%s]]'):format(package.path),
-        '-e', ('package.cpath=[[%s]]'):format(package.cpath),
-        script,
-        args,
-        cwd = fs.current_path(),
+        '-e', ('package.path=[[%s]];package.cpath=[[%s]]'):format(package.path, package.cpath)
     }
-    if options then
-        for k, v in pairs(options) do
-            if type(k) == 'string' then
-                init[k] = v
-            end
-        end
+    for i, v in ipairs(args) do
+        table.insert(option, i, v)
     end
-    return sp.spawn(init)
+    option.argsStyle = nil
+    option.cwd = option.cwd or fs.current_path()
+    return sp.spawn(option)
 end
 
 local function thread(script, cfunction)
@@ -114,7 +112,4 @@ else
     sp.shell = shell_bash
 end
 
-return {
-    fork = fork,
-    thread = thread
-}
+sp.fork = fork

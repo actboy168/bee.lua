@@ -378,3 +378,18 @@ function test_subprocess:test_shell()
     lu.assertEquals(process.stderr:read 'a', '')
     lu.assertEquals(process:wait(), 0)
 end
+
+function test_subprocess:test_fork()
+    os.remove('./test/test_fork.lua')
+    local f = assert(io.open('./test/test_fork.lua', 'wb'))
+    f:write('io.write "ok"')
+    f:close()
+    local process, err = subprocess.fork { 'test_fork', stdout = true, stderr = true }
+    lu.assertUserdata(process, err)
+    lu.assertUserdata(process.stdout)
+    lu.assertUserdata(process.stderr)
+    lu.assertEquals(process.stdout:read 'a', 'ok')
+    lu.assertEquals(process.stderr:read 'a', '')
+    lu.assertEquals(process:wait(), 0)
+    os.remove('./test/test_fork.lua')
+end
