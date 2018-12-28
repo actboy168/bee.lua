@@ -1,16 +1,26 @@
 #include <lua.hpp>
-#include <filesystem>
-#include <bee/utility/path_helper.h>
 #include <bee/lua/binding.h>
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <string.h>
 #include <utime.h>
+#include <errno.h>
+#include <dlfcn.h>
 
 namespace bee::lua_posixfs {
+
+    const char* dll_path(void* module_handle) {
+        ::Dl_info dl_info;
+        dl_info.dli_fname = 0;
+        int const ret = ::dladdr(module_handle, &dl_info);
+        if (0 != ret && dl_info.dli_fname != NULL) {
+            return dl_info.dli_fname;
+        }
+        return 0;
+    }
+
     static int lgetcwd(lua_State* L) {
         luaL_Buffer b;
         luaL_buffinit(L, &b);
@@ -141,17 +151,21 @@ namespace bee::lua_posixfs {
     }
 
     static int lexe_path(lua_State* L)  {
-        LUA_TRY;
-        lua_pushstring(L,path_helper::exe_path().value().string().c_str());
+        const char* path = dll_path((void*)&lua_newstate);
+        if (!path) {
+            return 0;
+        }
+        lua_pushstring(L, path);
         return 1;
-        LUA_TRY_END;
     }
 
     static int ldll_path(lua_State* L)  {
-        LUA_TRY;
-        lua_pushstring(L, path_helper::dll_path().value().string().c_str());
+        const char* path = dll_path((void*)&ldll_path);
+        if (!path) {
+            return 0;
+        }
+        lua_pushstring(L, path);
         return 1;
-        LUA_TRY_END;
     }
 
     int luaopen(lua_State* L) {

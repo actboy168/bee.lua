@@ -7,7 +7,6 @@ BEE_FILESYSTEM = \
 
 BEE_POSIXFS = \
 	$(TMPDIR)/binding_lua_posixfs.o \
-	$(TMPDIR)/bee_utility_path_helper.o \
 	$(BEE_COMMON)
 
 BEE_FILEWATCH = \
