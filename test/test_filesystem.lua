@@ -1,7 +1,12 @@
-local lu = require 'luaunit'
-
-local fs = require 'bee.filesystem'
 local platform = require 'bee.platform'
+local fs
+if platform.OS == 'Windows' then
+    fs = require 'bee.filesystem'
+else
+    fs = require 'filesystem'
+end
+
+local lu = require 'luaunit'
 local shell = require 'shell'
 
 local C
@@ -32,7 +37,8 @@ end
 test_fs = {}
 
 function test_fs:test_path()
-    lu.assertUserdata(fs.path(''))
+    local path = fs.path('')
+    lu.assertIsTrue(type(path) == 'userdata' or type(path) == 'table')
 end
 
 function test_fs:test_string()

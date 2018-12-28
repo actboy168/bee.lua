@@ -5,6 +5,11 @@ BEE_FILESYSTEM = \
 	$(TMPDIR)/bee_utility_path_helper.o \
 	$(BEE_COMMON)
 
+BEE_POSIXFS = \
+	$(TMPDIR)/binding_lua_posixfs.o \
+	$(TMPDIR)/bee_utility_path_helper.o \
+	$(BEE_COMMON)
+
 BEE_FILEWATCH = \
 	$(TMPDIR)/binding_lua_filewatch.o \
 	$(BEE_COMMON)
@@ -82,6 +87,8 @@ ifneq "$(PLAT)" "linux"
 BEE_ALL += $(BEE_FILEWATCH)
 endif
 
-ifneq "$(PLAT)" "macosx"
+ifeq "$(PLAT)" "mingw"
 BEE_ALL += $(BEE_FILESYSTEM)
+else
+BEE_ALL += $(BEE_POSIXFS)
 endif

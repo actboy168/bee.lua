@@ -58,6 +58,9 @@ $(TMPDIR)/binding_lua_filewatch.o : binding/lua_filewatch.cpp binding/lua_filewa
 $(TMPDIR)/binding_lua_platform.o : binding/lua_platform.cpp binding/lua_platform.cpp bee/lua/binding.h bee/utility/unicode.h bee/config.h bee/platform.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I$(LUADIR) -I.
 
+$(TMPDIR)/binding_lua_posixfs.o : binding/lua_posixfs.cpp binding/lua_posixfs.cpp bee/utility/path_helper.h bee/config.h bee/nonstd/expected.h bee/utility/unicode.h bee/lua/range.h bee/lua/binding.h | $(TMPDIR)
+	$(CXX) -c $(CFLAGS) -o $@ $<  -I$(LUADIR) -I.
+
 $(TMPDIR)/binding_lua_registry.o : binding/lua_registry.cpp binding/lua_registry.cpp bee/registry/key.h bee/registry/traits.h bee/registry/value.h bee/utility/dynarray.h bee/nonstd/span.h bee/registry/exception.h bee/config.h bee/registry/predefined_keys.h bee/utility/unicode.h bee/lua/binding.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I$(LUADIR) -I.
 

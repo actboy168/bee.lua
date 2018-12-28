@@ -17,18 +17,16 @@ end
 
 local lu = require 'luaunit'
 
-require 'test_lua'
-require 'test_platform'
-require 'test_serialization'
-if platform.OS ~= 'macOS' then
-    require 'test_filesystem'
-end
-require 'test_thread'
-require 'test_subprocess'
-require 'test_socket'
-if platform.OS == 'Windows' then
-require 'test_filewatch'
-end
+--require 'test_lua'
+--require 'test_platform'
+--require 'test_serialization'
+require 'test_filesystem'
+--require 'test_thread'
+--require 'test_subprocess'
+--require 'test_socket'
+--if platform.OS == 'Windows' then
+--require 'test_filewatch'
+--end
 --require 'test_registry'
 
 os.exit(lu.LuaUnit.run(), true)
