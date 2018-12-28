@@ -39,7 +39,7 @@ namespace bee::lua_posixfs {
         }
     }
 
-    static int lstat_type(lua_State* L) {
+    static int lstat(lua_State* L) {
         struct stat info;
         if (stat(luaL_checkstring(L, 1), &info)) {
             return 0;
@@ -58,25 +58,29 @@ namespace bee::lua_posixfs {
 
 #define PERMS_MASK (S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH)
 
-    static int lstat_perms(lua_State* L) {
-        struct stat info;
-        if (stat(luaL_checkstring(L, 1), &info)) {
-            return 0;
+    static int lpermissions(lua_State* L) {
+        if (lua_isnoneornil(L, 2)) {
+            struct stat info;
+            if (stat(luaL_checkstring(L, 1), &info)) {
+                return 0;
+            }
+            lua_pushinteger(L, info.st_mode & PERMS_MASK);
+            return 1;
         }
-        lua_pushinteger(L, info.st_mode & PERMS_MASK);
+        int res = chmod(luaL_checkstring(L, 1), PERMS_MASK & luaL_checkinteger(L, 2));
+        lua_pushboolean(L, res == 0);
         return 1;
     }
 
-    static int lstat_mtime(lua_State* L) {
-        struct stat info;
-        if (stat(luaL_checkstring(L, 1), &info)) {
-            return 0;
+    static int llast_write_time(lua_State* L) {
+        if (lua_isnoneornil(L, 2)) {
+            struct stat info;
+            if (stat(luaL_checkstring(L, 1), &info)) {
+                return 0;
+            }
+            lua_pushinteger(L, info.st_mtime);
+            return 1;
         }
-        lua_pushinteger(L, info.st_mtime);
-        return 1;
-    }
-
-    static int lutime(lua_State* L) {
         struct stat info;
         if (stat(luaL_checkstring(L, 1), &info)) {
             lua_pushboolean(L, 0);
@@ -95,12 +99,6 @@ namespace bee::lua_posixfs {
 
     static int lmkdir(lua_State* L) {
         int res = mkdir(luaL_checkstring(L, 1), S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IXOTH);
-        lua_pushboolean(L, res == 0);
-        return 1;
-    }
-
-    static int lchmod(lua_State* L) {
-        int res = chmod(luaL_checkstring(L, 1), PERMS_MASK & luaL_checkinteger(L, 2));
         lua_pushboolean(L, res == 0);
         return 1;
     }
@@ -171,12 +169,10 @@ namespace bee::lua_posixfs {
     int luaopen(lua_State* L) {
         static luaL_Reg lib[] = {
             { "getcwd", lgetcwd },
-            { "stat_type", lstat_type },
-            { "stat_perms", lstat_perms },
-            { "stat_mtime", lstat_mtime },
+            { "stat", lstat },
+            { "permissions", lpermissions },
+            { "last_write_time", llast_write_time },
             { "mkdir", lmkdir },
-            { "chmod", lchmod },
-            { "utime", lutime },
             { "dir", ldir },
             { "exe_path", lexe_path },
             { "dll_path", ldll_path },

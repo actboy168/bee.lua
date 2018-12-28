@@ -117,22 +117,22 @@ function path_mt:list_directory()
 end
 
 function path_mt:permissions()
-    return posixfs.stat_perms(self._value)
+    return posixfs.permissions(self._value)
 end
 
 function path_mt:add_permissions(prms)
-    local old = posixfs.stat_perms(self._value)
+    local old = posixfs.permissions(self._value)
     local new = prms | old
-    if not posixfs.chmod(self._value, new) then
+    if not posixfs.permissions(self._value, new) then
         return old
     end
     return new
 end
 
 function path_mt:remove_permissions(prms)
-    local old = posixfs.stat_perms(self._value)
+    local old = posixfs.permissions(self._value)
     local new = (~prms) & old
-    if not posixfs.chmod(self._value, new) then
+    if not posixfs.permissions(self._value, new) then
         return old
     end
     return new
@@ -147,11 +147,11 @@ function fs.current_path()
 end
 
 function fs.exists(path)
-    return posixfs.stat_type(path._value) ~= nil
+    return posixfs.stat(path._value) ~= nil
 end
 
 function fs.is_directory(path)
-    return posixfs.stat_type(path._value) == 'dir'
+    return posixfs.stat(path._value) == 'dir'
 end
 
 function fs.rename(from, to)
@@ -159,7 +159,7 @@ function fs.rename(from, to)
 end
 
 function fs.remove(path)
-    if posixfs.stat_type(path._value) == nil then
+    if posixfs.stat(path._value) == nil then
         return false
     end
     assert(os.remove(path._value))
@@ -167,7 +167,7 @@ function fs.remove(path)
 end
 
 function fs.remove_all(dir)
-    local stat = posixfs.stat_type(dir._value)
+    local stat = posixfs.stat(dir._value)
     if stat == nil then
         return 0
     elseif stat ~= 'dir' then
@@ -243,10 +243,7 @@ function fs.copy_file(from, to, overwritten)
 end
 
 function fs.last_write_time(path, newtime)
-    if not newtime then
-        return posixfs.stat_mtime(path._value)
-    end
-    return posixfs.utime(path._value, newtime)
+    return posixfs.last_write_time(path._value, newtime)
 end
 
 function fs.exe_path()

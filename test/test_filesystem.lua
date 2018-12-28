@@ -229,7 +229,6 @@ function test_fs:test_absolute()
     end
 end
 
-
 function test_fs:test_relative()
     local function relative(a, b, c)
         return lu.assertEquals(fs.relative(fs.path(a), fs.path(b)):string(), c)
