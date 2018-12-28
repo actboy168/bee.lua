@@ -19,14 +19,12 @@ Lua runtime and toolset
 
 |            | Windows | Linux | macOS |
 | ---------- | ------- | ----- |------ |
-| filesystem |   Yes   |  Yes  | No<sup>[1]</sup> |
+| filesystem |   Yes   |  Yes  |  Yes  |
 | thread     |   Yes   |  Yes  |  Yes  |
 | socket     |   Yes   |  Yes  |  Yes  |
 | subprocess |   Yes   |  Yes  |  Yes  |
 | filewatch  |   Yes   | TODO  |  Yes  |
 | registry   |   Yes   |  N/A  |  N/A  |
-
-[1] Need compiler support
 
 ## TODO
 
