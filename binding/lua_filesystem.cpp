@@ -380,7 +380,7 @@ namespace bee::lua_filesystem {
 
     static int last_write_time(lua_State* L)
     {
-        // TODDO: need file_clock http://wg21.link/p0355r7
+        // TODO: need file_clock http://wg21.link/p0355r7
         using namespace std::chrono;
         LUA_TRY;
         const fs::path& p = path::to(L, 1);

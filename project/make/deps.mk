@@ -49,7 +49,7 @@ $(TMPDIR)/bee_utility_unicode.o : bee/utility/unicode.cpp bee/utility/unicode.cp
 $(TMPDIR)/binding_lua_embed.o : binding/lua_embed.cpp bee/lua/binding.h bee/utility/unicode.h bee/config.h bee/nonstd/embed.h bee/nonstd/span.h script/bee.lua | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I$(LUADIR) -I$(3RD)/incbin -I.
 
-$(TMPDIR)/binding_lua_filesystem.o : binding/lua_filesystem.cpp binding/lua_filesystem.cpp bee/utility/path_helper.h bee/config.h bee/nonstd/expected.h bee/utility/unicode.h bee/lua/range.h bee/lua/binding.h | $(TMPDIR)
+$(TMPDIR)/binding_lua_filesystem.o : binding/lua_filesystem.cpp binding/lua_filesystem.cpp bee/lua/binding.h bee/utility/unicode.h bee/config.h bee/utility/path_helper.h bee/nonstd/expected.h bee/lua/range.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I$(LUADIR) -I.
 
 $(TMPDIR)/binding_lua_filewatch.o : binding/lua_filewatch.cpp binding/lua_filewatch.cpp bee/fsevent.h bee/fsevent/fsevent_win.h bee/utility/lockqueue.h bee/fsevent/fsevent_osx.h bee/utility/semaphore.h bee/error.h bee/config.h bee/lua/binding.h bee/utility/unicode.h | $(TMPDIR)
@@ -58,7 +58,7 @@ $(TMPDIR)/binding_lua_filewatch.o : binding/lua_filewatch.cpp binding/lua_filewa
 $(TMPDIR)/binding_lua_platform.o : binding/lua_platform.cpp binding/lua_platform.cpp bee/lua/binding.h bee/utility/unicode.h bee/config.h bee/platform.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I$(LUADIR) -I.
 
-$(TMPDIR)/binding_lua_posixfs.o : binding/lua_posixfs.cpp binding/lua_posixfs.cpp bee/config.h bee/nonstd/expected.h bee/lua/binding.h | $(TMPDIR)
+$(TMPDIR)/binding_lua_posixfs.o : binding/lua_posixfs.cpp binding/lua_posixfs.cpp bee/lua/binding.h bee/utility/unicode.h bee/config.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I$(LUADIR) -I.
 
 $(TMPDIR)/binding_lua_registry.o : binding/lua_registry.cpp binding/lua_registry.cpp bee/registry/key.h bee/registry/traits.h bee/registry/value.h bee/utility/dynarray.h bee/nonstd/span.h bee/registry/exception.h bee/config.h bee/registry/predefined_keys.h bee/utility/unicode.h bee/lua/binding.h | $(TMPDIR)

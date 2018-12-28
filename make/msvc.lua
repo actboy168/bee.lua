@@ -6,7 +6,7 @@ ffi.cdef[[
     int SetEnvironmentVariableA(const char* name, const char* value);
 ]]
 
-local function strtrim(str) 
+local function strtrim(str)
     return str:gsub("^%s*(.-)%s*$", "%1")
 end
 
