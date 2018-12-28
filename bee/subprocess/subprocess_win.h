@@ -83,6 +83,8 @@ namespace bee::win::subprocess {
             array,
         };
         type type = type::array;
+        args_t() {}
+        args_t(std::vector<std::wstring> init) : std::vector<std::wstring>(init) {}
     };
 
     class _BEE_API spawn {
