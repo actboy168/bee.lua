@@ -1,11 +1,5 @@
 local platform = require 'bee.platform'
-local fs
-if platform.OS == 'Windows' then
-    fs = require 'bee.filesystem'
-else
-    fs = require 'filesystem'
-end
-
+local fs = require 'bee.filesystem'
 local lu = require 'luaunit'
 local shell = require 'shell'
 

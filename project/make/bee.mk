@@ -1,12 +1,6 @@
 BEE_COMMON = $(TMPDIR)/bee_error.o
 
 BEE_FILESYSTEM = \
-	$(TMPDIR)/binding_lua_filesystem.o \
-	$(TMPDIR)/bee_utility_path_helper.o \
-	$(BEE_COMMON)
-
-BEE_POSIXFS = \
-	$(TMPDIR)/binding_lua_posixfs.o \
 	$(BEE_COMMON)
 
 BEE_FILEWATCH = \
@@ -55,14 +49,17 @@ BEE_SUBPROCESS += $(TMPDIR)/bee_subprocess_subprocess_win.o
 BEE_SUBPROCESS += $(TMPDIR)/bee_subprocess_sharedmemory_win.o
 BEE_SOCKET += $(TMPDIR)/bee_utility_file_version.o
 BEE_SOCKET += $(TMPDIR)/bee_platform_version.o
+BEE_FILESYSTEM += $(TMPDIR)/binding_lua_posixfs.o
 
 else 
 
 BEE_SUBPROCESS += $(TMPDIR)/bee_subprocess_subprocess_posix.o
 
 ifeq "$(PLAT)" "linux"
-#TODO
+BEE_FILESYSTEM += $(TMPDIR)/binding_lua_filesystem.o \
+BEE_FILESYSTEM += $(TMPDIR)/bee_utility_path_helper.o
 else ifeq "$(PLAT)" "macosx"
+BEE_FILESYSTEM += $(TMPDIR)/binding_lua_posixfs.o
 BEE_FILEWATCH += $(TMPDIR)/bee_fsevent_fsevent_osx.o
 endif
 
@@ -71,6 +68,7 @@ endif
 
 BEE_ALL = \
 	$(TMPDIR)/binding_lua_embed.o \
+	$(BEE_FILESYSTEM) \
 	$(BEE_SOCKET) \
 	$(BEE_SUBPROCESS) \
 	$(BEE_THREAD) \
@@ -84,10 +82,4 @@ endif
 
 ifneq "$(PLAT)" "linux"
 BEE_ALL += $(BEE_FILEWATCH)
-endif
-
-ifeq "$(PLAT)" "mingw"
-BEE_ALL += $(BEE_FILESYSTEM)
-else
-BEE_ALL += $(BEE_POSIXFS)
 endif

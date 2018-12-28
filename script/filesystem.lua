@@ -249,12 +249,10 @@ function fs.last_write_time(path, newtime)
     return posixfs.utime(path._value, newtime)
 end
 
--- TODO
 function fs.exe_path()
     return constructor(posixfs.exe_path())
 end
 
--- TODO
 function fs.dll_path()
     return constructor(posixfs.dll_path())
 end

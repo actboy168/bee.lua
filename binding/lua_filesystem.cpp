@@ -1,9 +1,9 @@
 #include <lua.hpp>
+#include <bee/lua/binding.h>
 #include <filesystem>
 #include <bee/utility/path_helper.h>
 #include <bee/utility/unicode.h>
 #include <bee/lua/range.h>
-#include <bee/lua/binding.h>
 
 namespace fs = std::filesystem;
 
