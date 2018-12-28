@@ -18,7 +18,7 @@ int luaopen_bee(lua_State* L) {
     return do_span(L, "=module 'bee'", nonstd::embed(bee, "script/bee.lua"));
 }
 
-#if defined(__APPLE__) || defined(__MINGW32__)
+#if defined(__APPLE__)
 #include <bee/nonstd/embed.h>
 define_embed(filesystem, "script/filesystem.lua");
 

@@ -49,14 +49,15 @@ BEE_SUBPROCESS += $(TMPDIR)/bee_subprocess_subprocess_win.o
 BEE_SUBPROCESS += $(TMPDIR)/bee_subprocess_sharedmemory_win.o
 BEE_SOCKET += $(TMPDIR)/bee_utility_file_version.o
 BEE_SOCKET += $(TMPDIR)/bee_platform_version.o
-BEE_FILESYSTEM += $(TMPDIR)/binding_lua_posixfs.o
+BEE_FILESYSTEM += $(TMPDIR)/binding_lua_filesystem.o
+BEE_FILESYSTEM += $(TMPDIR)/bee_utility_path_helper.o
 
 else 
 
 BEE_SUBPROCESS += $(TMPDIR)/bee_subprocess_subprocess_posix.o
 
 ifeq "$(PLAT)" "linux"
-BEE_FILESYSTEM += $(TMPDIR)/binding_lua_filesystem.o \
+BEE_FILESYSTEM += $(TMPDIR)/binding_lua_filesystem.o
 BEE_FILESYSTEM += $(TMPDIR)/bee_utility_path_helper.o
 else ifeq "$(PLAT)" "macosx"
 BEE_FILESYSTEM += $(TMPDIR)/binding_lua_posixfs.o
