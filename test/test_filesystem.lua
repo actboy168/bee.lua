@@ -363,6 +363,19 @@ function test_fs:test_is_directory()
     is_directory(filename, false)
 end
 
+function test_fs:test_is_regular_file()
+    local function is_regular_file(path, b)
+        lu.assertEquals(fs.is_regular_file(fs.path(path)), b, path)
+    end
+    local filename = 'temp.txt'
+    is_regular_file('./test', false)
+    is_regular_file('.', false)
+    create_file(filename)
+    is_regular_file(filename, true)
+    os.remove(filename)
+    is_regular_file(filename, false)
+end
+
 function test_fs:test_create_directory()
     local function create_directory_ok(path, cb)
         local fspath = fs.path(path)

@@ -4,7 +4,6 @@ local thd = require 'bee.thread'
 local platform = require 'bee.platform'
 
 if platform.CRT == 'mingw' then
-    --直到mingw 8.2，仍然有许多不符合标准的行为，所以打几个补丁，以便让测试通过。
     local fs_remove = fs.remove
     function fs.remove(path)
         if not fs.exists(path) then
