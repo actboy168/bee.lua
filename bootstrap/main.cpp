@@ -126,6 +126,19 @@ static int pushargs (lua_State *L) {
 
 void pushprogdir(lua_State *L);
 
+static void init_cpath(lua_State *L) {
+    lua_getglobal(L, "package");
+    pushprogdir(L);
+#if defined(_WIN32)
+    lua_pushstring(L, "?.dll");
+#else
+    lua_pushstring(L, "?.so");
+#endif
+    lua_concat(L, 2);
+    lua_setfield(L, -2, "cpath");
+    lua_pop(L, 1);
+}
+
 static int handle_script (lua_State *L) {
   pushprogdir(L);
   lua_pushstring(L, "main.lua");
@@ -150,6 +163,7 @@ static int pmain (lua_State *L) {
   lua_pushboolean(L, 1);  /* signal for libraries to ignore env. vars. */
   lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
   luaL_openlibs(L);  /* open standard libraries */
+  init_cpath(L);
   createargtable(L, argv, argc);  /* create table 'arg' */
   lua_gc(L, LUA_GCGEN, 0, 0);  /* GC in generational mode */
   if (handle_script(L) != LUA_OK)
