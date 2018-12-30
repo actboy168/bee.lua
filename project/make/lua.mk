@@ -1,11 +1,12 @@
 ifeq "$(PLAT)" "mingw"
 alllua :  $(BINDIR)/lua54.dll $(BINDIR)/lua.exe $(BINDIR)/bee.exe $(BINDIR)/main.lua 
-else ifeq "$(PLAT)" "linux"
-alllua : $(BINDIR)/lua $(BINDIR)/bee $(BINDIR)/main.lua 
-LUALDFLAGS = -Wl,-E -lm -ldl -lreadline
 else
-alllua : $(BINDIR)/lua
-LUALDFLAGS = -lreadline
+	alllua : $(BINDIR)/lua $(BINDIR)/bee $(BINDIR)/main.lua 
+	ifeq "$(PLAT)" "linux"
+		LUALDFLAGS = -Wl,-E -lm -ldl -lreadline
+	else
+		LUALDFLAGS = -lreadline
+	endif
 endif
 
 LUA_FLAGS += -DLUAI_MAXCCALLS=200
