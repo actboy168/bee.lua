@@ -1,10 +1,10 @@
 ifeq "$(PLAT)" "mingw"
-alllua :  $(BINDIR)/lua54.dll $(BINDIR)/bee.exe
+alllua :  $(BINDIR)/lua54.dll $(BINDIR)/lua.exe $(BINDIR)/bee.exe $(BINDIR)/main.lua 
 else ifeq "$(PLAT)" "linux"
-alllua : $(BINDIR)/bee
+alllua : $(BINDIR)/lua $(BINDIR)/bee $(BINDIR)/main.lua 
 LUALDFLAGS = -Wl,-E -lm -ldl -lreadline
 else
-alllua : $(BINDIR)/bee
+alllua : $(BINDIR)/lua
 LUALDFLAGS = -lreadline
 endif
 
@@ -23,7 +23,7 @@ $(TMPDIR)/lua/$(1) : $(LUADIR)/$(subst .o,.c,$(1))  | $(TMPDIR)/lua
 endef
 $(foreach v, $(ALL_O), $(eval $(call build_lua,$(v))))
 
-$(BINDIR)/bee : $(TMPDIR)/lua/lua.o $(foreach v, $(BASE_O), $(TMPDIR)/lua/$(v)) | $(BINDIR)
+$(BINDIR)/lua : $(TMPDIR)/lua/lua.o $(foreach v, $(BASE_O), $(TMPDIR)/lua/$(v)) | $(BINDIR)
 	gcc -o $@ $^ $(LUALDFLAGS)
 	$(STRIP) $@
 
@@ -31,7 +31,7 @@ $(BINDIR)/lua54.dll : $(TMPDIR)/lua/utf8_crt.o $(foreach v, $(BASE_O), $(TMPDIR)
 	gcc -o $@ $^ $(LDSHARED)
 	$(STRIP) $@
 
-$(BINDIR)/bee.exe : $(TMPDIR)/lua/utf8_lua.o $(foreach v, $(BASE_O), $(TMPDIR)/lua/$(v)) | $(BINDIR)
+$(BINDIR)/lua.exe : $(TMPDIR)/lua/utf8_lua.o | $(BINDIR)
 	gcc -o $@ $^ $(LUALIB)
 	$(STRIP) $@
 
@@ -107,3 +107,23 @@ lvm.o: lvm.c lprefix.h lua.h luaconf.h ldebug.h lstate.h lobject.h \
  ltable.h lvm.h ljumptab.h
 lzio.o: lzio.c lprefix.h lua.h luaconf.h llimits.h lmem.h lstate.h \
  lobject.h ltm.h lzio.h
+
+$(TMPDIR)/bootstrap/main.o : bootstrap/main.cpp | $(TMPDIR)/bootstrap
+	$(CXX) -c $(CFLAGS) -o $@ $< -I$(LUADIR)
+
+$(TMPDIR)/bootstrap/progdir.o : bootstrap/progdir.cpp | $(TMPDIR)/bootstrap
+	$(CXX) -c $(CFLAGS) -o $@ $< -I$(LUADIR)
+
+$(BINDIR)/bee : $(TMPDIR)/bootstrap/main.o $(TMPDIR)/bootstrap/progdir.o $(foreach v, $(BASE_O), $(TMPDIR)/lua/$(v)) | $(BINDIR)
+	gcc -o $@ $^ $(LUALDFLAGS)
+	$(STRIP) $@
+
+$(BINDIR)/bee.exe : $(TMPDIR)/bootstrap/main.o $(TMPDIR)/bootstrap/progdir.o | $(BINDIR)
+	gcc -o $@ $^ $(LUALIB)
+	$(STRIP) $@
+
+$(BINDIR)/main.lua : bootstrap/main.lua
+	cp $^ $@
+
+$(TMPDIR)/bootstrap :
+	mkdir -p $@
