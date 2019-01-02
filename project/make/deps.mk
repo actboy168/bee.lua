@@ -73,7 +73,7 @@ $(TMPDIR)/binding_lua_serialization.o : binding/lua_serialization.cpp binding/lu
 $(TMPDIR)/binding_lua_socket.o : binding/lua_socket.cpp binding/lua_socket.cpp bee/net/unixsocket.h bee/net/socket.h bee/net/endpoint.h bee/utility/dynarray.h bee/nonstd/span.h bee/nonstd/expected.h bee/lua/binding.h bee/utility/unicode.h bee/config.h bee/error.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I$(LUADIR) -I.
 
-$(TMPDIR)/binding_lua_subprocess.o : binding/lua_subprocess.cpp binding/lua_subprocess.cpp bee/subprocess.h bee/config.h bee/subprocess/subprocess_win.h bee/net/socket.h bee/utility/file_helper.h bee/subprocess/subprocess_posix.h bee/utility/unicode.h bee/lua/binding.h bee/error.h | $(TMPDIR)
+$(TMPDIR)/binding_lua_subprocess.o : binding/lua_subprocess.cpp binding/lua_subprocess.cpp bee/subprocess.h bee/config.h bee/subprocess/subprocess_win.h bee/net/socket.h bee/utility/file_helper.h bee/subprocess/subprocess_posix.h bee/utility/unicode.h bee/lua/binding.h bee/lua/file.h bee/error.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I$(LUADIR) -I.
 
 $(TMPDIR)/binding_lua_thread.o : binding/lua_thread.cpp binding/lua_thread.cpp bee/utility/semaphore.h bee/utility/lockqueue.h bee/lua/binding.h bee/utility/unicode.h bee/config.h | $(TMPDIR)

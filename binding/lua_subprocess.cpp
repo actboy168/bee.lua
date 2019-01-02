@@ -1,6 +1,7 @@
 #include <bee/subprocess.h>
 #include <bee/utility/unicode.h>
 #include <bee/lua/binding.h>
+#include <bee/lua/file.h>
 #include <bee/error.h>
 #include <lua.hpp>
 #include <optional>
@@ -158,30 +159,6 @@ namespace bee::lua_subprocess {
             return std::optional<nativestring>();
         }
 
-        static int fileclose(lua_State* L) {
-            luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, 1, LUA_FILEHANDLE);
-            int ok = fclose(p->f);
-            int en = errno;  /* calls to Lua API may change this value */
-            if (ok) {
-                lua_pushboolean(L, 1);
-                return 1;
-            }
-            else {
-                lua_pushnil(L);
-                lua_pushfstring(L, "%s", strerror(en));
-                lua_pushinteger(L, en);
-                return 3;
-            }
-        }
-
-        static int newfile(lua_State* L, FILE* f) {
-            luaL_Stream* pf = (luaL_Stream*)lua_newuserdata(L, sizeof(luaL_Stream));
-            luaL_setmetatable(L, LUA_FILEHANDLE);
-            pf->closef = &fileclose;
-            pf->f = f;
-            return 1;
-        }
-
 #if defined(_WIN32)
 #   define LOAD_ARGS(L, idx) lua::to_string((L), (idx))
 #else
@@ -274,11 +251,11 @@ namespace bee::lua_subprocess {
                 }
                 lua_pop(L, 1);
                 if (strcmp(name, "stdin") == 0) {
-                    newfile(L, pipe.open_file(file::mode::eWrite));
+                    bee::lua::newfile(L, pipe.open_file(file::mode::eWrite));
                     return pipe.rd;
                 }
                 else {
-                    newfile(L, pipe.open_file(file::mode::eRead));
+                    bee::lua::newfile(L, pipe.open_file(file::mode::eRead));
                     return pipe.wr;
                 }
             }
