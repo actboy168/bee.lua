@@ -86,7 +86,7 @@ namespace bee::file {
 
     handle lock(const lua::string_type& filename) {
 #if defined(__APPLE__) 
-        int fd = ::open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_EXLOCK, 0644);
+        int fd = ::open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_EXLOCK | O_NONBLOCK, 0644);
         return handle(fd);
 #else
         int fd = ::open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);

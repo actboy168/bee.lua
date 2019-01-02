@@ -1,5 +1,8 @@
 #include <lua.hpp>
 #include <bee/lua/binding.h>
+#include <bee/lua/file.h>
+#include <bee/utility/file_helper.h>
+#include <bee/error.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
