@@ -581,3 +581,53 @@ function test_fs:test_dll_path()
     end
     lu.assertEquals(fs.dll_path():string(), getdll())
 end
+
+function test_fs:test_filelock_1()
+    local lock = fs.path("temp.lock")
+    local f1, err1 = fs.filelock(lock)
+    lu.assertUserdata(f1, err1)
+    lu.assertNil(fs.filelock(lock))
+    f1:close()
+    local f2, err2 = fs.filelock(lock)
+    lu.assertUserdata(f2, err2)
+    f2:close()
+    fs.remove(fs.path("temp.lock"))
+end
+
+function test_fs:test_filelock_2()
+    local subprocess = require "bee.subprocess"
+    local function getexe()
+        local i = 0
+        while arg[i] ~= nil do
+            i = i - 1
+        end
+        return arg[i + 1]
+    end
+    local function createLua(script, option)
+        local init = ("package.cpath = [[%s]]"):format(package.cpath)
+        option = option or {}
+        option[1] = {
+            getexe(),
+            '-e', init,
+            '-e', script,
+        }
+        return subprocess.spawn(option)
+    end
+
+    local process = createLua([[
+        local fs = require 'bee.filesystem'
+        fs.filelock(fs.path("temp.lock"))
+        io.stdout:write 'ok'
+        io.stdout:flush()
+        io.read 'a'
+    ]], { stdin = true, stdout = true, stderr = true })
+    lu.assertEquals(process.stdout:read(2), 'ok')
+    lu.assertNil(fs.filelock(fs.path("temp.lock")))
+    process.stdin:close()
+    lu.assertEquals(process.stderr:read 'a', '')
+    lu.assertEquals(process:wait(), 0)
+    local f, err = fs.filelock(fs.path("temp.lock"))
+    lu.assertUserdata(f, err)
+    f:close()
+    fs.remove(fs.path("temp.lock"))
+end

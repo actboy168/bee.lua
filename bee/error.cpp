@@ -7,6 +7,10 @@
 #endif
 
 namespace bee {
+    int last_crterror() {
+        return errno;
+    }
+
     int last_syserror() {
 #if defined(_WIN32)
         return ::GetLastError();
@@ -33,6 +37,13 @@ namespace bee {
 
     std::system_error make_error(int err, const char* message) {
         return std::system_error(make_error_code(err), message ? message : "");
+    }
+
+    std::system_error make_crterror(const char* message) {
+        return std::system_error(
+            std::error_code(last_crterror(), std::generic_category()), 
+            message ? message : ""
+        );
     }
 
     std::system_error make_syserror(const char* message) {

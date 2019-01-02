@@ -351,9 +351,9 @@ namespace bee::win::subprocess {
             sa.lpSecurityDescriptor = NULL;
             HANDLE read_pipe = NULL, write_pipe = NULL;
             if (!::CreatePipe(&read_pipe, &write_pipe, &sa, 0)) {
-                return { NULL, NULL };
+                return { file::handle::invalid(), file::handle::invalid() };
             }
-            return { read_pipe, write_pipe };
+            return { file::handle(read_pipe), file::handle(write_pipe) };
         }
 
         int peek(FILE* f) {

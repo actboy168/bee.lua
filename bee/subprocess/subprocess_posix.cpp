@@ -388,9 +388,9 @@ namespace bee::posix::subprocess {
         open_result open() {
             int fds[2];
             if (!net::socket::blockpair(fds)) {
-                return { 0, 0 };
+                return { file::handle::invalid(), file::handle::invalid() };
             }
-            return { fds[0], fds[1] };
+            return { file::handle(fds[0]), file::handle(fds[1]) };
         }
         int peek(FILE* f) {
             char tmp[256];

@@ -235,7 +235,7 @@ namespace bee::lua_subprocess {
             case LUA_TUSERDATA: {
                 luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, -1, LUA_FILEHANDLE);
                 if (!p->closef) {
-                    return 0;
+                    return file::handle::invalid();
                 }
                 return file::dup(p->f);
             }
@@ -249,11 +249,19 @@ namespace bee::lua_subprocess {
                 }
                 lua_pop(L, 1);
                 if (strcmp(name, "stdin") == 0) {
-                    bee::lua::newfile(L, pipe.open_file(file::mode::eWrite));
+                    FILE* f = pipe.open_file(file::mode::eWrite);
+                    if (!f) {
+                        return file::handle::invalid();
+                    }
+                    bee::lua::newfile(L, f);
                     return pipe.rd;
                 }
                 else {
-                    bee::lua::newfile(L, pipe.open_file(file::mode::eRead));
+                    FILE* f = pipe.open_file(file::mode::eRead);
+                    if (!f) {
+                        return file::handle::invalid();
+                    }
+                    bee::lua::newfile(L, f);
                     return pipe.wr;
                 }
             }
@@ -261,15 +269,14 @@ namespace bee::lua_subprocess {
                 break;
             }
             lua_pop(L, 1);
-            return 0;
+            return file::handle::invalid();
         }
 
         static file::handle cast_stdio(lua_State* L, subprocess::spawn& self, const char* name, subprocess::stdio type) {
             file::handle f = cast_stdio(L, name);
-            if (!f) {
-                return 0;
+            if (f) {
+                self.redirect(type, f);
             }
-            self.redirect(type, f);
             return f;
         }
 

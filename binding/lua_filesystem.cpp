@@ -2,8 +2,11 @@
 #include <bee/lua/binding.h>
 #include <filesystem>
 #include <bee/utility/path_helper.h>
+#include <bee/utility/file_helper.h>
 #include <bee/utility/unicode.h>
 #include <bee/lua/range.h>
+#include <bee/lua/file.h>
+#include <bee/error.h>
 
 namespace fs = std::filesystem;
 
@@ -418,7 +421,28 @@ namespace bee::lua_filesystem {
         return path::constructor_(L, std::move(path_helper::dll_path().value()));
         LUA_TRY_END;
     }
-    
+
+    static int filelock(lua_State* L)
+    {
+        LUA_TRY;
+        const fs::path& self = path::to(L, 1);
+        file::handle fd = file::lock(self.string<lua::string_type::value_type>());
+        if (!fd) {
+            lua_pushnil(L);
+            lua_pushstring(L, make_syserror().what());
+            return 2;
+        }
+        FILE* f = file::open(fd, file::mode::eWrite);
+        if (!f) {
+            lua_pushnil(L);
+            lua_pushstring(L, make_crterror().what());
+            return 2;
+        }
+        lua::newfile(L, f);
+        return 1;
+        LUA_TRY_END;
+    }
+
     int luaopen(lua_State* L) {
         static luaL_Reg lib[] = {
             { "path", path::constructor },
@@ -437,6 +461,7 @@ namespace bee::lua_filesystem {
             { "last_write_time", last_write_time },
             { "exe_path", exe_path },
             { "dll_path", dll_path },
+            { "filelock", filelock },
             { NULL, NULL }
         };
         luaL_newlib(L, lib);
