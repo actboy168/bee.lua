@@ -117,7 +117,7 @@ namespace bee::osx::fsevent {
         taskid id = ++m_gentask;
         m_apc_queue.push ({
             apc_arg::type::Add,
-            ++m_gentask,
+            id,
             path
         });
         thread_signal();
