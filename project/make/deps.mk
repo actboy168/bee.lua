@@ -25,7 +25,7 @@ $(TMPDIR)/bee_net_socket.o : bee/net/socket.cpp bee/net/socket.cpp bee/utility/u
 $(TMPDIR)/bee_net_unixsocket.o : bee/net/unixsocket.cpp bee/net/unixsocket.cpp bee/net/unixsocket.h bee/net/socket.h bee/net/endpoint.h bee/utility/dynarray.h bee/nonstd/span.h bee/nonstd/expected.h bee/utility/unicode.h bee/config.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I.
 
-$(TMPDIR)/bee_platform_version.o : bee/platform/version.cpp bee/platform/version.cpp bee/platform/version.h bee/config.h bee/nonstd/enum.h bee/utility/file_version.h | $(TMPDIR)
+$(TMPDIR)/bee_platform_version.o : bee/platform/version.cpp bee/platform/version.cpp bee/platform/version.h bee/config.h bee/nonstd/enum.h bee/utility/module_version.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I.
 
 $(TMPDIR)/bee_subprocess_sharedmemory_win.o : bee/subprocess/sharedmemory_win.cpp bee/subprocess/sharedmemory_win.cpp bee/subprocess/sharedmemory_win.h | $(TMPDIR)
@@ -37,7 +37,10 @@ $(TMPDIR)/bee_subprocess_subprocess_posix.o : bee/subprocess/subprocess_posix.cp
 $(TMPDIR)/bee_subprocess_subprocess_win.o : bee/subprocess/subprocess_win.cpp bee/subprocess/subprocess_win.cpp bee/subprocess.h bee/config.h bee/subprocess/subprocess_win.h bee/net/socket.h bee/subprocess/subprocess_posix.h bee/subprocess/sharedmemory_win.h bee/nonstd/span.h bee/utility/format.h bee/utility/hybrid_array.h bee/utility/unicode.h bee/subprocess/args_helper.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I.
 
-$(TMPDIR)/bee_utility_file_version.o : bee/utility/file_version.cpp bee/utility/file_version.cpp bee/utility/file_version.h bee/config.h bee/utility/format.h bee/utility/hybrid_array.h bee/utility/unicode.h | $(TMPDIR)
+$(TMPDIR)/bee_utility_file_helper.o : bee/utility/file_helper.cpp bee/utility/file_helper.cpp | $(TMPDIR)
+	$(CXX) -c $(CFLAGS) -o $@ $<  -I.
+
+$(TMPDIR)/bee_utility_module_version.o : bee/utility/module_version.cpp bee/utility/module_version.cpp bee/utility/module_version.h bee/config.h bee/utility/format.h bee/utility/hybrid_array.h bee/utility/unicode.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I.
 
 $(TMPDIR)/bee_utility_path_helper.o : bee/utility/path_helper.cpp bee/utility/path_helper.cpp bee/utility/path_helper.h bee/config.h bee/nonstd/expected.h bee/utility/dynarray.h bee/nonstd/span.h bee/error.h | $(TMPDIR)
