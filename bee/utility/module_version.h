@@ -6,11 +6,11 @@
 #include <memory>
 
 namespace bee {
-	class _BEE_API file_version {
+	class _BEE_API module_version {
 		const static WORD ansi_code_page = 1252;
 	public:
-		file_version();
-		file_version(const wchar_t* module_path);
+		module_version();
+		module_version(const wchar_t* module_path);
 		const wchar_t* operator[] (const wchar_t* key) const;
 		VS_FIXEDFILEINFO* fixed_file_info() const;
 		bool select_language(WORD langid);
@@ -40,9 +40,9 @@ namespace bee {
         bool vaild_;
 	};
 
-	struct _BEE_API simple_file_version {
-		simple_file_version();
-		simple_file_version(const wchar_t* module_path, const wchar_t* key = L"FileVersion", const wchar_t pred = L',');
+	struct _BEE_API simple_module_version {
+		simple_module_version();
+		simple_module_version(const wchar_t* module_path, const wchar_t* key = L"FileVersion", const wchar_t pred = L',');
 		uint32_t major;
 		uint32_t minor;
 		uint32_t revision;

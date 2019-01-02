@@ -1,5 +1,5 @@
 #include <bee/platform/version.h>
-#include <bee/utility/file_version.h>
+#include <bee/utility/module_version.h>
 #include <Windows.h>
 
 namespace bee::platform {
@@ -49,7 +49,7 @@ namespace bee::platform {
 			// see
 			//   http://msdn.microsoft.com/en-us/library/windows/desktop/ms724451(v=vs.85).aspx
 			//   http://msdn.microsoft.com/en-us/library/windows/desktop/ms724429(v=vs.85).aspx
-			simple_file_version sfv(L"kernel32.dll", L"ProductVersion", L'.');
+			simple_module_version sfv(L"kernel32.dll", L"ProductVersion", L'.');
 			major = sfv.major;
 			minor = sfv.minor;
 			build = sfv.revision;

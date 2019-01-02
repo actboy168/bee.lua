@@ -105,9 +105,6 @@
     <ClCompile Include="..\..\bee\platform\version.cpp">
       <Filter>bee\platform</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\bee\utility\file_version.cpp">
-      <Filter>bee\utility</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\binding\lua_serialization.cpp">
       <Filter>binding</Filter>
     </ClCompile>
@@ -116,6 +113,9 @@
     </ClCompile>
     <ClCompile Include="..\..\bee\subprocess\sharedmemory_win.cpp">
       <Filter>bee\subprocess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bee\utility\module_version.cpp">
+      <Filter>bee\utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -215,9 +215,6 @@
     <ClInclude Include="..\..\bee\platform\version.h">
       <Filter>bee\platform</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\bee\utility\file_version.h">
-      <Filter>bee\utility</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\bee\nonstd\enum.h">
       <Filter>bee\nonstd</Filter>
     </ClInclude>
@@ -229,6 +226,9 @@
     </ClInclude>
     <ClInclude Include="..\..\bee\subprocess\args_helper.h">
       <Filter>bee\subprocess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\utility\module_version.h">
+      <Filter>bee\utility</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
