@@ -145,9 +145,41 @@ namespace bee::lua_filesystem {
                 self.replace_extension(to(L, 2));
                 lua_settop(L, 1);
                 return 1;
+            default:
+                luaL_checktype(L, 2, LUA_TSTRING);
+                return 0;
             }
-            luaL_checktype(L, 2, LUA_TSTRING);
-            return 0;
+            LUA_TRY_END;
+        }
+
+        static int equal_extension(lua_State* L, const fs::path& self, const lua::string_type& ext)
+        {
+            auto const& selfext = self.extension();
+            if (selfext.empty()) {
+                lua_pushboolean(L, ext.empty());
+                return 1;
+            }
+            if (ext[0] != '.') {
+                lua_pushboolean(L, path_helper::equal(selfext, lua::string_type{ '.' } + ext));
+                return 1;
+            }
+            lua_pushboolean(L, path_helper::equal(selfext, ext));
+            return 1;
+        }
+
+        static int equal_extension(lua_State* L)
+        {
+            LUA_TRY;
+            fs::path& self = path::to(L, 1);
+            switch (lua_type(L, 2)) {
+            case LUA_TSTRING:
+                return equal_extension(L, self, lua::to_string(L, 2));
+            case LUA_TUSERDATA:
+                return equal_extension(L, self, to(L, 2));
+            default:
+                luaL_checktype(L, 2, LUA_TSTRING);
+                return 0;
+            }
             LUA_TRY_END;
         }
 
@@ -248,6 +280,7 @@ namespace bee::lua_filesystem {
                     { "is_relative", path::is_relative },
                     { "remove_filename", path::remove_filename },
                     { "replace_extension", path::replace_extension },
+                    { "equal_extension", path::equal_extension },
                     { "list_directory", path::list_directory },
                     { "permissions", path::permissions },
                     { "add_permissions", path::add_permissions },

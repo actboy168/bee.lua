@@ -152,6 +152,20 @@ function test_fs:test_replace_extension()
     lu.assertEquals(replace_extension('a/b/c.ext', '..lua'), 'a/b/c..lua')
 end
 
+function test_fs:test_equal_extension()
+    local function equal_extension(path, ext)
+        return lu.assertIsTrue(fs.path(path):equal_extension(ext), path)
+    end
+    equal_extension('a/b/c.ext', '.ext')
+    equal_extension('a/b/c.ext', 'ext')
+    equal_extension('a/b/c', '')
+    equal_extension('a/b/.ext', '')
+    equal_extension('a/b/c.', '.')
+    equal_extension('a/b/c..', '.')
+    equal_extension('a/b/c..lua', '.lua')
+    equal_extension('a/b/c..lua', 'lua')
+end
+
 local ALLOW_WRITE = 0x92
 local USER_WRITE = 0x80
 

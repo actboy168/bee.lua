@@ -166,6 +166,23 @@ namespace bee::lua_posixfs {
         return 1;
     }
 
+    static int lfilelock(lua_State* L) {
+        file::handle fd = file::lock(luaL_checkstring(L, 1));
+        if (!fd) {
+            lua_pushnil(L);
+            lua_pushstring(L, make_syserror().what());
+            return 2;
+        }
+        FILE* f = file::open(fd, file::mode::eWrite);
+        if (!f) {
+            lua_pushnil(L);
+            lua_pushstring(L, make_crterror().what());
+            return 2;
+        }
+        lua::newfile(L, f);
+        return 1;
+    }
+
     int luaopen(lua_State* L) {
         static luaL_Reg lib[] = {
             { "getcwd", lgetcwd },
@@ -176,6 +193,7 @@ namespace bee::lua_posixfs {
             { "dir", ldir },
             { "exe_path", lexe_path },
             { "dll_path", ldll_path },
+            { "filelock", lfilelock },
             { NULL, NULL }
         };
         luaL_newlib(L, lib);
