@@ -147,7 +147,7 @@ namespace bee::win::subprocess {
         flags_ |= CREATE_SUSPENDED;
     }
     
-    void spawn::redirect(stdio type, pipe::handle h) {
+    void spawn::redirect(stdio type, file::handle h) {
         si_.dwFlags |= STARTF_USESTDHANDLES;
         inherit_handle_ = true;
         switch (type) {
@@ -340,33 +340,8 @@ namespace bee::win::subprocess {
     }
 
     namespace pipe {
-        FILE* open_result::open_file(mode m) {
-            switch (m) {
-            case mode::eRead:
-                return _fdopen(_open_osfhandle((intptr_t)rd, _O_RDONLY | _O_BINARY), "rb");
-            case mode::eWrite:
-                return _fdopen(_open_osfhandle((intptr_t)wr, _O_WRONLY | _O_BINARY), "wb");
-            default:
-                assert(false);
-                return 0;
-            }
-        }
-
-        static handle to_handle(FILE* f) {
-            int n = _fileno(f);
-            return (n >= 0) ? (HANDLE)_get_osfhandle(n) : INVALID_HANDLE_VALUE;
-        }
-
-        handle dup(FILE* f) {
-            handle h = to_handle(f);
-            if (h == INVALID_HANDLE_VALUE) {
-                return 0;
-            }
-            handle newh;
-            if (!::DuplicateHandle(::GetCurrentProcess(), h, ::GetCurrentProcess(), &newh, 0, FALSE, DUPLICATE_SAME_ACCESS)) {
-                return 0;
-            }
-            return newh;
+        FILE* open_result::open_file(file::mode m) {
+            return file::open(m == file::mode::eRead ? rd : wr, m);
         }
 
         open_result open() {
@@ -383,7 +358,7 @@ namespace bee::win::subprocess {
 
         int peek(FILE* f) {
             DWORD rlen = 0;
-            if (PeekNamedPipe(to_handle(f), 0, 0, 0, &rlen, 0)) {
+            if (PeekNamedPipe(file::get_handle(f), 0, 0, 0, &rlen, 0)) {
                 return rlen;
             }
             return -1;

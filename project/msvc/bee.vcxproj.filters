@@ -117,6 +117,9 @@
     <ClCompile Include="..\..\bee\utility\module_version.cpp">
       <Filter>bee\utility</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\bee\utility\file_helper.cpp">
+      <Filter>bee\utility</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\bee\subprocess\subprocess_posix.h">
@@ -228,6 +231,9 @@
       <Filter>bee\subprocess</Filter>
     </ClInclude>
     <ClInclude Include="..\..\bee\utility\module_version.h">
+      <Filter>bee\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\utility\file_helper.h">
       <Filter>bee\utility</Filter>
     </ClInclude>
   </ItemGroup>

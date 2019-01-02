@@ -7,6 +7,7 @@
 #include <string>
 #include <memory>
 #include <bee/net/socket.h>
+#include <bee/utility/file_helper.h>
 
 namespace bee::win::subprocess {
     namespace ignore_case {
@@ -37,19 +38,13 @@ namespace bee::win::subprocess {
     };
 
     namespace pipe {
-        typedef HANDLE handle;
-        enum class mode {
-            eRead,
-            eWrite,
-        };
         struct open_result {
-            handle rd;
-            handle wr;
-            FILE*  open_file(mode m);
+            file::handle rd;
+            file::handle wr;
+            FILE*  open_file(file::mode m);
             operator bool() { return rd && wr; }
         };
         extern std::vector<net::socket::fd_t> sockets;
-        handle dup(FILE* f);
         _BEE_API open_result open();
         _BEE_API int         peek(FILE* f);
     }
@@ -96,7 +91,7 @@ namespace bee::win::subprocess {
         bool set_console(console type);
         bool hide_window();
         void suspended();
-        void redirect(stdio type, pipe::handle h);
+        void redirect(stdio type, file::handle h);
         void duplicate(net::socket::fd_t fd);
         void env_set(const std::wstring& key, const std::wstring& value);
         void env_del(const std::wstring& key);

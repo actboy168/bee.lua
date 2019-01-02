@@ -152,7 +152,7 @@ namespace bee::posix::subprocess {
         suspended_ = true;
     }
 
-    void spawn::redirect(stdio type, pipe::handle h) { 
+    void spawn::redirect(stdio type, file::handle h) { 
         switch (type) {
         case stdio::eInput:
             fds_[0] = h;
@@ -382,19 +382,8 @@ namespace bee::posix::subprocess {
     }
 
     namespace pipe {
-        FILE* open_result::open_file(mode m) {
-            switch (m) {
-            case mode::eRead:
-                return fdopen(rd, "rb");
-            case mode::eWrite:
-                return fdopen(wr, "wb");
-            default:
-                assert(false);
-                return 0;
-            }
-        }
-        handle dup(FILE* f) {
-            return ::dup(fileno(f));
+        FILE* open_result::open_file(file::mode m) {
+            return file::open(m == file::mode::eRead ? rd : wr, m);
         }
         open_result open() {
             int fds[2];
@@ -405,7 +394,7 @@ namespace bee::posix::subprocess {
         }
         int peek(FILE* f) {
             char tmp[256];
-            int rc = recv(fileno(f), tmp, sizeof(tmp), MSG_PEEK | MSG_DONTWAIT);
+            int rc = recv(file::get_handle(f), tmp, sizeof(tmp), MSG_PEEK | MSG_DONTWAIT);
             if (rc == 0) {
                 return -1;
             }

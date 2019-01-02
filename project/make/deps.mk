@@ -31,13 +31,13 @@ $(TMPDIR)/bee_platform_version.o : bee/platform/version.cpp bee/platform/version
 $(TMPDIR)/bee_subprocess_sharedmemory_win.o : bee/subprocess/sharedmemory_win.cpp bee/subprocess/sharedmemory_win.cpp bee/subprocess/sharedmemory_win.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I.
 
-$(TMPDIR)/bee_subprocess_subprocess_posix.o : bee/subprocess/subprocess_posix.cpp bee/subprocess/subprocess_posix.cpp bee/subprocess.h bee/config.h bee/subprocess/subprocess_win.h bee/net/socket.h bee/subprocess/subprocess_posix.h bee/utility/format.h bee/utility/hybrid_array.h bee/utility/unicode.h | $(TMPDIR)
+$(TMPDIR)/bee_subprocess_subprocess_posix.o : bee/subprocess/subprocess_posix.cpp bee/subprocess/subprocess_posix.cpp bee/subprocess.h bee/config.h bee/subprocess/subprocess_win.h bee/net/socket.h bee/utility/file_helper.h bee/subprocess/subprocess_posix.h bee/utility/format.h bee/utility/hybrid_array.h bee/utility/unicode.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I.
 
-$(TMPDIR)/bee_subprocess_subprocess_win.o : bee/subprocess/subprocess_win.cpp bee/subprocess/subprocess_win.cpp bee/subprocess.h bee/config.h bee/subprocess/subprocess_win.h bee/net/socket.h bee/subprocess/subprocess_posix.h bee/subprocess/sharedmemory_win.h bee/nonstd/span.h bee/utility/format.h bee/utility/hybrid_array.h bee/utility/unicode.h bee/subprocess/args_helper.h | $(TMPDIR)
+$(TMPDIR)/bee_subprocess_subprocess_win.o : bee/subprocess/subprocess_win.cpp bee/subprocess/subprocess_win.cpp bee/subprocess.h bee/config.h bee/subprocess/subprocess_win.h bee/net/socket.h bee/utility/file_helper.h bee/subprocess/subprocess_posix.h bee/subprocess/sharedmemory_win.h bee/nonstd/span.h bee/utility/format.h bee/utility/hybrid_array.h bee/utility/unicode.h bee/subprocess/args_helper.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I.
 
-$(TMPDIR)/bee_utility_file_helper.o : bee/utility/file_helper.cpp bee/utility/file_helper.cpp | $(TMPDIR)
+$(TMPDIR)/bee_utility_file_helper.o : bee/utility/file_helper.cpp bee/utility/file_helper.cpp bee/utility/file_helper.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I.
 
 $(TMPDIR)/bee_utility_module_version.o : bee/utility/module_version.cpp bee/utility/module_version.cpp bee/utility/module_version.h bee/config.h bee/utility/format.h bee/utility/hybrid_array.h bee/utility/unicode.h | $(TMPDIR)
@@ -73,7 +73,7 @@ $(TMPDIR)/binding_lua_serialization.o : binding/lua_serialization.cpp binding/lu
 $(TMPDIR)/binding_lua_socket.o : binding/lua_socket.cpp binding/lua_socket.cpp bee/net/unixsocket.h bee/net/socket.h bee/net/endpoint.h bee/utility/dynarray.h bee/nonstd/span.h bee/nonstd/expected.h bee/lua/binding.h bee/utility/unicode.h bee/config.h bee/error.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I$(LUADIR) -I.
 
-$(TMPDIR)/binding_lua_subprocess.o : binding/lua_subprocess.cpp binding/lua_subprocess.cpp bee/subprocess.h bee/config.h bee/subprocess/subprocess_win.h bee/net/socket.h bee/subprocess/subprocess_posix.h bee/utility/unicode.h bee/lua/binding.h bee/error.h | $(TMPDIR)
+$(TMPDIR)/binding_lua_subprocess.o : binding/lua_subprocess.cpp binding/lua_subprocess.cpp bee/subprocess.h bee/config.h bee/subprocess/subprocess_win.h bee/net/socket.h bee/utility/file_helper.h bee/subprocess/subprocess_posix.h bee/utility/unicode.h bee/lua/binding.h bee/error.h | $(TMPDIR)
 	$(CXX) -c $(CFLAGS) -o $@ $<  -I$(LUADIR) -I.
 
 $(TMPDIR)/binding_lua_thread.o : binding/lua_thread.cpp binding/lua_thread.cpp bee/utility/semaphore.h bee/utility/lockqueue.h bee/lua/binding.h bee/utility/unicode.h bee/config.h | $(TMPDIR)

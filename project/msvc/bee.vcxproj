@@ -193,6 +193,7 @@ $(projectDir)..\..\make\luamake.exe $(projectDir)..\..\project\embed.lua $(proje
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\bee\subprocess\subprocess_win.cpp" />
+    <ClCompile Include="..\..\bee\utility\file_helper.cpp" />
     <ClCompile Include="..\..\bee\utility\module_version.cpp" />
     <ClCompile Include="..\..\bee\utility\path_helper.cpp" />
     <ClCompile Include="..\..\bee\utility\unicode.cpp" />
@@ -248,6 +249,7 @@ $(projectDir)..\..\make\luamake.exe $(projectDir)..\..\project\embed.lua $(proje
     </ClInclude>
     <ClInclude Include="..\..\bee\subprocess\subprocess_win.h" />
     <ClInclude Include="..\..\bee\utility\dynarray.h" />
+    <ClInclude Include="..\..\bee\utility\file_helper.h" />
     <ClInclude Include="..\..\bee\utility\module_version.h" />
     <ClInclude Include="..\..\bee\utility\format.h" />
     <ClInclude Include="..\..\bee\utility\hybrid_array.h" />

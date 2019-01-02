@@ -19,6 +19,7 @@ BEE_SOCKET = \
 
 BEE_SUBPROCESS = \
 	$(TMPDIR)/binding_lua_subprocess.o \
+	$(TMPDIR)/bee_utility_file_helper.o \
 	$(BEE_COMMON)
 
 BEE_THREAD = \
