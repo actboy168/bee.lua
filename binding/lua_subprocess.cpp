@@ -23,8 +23,6 @@ namespace bee::lua_socket {
 }
 
 namespace bee::lua_subprocess {
-    typedef lua::string_type nativestring;
-
 #ifdef ENABLE_FILESYSTEM
     static fs::path& topath(lua_State* L, int idx) {
         return *(fs::path*)getObject(L, idx, "filesystem");
@@ -142,21 +140,21 @@ namespace bee::lua_subprocess {
     }
 
     namespace spawn {
-        static std::optional<nativestring> cast_cwd(lua_State* L) {
+        static std::optional<lua::string_type> cast_cwd(lua_State* L) {
             if (LUA_TSTRING == lua_getfield(L, 1, "cwd")) {
-                nativestring ret(lua::to_string(L, -1));
+                lua::string_type ret(lua::to_string(L, -1));
                 lua_pop(L, 1);
                 return ret;
             }
 #ifdef ENABLE_FILESYSTEM
             else if (LUA_TUSERDATA == lua_type(L, -1)) {
-                nativestring ret = topath(L, -1).string<nativestring::value_type>();
+                lua::string_type ret = topath(L, -1).string<lua::string_type::value_type>();
                 lua_pop(L, 1);
                 return ret;
             }
 #endif
             lua_pop(L, 1);
-            return std::optional<nativestring>();
+            return std::optional<lua::string_type>();
         }
 
 #if defined(_WIN32)
@@ -359,7 +357,7 @@ namespace bee::lua_subprocess {
                 return 0;
             }
 
-            std::optional<nativestring> cwd = cast_cwd(L);
+            std::optional<lua::string_type> cwd = cast_cwd(L);
             cast_env(L, spawn);
             cast_suspended(L, spawn);
             cast_option(L, spawn);
