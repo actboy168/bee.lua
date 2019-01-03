@@ -73,33 +73,29 @@
     <OutDir>$(projectDir)..\..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
     <IntDir>$(projectDir)..\..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <CustomBuildAfterTargets>
-    </CustomBuildAfterTargets>
-    <CustomBuildBeforeTargets>PrepareForBuild</CustomBuildBeforeTargets>
+    <CustomBuildAfterTargets>PrepareForBuild</CustomBuildAfterTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(projectDir)..\..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
     <IntDir>$(projectDir)..\..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <CustomBuildAfterTargets>
-    </CustomBuildAfterTargets>
-    <CustomBuildBeforeTargets>PrepareForBuild</CustomBuildBeforeTargets>
+    <CustomBuildAfterTargets>PrepareForBuild</CustomBuildAfterTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IntDir>$(projectDir)..\..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <OutDir>$(projectDir)..\..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <CustomBuildAfterTargets>
-    </CustomBuildAfterTargets>
-    <CustomBuildBeforeTargets>PrepareForBuild</CustomBuildBeforeTargets>
+    <CustomBuildAfterTargets>PrepareForBuild</CustomBuildAfterTargets>
+    <CustomBuildBeforeTargets>
+    </CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IntDir>$(projectDir)..\..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <OutDir>$(projectDir)..\..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <CustomBuildAfterTargets>
-    </CustomBuildAfterTargets>
-    <CustomBuildBeforeTargets>PrepareForBuild</CustomBuildBeforeTargets>
+    <CustomBuildAfterTargets>PrepareForBuild</CustomBuildAfterTargets>
+    <CustomBuildBeforeTargets>
+    </CustomBuildBeforeTargets>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
