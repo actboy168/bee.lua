@@ -150,6 +150,7 @@ function test_fs:test_replace_extension()
 
     lu.assertEquals(replace_extension('a/b/c.ext', 'lua'), 'a/b/c.lua')
     lu.assertEquals(replace_extension('a/b/c.ext', '..lua'), 'a/b/c..lua')
+    lu.assertEquals(replace_extension('c.ext', '.lua'), 'c.lua')
 end
 
 function test_fs:test_equal_extension()

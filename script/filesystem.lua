@@ -76,7 +76,7 @@ function path_mt:extension()
 end
 
 function path_mt:remove_filename()
-    self._value = self._value:match("^(.+/)[%w_.-]*$")
+    self._value = self._value:match("^(.+/)[%w_.-]*$") or ""
     return self
 end
 
