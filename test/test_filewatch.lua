@@ -76,9 +76,9 @@ function test_fw:test_2()
             if w then
                 n = 100
                 if type(v) == 'userdata' or type(v) == 'table' then
-                    list[v:string()] = true
+                    list[#list+1] = v
                 else
-                    list[v] = true
+                    list[#list+1] = fs.path(v)
                 end
             else
                 n = n - 1
@@ -89,7 +89,12 @@ function test_fw:test_2()
             end
         end
         local function assertHas(path)
-            lu.assertIsTrue(list[path:string()])
+            for _, v in ipairs(list) do
+                if v == path then
+                    return
+                end
+            end
+            lu.assertNil(path)
         end
         assertHas(root / 'test1')
         assertHas(root / 'test1.txt')
