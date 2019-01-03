@@ -13,8 +13,6 @@ namespace bee::win::fsevent {
     enum class tasktype {
         Error,
         Confirm,
-        Create,
-        Delete,
         Modify,
         Rename,
     };

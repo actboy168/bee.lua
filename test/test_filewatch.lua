@@ -1,6 +1,7 @@
 local lu = require 'luaunit'
 local fw = require 'bee.filewatch'
 local fs = require 'bee.filesystem'
+local platform = require 'bee.platform'
 local thread = require 'bee.thread'
 
 test_fw = {}
@@ -29,7 +30,7 @@ local function assertSelect(what, value)
         local w, v = fw.select()
         if w then
             lu.assertEquals(w, what, v)
-            if type(value) == 'userdata' then
+            if type(value) == 'userdata' or type(value) == 'table' then
                 lu.assertEquals(fs.path(v), value)
             else
                 lu.assertEquals(v, value)
@@ -64,19 +65,34 @@ end
 function test_fw:test_2()
     test(function(root)
         create_dir 'test1'
-        assertSelect('create', root / 'test1')
-
         create_file 'test1.txt'
-        assertSelect('create', root / 'test1.txt')
-
         fs.rename(root / 'test1.txt', root / 'test2.txt')
-        assertSelect('rename', root / 'test1.txt')
-        assertSelect('rename', root / 'test2.txt')
-
-        modify_file('test2.txt', 'ok')
-        assertSelect('modify', root / 'test2.txt')
-
         fs.remove(root / 'test2.txt')
-        assertSelect('delete', root / 'test2.txt')
+
+        local list = {}
+        local n = 10
+        while true do
+            local w, v = fw.select()
+            if w then
+                n = 10
+                if type(v) == 'userdata' or type(v) == 'table' then
+                    list[v:string()] = true
+                else
+                    list[v] = true
+                end
+            else
+                n = n - 1
+                if n < 0 then
+                    break
+                end
+                thread.sleep(0.001)
+            end
+        end
+        local function assertHas(path)
+            lu.assertIsTrue(list[path:string()])
+        end
+        assertHas(root / 'test1')
+        assertHas(root / 'test1.txt')
+        assertHas(root / 'test2.txt')
     end)
 end

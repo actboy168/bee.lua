@@ -220,22 +220,22 @@ namespace bee::osx::fsevent {
 
     void watch::event_cb(const char* paths[], const FSEventStreamEventFlags flags[], size_t n) {
         for (size_t i = 0; i < n; ++i) {
-            if (flags[i] & kFSEventStreamEventFlagItemCreated) {
-                m_notify.push({
-                    tasktype::Create, paths[i]
-                });
-            }
-            if (flags[i] & kFSEventStreamEventFlagItemRemoved) {
-                m_notify.push({
-                    tasktype::Delete, paths[i]
-                });
-            }
-            if (flags[i] & kFSEventStreamEventFlagItemRenamed) {
+            if (flags[i] & (
+                kFSEventStreamEventFlagItemCreated |
+                kFSEventStreamEventFlagItemRemoved |
+                kFSEventStreamEventFlagItemRenamed
+            )) {
                 m_notify.push({
                     tasktype::Rename, paths[i]
                 });
             }
-            if (flags[i] & kFSEventStreamEventFlagItemModified) {
+            else if (flags[i] & (
+                kFSEventStreamEventFlagItemFinderInfoMod |
+                kFSEventStreamEventFlagItemModified |
+                kFSEventStreamEventFlagItemInodeMetaMod |
+                kFSEventStreamEventFlagItemChangeOwner |
+                kFSEventStreamEventFlagItemXattrMod
+            )) {
                 m_notify.push({
                     tasktype::Modify, paths[i]
                 });

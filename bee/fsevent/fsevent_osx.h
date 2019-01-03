@@ -15,8 +15,6 @@ namespace bee::osx::fsevent {
     enum class tasktype {
         Error,
         Confirm,
-        Create,
-        Delete,
         Modify,
         Rename,
     };

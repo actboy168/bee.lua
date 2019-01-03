@@ -138,15 +138,11 @@ namespace bee::win::fsevent {
             FILE_NOTIFY_INFORMATION& fni = (FILE_NOTIFY_INFORMATION&)*data;
             std::wstring path(fni.FileName, fni.FileNameLength / sizeof(wchar_t));
             switch (fni.Action) {
-            case FILE_ACTION_ADDED:
-                push_notify(tasktype::Create, (m_path / path).wstring());
-                break;
-            case FILE_ACTION_REMOVED:
-                push_notify(tasktype::Delete, (m_path / path).wstring());
-                break;
             case FILE_ACTION_MODIFIED:
                 push_notify(tasktype::Modify, (m_path / path).wstring());
                 break;
+            case FILE_ACTION_ADDED:
+            case FILE_ACTION_REMOVED:
             case FILE_ACTION_RENAMED_OLD_NAME:
             case FILE_ACTION_RENAMED_NEW_NAME:
                 push_notify(tasktype::Rename, (m_path / path).wstring());
