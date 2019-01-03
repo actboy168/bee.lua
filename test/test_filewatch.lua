@@ -70,11 +70,11 @@ function test_fw:test_2()
         fs.remove(root / 'test2.txt')
 
         local list = {}
-        local n = 10
+        local n = 100
         while true do
             local w, v = fw.select()
             if w then
-                n = 10
+                n = 100
                 if type(v) == 'userdata' or type(v) == 'table' then
                     list[v:string()] = true
                 else

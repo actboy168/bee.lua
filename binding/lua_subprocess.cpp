@@ -2,6 +2,7 @@
 #include <bee/utility/unicode.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/file.h>
+#include <bee/lua/path.h>
 #include <bee/error.h>
 #include <lua.hpp>
 #include <optional>
@@ -11,24 +12,12 @@
 #include <unistd.h>
 #endif
 
-#if __has_include(<filesystem>)
-#include <filesystem>
-namespace fs = std::filesystem;
-#define ENABLE_FILESYSTEM
-#endif
-
 namespace bee::lua_socket {
     net::socket::fd_t checksocket(lua_State* L, int idx);
     void pushsocket(lua_State* L, net::socket::fd_t fd);
 }
 
 namespace bee::lua_subprocess {
-#ifdef ENABLE_FILESYSTEM
-    static fs::path& topath(lua_State* L, int idx) {
-        return *(fs::path*)getObject(L, idx, "filesystem");
-    }
-#endif
-
     namespace process {
         static subprocess::process& to(lua_State* L, int idx) {
             return *(subprocess::process*)getObject(L, idx, "subprocess");
@@ -141,50 +130,30 @@ namespace bee::lua_subprocess {
 
     namespace spawn {
         static std::optional<lua::string_type> cast_cwd(lua_State* L) {
-            if (LUA_TSTRING == lua_getfield(L, 1, "cwd")) {
-                lua::string_type ret(lua::to_string(L, -1));
-                lua_pop(L, 1);
-                return ret;
-            }
-#ifdef ENABLE_FILESYSTEM
-            else if (LUA_TUSERDATA == lua_type(L, -1)) {
-                lua::string_type ret = topath(L, -1).string<lua::string_type::value_type>();
-                lua_pop(L, 1);
-                return ret;
-            }
-#endif
+            lua_getfield(L, 1, "cwd");
+            auto ret = lua::get_path(L, -1);
             lua_pop(L, 1);
-            return std::optional<lua::string_type>();
+            return ret;
         }
 
-#if defined(_WIN32)
-#   define LOAD_ARGS(L, idx) lua::to_string((L), (idx))
-#else
-#   define LOAD_ARGS(L, idx) (char*)luaL_checkstring((L), (idx))
-#endif
         static void cast_args_array(lua_State* L, int idx, subprocess::args_t& args) {
             args.type = subprocess::args_t::type::array;
             lua_Integer n = luaL_len(L, idx);
             for (lua_Integer i = 1; i <= n; ++i) {
-                switch (lua_geti(L, idx, i)) {
-                case LUA_TSTRING:
-                    args.push_back(LOAD_ARGS(L, -1));
-                    break;
-#ifdef ENABLE_FILESYSTEM
-                case LUA_TUSERDATA:
+                lua_geti(L, idx, i);
+                auto ret = lua::get_path(L, -1);
+                if (ret) {
 #if defined(_WIN32)
-                    args.push_back(topath(L, -1).wstring());
+                    args.push_back(ret->wstring());
 #else
-                    args.push_back((char*)topath(L, -1).c_str());
+                    args.push(*ret);
 #endif
-                    break;
-#endif
-                case LUA_TTABLE:
+                }
+                else if (lua_type(L, -1) == LUA_TTABLE) {
                     cast_args_array(L, lua_absindex(L, -1), args);
-                    break;
-                default:
+                }
+                else {
                     luaL_error(L, "Unsupported type: %s.", lua_typename(L, lua_type(L, -1)));
-                    return;
                 }
                 lua_pop(L, 1);
             }
@@ -193,20 +162,16 @@ namespace bee::lua_subprocess {
         static void cast_args_string(lua_State* L, int idx, subprocess::args_t& args) {
             args.type = subprocess::args_t::type::string;
             for (lua_Integer i = 1; i <= 2; ++i) {
-                switch (lua_geti(L, idx, i)) {
-                case LUA_TSTRING:
-                    args.push_back(LOAD_ARGS(L, -1));
-                    break;
-#ifdef ENABLE_FILESYSTEM
-                case LUA_TUSERDATA:
+                lua_geti(L, idx, i);
+                auto ret = lua::get_path(L, -1);
+                if (ret) {
 #if defined(_WIN32)
-                    args.push_back(topath(L, -1).wstring());
+                    args.push_back(ret->wstring());
 #else
-                    args.push_back((char*)topath(L, -1).c_str());
+                    args.push(*ret);
 #endif
-                    break;
-#endif
-                default:
+                }
+                else {
                     luaL_error(L, "Unsupported type: %s.", lua_typename(L, lua_type(L, -1)));
                     return;
                 }

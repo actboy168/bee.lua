@@ -50,6 +50,8 @@ namespace bee::posix::subprocess {
         };
         type type = type::array;
         ~args_t();
+        void push(char* str);
+        void push(const std::string& str);
     };
 
     class spawn {

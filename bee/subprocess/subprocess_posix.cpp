@@ -2,7 +2,6 @@
 #include <bee/utility/format.h>
 #include <deque>
 #include <memory.h>
-
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
@@ -22,11 +21,19 @@ extern char **environ;
 namespace bee::posix::subprocess {
 
     args_t::~args_t() {
-        if (type == type::string) {
-            for (size_t i = 3; i < size(); ++i) {
-                delete[]((*this)[i]);
-            }
+        for (size_t i = 0; i < size(); ++i) {
+            delete[]((*this)[i]);
         }
+    }
+
+    void args_t::push(char* str) {
+        push_back(str);
+    }
+
+    void args_t::push(const std::string& str) {
+        std::unique_ptr<char[]> tmp(new char[str.size() + 1]);
+        memcpy(tmp.get(), str.data(), str.size() + 1);
+        push(tmp.release());
     }
 
     static void sigalrm_handler (int) {
@@ -244,7 +251,7 @@ namespace bee::posix::subprocess {
             data[j] = str[i];
         }
         data[j] = 0;
-        args.push_back(data);
+        args.push(data);
     }
     static void split_str(args_t& args, const char*& z) {
         const char* start = z;
@@ -322,7 +329,7 @@ namespace bee::posix::subprocess {
         else if (args.size() > 2) {
             args.resize(2);
         }
-        args.push_back(args[0]);
+        args.push(std::string(args[0]));
         split_next(args, args[1]);
     }
     bool spawn::exec(args_t& args, const char* cwd) {
@@ -331,11 +338,11 @@ namespace bee::posix::subprocess {
         }
         switch (args.type) {
         case args_t::type::array:
-            args.push_back(nullptr);
+            args.push(nullptr);
             return raw_exec(args.data(), cwd);
         case args_t::type::string:
             split(args);
-            args.push_back(nullptr);
+            args.push(nullptr);
             return raw_exec(args.data() + 2, cwd);
         default:
             return false;

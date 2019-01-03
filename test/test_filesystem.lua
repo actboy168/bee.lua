@@ -608,7 +608,7 @@ function test_fs:test_filelock_1()
     fs.remove(fs.path("temp.lock"))
 end
 
-function test_fs:xtest_filelock_2()
+function test_fs:test_filelock_2()
     local subprocess = require "bee.subprocess"
     local function getexe()
         local i = 0

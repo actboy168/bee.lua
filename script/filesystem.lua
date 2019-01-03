@@ -1,6 +1,7 @@
 local posixfs = require 'bee.posixfs'
 
 local path_mt = {}
+path_mt.__name = 'filesystem'
 path_mt.__index = path_mt
 
 local function constructor(str)

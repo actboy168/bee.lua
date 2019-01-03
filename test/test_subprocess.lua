@@ -1,5 +1,6 @@
 local lu = require 'luaunit'
 
+require 'bee'
 local subprocess = require 'bee.subprocess'
 local socket = require 'bee.socket'
 local thread = require 'bee.thread'
@@ -329,12 +330,6 @@ function test_subprocess:test_args()
     testStringArgs([[\"A\\\"]], [["A\"]])
     testStringArgs([["A\" B"]], [[A" B]])
 end
-
-if platform.OS == 'macOS' then
-    return
-end
-
-require 'bee'
 
 function test_subprocess:test_shell()
     local process, err = subprocess.shell {'echo', 'ok', stdout = true, stderr = true}
