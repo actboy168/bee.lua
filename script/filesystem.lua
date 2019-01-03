@@ -60,23 +60,23 @@ function path_mt:string()
 end
 
 function path_mt:filename()
-    return constructor(self._value:match("[/]?([%w_.-]*)$"))
+    return constructor(self._value:match("[/]?([%w*?_.-]*)$"))
 end
 
 function path_mt:parent_path()
-    return constructor(self._value:match("^(.+)/[%w_.-]*$"))
+    return constructor(self._value:match("^(.+)/[%w*?_.-]*$"))
 end
 
 function path_mt:stem()
-    return constructor(self._value:match("[/]?([%w_.-]+)%.[%w_-]*$") or self._value:match("[/]?([.]?[%w_-]*)$"))
+    return constructor(self._value:match("[/]?([%w*?_.-]+)%.[%w*?_-]*$") or self._value:match("[/]?([.]?[%w*?_-]*)$"))
 end
 
 function path_mt:extension()
-    return constructor(self._value:match("[^/](%.[%w_-]*)$"))
+    return constructor(self._value:match("[^/](%.[%w*?_-]*)$"))
 end
 
 function path_mt:remove_filename()
-    self._value = self._value:match("^(.+/)[%w_.-]*$") or ""
+    self._value = self._value:match("^(.+/)[%w*?_.-]*$") or ""
     return self
 end
 
@@ -92,7 +92,7 @@ end
 
 function path_mt:equal_extension(ext)
     ext = (type(ext) == 'string') and ext or ext._value
-    local selfext = self._value:match("[^/](%.[%w_-]*)$") or ""
+    local selfext = self._value:match("[^/](%.[%w*?_-]*)$") or ""
     if selfext == "" then
         return ext == ""
     end
