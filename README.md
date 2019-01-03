@@ -10,7 +10,7 @@ Lua runtime and toolset
 
 * Enable ansi escape code on windows
 * String encoding on windows using utf8
-* Remove randomness when traversing the array
+* Remove randomness when traversing the table
 * Disable load binary chunk (for security)
 * Add error hooks (for debuggers)
 * Add lua_getprotohash (for debuggers)
@@ -28,5 +28,5 @@ Lua runtime and toolset
 
 ## TODO
 
-* Linux filewatch、
+* Linux filewatch
 * High-level network library

@@ -11,9 +11,9 @@ package.path = './test/?.lua'
 package.cpath = ('./bin/%s/?.%s'):format(__Target__, __EXT__)
 
 local platform = require 'bee.platform'
-if platform.Compiler == 'msvc' then
-    dofile './3rd/luaffi/src/test.lua'
-end
+--if platform.Compiler == 'msvc' then
+--    dofile './3rd/luaffi/src/test.lua'
+--end
 
 local lu = require 'luaunit'
 
