@@ -144,7 +144,7 @@ namespace bee::lua_subprocess {
                 auto ret = lua::get_path(L, -1);
                 if (ret) {
 #if defined(_WIN32)
-                    args.push_back(ret->wstring());
+                    args.push_back(*ret);
 #else
                     args.push(*ret);
 #endif
@@ -166,7 +166,7 @@ namespace bee::lua_subprocess {
                 auto ret = lua::get_path(L, -1);
                 if (ret) {
 #if defined(_WIN32)
-                    args.push_back(ret->wstring());
+                    args.push_back(*ret);
 #else
                     args.push(*ret);
 #endif
