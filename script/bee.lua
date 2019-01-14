@@ -72,6 +72,9 @@ require %q]=]):format(
 end
 
 local function quote_arg(s)
+    if type(s) ~= 'string' then
+        s = tostring(s)
+    end
     if #s == 0 then
         return '""'
     end
