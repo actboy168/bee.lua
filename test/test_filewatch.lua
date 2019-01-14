@@ -1,7 +1,6 @@
 local lu = require 'luaunit'
 local fw = require 'bee.filewatch'
 local fs = require 'bee.filesystem'
-local platform = require 'bee.platform'
 local thread = require 'bee.thread'
 
 test_fw = {}
@@ -16,12 +15,6 @@ local function create_file(filename, content)
     if content ~= nil then
         f:write(content)
     end
-    f:close()
-end
-
-local function modify_file(filename, content)
-    local f = assert(io.open('temp/' .. filename, 'ab'))
-    f:write(content)
     f:close()
 end
 
