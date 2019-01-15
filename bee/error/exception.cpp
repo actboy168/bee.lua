@@ -40,7 +40,7 @@ namespace bee {
     exception::~exception()
     { }
 
-    const char* exception::what() const {
+    const char* exception::what() const noexcept {
         return what_.data() ? what_.data() : "unknown bee::exception";
     }
 }
