@@ -23,8 +23,9 @@ lm:shared_library 'bee' {
     deps = "lua54",
     includes = {
         "3rd/lua/src",
-         "3rd/lua-seri",
-       "."
+        "3rd/lua-seri",
+        "3rd/incbin",
+        "."
     },
     defines = {
         "_WIN32_WINNT=0x0601",
@@ -42,7 +43,9 @@ lm:shared_library 'bee' {
     links = {
         "advapi32",
         "ws2_32",
-        "version"
+        "version",
+        "stdc++fs",
+        "stdc++"
     }
 }
 
@@ -54,4 +57,13 @@ lm:executable 'bootstrap' {
     sources = {
         "bootstrap/*.cpp",
     },
+}
+
+lm:build "copy_script" {
+    "$luamake", "lua", "project/luamake/copy.lua", "bootstrap/main.lua", "$bin/main.lua"
+}
+
+lm:build "test" {
+    "$bin/bootstrap.exe", "test/test.lua",
+    deps = { "bootstrap", "copy_script", "bee" },
 }
