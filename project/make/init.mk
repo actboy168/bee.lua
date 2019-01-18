@@ -17,8 +17,8 @@ CC = clang -std=c11
 CXX = clang -std=c++17
 endif
 
-BUILD_CONFIG = Release
-ifeq "$(BUILD_CONFIG)" "Release"
+BUILD_CONFIG = release
+ifeq "$(BUILD_CONFIG)" "release"
 DEBUG_INFO = -O2
 else
 DEBUG_INFO = -g -D_DEBUG
