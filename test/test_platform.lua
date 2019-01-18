@@ -1,5 +1,5 @@
 local support = {}
-for _, config in ipairs {'Debug', 'Release'} do
+for _, config in ipairs {'debug', 'release'} do
     support['msvc_x86_' .. config] = {
         OS = 'Windows',
         Arch = '32',

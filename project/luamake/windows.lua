@@ -9,7 +9,10 @@ lm:shared_library 'lua54' {
         "!src/luac.c",
         "utf8/utf8_crt.c",
     },
-    defines = "LUA_BUILD_AS_DLL"
+    defines = {
+        "LUA_BUILD_AS_DLL",
+        "LUAI_MAXCCALLS=200"
+    }
 }
 lm:executable 'lua' {
     deps = "lua54",

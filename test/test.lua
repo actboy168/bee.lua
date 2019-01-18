@@ -5,7 +5,7 @@ local function getTarget()
     end
     return arg[i + 1]:match("(.+)[/\\][%w_.-]+$"):match("[/\\]?([%w_.-]+)$")
 end
-__Target__ = getTarget()
+__Target__ = getTarget():lower()
 __EXT__ = package.cpath:match '[/\\]%?%.([a-z]+)'
 package.path = './test/?.lua'
 package.cpath = ('./bin/%s/?.%s'):format(__Target__, __EXT__)
