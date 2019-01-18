@@ -22,8 +22,22 @@ lm:executable 'lua' {
 }
 
 lm.rootdir = ''
+
+if lm.plat == 'msvc' then
+    lm:build "embed_clean" {
+        "$luamake", "lua", "project/embed.lua", "bootstrap/main.lua", "bee/nonstd/embed_detail.h"
+    }
+    lm:build "embed_make" {
+        "$luamake", "lua", "project/embed.lua", "bootstrap/main.lua", "bee/nonstd/embed_detail.h", "binding/lua_embed.cpp",
+        deps = "embed_clean"
+    }
+end
+
 lm:shared_library 'bee' {
-    deps = "lua54",
+    deps = {
+        "lua54",
+        (lm.plat == 'msvc') and "embed_make",
+    },
     includes = {
         "3rd/lua/src",
         "3rd/lua-seri",
