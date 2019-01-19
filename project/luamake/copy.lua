@@ -1,3 +1,0 @@
-local from, to = ...
-local fs = require "bee.filesystem"
-fs.copy_file(fs.path(from), fs.path(to), true)
