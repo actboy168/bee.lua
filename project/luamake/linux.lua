@@ -1,5 +1,8 @@
 local lm = require 'luamake'
 
+lm.gcc = 'clang'
+lm.gxx = 'clang'
+
 lm.rootdir = '3rd/lua/'
 lm:executable 'lua' {
     sources = {
@@ -7,7 +10,10 @@ lm:executable 'lua' {
         "!src/luac.c",
     },
     ldflags = "-Wl,-E",
-    defines = "LUA_USE_LINUX",
+    defines = {
+        "LUA_USE_LINUX",
+        "LUAI_MAXCCALLS=200"
+    },
     links = { "m", "dl" },
 }
 
@@ -34,11 +40,13 @@ lm:shared_library 'bee' {
         "!bee/platform/version.cpp",
         "!bee/*_win.cpp",
         "!bee/*_osx.cpp",
+        "!binding/lua_unicode.cpp",
         "!binding/lua_posixfs.cpp",
         "!binding/lua_filewatch.cpp",
         "!binding/lua_registry.cpp",
     },
     links = {
+        "pthread",
         "stdc++fs",
         "stdc++"
     }
@@ -50,9 +58,16 @@ lm:executable 'bootstrap' {
     },
     sources = {
         "3rd/lua/src/*.c",
+        "!3rd/lua/src/lua.c",
         "!3rd/lua/src/luac.c",
         "bootstrap/*.cpp",
     },
+    ldflags = "-Wl,-E",
+    defines = {
+        "LUA_USE_LINUX",
+        "LUAI_MAXCCALLS=200"
+    },
+    links = { "m", "dl" },
 }
 
 lm:build "copy_script" {
