@@ -1,6 +1,6 @@
 #include <lua.hpp>
 #include <bee/lua/binding.h>
-#include <bee/utility/unicode.h>
+#include <bee/utility/unicode_win.h>
 
 namespace bee::lua_unicode {
     static int lu2a(lua_State* L) {

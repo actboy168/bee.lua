@@ -45,9 +45,6 @@
     <ClCompile Include="..\..\bee\subprocess\subprocess_win.cpp">
       <Filter>bee\subprocess</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\bee\utility\unicode.cpp">
-      <Filter>bee\utility</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\bee\utility\path_helper.cpp">
       <Filter>bee\utility</Filter>
     </ClCompile>
@@ -68,9 +65,6 @@
     </ClCompile>
     <ClCompile Include="..\..\bee\error.cpp">
       <Filter>bee</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\bee\error\windows_category.cpp">
-      <Filter>bee\error</Filter>
     </ClCompile>
     <ClCompile Include="..\..\binding\lua_socket.cpp">
       <Filter>binding</Filter>
@@ -99,12 +93,6 @@
     <ClCompile Include="..\..\bee\error\exception.cpp">
       <Filter>bee\error</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\bee\net\unixsocket.cpp">
-      <Filter>bee\net</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\bee\platform\version.cpp">
-      <Filter>bee\platform</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\binding\lua_serialization.cpp">
       <Filter>binding</Filter>
     </ClCompile>
@@ -114,10 +102,22 @@
     <ClCompile Include="..\..\bee\subprocess\sharedmemory_win.cpp">
       <Filter>bee\subprocess</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\bee\utility\module_version.cpp">
+    <ClCompile Include="..\..\bee\utility\file_helper.cpp">
       <Filter>bee\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\bee\utility\file_helper.cpp">
+    <ClCompile Include="..\..\bee\error\category_win.cpp">
+      <Filter>bee\error</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bee\platform\version_win.cpp">
+      <Filter>bee\platform</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bee\net\unixsocket_win.cpp">
+      <Filter>bee\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bee\utility\module_version_win.cpp">
+      <Filter>bee\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bee\utility\unicode_win.cpp">
       <Filter>bee\utility</Filter>
     </ClCompile>
   </ItemGroup>
@@ -133,9 +133,6 @@
     </ClInclude>
     <ClInclude Include="..\..\bee\subprocess.h">
       <Filter>bee</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\bee\utility\unicode.h">
-      <Filter>bee\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\..\bee\utility\dynarray.h">
       <Filter>bee\utility</Filter>
@@ -206,14 +203,8 @@
     <ClInclude Include="..\..\bee\error.h">
       <Filter>bee</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\bee\error\windows_category.h">
-      <Filter>bee\error</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\bee\error\exception.h">
       <Filter>bee\error</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\bee\net\unixsocket.h">
-      <Filter>bee\net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\bee\platform\version.h">
       <Filter>bee\platform</Filter>
@@ -230,10 +221,19 @@
     <ClInclude Include="..\..\bee\subprocess\args_helper.h">
       <Filter>bee\subprocess</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\bee\utility\module_version.h">
+    <ClInclude Include="..\..\bee\utility\file_helper.h">
       <Filter>bee\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\bee\utility\file_helper.h">
+    <ClInclude Include="..\..\bee\error\category_win.h">
+      <Filter>bee\error</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\net\unixsocket_win.h">
+      <Filter>bee\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\utility\module_version_win.h">
+      <Filter>bee\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\utility\unicode_win.h">
       <Filter>bee\utility</Filter>
     </ClInclude>
   </ItemGroup>

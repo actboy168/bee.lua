@@ -13,7 +13,9 @@ namespace bee {
     public:
         exception();
         exception(const char* fmt, ...);
+#if defined(_WIN32)
         exception(const wchar_t* fmt, ...);
+#endif
         virtual ~exception();
         virtual const char* what() const noexcept;
     protected:

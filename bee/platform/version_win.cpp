@@ -1,5 +1,5 @@
 #include <bee/platform/version.h>
-#include <bee/utility/module_version.h>
+#include <bee/utility/module_version_win.h>
 #include <Windows.h>
 
 namespace bee::platform {

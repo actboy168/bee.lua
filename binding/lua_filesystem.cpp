@@ -3,10 +3,13 @@
 #include <filesystem>
 #include <bee/utility/path_helper.h>
 #include <bee/utility/file_helper.h>
-#include <bee/utility/unicode.h>
 #include <bee/lua/range.h>
 #include <bee/lua/file.h>
 #include <bee/error.h>
+
+#if defined(_WIN32)
+#include <bee/utility/unicode_win.h>
+#endif
 
 namespace fs = std::filesystem;
 

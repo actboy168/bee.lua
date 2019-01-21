@@ -2,8 +2,8 @@
 #   include <winsock2.h>
 #   include <mswsock.h>
 #   include <mstcpip.h>
-#   include <bee/utility/unicode.h>
-#   include <bee/net/unixsocket.h>
+#   include <bee/utility/unicode_win.h>
+#   include <bee/net/unixsocket_win.h>
 #   include <bee/platform/version.h>
 #else
 #   include <fcntl.h>

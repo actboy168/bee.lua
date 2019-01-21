@@ -1,7 +1,10 @@
 #pragma once
 
-#include <bee/utility/unicode.h>
 #include <lua.hpp>
+#include <string>
+#if defined(_WIN32)
+#include <bee/utility/unicode_win.h>
+#endif
 
 namespace bee::lua {
 #if defined(_WIN32)

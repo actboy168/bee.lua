@@ -1,6 +1,6 @@
 #include <lua.hpp>      
 #include <bee/registry/key.h>
-#include <bee/utility/unicode.h>
+#include <bee/utility/unicode_win.h>
 #include <bee/lua/binding.h>
 
 namespace bee::lua_registry {

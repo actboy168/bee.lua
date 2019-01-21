@@ -9,7 +9,7 @@
 #include <bee/utility/hybrid_array.h>
 
 #if !defined(BEE_FORMAT_DISABLE_UNICODE)
-#include <bee/utility/unicode.h>
+#include <bee/utility/unicode_win.h>
 #endif
 
 #if defined(_MSC_VER)

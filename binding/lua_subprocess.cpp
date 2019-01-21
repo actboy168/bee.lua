@@ -1,5 +1,4 @@
 #include <bee/subprocess.h>
-#include <bee/utility/unicode.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/file.h>
 #include <bee/lua/path.h>
@@ -8,7 +7,9 @@
 #include <optional>
 #include <errno.h>
 #include <string.h>
-#if !defined(_WIN32)
+#if defined(_WIN32)
+#include <bee/utility/unicode_win.h>
+#else
 #include <unistd.h>
 #endif
 

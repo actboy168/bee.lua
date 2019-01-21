@@ -1,5 +1,5 @@
 #include <bee/fsevent/fsevent_win.h>
-#include <bee/utility/unicode.h>
+#include <bee/utility/unicode_win.h>
 #include <bee/utility/format.h>
 #include <bee/error.h>
 #include <array>
