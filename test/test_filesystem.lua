@@ -203,6 +203,7 @@ function test_fs:test_div()
     lu.assertEquals(div('a/b', 'c'), 'a/b/c')
     lu.assertEquals(div('a/', 'b'), 'a/b')
     lu.assertEquals(div('a', '/b'), '/b')
+    lu.assertEquals(div('', 'a/b'), 'a/b')
     lu.assertEquals(div(C..'a', D..'b'), D..'b')
     lu.assertEquals(div(C..'a/', D..'b'), D..'b')
     if platform.OS == 'Windows' then
