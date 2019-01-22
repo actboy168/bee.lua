@@ -10,5 +10,5 @@ fs.create_directories(outdir)
 assert(
     assert(
         io.open(output:string(), 'wb')
-    ):write(("deps_prefix = %s"):format(prefix))
+    ):write(("deps_prefix = %s\n"):format(prefix))
 ):close()
