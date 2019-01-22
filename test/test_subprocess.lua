@@ -128,7 +128,7 @@ function test_subprocess:test_kill()
     lu.assertIsTrue(process:is_running())
     lu.assertIsTrue(process:kill())
     lu.assertIsFalse(process:is_running())
-    lu.assertEquals(process:wait(), 0xF00)
+    lu.assertEquals(process:wait() & 0xFF, 0)
 
     local process = createLua('io.read "a"', { stdin = true })
     lu.assertIsTrue(process:is_running())
