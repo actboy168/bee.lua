@@ -4,11 +4,17 @@ local fs = require 'bee.filesystem'
 
 local cwd = fs.exe_path():parent_path():parent_path()
 local outdir = cwd / 'build' / 'msvc'
-local output = outdir / 'msvc_deps_prefix.ninja'
+local output = outdir / 'msvc-init.ninja'
 fs.create_directories(outdir)
+
+local template = [[
+builddir = build/msvc
+msvc_deps_prefix = %s
+subninja ninja/msvc.ninja
+]]
 
 assert(
     assert(
         io.open(output:string(), 'wb')
-    ):write(("deps_prefix = %s\n"):format(prefix))
+    ):write(template:format(prefix))
 ):close()

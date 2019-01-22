@@ -2,13 +2,11 @@ builddir = build/msvc
 luamake = cmd.exe /c ..\luamake\luamake
 bin = bin/msvc_x86_release
 obj = tmp/msvc_x86_release
-subninja $builddir/msvc_deps_prefix.ninja
 rule C_lua54
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /permissive- /O2 $
       /GL /Zc:inline /W3 /MD -DLUA_BUILD_AS_DLL -DLUAI_MAXCCALLS=200 
   description = Compile C $out
   deps = msvc
-  msvc_deps_prefix = $deps_prefix
 build $obj/lua54/lapi.obj: C_lua54 3rd/lua/src/lapi.c
 build $obj/lua54/lauxlib.obj: C_lua54 3rd/lua/src/lauxlib.c
 build $obj/lua54/lbaselib.obj: C_lua54 3rd/lua/src/lbaselib.c
@@ -63,7 +61,6 @@ rule C_lua
       /GL /Zc:inline /W3 /MD 
   description = Compile C $out
   deps = msvc
-  msvc_deps_prefix = $deps_prefix
 build $obj/lua/utf8_lua.obj: C_lua 3rd/lua/utf8/utf8_lua.c
 rule LINK_lua
   command = cl /nologo $in  /link /SAFESEH /MACHINE:x86 /DEBUG:NONE /LTCG $
@@ -84,7 +81,6 @@ rule C_bee
       -D_WIN32_WINNT=0x0601 -DBEE_EXPORTS -D_CRT_SECURE_NO_WARNINGS 
   description = Compile C $out
   deps = msvc
-  msvc_deps_prefix = $deps_prefix
 build $obj/bee/lua-seri.obj: C_bee 3rd/lua-seri/lua-seri.c
 rule CXX_bee
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /permissive- /O2 $
@@ -92,7 +88,6 @@ rule CXX_bee
       -D_WIN32_WINNT=0x0601 -DBEE_EXPORTS -D_CRT_SECURE_NO_WARNINGS /std:c++17
   description = Compile CXX $out
   deps = msvc
-  msvc_deps_prefix = $deps_prefix
 build $obj/bee/category_win.obj: CXX_bee bee/error/category_win.cpp
 build $obj/bee/exception.obj: CXX_bee bee/error/exception.cpp
 build $obj/bee/error.obj: CXX_bee bee/error.cpp
@@ -142,7 +137,6 @@ rule CXX_bootstrap
       /GL /Zc:inline /W3 /MD -I3rd/lua/src /std:c++17
   description = Compile CXX $out
   deps = msvc
-  msvc_deps_prefix = $deps_prefix
 build $obj/bootstrap/main.obj: CXX_bootstrap bootstrap/main.cpp
 build $obj/bootstrap/progdir.obj: CXX_bootstrap bootstrap/progdir.cpp
 rule LINK_bootstrap
