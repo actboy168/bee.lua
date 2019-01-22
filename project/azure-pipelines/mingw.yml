@@ -7,7 +7,7 @@ steps:
   displayName: 'Install msys2'
 
 - script: |
-   c:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -Syu mingw-w64-x86_64-gcc make"
+   c:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -Syu mingw-w64-x86_64-gcc ninja"
    c:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -Su"
    exit
   displayName: 'Update mingw'
@@ -16,11 +16,10 @@ steps:
    cd make
    luamake mingw-init.lua c:\tools\msys64
    luamake mingw.lua gcc --version
-   luamake mingw.lua ./configure
-   luamake mingw.lua make
+   luamake mingw.lua ninja -f build/mingw/make.ninja
   displayName: Compile
 
 - script: |
    cd make
-   luamake mingw.lua .\bin\mingw_Release\bee.exe .\test\test.lua
+   luamake mingw.lua .\bin\mingw_release\bee.exe .\test\test.lua
   displayName: Test

@@ -1,10 +1,11 @@
 steps:
 - bash: |
    sudo xcode-select -s /Applications/Xcode_10.1.app
+   brew install ninja
   displayName: Init
 
 - bash: |
-   make
+   ninja -f build/macos/make.ninja
   displayName: Compile
 
 - bash: |

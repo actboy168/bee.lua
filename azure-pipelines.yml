@@ -22,7 +22,7 @@ jobs:
   pool:
     vmImage: macOS 10.13
   steps:
-  - template: project/azure-pipelines/macosx.yml
+  - template: project/azure-pipelines/macos.yml
 
 #- job: linux_clang
 #  pool:
