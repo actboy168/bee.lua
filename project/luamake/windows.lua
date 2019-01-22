@@ -25,10 +25,10 @@ lm.rootdir = ''
 
 if lm.plat == 'msvc' then
     lm:build "embed_clean" {
-        "make\\lua", "project/embed.lua", "bootstrap/main.lua", "bee/nonstd/embed_detail.h"
+        "make\\lua", "project/embed.lua", "bee/nonstd/embed_detail.h"
     }
     lm:build "embed_make" {
-        "make\\lua", "project/embed.lua", "bootstrap/main.lua", "bee/nonstd/embed_detail.h", "binding/lua_embed.cpp",
+        "make\\lua", "project/embed.lua", "bee/nonstd/embed_detail.h", "binding/lua_embed.cpp",
         deps = "embed_clean"
     }
 end

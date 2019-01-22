@@ -74,11 +74,10 @@ rule command
   command = $COMMAND
   description = $DESC
 build $builddir/_/embed_clean: command
-  COMMAND = make\lua project/embed.lua bootstrap/main.lua $
-      bee/nonstd/embed_detail.h
+  COMMAND = make\lua project/embed.lua bee/nonstd/embed_detail.h
 build $builddir/_/embed_make: command | $builddir/_/embed_clean
-  COMMAND = make\lua project/embed.lua bootstrap/main.lua $
-      bee/nonstd/embed_detail.h binding/lua_embed.cpp
+  COMMAND = make\lua project/embed.lua bee/nonstd/embed_detail.h $
+      binding/lua_embed.cpp
 rule C_bee
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /permissive- /O2 $
       /GL /Zc:inline /W3 /MD -I3rd/lua/src -I3rd/lua-seri -I3rd/incbin -I. $
