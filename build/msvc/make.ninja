@@ -74,10 +74,10 @@ rule command
   command = $COMMAND
   description = $DESC
 build $builddir/_/embed_clean: command
-  COMMAND = $luamake lua project/embed.lua bootstrap/main.lua $
+  COMMAND = make\lua project/embed.lua bootstrap/main.lua $
       bee/nonstd/embed_detail.h
 build $builddir/_/embed_make: command | $builddir/_/embed_clean
-  COMMAND = $luamake lua project/embed.lua bootstrap/main.lua $
+  COMMAND = make\lua project/embed.lua bootstrap/main.lua $
       bee/nonstd/embed_detail.h binding/lua_embed.cpp
 rule C_bee
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /permissive- /O2 $
@@ -153,8 +153,8 @@ rule LINK_bootstrap
 build $bin/bootstrap.exe: LINK_bootstrap $obj/bootstrap/main.obj $
     $obj/bootstrap/progdir.obj $bin/lua54.lib
 build $builddir/_/copy_script: command
-  COMMAND = cmd.exe /c copy /Y bootstrap\main.lua $
-      bin\msvc_x86_release\main.lua
+  COMMAND = cmd.exe /C project\copy.bat bootstrap\main.lua $
+      bin\msvc_x86_release
 build $builddir/_/test: command | $bin/bootstrap.exe $
     $builddir/_/copy_script $bin/bee.dll
   COMMAND = $bin/bootstrap.exe test/test.lua
