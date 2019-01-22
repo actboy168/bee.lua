@@ -3,6 +3,7 @@
 /build/
 .vs/
 *.user
+!*.ninja
 
 /bee/nonstd/embed_detail.h
 /test/temp.lua
