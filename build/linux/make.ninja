@@ -1,0 +1,175 @@
+builddir = build/linux
+luamake = ..\luamake\luamake
+bin = bin/linux_release
+obj = tmp/linux_release
+rule C_lua
+  command = clang -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall $
+      -DLUA_USE_LINUX -DLUAI_MAXCCALLS=200 -o $out -c $in
+  description = Compile C $out
+  depfile = $out.d
+  deps = gcc
+build $obj/lua/lapi.obj: C_lua 3rd/lua/src/lapi.c
+build $obj/lua/lauxlib.obj: C_lua 3rd/lua/src/lauxlib.c
+build $obj/lua/lbaselib.obj: C_lua 3rd/lua/src/lbaselib.c
+build $obj/lua/lcode.obj: C_lua 3rd/lua/src/lcode.c
+build $obj/lua/lcorolib.obj: C_lua 3rd/lua/src/lcorolib.c
+build $obj/lua/lctype.obj: C_lua 3rd/lua/src/lctype.c
+build $obj/lua/ldblib.obj: C_lua 3rd/lua/src/ldblib.c
+build $obj/lua/ldebug.obj: C_lua 3rd/lua/src/ldebug.c
+build $obj/lua/ldo.obj: C_lua 3rd/lua/src/ldo.c
+build $obj/lua/ldump.obj: C_lua 3rd/lua/src/ldump.c
+build $obj/lua/lfunc.obj: C_lua 3rd/lua/src/lfunc.c
+build $obj/lua/lgc.obj: C_lua 3rd/lua/src/lgc.c
+build $obj/lua/linit.obj: C_lua 3rd/lua/src/linit.c
+build $obj/lua/liolib.obj: C_lua 3rd/lua/src/liolib.c
+build $obj/lua/llex.obj: C_lua 3rd/lua/src/llex.c
+build $obj/lua/lmathlib.obj: C_lua 3rd/lua/src/lmathlib.c
+build $obj/lua/lmem.obj: C_lua 3rd/lua/src/lmem.c
+build $obj/lua/loadlib.obj: C_lua 3rd/lua/src/loadlib.c
+build $obj/lua/lobject.obj: C_lua 3rd/lua/src/lobject.c
+build $obj/lua/lopcodes.obj: C_lua 3rd/lua/src/lopcodes.c
+build $obj/lua/loslib.obj: C_lua 3rd/lua/src/loslib.c
+build $obj/lua/lparser.obj: C_lua 3rd/lua/src/lparser.c
+build $obj/lua/lstate.obj: C_lua 3rd/lua/src/lstate.c
+build $obj/lua/lstring.obj: C_lua 3rd/lua/src/lstring.c
+build $obj/lua/lstrlib.obj: C_lua 3rd/lua/src/lstrlib.c
+build $obj/lua/ltable.obj: C_lua 3rd/lua/src/ltable.c
+build $obj/lua/ltablib.obj: C_lua 3rd/lua/src/ltablib.c
+build $obj/lua/ltm.obj: C_lua 3rd/lua/src/ltm.c
+build $obj/lua/lua.obj: C_lua 3rd/lua/src/lua.c
+build $obj/lua/lzio.obj: C_lua 3rd/lua/src/lzio.c
+build $obj/lua/lundump.obj: C_lua 3rd/lua/src/lundump.c
+build $obj/lua/lutf8lib.obj: C_lua 3rd/lua/src/lutf8lib.c
+build $obj/lua/lvm.obj: C_lua 3rd/lua/src/lvm.c
+rule LINK_lua
+  command = clang $in -o $out -Wl,-E -s -lm -ldl
+  description = Link Executable $out
+build $bin/lua: LINK_lua $obj/lua/lapi.obj $obj/lua/lauxlib.obj $
+    $obj/lua/lbaselib.obj $obj/lua/lcode.obj $obj/lua/lcorolib.obj $
+    $obj/lua/lctype.obj $obj/lua/ldblib.obj $obj/lua/ldebug.obj $
+    $obj/lua/ldo.obj $obj/lua/ldump.obj $obj/lua/lfunc.obj $obj/lua/lgc.obj $
+    $obj/lua/linit.obj $obj/lua/liolib.obj $obj/lua/llex.obj $
+    $obj/lua/lmathlib.obj $obj/lua/lmem.obj $obj/lua/loadlib.obj $
+    $obj/lua/lobject.obj $obj/lua/lopcodes.obj $obj/lua/loslib.obj $
+    $obj/lua/lparser.obj $obj/lua/lstate.obj $obj/lua/lstring.obj $
+    $obj/lua/lstrlib.obj $obj/lua/ltable.obj $obj/lua/ltablib.obj $
+    $obj/lua/ltm.obj $obj/lua/lua.obj $obj/lua/lzio.obj $
+    $obj/lua/lundump.obj $obj/lua/lutf8lib.obj $obj/lua/lvm.obj | $
+    $builddir/make.ninja
+rule C_bee
+  command = clang -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall -I3rd/lua/src $
+      -I3rd/lua-seri -I3rd/incbin -I. -fPIC -o $out -c $in
+  description = Compile C $out
+  depfile = $out.d
+  deps = gcc
+build $obj/bee/lua-seri.obj: C_bee 3rd/lua-seri/lua-seri.c
+rule CXX_bee
+  command = clang -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall $
+      -I3rd/lua/src -I3rd/lua-seri -I3rd/incbin -I. -fPIC -o $out -c $in
+  description = Compile CXX $out
+  depfile = $out.d
+  deps = gcc
+build $obj/bee/lua_filesystem.obj: CXX_bee binding/lua_filesystem.cpp
+build $obj/bee/exception.obj: CXX_bee bee/error/exception.cpp
+build $obj/bee/error.obj: CXX_bee bee/error.cpp
+build $obj/bee/lua_platform.obj: CXX_bee binding/lua_platform.cpp
+build $obj/bee/lua_thread.obj: CXX_bee binding/lua_thread.cpp
+build $obj/bee/endpoint.obj: CXX_bee bee/net/endpoint.cpp
+build $obj/bee/socket.obj: CXX_bee bee/net/socket.cpp
+build $obj/bee/lua_subprocess.obj: CXX_bee binding/lua_subprocess.cpp
+build $obj/bee/lua_socket.obj: CXX_bee binding/lua_socket.cpp
+build $obj/bee/lua_serialization.obj: CXX_bee binding/lua_serialization.cpp
+build $obj/bee/subprocess_posix.obj: CXX_bee $
+    bee/subprocess/subprocess_posix.cpp
+build $obj/bee/path_helper.obj: CXX_bee bee/utility/path_helper.cpp
+build $obj/bee/file_helper.obj: CXX_bee bee/utility/file_helper.cpp
+build $obj/bee/lua_embed.obj: CXX_bee binding/lua_embed.cpp
+rule LINK_bee
+  command = clang --shared $in -o $out -s -lpthread -lstdc++fs -lstdc++
+  description = Link SharedLibrary $out
+build $bin/bee.so: LINK_bee $obj/bee/lua-seri.obj $
+    $obj/bee/lua_filesystem.obj $obj/bee/exception.obj $obj/bee/error.obj $
+    $obj/bee/lua_platform.obj $obj/bee/lua_thread.obj $obj/bee/endpoint.obj $
+    $obj/bee/socket.obj $obj/bee/lua_subprocess.obj $obj/bee/lua_socket.obj $
+    $obj/bee/lua_serialization.obj $obj/bee/subprocess_posix.obj $
+    $obj/bee/path_helper.obj $obj/bee/file_helper.obj $
+    $obj/bee/lua_embed.obj | $builddir/make.ninja
+rule C_bootstrap
+  command = clang -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall -I3rd/lua/src $
+      -DLUA_USE_LINUX -DLUAI_MAXCCALLS=200 -o $out -c $in
+  description = Compile C $out
+  depfile = $out.d
+  deps = gcc
+build $obj/bootstrap/lapi.obj: C_bootstrap 3rd/lua/src/lapi.c
+build $obj/bootstrap/lauxlib.obj: C_bootstrap 3rd/lua/src/lauxlib.c
+build $obj/bootstrap/lbaselib.obj: C_bootstrap 3rd/lua/src/lbaselib.c
+build $obj/bootstrap/lcode.obj: C_bootstrap 3rd/lua/src/lcode.c
+build $obj/bootstrap/lcorolib.obj: C_bootstrap 3rd/lua/src/lcorolib.c
+build $obj/bootstrap/lctype.obj: C_bootstrap 3rd/lua/src/lctype.c
+build $obj/bootstrap/ldblib.obj: C_bootstrap 3rd/lua/src/ldblib.c
+build $obj/bootstrap/ldebug.obj: C_bootstrap 3rd/lua/src/ldebug.c
+build $obj/bootstrap/ldo.obj: C_bootstrap 3rd/lua/src/ldo.c
+build $obj/bootstrap/ldump.obj: C_bootstrap 3rd/lua/src/ldump.c
+build $obj/bootstrap/lfunc.obj: C_bootstrap 3rd/lua/src/lfunc.c
+build $obj/bootstrap/lgc.obj: C_bootstrap 3rd/lua/src/lgc.c
+build $obj/bootstrap/linit.obj: C_bootstrap 3rd/lua/src/linit.c
+build $obj/bootstrap/liolib.obj: C_bootstrap 3rd/lua/src/liolib.c
+build $obj/bootstrap/llex.obj: C_bootstrap 3rd/lua/src/llex.c
+build $obj/bootstrap/lmathlib.obj: C_bootstrap 3rd/lua/src/lmathlib.c
+build $obj/bootstrap/lmem.obj: C_bootstrap 3rd/lua/src/lmem.c
+build $obj/bootstrap/loadlib.obj: C_bootstrap 3rd/lua/src/loadlib.c
+build $obj/bootstrap/lobject.obj: C_bootstrap 3rd/lua/src/lobject.c
+build $obj/bootstrap/lopcodes.obj: C_bootstrap 3rd/lua/src/lopcodes.c
+build $obj/bootstrap/loslib.obj: C_bootstrap 3rd/lua/src/loslib.c
+build $obj/bootstrap/lparser.obj: C_bootstrap 3rd/lua/src/lparser.c
+build $obj/bootstrap/lstate.obj: C_bootstrap 3rd/lua/src/lstate.c
+build $obj/bootstrap/lstring.obj: C_bootstrap 3rd/lua/src/lstring.c
+build $obj/bootstrap/lstrlib.obj: C_bootstrap 3rd/lua/src/lstrlib.c
+build $obj/bootstrap/ltable.obj: C_bootstrap 3rd/lua/src/ltable.c
+build $obj/bootstrap/ltablib.obj: C_bootstrap 3rd/lua/src/ltablib.c
+build $obj/bootstrap/ltm.obj: C_bootstrap 3rd/lua/src/ltm.c
+rule CXX_bootstrap
+  command = clang -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall $
+      -I3rd/lua/src -DLUA_USE_LINUX -DLUAI_MAXCCALLS=200 -o $out -c $in
+  description = Compile CXX $out
+  depfile = $out.d
+  deps = gcc
+build $obj/bootstrap/progdir.obj: CXX_bootstrap bootstrap/progdir.cpp
+build $obj/bootstrap/main.obj: CXX_bootstrap bootstrap/main.cpp
+build $obj/bootstrap/lundump.obj: C_bootstrap 3rd/lua/src/lundump.c
+build $obj/bootstrap/lutf8lib.obj: C_bootstrap 3rd/lua/src/lutf8lib.c
+build $obj/bootstrap/lvm.obj: C_bootstrap 3rd/lua/src/lvm.c
+build $obj/bootstrap/lzio.obj: C_bootstrap 3rd/lua/src/lzio.c
+rule LINK_bootstrap
+  command = clang $in -o $out -Wl,-E -s -lm -ldl
+  description = Link Executable $out
+build $bin/bootstrap: LINK_bootstrap $obj/bootstrap/lapi.obj $
+    $obj/bootstrap/lauxlib.obj $obj/bootstrap/lbaselib.obj $
+    $obj/bootstrap/lcode.obj $obj/bootstrap/lcorolib.obj $
+    $obj/bootstrap/lctype.obj $obj/bootstrap/ldblib.obj $
+    $obj/bootstrap/ldebug.obj $obj/bootstrap/ldo.obj $
+    $obj/bootstrap/ldump.obj $obj/bootstrap/lfunc.obj $
+    $obj/bootstrap/lgc.obj $obj/bootstrap/linit.obj $
+    $obj/bootstrap/liolib.obj $obj/bootstrap/llex.obj $
+    $obj/bootstrap/lmathlib.obj $obj/bootstrap/lmem.obj $
+    $obj/bootstrap/loadlib.obj $obj/bootstrap/lobject.obj $
+    $obj/bootstrap/lopcodes.obj $obj/bootstrap/loslib.obj $
+    $obj/bootstrap/lparser.obj $obj/bootstrap/lstate.obj $
+    $obj/bootstrap/lstring.obj $obj/bootstrap/lstrlib.obj $
+    $obj/bootstrap/ltable.obj $obj/bootstrap/ltablib.obj $
+    $obj/bootstrap/ltm.obj $obj/bootstrap/progdir.obj $
+    $obj/bootstrap/main.obj $obj/bootstrap/lundump.obj $
+    $obj/bootstrap/lutf8lib.obj $obj/bootstrap/lvm.obj $
+    $obj/bootstrap/lzio.obj | $builddir/make.ninja
+rule command
+  command = $COMMAND
+  description = $DESC
+build $builddir/_/copy_script: command | $builddir/make.ninja
+  COMMAND = cp bootstrap/main.lua $bin/main.lua
+build $builddir/_/test: command | $bin/bootstrap $builddir/_/copy_script $
+    $bin/bee.so $builddir/make.ninja
+  COMMAND = $bin/bootstrap test/test.lua
+rule configure
+  command = $luamake init -f $in
+  generator = 1
+build $builddir/make.ninja: configure make.lua | project/luamake/linux.lua
