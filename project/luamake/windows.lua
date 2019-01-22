@@ -83,6 +83,7 @@ if lm.plat == 'msvc' then
     }
 else
     lm:build "copy_script" {
+        "mkdir", "-p", "$bin", "&&",
         "cp", "bootstrap/main.lua", "$bin/main.lua"
     }
 end

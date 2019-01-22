@@ -63,6 +63,7 @@ lm:executable 'bootstrap' {
 }
 
 lm:build "copy_script" {
+    "mkdir", "-p", "$bin", "&&",
     "cp", "bootstrap/main.lua", "$bin/main.lua"
 }
 

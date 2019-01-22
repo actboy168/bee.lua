@@ -162,7 +162,7 @@ rule command
   command = $COMMAND
   description = $DESC
 build $builddir/_/copy_script: command
-  COMMAND = cp bootstrap/main.lua $bin/main.lua
+  COMMAND = mkdir -p $bin && cp bootstrap/main.lua $bin/main.lua
 build $builddir/_/test: command | $bin/bootstrap $builddir/_/copy_script $
     $bin/bee.so
   COMMAND = $bin/bootstrap test/test.lua
