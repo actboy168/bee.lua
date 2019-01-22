@@ -5,7 +5,7 @@ for _, config in ipairs {'debug', 'release'} do
         Arch = '32',
         Compiler = 'msvc',
         CRT = 'msvc',
-        DEBUG = (config == 'Debug'),
+        DEBUG = (config == 'debug'),
     }
     support['msvc_x64_' .. config] = {
         OS = 'Windows',
@@ -19,21 +19,21 @@ for _, config in ipairs {'debug', 'release'} do
         Arch = '64',
         Compiler = 'gcc',
         CRT = 'mingw',
-        DEBUG = (config == 'Debug'),
+        DEBUG = (config == 'debug'),
     }
     support['linux_' .. config] = {
         OS = 'Linux',
         Arch = '64',
         Compiler = 'clang',
         CRT = 'glibc',
-        DEBUG = (config == 'Debug'),
+        DEBUG = (config == 'debug'),
     }
-    support['macosx_' .. config] = {
+    support['macos_' .. config] = {
         OS = 'macOS',
         Arch = '64',
         Compiler = 'clang',
         CRT = 'libc++',
-        DEBUG = (config == 'Debug'),
+        DEBUG = (config == 'debug'),
     }
 end
 

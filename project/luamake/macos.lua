@@ -6,7 +6,10 @@ lm:executable 'lua' {
         "src/*.c",
         "!src/luac.c",
     },
-    defines = "LUA_USE_MACOSX",
+    defines = {
+        "LUA_USE_MACOSX",
+        "LUAI_MAXCCALLS=200"
+    },
     links = { "m", "dl" },
 }
 

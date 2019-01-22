@@ -5,7 +5,7 @@ ifeq "$(PLAT)" ""
 	else ifeq "$(shell uname -s)" "Linux"
 		PLAT = linux
 	else ifeq "$(shell uname -s)" "Darwin"
-		PLAT = macosx
+		PLAT = macos
 	endif
 endif
 
@@ -45,7 +45,7 @@ LUALIB = -llua
 LDSHARED = --shared
 STRIP = strip --strip-unneeded
 
-else ifeq "$(PLAT)" "macosx"
+else ifeq "$(PLAT)" "macos"
 
 LUA_FLAGS = -DLUA_USE_MACOSX -DLUA_USE_READLINE
 LUALIB = -llua

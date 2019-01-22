@@ -60,7 +60,7 @@ BEE_SUBPROCESS += $(TMPDIR)/bee_subprocess_subprocess_posix.o
 ifeq "$(PLAT)" "linux"
 BEE_FILESYSTEM += $(TMPDIR)/binding_lua_filesystem.o
 BEE_FILESYSTEM += $(TMPDIR)/bee_utility_path_helper.o
-else ifeq "$(PLAT)" "macosx"
+else ifeq "$(PLAT)" "macos"
 BEE_FILESYSTEM += $(TMPDIR)/binding_lua_posixfs.o
 BEE_FILEWATCH += $(TMPDIR)/bee_fsevent_fsevent_osx.o
 endif

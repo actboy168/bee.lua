@@ -26,8 +26,6 @@ lm:shared_library 'bee' {
         "3rd/incbin",
         "."
     },
-    defines = {
-    },
     sources = {
         "3rd/lua-seri/*.c",
         "bee/*.cpp",
