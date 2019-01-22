@@ -1,1 +1,0 @@
-make/luamake project/make/generate_deps.lua project/make/deps.mk

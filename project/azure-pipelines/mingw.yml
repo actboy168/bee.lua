@@ -14,12 +14,12 @@ steps:
 
 - script: |
    cd make
-   luamake mingw-init.lua c:\tools\msys64
-   luamake mingw.lua gcc --version
-   luamake mingw.lua ninja -f build/mingw/make.ninja
+   lua mingw-init.lua c:\tools\msys64
+   lua mingw.lua gcc --version
+   lua mingw.lua ninja -f build/mingw/make.ninja
   displayName: Compile
 
 - script: |
    cd make
-   luamake mingw.lua .\bin\mingw_release\bootstrap.exe .\test\test.lua
+   lua mingw.lua .\bin\mingw_release\bootstrap.exe .\test\test.lua
   displayName: Test
