@@ -9,10 +9,10 @@ Lua runtime and toolset
 ## Build
 
 * install ninja
-* ninja -f build/msvc/make.ninja
-* ninja -f build/mingw/make.ninja
-* ninja -f build/linux/make.ninja
-* ninja -f build/macos/make.ninja
+* ninja -f ninja/msvc.ninja
+* ninja -f ninja/mingw.ninja
+* ninja -f ninja/linux.ninja
+* ninja -f ninja/macos.ninja
 
 ## Lua patch
 

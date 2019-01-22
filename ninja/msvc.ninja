@@ -1,8 +1,8 @@
 builddir = build/msvc
-luamake = ..\luamake\luamake
+luamake = cmd.exe /c ..\luamake\luamake
 bin = bin/msvc_x86_release
 obj = tmp/msvc_x86_release
-deps_prefix = 注意: 包含文件:
+subninja $builddir/msvc_deps_prefix.ninja
 rule C_lua54
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /permissive- /O2 $
       /GL /Zc:inline /W3 /MD -DLUA_BUILD_AS_DLL -DLUAI_MAXCCALLS=200 

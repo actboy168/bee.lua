@@ -16,7 +16,7 @@ steps:
    cd make
    lua mingw-init.lua c:\tools\msys64
    lua mingw.lua gcc --version
-   lua mingw.lua ninja -f build/mingw/make.ninja
+   lua mingw.lua ninja -f ninja/mingw.ninja
   displayName: Compile
 
 - script: |

@@ -5,7 +5,7 @@ steps:
   displayName: Init
 
 - bash: |
-   ninja -f build/macos/make.ninja
+   ninja -f ninja/macos.ninja
   displayName: Compile
 
 - bash: |

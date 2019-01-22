@@ -1,9 +1,8 @@
 /bin/
 /tmp/
+/build/
 .vs/
 *.user
-.ninja_deps
-.ninja_log
 
 /bee/nonstd/embed_detail.h
 /test/temp.lua
