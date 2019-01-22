@@ -6,6 +6,14 @@ Lua runtime and toolset
 | ------ | ------ | ------ | ------ |
 | [![Build Status](https://dev.azure.com/actboy168/bee.lua/_apis/build/status/bee.lua?branchName=master&jobName=windows_msvc)](https://dev.azure.com/actboy168/bee.lua/_build/latest?definitionId=5?branchName=master) | [![Build Status](https://dev.azure.com/actboy168/bee.lua/_apis/build/status/bee.lua?branchName=master&jobName=Windows_MinGW)](https://dev.azure.com/actboy168/bee.lua/_build/latest?definitionId=5?branchName=master) | [![Build Status](https://dev.azure.com/actboy168/bee.lua/_apis/build/status/bee.lua?branchName=master&jobName=macos)](https://dev.azure.com/actboy168/bee.lua/_build/latest?definitionId=5?branchName=master) | [![Build status](https://ci.appveyor.com/api/projects/status/qfp4flrsoi1aat41?svg=true)](https://ci.appveyor.com/project/actboy168/bee-lua) |
 
+## Build
+
+* install ninja
+* ninja -f build/msvc/make.ninja
+* ninja -f build/mingw/make.ninja
+* ninja -f build/linux/make.ninja
+* ninja -f build/macos/make.ninja
+
 ## Lua patch
 
 * Enable ansi escape code on windows
