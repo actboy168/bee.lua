@@ -1,5 +1,5 @@
-#include <bee/error/windows_category.h>
-#include <bee/utility/unicode.h>
+#include <bee/error/category_win.h>
+#include <bee/utility/unicode_win.h>
 #include <sstream>
 #include <Windows.h>
 

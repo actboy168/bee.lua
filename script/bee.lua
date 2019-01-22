@@ -34,11 +34,12 @@ if platform.CRT == 'mingw' then
 
     local path_string = path_mt.string
     function path_mt.string(path)
-        return path_string(path):gsub('\\', '/')
+        local res = path_string(path):gsub('\\', '/')
+        return res
     end
 
     function path_mt.parent_path(path)
-        return fs.path(path:string():match("(.+)[/\\][%w_.-]*$") or "")
+        return fs.path(path:string():match("(.+)[/\\][%w*?_.-]*$") or "")
     end
 end
 

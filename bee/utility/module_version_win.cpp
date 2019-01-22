@@ -1,4 +1,4 @@
-#include <bee/utility/module_version.h>
+#include <bee/utility/module_version_win.h>
 #include <bee/utility/format.h>
 #include <vector>
 

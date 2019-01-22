@@ -42,7 +42,7 @@ end
 
 function path_mt:__div(other)
     other = (type(other) == 'string') and other or other._value
-    if other:sub(1, 1) == '/' then
+    if self._value == '' or other:sub(1, 1) == '/' then
         return constructor(other)
     end
     local value = self._value:gsub("(.-)/?$", "%1")
@@ -52,7 +52,7 @@ end
 function path_mt:__eq(other)
     local lft = normalize(self._value)
     local rht = normalize(other._value)
-    return lft == rht
+    return lft:lower() == rht:lower()
 end
 
 function path_mt:string()

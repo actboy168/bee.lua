@@ -79,7 +79,7 @@ local function gen_file(path)
     path = path:string():gsub("\\", "/")
     local deps, sysdeps = alldeps[path][1], alldeps[path][2]
     if path == 'binding/lua_embed.cpp' then
-        res[#res + 1] = ("$(TMPDIR)/%s.o : %s bee/lua/binding.h bee/utility/unicode.h bee/config.h bee/nonstd/embed.h bee/nonstd/span.h script/bee.lua | $(TMPDIR)"):format(cpp_to_o(path), path)
+        res[#res + 1] = ("$(TMPDIR)/%s.o : %s bee/lua/binding.h bee/utility/unicode_win.h bee/config.h bee/nonstd/embed.h bee/nonstd/span.h script/bee.lua | $(TMPDIR)"):format(cpp_to_o(path), path)
     else
         res[#res + 1] = ("$(TMPDIR)/%s.o : %s %s | $(TMPDIR)"):format(cpp_to_o(path), path, table.concat(deps, " "))
     end

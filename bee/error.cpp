@@ -1,7 +1,7 @@
 #include <bee/error.h>
 #if defined(_WIN32)
 #include <Windows.h>
-#include <bee/error/windows_category.h>
+#include <bee/error/category_win.h>
 #else
 #include <errno.h>
 #endif

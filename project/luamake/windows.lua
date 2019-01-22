@@ -53,8 +53,9 @@ lm:shared_library 'bee' {
         "3rd/lua-seri/*.c",
         "bee/*.cpp",
         "binding/*.cpp",
-        "!bee/fsevent/fsevent_osx.cpp",
-        "!bee/subprocess/subprocess_posix.cpp",
+        "!bee/*_osx.cpp",
+        "!bee/*_linux.cpp",
+        "!bee/*_posix.cpp",
         "!binding/lua_posixfs.cpp",
     },
     links = {
@@ -76,9 +77,15 @@ lm:executable 'bootstrap' {
     },
 }
 
-lm:build "copy_script" {
-    "$luamake", "lua", "project/luamake/copy.lua", "bootstrap/main.lua", "$bin/main.lua"
-}
+if lm.plat == 'msvc' then
+    lm:build "copy_script" {
+        "cmd.exe", "/c", "copy", "/Y", "bootstrap\\main.lua", lm.bindir:gsub('/', '\\') .. "\\main.lua"
+    }
+else
+    lm:build "copy_script" {
+        "cp", "bootstrap/main.lua", "$bin/main.lua"
+    }
+end
 
 lm:build "test" {
     "$bin/bootstrap.exe", "test/test.lua",

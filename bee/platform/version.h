@@ -1,5 +1,7 @@
 #pragma once
 
+#if defined(_WIN32)
+
 #include <bee/config.h>
 #include <bee/nonstd/enum.h>
 #include <stdint.h>
@@ -22,3 +24,5 @@ namespace bee::platform {
 	};
 	_BEE_API version get_version();
 }
+
+#endif

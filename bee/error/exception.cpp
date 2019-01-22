@@ -1,6 +1,16 @@
 #include <bee/error/exception.h>
-#include <bee/utility/unicode.h>
 #include <stdarg.h>
+
+#if defined(_WIN32)
+
+#include <bee/utility/unicode_win.h>
+
+#define VPRINTF(fmt, va) ::_vscprintf((fmt), (va))
+#define VSPRINTF(str, sz, fmt, va) ::_vsnprintf_s((str), (sz) + 1, (sz), (fmt), (va));
+#else
+#define VPRINTF(fmt, va) ::vprintf((fmt), (va))
+#define VSPRINTF(str, sz, fmt, va) ::vsnprintf((str), (sz), (fmt), (va));
+#endif
 
 namespace bee {
     exception::exception()
@@ -12,15 +22,16 @@ namespace bee {
     {
         va_list va;
         va_start(va, fmt);
-        size_t sz = ::_vscprintf(fmt, va);
+        size_t sz = VPRINTF(fmt, va);
         std::dynarray<char> str(sz + 1);
-        int n = ::_vsnprintf_s(str.data(), sz + 1, sz, fmt, va);
+        int n = VSPRINTF(str.data(), sz, fmt, va);
         if (n > 0) {
             what_ = std::move(str);
         }
         va_end(va);
     }
 
+#if defined(_WIN32)
     exception::exception(const wchar_t* fmt, ...)
         : exception()
     {
@@ -36,6 +47,7 @@ namespace bee {
         }
         va_end(va);
     }
+#endif
 
     exception::~exception()
     { }

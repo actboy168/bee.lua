@@ -8,5 +8,5 @@ steps:
   displayName: Compile
 
 - bash: |
-   bin/macosx_Release/bee test/test.lua
+   bin/macos_release/bee test/test.lua
   displayName: Test

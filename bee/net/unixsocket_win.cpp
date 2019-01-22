@@ -1,6 +1,6 @@
 #include <winsock2.h>
-#include <bee/net/unixsocket.h>
-#include <bee/utility/unicode.h>
+#include <bee/net/unixsocket_win.h>
+#include <bee/utility/unicode_win.h>
 #include <fstream>
 #include <charconv>
 #include <limits>
