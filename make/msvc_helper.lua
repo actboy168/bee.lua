@@ -72,7 +72,7 @@ local function get_env(path, arch, winsdk)
 end
 
 local function get_prefix(env)
-    local testdir = MAKEDIR / 'luamake-temp'
+    local testdir = (MAKEDIR or fs.path('.')) / 'luamake-temp'
     fs.create_directories(testdir)
     createfile(testdir / 'test.h')
     createfile(testdir / 'test.c', '#include "test.h"')
