@@ -29,15 +29,13 @@ if lm.plat == 'msvc' then
     }
     lm:build "embed_make" {
         "make\\lua", "project/embed.lua", "bee/nonstd/embed_detail.h", "binding/lua_embed.cpp",
-        deps = "embed_clean"
+        deps = "embed_clean",
+        output = "bee/nonstd/embed_detail.h"
     }
 end
 
 lm:shared_library 'bee' {
-    deps = {
-        "lua54",
-        (lm.plat == 'msvc') and "embed_make",
-    },
+    deps = "lua54",
     includes = {
         "3rd/lua/src",
         "3rd/lua-seri",
