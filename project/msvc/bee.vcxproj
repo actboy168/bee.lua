@@ -116,8 +116,7 @@
       <AdditionalDependencies>ws2_32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
-      <Command>$(projectDir)..\..\make\lua.exe $(projectDir)..\..\project\embed.lua $(projectDir)..\..\bee\nonstd\embed_detail.h
-$(projectDir)..\..\make\lua.exe $(projectDir)..\..\project\embed.lua $(projectDir)..\..\bee\nonstd\embed_detail.h $(projectDir)..\..\binding\lua_embed.cpp
+      <Command>$(projectDir)..\..\make\lua.exe $(projectDir)..\..\project\embed.lua $(projectDir)..\..\bee\nonstd\embed_detail.h $(projectDir)..\..\binding\lua_embed.cpp
 </Command>
     </CustomBuildStep>
     <CustomBuildStep>
@@ -147,8 +146,7 @@ $(projectDir)..\..\make\lua.exe $(projectDir)..\..\project\embed.lua $(projectDi
       <AdditionalDependencies>ws2_32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
-      <Command>$(projectDir)..\..\make\lua.exe $(projectDir)..\..\project\embed.lua $(projectDir)..\..\bee\nonstd\embed_detail.h
-$(projectDir)..\..\make\lua.exe $(projectDir)..\..\project\embed.lua $(projectDir)..\..\bee\nonstd\embed_detail.h $(projectDir)..\..\binding\lua_embed.cpp
+      <Command>$(projectDir)..\..\make\lua.exe $(projectDir)..\..\project\embed.lua $(projectDir)..\..\bee\nonstd\embed_detail.h $(projectDir)..\..\binding\lua_embed.cpp
 </Command>
     </CustomBuildStep>
     <CustomBuildStep>
@@ -175,8 +173,7 @@ $(projectDir)..\..\make\lua.exe $(projectDir)..\..\project\embed.lua $(projectDi
       </Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Command>$(projectDir)..\..\make\lua.exe $(projectDir)..\..\project\embed.lua $(projectDir)..\..\bee\nonstd\embed_detail.h
-$(projectDir)..\..\make\lua.exe $(projectDir)..\..\project\embed.lua $(projectDir)..\..\bee\nonstd\embed_detail.h $(projectDir)..\..\binding\lua_embed.cpp
+      <Command>$(projectDir)..\..\make\lua.exe $(projectDir)..\..\project\embed.lua $(projectDir)..\..\bee\nonstd\embed_detail.h $(projectDir)..\..\binding\lua_embed.cpp
 </Command>
     </CustomBuildStep>
     <CustomBuildStep>
@@ -209,8 +206,7 @@ $(projectDir)..\..\make\lua.exe $(projectDir)..\..\project\embed.lua $(projectDi
       </Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Command>$(projectDir)..\..\make\lua.exe $(projectDir)..\..\project\embed.lua $(projectDir)..\..\bee\nonstd\embed_detail.h
-$(projectDir)..\..\make\lua.exe $(projectDir)..\..\project\embed.lua $(projectDir)..\..\bee\nonstd\embed_detail.h $(projectDir)..\..\binding\lua_embed.cpp
+      <Command>$(projectDir)..\..\make\lua.exe $(projectDir)..\..\project\embed.lua $(projectDir)..\..\bee\nonstd\embed_detail.h $(projectDir)..\..\binding\lua_embed.cpp
 </Command>
     </CustomBuildStep>
     <CustomBuildStep>

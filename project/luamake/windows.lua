@@ -24,12 +24,8 @@ lm:executable 'lua' {
 lm.rootdir = ''
 
 if lm.plat == 'msvc' then
-    lm:build "embed_clean" {
-        "make\\lua", "project/embed.lua", "bee/nonstd/embed_detail.h"
-    }
     lm:build "embed_make" {
         "make\\lua", "project/embed.lua", "bee/nonstd/embed_detail.h", "binding/lua_embed.cpp",
-        deps = "embed_clean",
         output = "bee/nonstd/embed_detail.h"
     }
 end
@@ -90,4 +86,5 @@ end
 lm:build "test" {
     "$bin/bootstrap.exe", "test/test.lua",
     deps = { "bootstrap", "copy_script", "bee" },
+    pool = "console"
 }

@@ -57,8 +57,5 @@ local function scan(output, filename)
 end
 
 local output, filename = ...
-if not filename then
-    fs.remove(fs.path(output))
-    return
-end
+fs.remove(fs.path(output))
 scan(output, filename)
