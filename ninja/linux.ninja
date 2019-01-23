@@ -1,7 +1,7 @@
 builddir = build/linux
 luamake = ..\luamake\luamake
 bin = bin/linux_release
-obj = tmp/linux_release
+obj = $builddir/obj
 rule C_lua
   command = clang -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall $
       -DLUA_USE_LINUX -DLUAI_MAXCCALLS=200 -o $out -c $in

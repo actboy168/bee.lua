@@ -70,27 +70,27 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(projectDir)..\..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
-    <IntDir>$(projectDir)..\..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir>$(projectDir)..\..\build\msbuild\obj\$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(projectDir)..\..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
-    <IntDir>$(projectDir)..\..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir>$(projectDir)..\..\build\msbuild\obj\$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(projectDir)..\..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
-    <IntDir>$(projectDir)..\..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir>$(projectDir)..\..\build\msbuild\obj\$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(projectDir)..\..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
-    <IntDir>$(projectDir)..\..\tmp\msvc_$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir>$(projectDir)..\..\build\msbuild\obj\$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>

@@ -19,7 +19,6 @@ end
 outdir = outdir .. '_release'
 
 lm.bindir = 'bin/' .. outdir
-lm.objdir = 'tmp/' .. outdir
 
 lm.c = lm.plat == 'msvc' and 'c89' or 'c11'
 lm.cxx = 'c++17'

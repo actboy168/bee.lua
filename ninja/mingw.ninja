@@ -1,7 +1,7 @@
 builddir = build/mingw
 luamake = ..\luamake\luamake
 bin = bin/mingw_release
-obj = tmp/mingw_release
+obj = $builddir/obj
 rule C_lua54
   command = gcc -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall $
       -DLUA_BUILD_AS_DLL -DLUAI_MAXCCALLS=200 -o $out -c $in
