@@ -70,12 +70,10 @@ build $bin/lua.exe: LINK_lua $obj/lua/utf8_lua.obj $bin/lua54.lib
 rule command
   command = $COMMAND
   description = $DESC
-build $builddir/_/embed_clean: command
-  COMMAND = make\lua project/embed.lua bee/nonstd/embed_detail.h
-build $builddir/_/embed_make | bee/nonstd/embed_detail.h: command | $
-    $builddir/_/embed_clean
+build $builddir/_/embed_make | bee/nonstd/embed_detail.h: command
   COMMAND = make\lua project/embed.lua bee/nonstd/embed_detail.h $
       binding/lua_embed.cpp
+build binding/lua_embed.cpp: phony bee/nonstd/embed_detail.h
 rule C_bee
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /permissive- /O2 $
       /GL /Zc:inline /W3 /MD -I3rd/lua/src -I3rd/lua-seri -I3rd/incbin -I. $
@@ -150,4 +148,5 @@ build $builddir/_/copy_script: command
       bin\msvc_x86_release
 build $builddir/_/test: command | $bin/bootstrap.exe $
     $builddir/_/copy_script $bin/bee.dll
+  pool = console
   COMMAND = $bin/bootstrap.exe test/test.lua
