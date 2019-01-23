@@ -285,6 +285,9 @@ namespace bee::lua_subprocess {
                 else if (console == "inherit") {
                     self.set_console(subprocess::console::eInherit);
                 }
+                else if (console == "detached") {
+                    self.set_console(subprocess::console::eDetached);
+                }
             }
             lua_pop(L, 1);
 

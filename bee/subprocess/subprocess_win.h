@@ -30,6 +30,7 @@ namespace bee::win::subprocess {
         eInherit,
         eDisable,
         eNew,
+        eDetached,
     };
     enum class stdio {
         eInput,

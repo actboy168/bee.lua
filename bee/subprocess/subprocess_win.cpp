@@ -121,9 +121,12 @@ namespace bee::win::subprocess {
     }
     
     bool spawn::set_console(console type) {
-        flags_ &= ~(CREATE_NO_WINDOW | CREATE_NEW_CONSOLE);
+        flags_ &= ~(CREATE_NO_WINDOW | CREATE_NEW_CONSOLE | DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP);
         switch (type) {
         case console::eInherit:
+            break;
+        case console::eDetached:
+            flags_ |= DETACHED_PROCESS & CREATE_NEW_PROCESS_GROUP;
             break;
         case console::eDisable:
             flags_ |= CREATE_NO_WINDOW;
