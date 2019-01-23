@@ -92,6 +92,7 @@ namespace bee::win::subprocess {
         bool set_console(console type);
         bool hide_window();
         void suspended();
+        void detached();
         void redirect(stdio type, file::handle h);
         void duplicate(net::socket::fd_t fd);
         void env_set(const std::wstring& key, const std::wstring& value);
@@ -113,5 +114,6 @@ namespace bee::win::subprocess {
         DWORD                   flags_ = 0;
         bool                    inherit_handle_ = false;
         bool                    search_path_ = false;
+        bool                    detached_ = false;
     };
 }

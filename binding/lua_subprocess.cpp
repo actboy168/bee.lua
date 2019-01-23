@@ -271,6 +271,15 @@ namespace bee::lua_subprocess {
             lua_pop(L, 1);
         }
 
+        static void cast_detached(lua_State* L, subprocess::spawn& self) {
+            if (LUA_TBOOLEAN == lua_getfield(L, 1, "detached")) {
+                if (lua_toboolean(L, -1)) {
+                    self.detached();
+                }
+            }
+            lua_pop(L, 1);
+        }
+
 #if defined(_WIN32)
         static void cast_option(lua_State* L, subprocess::spawn& self)
         {
@@ -338,6 +347,7 @@ namespace bee::lua_subprocess {
             cast_suspended(L, spawn);
             cast_option(L, spawn);
             cast_sockets(L, spawn);
+            cast_detached(L, spawn);
 
             file::handle f_stdin = cast_stdio(L, spawn, "stdin", subprocess::stdio::eInput);
             file::handle f_stdout = cast_stdio(L, spawn, "stdout", subprocess::stdio::eOutput);

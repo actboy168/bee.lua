@@ -100,6 +100,44 @@ namespace bee::win::subprocess {
         return nullptr;
     }
 
+    static HANDLE create_job() {
+        SECURITY_ATTRIBUTES attr;
+        memset(&attr, 0, sizeof attr);
+        attr.bInheritHandle = FALSE;
+
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION info;
+        memset(&info, 0, sizeof info);
+        info.BasicLimitInformation.LimitFlags = 
+            JOB_OBJECT_LIMIT_BREAKAWAY_OK 
+            | JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK
+            | JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+            | JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION
+            ;
+
+        HANDLE job = CreateJobObjectW(&attr, NULL);
+        if (job == NULL) {
+            return NULL;
+        }
+        if (!SetInformationJobObject(job, JobObjectExtendedLimitInformation, &info, sizeof info)) {
+            return NULL;
+        }
+        return job;
+    }
+
+    static bool join_job(HANDLE process) {
+        static HANDLE job = create_job();
+        if (job) {
+            return false;
+        }
+        if (!AssignProcessToJobObject(job, process)) {
+            DWORD err = GetLastError();
+            if (err != ERROR_ACCESS_DENIED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     spawn::spawn()
     {
         memset(&si_, 0, sizeof(STARTUPINFOW));
@@ -149,7 +187,12 @@ namespace bee::win::subprocess {
     void spawn::suspended() {
         flags_ |= CREATE_SUSPENDED;
     }
-    
+
+    void spawn::detached() {
+        set_console(console::eDetached);
+        detached_ = true;
+    }
+
     void spawn::redirect(stdio type, file::handle h) {
         si_.dwFlags |= STARTF_USESTDHANDLES;
         inherit_handle_ = true;
@@ -254,6 +297,9 @@ namespace bee::win::subprocess {
         }
         do_duplicate_finish();
         do_duplicate_shutdown();
+        if (!detached_) {
+            join_job(pi_.hProcess);
+        }
         if (resume) {
             ::ResumeThread(pi_.hThread);
         }

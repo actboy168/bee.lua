@@ -60,6 +60,7 @@ namespace bee::posix::subprocess {
         spawn();
         ~spawn();
         void suspended();
+        void detached();
         void redirect(stdio type, file::handle f);
         void duplicate(net::socket::fd_t fd);
         void env_set(const std::string& key, const std::string& value);
@@ -76,5 +77,6 @@ namespace bee::posix::subprocess {
         int                                fds_[3];
         int                                pid_ = -1;
         bool                               suspended_ = false;
+        bool                               detached_ = false;
     };
 }

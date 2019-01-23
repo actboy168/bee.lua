@@ -159,6 +159,10 @@ namespace bee::posix::subprocess {
         suspended_ = true;
     }
 
+    void spawn::detached() {
+        detached_ = true;
+    }
+
     void spawn::redirect(stdio type, file::handle h) { 
         switch (type) {
         case stdio::eInput:
@@ -222,6 +226,9 @@ namespace bee::posix::subprocess {
             return false;
         }
         if (pid == 0) {
+            if (detached_) {
+                setsid();
+            }
             do_duplicate();
             if (!set_env_.empty() || !del_env_.empty()) {
                 environ = make_env(set_env_, del_env_);
