@@ -462,7 +462,7 @@ namespace bee::lua_filesystem {
     {
         LUA_TRY;
         const fs::path& self = path::to(L, 1);
-        file::handle fd = file::lock(self.string<lua::string_type::value_type>());
+        file::handle fd = file::lock(self.string<file::handle::string_type::value_type>());
         if (!fd) {
             lua_pushnil(L);
             lua_pushstring(L, make_syserror().what());

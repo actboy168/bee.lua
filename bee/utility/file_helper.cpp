@@ -54,7 +54,7 @@ namespace bee::file {
         return newh;
     }
 
-    handle lock(const lua::string_type& filename) {
+    handle lock(const handle::string_type& filename) {
         return handle(CreateFileW(filename.c_str(),
             GENERIC_WRITE,
             0, NULL,
