@@ -84,7 +84,7 @@ namespace bee::file {
         return handle(::dup(get_handle(f)));
     }
 
-    handle lock(const lua::string_type& filename) {
+    handle lock(const handle::string_type& filename) {
 #if defined(__APPLE__) 
         int fd = ::open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_EXLOCK | O_NONBLOCK, 0644);
         return handle(fd);
