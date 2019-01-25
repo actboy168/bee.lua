@@ -123,7 +123,6 @@
     <Lib />
     <Link>
       <AdditionalLibraryDirectories>$(projectDir)..\..\..\Lua\build\bin\$(ConfigurationName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent />
   </ItemDefinitionGroup>
@@ -139,7 +138,6 @@
     <Lib />
     <Link>
       <AdditionalLibraryDirectories>$(projectDir)..\..\..\Lua\build\bin\$(ConfigurationName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent />
   </ItemDefinitionGroup>
@@ -157,7 +155,6 @@
     <Lib />
     <Link>
       <AdditionalLibraryDirectories>$(projectDir)..\..\..\Lua\build\bin\$(ConfigurationName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent />
   </ItemDefinitionGroup>
@@ -175,7 +172,6 @@
     <Lib />
     <Link>
       <AdditionalLibraryDirectories>$(projectDir)..\..\..\Lua\build\bin\$(ConfigurationName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent />
   </ItemDefinitionGroup>

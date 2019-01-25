@@ -129,7 +129,6 @@
     <Lib />
     <Link>
       <AdditionalLibraryDirectories>$(projectDir)..\..\..\Lua\build\bin\$(ConfigurationName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
       <Command>"$(projectDir)..\..\make\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(projectDir)..\..\3rd\luaffi\src\call_x86.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
@@ -150,7 +149,6 @@
     <Lib />
     <Link>
       <AdditionalLibraryDirectories>$(projectDir)..\..\..\Lua\build\bin\$(ConfigurationName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
       <Command>"$(projectDir)..\..\make\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(projectDir)..\..\3rd\luaffi\src\call_x86.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
@@ -173,7 +171,6 @@
     <Lib />
     <Link>
       <AdditionalLibraryDirectories>$(projectDir)..\..\..\Lua\build\bin\$(ConfigurationName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
       <Command>"$(projectDir)..\..\make\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(projectDir)..\..\3rd\luaffi\src\call_x86.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
@@ -196,7 +193,6 @@
     <Lib />
     <Link>
       <AdditionalLibraryDirectories>$(projectDir)..\..\..\Lua\build\bin\$(ConfigurationName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
       <Command>"$(projectDir)..\..\make\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(projectDir)..\..\3rd\luaffi\src\call_x86.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
