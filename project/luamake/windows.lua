@@ -1,27 +1,29 @@
 local lm = require 'luamake'
 
-lm.rootdir = '3rd/lua/'
+lm.rootdir = '3rd/lua/src'
 
 lm:shared_library 'lua54' {
     sources = {
-        "src/*.c",
-        "!src/lua.c",
-        "!src/luac.c",
-        "utf8/utf8_crt.c",
+        "*.c",
+        "!lua.c",
+        "!luac.c",
+        "../utf8/utf8_crt.c",
     },
     defines = {
         "LUA_BUILD_AS_DLL",
         "LUAI_MAXCCALLS=200"
     }
 }
+
+lm.rootdir = ''
+
 lm:executable 'lua' {
     deps = "lua54",
     sources = {
-        "utf8/utf8_lua.c",
+        "3rd/lua/utf8/utf8_lua.c",
     }
 }
 
-lm.rootdir = ''
 
 if lm.plat == 'msvc' then
     lm:build "embed_make" {
