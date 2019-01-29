@@ -25,7 +25,7 @@ lm.rootdir = ''
 
 if lm.plat == 'msvc' then
     lm:build "embed_make" {
-        "make\\lua", "project/embed.lua", "bee/nonstd/embed_detail.h", "binding/lua_embed.cpp",
+        "@make/lua", "@project/embed.lua", "@bee/nonstd/embed_detail.h", "@binding/lua_embed.cpp",
         output = "bee/nonstd/embed_detail.h"
     }
     lm:phony {
@@ -78,17 +78,17 @@ lm:executable 'bootstrap' {
 if lm.plat == 'msvc' then
     local bin = lm.bindir:gsub('/', '\\')
     lm:build "copy_script" {
-        "cmd.exe", "/C", "project\\copy.bat", "bootstrap\\main.lua", bin
+        "cmd.exe", "/C", "@project/copy.bat", "@bootstrap/main.lua", bin
     }
 else
     lm:build "copy_script" {
-        "mkdir", "-p", "$bin", "&&",
-        "cp", "bootstrap/main.lua", "$bin/main.lua"
+        "mkdir", "-p", "@$bin", "&&",
+        "cp", "@bootstrap/main.lua", "@$bin/main.lua"
     }
 end
 
 lm:build "test" {
-    "$bin/bootstrap.exe", "test/test.lua",
+    "@$bin/bootstrap.exe", "@test/test.lua",
     deps = { "bootstrap", "copy_script", "bee" },
     pool = "console"
 }
