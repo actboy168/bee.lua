@@ -21,5 +21,5 @@ steps:
 
 - script: |
    cd make
-   lua mingw.lua .\build\mingw\bin\bootstrap.exe .\test\test.lua
+   lua mingw.lua build\mingw\bin\bootstrap.exe .\test\test.lua
   displayName: Test
