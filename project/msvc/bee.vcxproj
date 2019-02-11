@@ -70,20 +70,20 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(projectDir)..\..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
+    <OutDir>$(projectDir)..\..\build\msbuild\bin\$(PlatformTarget)_$(Configuration)\</OutDir>
     <IntDir>$(projectDir)..\..\build\msbuild\obj\$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <CustomBuildAfterTargets>PrepareForBuild</CustomBuildAfterTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(projectDir)..\..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
+    <OutDir>$(projectDir)..\..\build\msbuild\bin\$(PlatformTarget)_$(Configuration)\</OutDir>
     <IntDir>$(projectDir)..\..\build\msbuild\obj\$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <CustomBuildAfterTargets>PrepareForBuild</CustomBuildAfterTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IntDir>$(projectDir)..\..\build\msbuild\obj\$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
-    <OutDir>$(projectDir)..\..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
+    <OutDir>$(projectDir)..\..\build\msbuild\bin\$(PlatformTarget)_$(Configuration)\</OutDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <CustomBuildAfterTargets>PrepareForBuild</CustomBuildAfterTargets>
     <CustomBuildBeforeTargets>
@@ -91,7 +91,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IntDir>$(projectDir)..\..\build\msbuild\obj\$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
-    <OutDir>$(projectDir)..\..\bin\msvc_$(PlatformTarget)_$(Configuration)\</OutDir>
+    <OutDir>$(projectDir)..\..\build\msbuild\bin\$(PlatformTarget)_$(Configuration)\</OutDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <CustomBuildAfterTargets>PrepareForBuild</CustomBuildAfterTargets>
     <CustomBuildBeforeTargets>

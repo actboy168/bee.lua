@@ -78,9 +78,8 @@ lm:executable 'bootstrap' {
 }
 
 if lm.plat == 'msvc' then
-    local bin = lm.bindir:gsub('/', '\\')
     lm:build "copy_script" {
-        "cmd.exe", "/C", "@project/copy.bat", "@bootstrap/main.lua", bin
+        "cmd.exe", "/C", "@project/copy.bat", "@bootstrap/main.lua", "@$bin"
     }
 else
     lm:build "copy_script" {
