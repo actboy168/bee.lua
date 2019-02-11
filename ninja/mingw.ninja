@@ -141,8 +141,8 @@ rule command
   command = $COMMAND
   description = $DESC
 build $builddir/_/copy_script: command
-  COMMAND = mkdir -p $bin && cp bootstrap\main.lua $bin\main.lua
+  COMMAND = mkdir -p $bin && cp bootstrap/main.lua $bin/main.lua
 build $builddir/_/test: command | $bin/bootstrap.exe $
     $builddir/_/copy_script $bin/bee.dll
   pool = console
-  COMMAND = $bin\bootstrap.exe test\test.lua
+  COMMAND = $bin/bootstrap.exe test/test.lua

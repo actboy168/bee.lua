@@ -46,13 +46,14 @@ support.macos = {
 }
 
 local lu = require 'luaunit'
+local fs = require 'bee.filesystem'
 local platform = require 'bee.platform'
 
 test_plat = {}
 
 function test_plat:test_1()
     lu.assertNotNil(__Target__)
-    local plat = __Target__:sub(7, -5):lower()
+    local plat = fs.path(__Target__):parent_path():filename():string():lower()
     if platform.OS == 'Linux' then
         lu.assertIsTrue(platform.Compiler == 'gcc' or platform.Compiler == 'clang')
         support.linux.Compiler = platform.Compiler
