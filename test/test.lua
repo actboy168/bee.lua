@@ -1,14 +1,14 @@
-local function getTarget()
+local function getProcDir()
     local i = 0
     while arg[i] ~= nil do
         i = i - 1
     end
-    return arg[i + 1]:match("(.+)[/\\][%w_.-]+$"):match("[/\\]?([%w_.-]+)$")
+    return arg[i + 1]:match("(.+)[/\\][%w_.-]+$")
 end
-__Target__ = getTarget():lower()
+__Target__ = getProcDir()
 __EXT__ = package.cpath:match '[/\\]%?%.([a-z]+)'
 package.path = './test/?.lua'
-package.cpath = ('./bin/%s/?.%s'):format(__Target__, __EXT__)
+package.cpath = ('%s/?.%s'):format(__Target__, __EXT__)
 
 local platform = require 'bee.platform'
 --if platform.Compiler == 'msvc' then

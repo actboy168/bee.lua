@@ -1,41 +1,49 @@
 local support = {}
 for _, config in ipairs {'debug', 'release'} do
-    support['msvc_x86_' .. config] = {
+    support['msbuild_x86_' .. config] = {
         OS = 'Windows',
         Arch = '32',
         Compiler = 'msvc',
         CRT = 'msvc',
         DEBUG = (config == 'debug'),
     }
-    support['msvc_x64_' .. config] = {
+    support['msbuild_x64_' .. config] = {
         OS = 'Windows',
         Arch = '64',
         Compiler = 'msvc',
         CRT = 'msvc',
         DEBUG = (config == 'Debug'),
     }
-    support['mingw_' .. config] = {
-        OS = 'Windows',
-        Arch = '64',
-        Compiler = 'gcc',
-        CRT = 'mingw',
-        DEBUG = (config == 'debug'),
-    }
-    support['linux_' .. config] = {
-        OS = 'Linux',
-        Arch = '64',
-        Compiler = 'clang',
-        CRT = 'glibc',
-        DEBUG = (config == 'debug'),
-    }
-    support['macos_' .. config] = {
-        OS = 'macOS',
-        Arch = '64',
-        Compiler = 'clang',
-        CRT = 'libc++',
-        DEBUG = (config == 'debug'),
-    }
 end
+
+support.msvc = {
+    OS = 'Windows',
+    Arch = '64',
+    Compiler = 'msvc',
+    CRT = 'msvc',
+    DEBUG = false,
+}
+support.mingw = {
+    OS = 'Windows',
+    Arch = '64',
+    Compiler = 'gcc',
+    CRT = 'mingw',
+    DEBUG = false,
+}
+support.linux = {
+    OS = 'Linux',
+    Arch = '64',
+    Compiler = 'clang',
+    CRT = 'glibc',
+    DEBUG = false,
+}
+support.macos = {
+    OS = 'macOS',
+    Arch = '64',
+    Compiler = 'clang',
+    CRT = 'libc++',
+    DEBUG = false,
+}
 
 local lu = require 'luaunit'
 local platform = require 'bee.platform'
@@ -44,9 +52,10 @@ test_plat = {}
 
 function test_plat:test_1()
     lu.assertNotNil(__Target__)
+    local plat = __Target__:sub(7, -5):lower()
     if platform.OS == 'Linux' then
         lu.assertIsTrue(platform.Compiler == 'gcc' or platform.Compiler == 'clang')
-        support[__Target__].Compiler = platform.Compiler
+        support.linux.Compiler = platform.Compiler
     end
-    lu.assertEquals(support[__Target__], platform)
+    lu.assertEquals(support[plat], platform)
 end
