@@ -5,10 +5,9 @@ steps:
   displayName: Init
 
 - bash: |
-   ./configure
-   make
+   ninja -f ninja/linux.ninja
   displayName: Compile
 
 - bash: |
-   bin/linux_Release/bee test/test.lua
+   build/linux/bin/bootstrap test/test.lua
   displayName: Test

@@ -1,6 +1,6 @@
 builddir = build/macos
 luamake = ..\luamake\luamake
-bin = bin/macos_release
+bin = $builddir/bin
 obj = $builddir/obj
 rule C_lua
   command = gcc -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall $

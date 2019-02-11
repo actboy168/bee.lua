@@ -1,6 +1,6 @@
 builddir = build/mingw
 luamake = ..\luamake\luamake
-bin = bin/mingw_release
+bin = $builddir/bin
 obj = $builddir/obj
 rule C_lua54
   command = gcc -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall $
@@ -57,7 +57,8 @@ build $bin/lua54.dll: LINK_lua54 $obj/lua54/lapi.obj $obj/lua54/lauxlib.obj $
     $obj/lua54/lzio.obj $obj/lua54/lundump.obj $obj/lua54/lutf8lib.obj $
     $obj/lua54/lvm.obj
 rule C_lua
-  command = gcc -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall -o $out -c $in
+  command = gcc -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall -I3rd/lua/src $
+      -o $out -c $in
   description = Compile C $out
   depfile = $out.d
   deps = gcc
@@ -69,7 +70,7 @@ build $bin/lua.exe: LINK_lua $obj/lua/utf8_lua.obj $bin/lua54.dll
 rule C_bee
   command = gcc -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall -I3rd/lua/src $
       -I3rd/lua-seri -I3rd/incbin -I. -D_WIN32_WINNT=0x0601 -DBEE_EXPORTS $
-      -D_CRT_SECURE_NO_WARNINGS -o $out -c $in
+      -D_CRT_SECURE_NO_WARNINGS -I3rd/lua/src -o $out -c $in
   description = Compile C $out
   depfile = $out.d
   deps = gcc
@@ -77,7 +78,7 @@ build $obj/bee/lua-seri.obj: C_bee 3rd/lua-seri/lua-seri.c
 rule CXX_bee
   command = g++ -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall -I3rd/lua/src $
       -I3rd/lua-seri -I3rd/incbin -I. -D_WIN32_WINNT=0x0601 -DBEE_EXPORTS $
-      -D_CRT_SECURE_NO_WARNINGS -o $out -c $in
+      -D_CRT_SECURE_NO_WARNINGS -I3rd/lua/src -o $out -c $in
   description = Compile CXX $out
   depfile = $out.d
   deps = gcc
@@ -125,7 +126,7 @@ build $bin/bee.dll: LINK_bee $obj/bee/lua-seri.obj $
     $obj/bee/lua_serialization.obj $obj/bee/lua_socket.obj $bin/lua54.dll
 rule CXX_bootstrap
   command = g++ -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall -I3rd/lua/src $
-      -o $out -c $in
+      -I3rd/lua/src -o $out -c $in
   description = Compile CXX $out
   depfile = $out.d
   deps = gcc
@@ -140,8 +141,8 @@ rule command
   command = $COMMAND
   description = $DESC
 build $builddir/_/copy_script: command
-  COMMAND = mkdir -p $bin && cp bootstrap/main.lua $bin/main.lua
+  COMMAND = mkdir -p $bin && cp bootstrap\main.lua $bin\main.lua
 build $builddir/_/test: command | $bin/bootstrap.exe $
     $builddir/_/copy_script $bin/bee.dll
   pool = console
-  COMMAND = $bin/bootstrap.exe test/test.lua
+  COMMAND = $bin\bootstrap.exe test\test.lua

@@ -1,6 +1,6 @@
 builddir = build/linux
 luamake = ..\luamake\luamake
-bin = bin/linux_release
+bin = $builddir/bin
 obj = $builddir/obj
 rule C_lua
   command = clang -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall $

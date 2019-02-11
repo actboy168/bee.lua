@@ -9,5 +9,5 @@ steps:
   displayName: Compile
 
 - bash: |
-   bin/macos_release/bootstrap test/test.lua
+   build/macos/bin/bootstrap test/test.lua
   displayName: Test

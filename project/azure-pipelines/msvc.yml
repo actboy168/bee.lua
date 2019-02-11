@@ -11,5 +11,5 @@ steps:
     createLogFile: true
 
 - script:  |
-    .\bin\msvc_$(PLATFORM)_Release\bee.exe test\test.lua
+    .\build\msbuild\bin\$(PLATFORM)_Release\bee.exe test\test.lua
   displayName: Test
