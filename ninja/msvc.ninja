@@ -146,7 +146,7 @@ rule LINK_bootstrap
 build $bin/bootstrap.exe: LINK_bootstrap $obj/bootstrap/main.obj $
     $obj/bootstrap/progdir.obj $bin/lua54.lib
 build $builddir/_/copy_script: command
-  COMMAND = cmd.exe /C project\copy.bat bootstrap\main.lua $bin
+  COMMAND = cmd.exe /C project\copy.bat bootstrap\main.lua build\msvc\bin
 build $builddir/_/test: command | $bin/bootstrap.exe $
     $builddir/_/copy_script $bin/bee.dll
   pool = console

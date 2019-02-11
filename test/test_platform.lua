@@ -18,7 +18,7 @@ end
 
 support.msvc = {
     OS = 'Windows',
-    Arch = '64',
+    Arch = '32',
     Compiler = 'msvc',
     CRT = 'msvc',
     DEBUG = false,
