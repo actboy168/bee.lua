@@ -1,4 +1,6 @@
+#ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
+#endif
 #include "utf8_crt.h"
 #include "utf8_unicode.h"
 #include <malloc.h>
