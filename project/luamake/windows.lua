@@ -83,13 +83,13 @@ if lm.plat == 'msvc' then
     }
 else
     lm:build "copy_script" {
-        "mkdir", "-p", "@$bin", "&&",
-        "cp", "@bootstrap/main.lua", "@$bin/main.lua"
+        "mkdir", "-p", "$bin", "&&",
+        "cp", "@bootstrap/main.lua", "$bin/main.lua"
     }
 end
 
 lm:build "test" {
-    "@$bin/bootstrap.exe", "@test/test.lua",
+    "$bin/bootstrap.exe", "@test/test.lua",
     deps = { "bootstrap", "copy_script", "bee" },
     pool = "console"
 }
