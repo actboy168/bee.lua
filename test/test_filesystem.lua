@@ -219,6 +219,15 @@ function test_fs:test_div()
     end
 end
 
+function test_fs:test_concat()
+    local function concat(a, b, c)
+        lu.assertEquals(fs.path(a) .. b, fs.path(c))
+        lu.assertEquals(fs.path(a) .. fs.path(b), fs.path(c))
+    end
+    concat('a', 'b', 'ab')
+    concat('a/b', 'c', 'a/bc')
+end
+
 function test_fs:test_absolute()
     local function eq_absolute1(path)
         return lu.assertEquals(fs.absolute(fs.path(path)):string(), (fs.current_path() / path):string())
