@@ -1,45 +1,11 @@
 {
-    // 使用 IntelliSense 了解相关属性。 
-    // 悬停以查看现有属性的描述。
-    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        {
-            "name": "Embed",
-            "type": "lua",
-            "request": "launch",
-            "stopOnEntry": true,
-            "luaexe": "${workspaceFolder}/make/luamake.exe",
-            "program": "${workspaceFolder}/project/msvc/embed.lua",
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal",
-            "arg": [
-                "${workspaceFolder}\\bee\\nonstd\\embed_detail.h",
-                "${workspaceFolder}\\binding\\binding_embed.cpp"
-            ]
-        },
-        {
-            "type": "lua",
-            "request": "launch",
-            "name": "Make",
-            "luaexe": "${workspaceFolder}/make/luamake.exe",
-            "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/project/msvc.lua",
-            "path": [
-                "${workspaceFolder}/script/?.lua",
-                "${workspaceFolder}/make/luamake/?.lua",
-                "${workspaceFolder}/make/?.lua"
-            ],
-            "arg": [
-                "x86",
-                "Release"
-            ]
-        },
         {
             "type": "lua",
             "request": "launch",
             "name": "Test",
-            "luaexe": "${workspaceFolder}/bin/msvc_x86_Debug/bee.exe",
+            "luaexe": "${workspaceFolder}/build/msbuild_x86_Debug/bin/lua.exe",
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/test/test.lua",
             "stopOnEntry": false
