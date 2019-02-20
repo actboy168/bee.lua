@@ -31,6 +31,7 @@ namespace bee::win::subprocess {
         eDisable,
         eNew,
         eDetached,
+        eHide,
     };
     enum class stdio {
         eInput,
@@ -115,5 +116,6 @@ namespace bee::win::subprocess {
         bool                    inherit_handle_ = false;
         bool                    search_path_ = false;
         bool                    detached_ = false;
+        bool                    hide_console_ = false;
     };
 }

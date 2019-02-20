@@ -107,8 +107,8 @@ namespace bee::win::subprocess {
 
         JOBOBJECT_EXTENDED_LIMIT_INFORMATION info;
         memset(&info, 0, sizeof info);
-        info.BasicLimitInformation.LimitFlags = 
-            JOB_OBJECT_LIMIT_BREAKAWAY_OK 
+        info.BasicLimitInformation.LimitFlags =
+            JOB_OBJECT_LIMIT_BREAKAWAY_OK
             | JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK
             | JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
             | JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION
@@ -138,6 +138,20 @@ namespace bee::win::subprocess {
         return true;
     }
 
+    static bool hide_console(DWORD pid) {
+        DWORD wpid;
+        HWND wnd = NULL;
+        do {
+            wnd = FindWindowExW(NULL, wnd, L"ConsoleWindowClass", NULL);
+            if (wnd == NULL) {
+                return false;
+            }
+            GetWindowThreadProcessId(wnd, &wpid);
+        } while (pid != wpid);
+        ShowWindow(wnd, SW_HIDE);
+        return true;
+    }
+
     spawn::spawn()
     {
         memset(&si_, 0, sizeof(STARTUPINFOW));
@@ -157,8 +171,9 @@ namespace bee::win::subprocess {
     void spawn::search_path() {
         search_path_ = true;
     }
-    
+
     bool spawn::set_console(console type) {
+        hide_console_ = false;
         flags_ &= ~(CREATE_NO_WINDOW | CREATE_NEW_CONSOLE | DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP);
         switch (type) {
         case console::eInherit:
@@ -171,6 +186,10 @@ namespace bee::win::subprocess {
             break;
         case console::eNew:
             flags_ |= CREATE_NEW_CONSOLE;
+            break;
+        case console::eHide:
+            flags_ |= CREATE_NEW_CONSOLE;
+            hide_console_ = true;
             break;
         default:
             return false;
@@ -300,6 +319,9 @@ namespace bee::win::subprocess {
         if (!detached_) {
             join_job(pi_.hProcess);
         }
+        if (hide_console_) {
+            hide_console(pi_.dwProcessId);
+        }
         if (resume) {
             ::ResumeThread(pi_.hThread);
         }
@@ -314,7 +336,7 @@ namespace bee::win::subprocess {
         if (!command) {
             return false;
         }
-        return raw_exec(search_path_? 0 : args[0].c_str(), command, cwd);
+        return raw_exec(search_path_ ? 0 : args[0].c_str(), command, cwd);
     }
 
     void spawn::env_set(const std::wstring& key, const std::wstring& value) {
@@ -344,7 +366,7 @@ namespace bee::win::subprocess {
     bool process::wait(uint32_t timeout) {
         return ::WaitForSingleObject(pi_.hProcess, timeout) == WAIT_OBJECT_0;
     }
-    
+
     bool process::is_running() {
         if (exit_code() == STILL_ACTIVE) {
             return !wait(0);
