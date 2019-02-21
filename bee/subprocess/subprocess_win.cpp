@@ -6,6 +6,7 @@
 #include <Windows.h>
 #include <memory>
 #include <deque>
+#include <thread>
 #include <assert.h>
 #include <fcntl.h>
 #include <io.h>
@@ -138,17 +139,55 @@ namespace bee::win::subprocess {
         return true;
     }
 
-    static bool hide_console(DWORD pid) {
+    static HWND console_window(DWORD pid) {
         DWORD wpid;
         HWND wnd = NULL;
         do {
             wnd = FindWindowExW(NULL, wnd, L"ConsoleWindowClass", NULL);
             if (wnd == NULL) {
-                return false;
+                break;
             }
             GetWindowThreadProcessId(wnd, &wpid);
         } while (pid != wpid);
-        ShowWindow(wnd, SW_HIDE);
+        return wnd;
+    }
+
+    static bool hide_console(PROCESS_INFORMATION& pi) {
+        HWND wnd = console_window(pi.dwProcessId);
+        if (wnd) {
+            SetWindowPos(wnd, NULL, -10000, -10000, 0, 0, SWP_HIDEWINDOW);
+            return true;
+        }
+
+        PROCESS_INFORMATION cpi;
+        cpi.dwProcessId = pi.dwProcessId;
+        cpi.dwThreadId = pi.dwThreadId;
+        cpi.dwProcessId = pi.dwProcessId;
+        cpi.hThread = NULL;
+        if (!::DuplicateHandle(
+            ::GetCurrentProcess(),
+            pi.hProcess,
+            ::GetCurrentProcess(),
+            &cpi.hProcess,
+            0, FALSE, DUPLICATE_SAME_ACCESS)
+            ) {
+            return false;
+        }
+
+        std::thread thd([&]() {
+            process process(std::move(cpi));
+            for (;; std::this_thread::sleep_for(std::chrono::milliseconds(10))) {
+                if (!process.is_running()) {
+                    return;
+                }
+                HWND wnd = console_window(process.get_id());
+                if (wnd) {
+                    SetWindowPos(wnd, NULL, -10000, -10000, 0, 0, SWP_HIDEWINDOW);
+                    return;
+                }
+            }
+        });
+        thd.detach();
         return true;
     }
 
@@ -320,7 +359,7 @@ namespace bee::win::subprocess {
             join_job(pi_.hProcess);
         }
         if (hide_console_) {
-            hide_console(pi_.dwProcessId);
+            hide_console(pi_);
         }
         if (resume) {
             ::ResumeThread(pi_.hThread);
