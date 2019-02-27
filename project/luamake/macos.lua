@@ -22,6 +22,9 @@ lm:shared_library 'bee' {
         "3rd/incbin",
         "."
     },
+    defines = {
+        "span_FEATURE_BYTE_SPAN=1"
+    },
     sources = {
         "3rd/lua-seri/*.c",
         "bee/*.cpp",

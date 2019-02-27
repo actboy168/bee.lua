@@ -102,7 +102,7 @@
       <WarningLevel>Level3</WarningLevel>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(projectDir)..\..\;$(projectDir)..\..\3rd\lua\src\;$(projectDir)..\..\3rd\lua-seri\;$(projectDir)..\..\bee\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>BEE_EXPORTS;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BEE_EXPORTS;span_FEATURE_BYTE_SPAN=1;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <PreBuildEvent>
@@ -130,7 +130,7 @@
       <WarningLevel>Level3</WarningLevel>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(projectDir)..\..\;$(projectDir)..\..\3rd\lua\src\;$(projectDir)..\..\3rd\lua-seri\;$(projectDir)..\..\bee\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>BEE_EXPORTS;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BEE_EXPORTS;span_FEATURE_BYTE_SPAN=1;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <PreBuildEvent>
@@ -157,7 +157,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <AdditionalIncludeDirectories>$(projectDir)..\..\;$(projectDir)..\..\3rd\lua\src\;$(projectDir)..\..\3rd\lua-seri\;$(projectDir)..\..\bee\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>BEE_EXPORTS;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BEE_EXPORTS;span_FEATURE_BYTE_SPAN=1;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <OmitFramePointers>true</OmitFramePointers>
     </ClCompile>
@@ -189,7 +189,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(projectDir)..\..\;$(projectDir)..\..\3rd\lua\src\;$(projectDir)..\..\3rd\lua-seri\;$(projectDir)..\..\bee\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>BEE_EXPORTS;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BEE_EXPORTS;span_FEATURE_BYTE_SPAN=1;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>

@@ -47,7 +47,8 @@ lm:shared_library 'bee' {
     defines = {
         "_WIN32_WINNT=0x0601",
         "BEE_EXPORTS",
-        "_CRT_SECURE_NO_WARNINGS"
+        "_CRT_SECURE_NO_WARNINGS",
+        "span_FEATURE_BYTE_SPAN=1",
     },
     sources = {
         "3rd/lua-seri/*.c",
