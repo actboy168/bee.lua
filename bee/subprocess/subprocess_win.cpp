@@ -4,6 +4,7 @@
 #include <bee/utility/format.h>
 #include <bee/subprocess/args_helper.h>
 #include <Windows.h>
+#include <Shobjidl.h>
 #include <memory>
 #include <deque>
 #include <thread>
@@ -152,10 +153,22 @@ namespace bee::win::subprocess {
         return wnd;
     }
 
+    bool hide_taskbar(HWND w) {
+        ITaskbarList* taskbar;
+        if (SUCCEEDED(CoCreateInstance(CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, IID_ITaskbarList, (void**)&taskbar))) {
+            taskbar->HrInit();
+            taskbar->DeleteTab(w);
+            taskbar->Release();
+            return true;
+        }
+        return false;
+    }
+
     static bool hide_console(PROCESS_INFORMATION& pi) {
         HWND wnd = console_window(pi.dwProcessId);
         if (wnd) {
             SetWindowPos(wnd, NULL, -10000, -10000, 0, 0, SWP_HIDEWINDOW);
+            hide_taskbar(wnd);
             return true;
         }
 
@@ -183,6 +196,7 @@ namespace bee::win::subprocess {
                 HWND wnd = console_window(process.get_id());
                 if (wnd) {
                     SetWindowPos(wnd, NULL, -10000, -10000, 0, 0, SWP_HIDEWINDOW);
+                    hide_taskbar(wnd);
                     return;
                 }
             }

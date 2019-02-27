@@ -61,6 +61,8 @@ lm:shared_library 'bee' {
     links = {
         "advapi32",
         "ws2_32",
+        "ole32",
+        "user32",
         "version",
         "stdc++fs",
         "stdc++"
