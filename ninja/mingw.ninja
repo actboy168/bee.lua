@@ -109,8 +109,8 @@ build $obj/bee/lua_registry.obj: CXX_bee binding/lua_registry.cpp
 build $obj/bee/lua_serialization.obj: CXX_bee binding/lua_serialization.cpp
 build $obj/bee/lua_socket.obj: CXX_bee binding/lua_socket.cpp
 rule LINK_bee
-  command = gcc --shared $in -o $out -s -ladvapi32 -lws2_32 -lversion $
-      -lstdc++fs -lstdc++
+  command = gcc --shared $in -o $out -s -ladvapi32 -lws2_32 -lole32 $
+      -luser32 -lversion -lstdc++fs -lstdc++
   description = Link SharedLibrary $out
 build $bin/bee.dll: LINK_bee $obj/bee/lua-seri.obj $
     $obj/bee/category_win.obj $obj/bee/exception.obj $obj/bee/error.obj $
