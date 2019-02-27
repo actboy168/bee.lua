@@ -1,5 +1,5 @@
 #include <bee/utility/path_helper.h>
-#include <bee/utility/dynarray.h>
+#include <bee/nonstd/dynarray.h>
 #include <bee/error.h>
 
 #if defined(_WIN32)

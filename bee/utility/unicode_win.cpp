@@ -1,5 +1,5 @@
 #include <bee/utility/unicode_win.h>
-#include <bee/utility/dynarray.h>
+#include <bee/nonstd/dynarray.h>
 #include <Windows.h>
 
 namespace bee {

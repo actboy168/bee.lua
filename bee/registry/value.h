@@ -6,7 +6,7 @@
 #include <vector>      
 #include <list>    
 #include <deque>    
-#include <bee/utility/dynarray.h>
+#include <bee/nonstd/dynarray.h>
 #include <bee/registry/traits.h> 
 #include <bee/registry/exception.h>
 

@@ -137,9 +137,6 @@
     <ClInclude Include="..\..\bee\subprocess.h">
       <Filter>bee</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\bee\utility\dynarray.h">
-      <Filter>bee\utility</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\bee\utility\path_helper.h">
       <Filter>bee\utility</Filter>
     </ClInclude>
@@ -238,6 +235,9 @@
     </ClInclude>
     <ClInclude Include="..\..\bee\utility\unicode_win.h">
       <Filter>bee\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\nonstd\dynarray.h">
+      <Filter>bee\nonstd</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

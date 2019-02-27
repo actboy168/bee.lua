@@ -2,7 +2,7 @@
 
 #include <string>
 #include <string_view>
-#include <bee/utility/dynarray.h>
+#include <bee/nonstd/dynarray.h>
 #include <bee/nonstd/expected.h>
 
 #if !defined(_WIN32)

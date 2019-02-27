@@ -1,7 +1,7 @@
 #pragma once
 
 #include  <bee/config.h>
-#include  <bee/utility/dynarray.h>
+#include  <bee/nonstd/dynarray.h>
 
 namespace bee {
 #if defined(_MSC_VER)
