@@ -175,7 +175,6 @@ namespace bee::win::subprocess {
         PROCESS_INFORMATION cpi;
         cpi.dwProcessId = pi.dwProcessId;
         cpi.dwThreadId = pi.dwThreadId;
-        cpi.dwProcessId = pi.dwProcessId;
         cpi.hThread = NULL;
         if (!::DuplicateHandle(
             ::GetCurrentProcess(),
