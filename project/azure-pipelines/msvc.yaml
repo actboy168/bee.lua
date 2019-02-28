@@ -1,0 +1,13 @@
+steps:
+- script: |
+   choco install -y ninja
+   refreshenv
+  displayName: Init
+
+- script: |
+   ninja -f ninja\msvc.ninja
+  displayName: Compile
+
+- script: |
+   build\msvc\bin\bootstrap test\test.lua
+  displayName: Test
