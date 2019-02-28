@@ -9,5 +9,5 @@ steps:
   displayName: Compile
 
 - script: |
-   build\msvc\bin\bootstrap test\test.lua
+   build\msvc\bin\bootstrap.exe test\test.lua
   displayName: Test
