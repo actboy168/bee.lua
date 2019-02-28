@@ -5,7 +5,7 @@ steps:
   displayName: Init
 
 - script: |
-   ninja -f ninja\msvc.ninja
+   make\lua.exe make\msvc.lua ninja -f ninja\msvc.ninja
   displayName: Compile
 
 - script: |
