@@ -78,7 +78,7 @@ rule C_bee
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /O2 /GL $
       /Zc:inline /W3 /permissive- /MD -I3rd/lua/src -I3rd/lua-seri $
       -I3rd/incbin -I. -D_WIN32_WINNT=0x0601 -DBEE_EXPORTS $
-      -D_CRT_SECURE_NO_WARNINGS -I3rd/lua/src 
+      -D_CRT_SECURE_NO_WARNINGS -Dspan_FEATURE_BYTE_SPAN=1 -I3rd/lua/src 
   description = Compile C $out
   deps = msvc
 build $obj/bee/lua-seri.obj: C_bee 3rd/lua-seri/lua-seri.c
@@ -86,7 +86,8 @@ rule CXX_bee
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /O2 /GL $
       /Zc:inline /W3 /permissive- /MD -I3rd/lua/src -I3rd/lua-seri $
       -I3rd/incbin -I. -D_WIN32_WINNT=0x0601 -DBEE_EXPORTS $
-      -D_CRT_SECURE_NO_WARNINGS -I3rd/lua/src /std:c++17
+      -D_CRT_SECURE_NO_WARNINGS -Dspan_FEATURE_BYTE_SPAN=1 -I3rd/lua/src $
+      /std:c++17
   description = Compile CXX $out
   deps = msvc
 build $obj/bee/category_win.obj: CXX_bee bee/error/category_win.cpp
