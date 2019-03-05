@@ -7,8 +7,11 @@
 #if __has_include(<filesystem>)
 #include <filesystem>
 namespace fs = std::filesystem;
-#define ENABLE_FILESYSTEM
+#else
+#include <bee/nonstd/filesystem.h>
+namespace fs = ghc::filesystem;
 #endif
+#define ENABLE_FILESYSTEM
 
 namespace bee::lua {
     inline bool luaL_ismetaname(lua_State* L, int idx, const char* name) {

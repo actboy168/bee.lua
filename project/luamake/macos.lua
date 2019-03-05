@@ -33,7 +33,7 @@ lm:shared_library 'bee' {
         "!bee/*_linux.cpp",
         "!bee/utility/path_helper.cpp",
         "!binding/lua_unicode.cpp",
-        "!binding/lua_filesystem.cpp",
+        "!binding/lua_posixfs.cpp",
         "!binding/lua_registry.cpp",
     },
     ldflags = {

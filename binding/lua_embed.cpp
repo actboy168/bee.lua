@@ -17,14 +17,3 @@ BEE_LUA_API
 int luaopen_bee(lua_State* L) {
     return do_span(L, "=module 'bee'", nonstd::embed(bee, "script/bee.lua"));
 }
-
-#if defined(__APPLE__)
-#include <bee/nonstd/embed.h>
-define_embed(filesystem, "script/filesystem.lua");
-
-BEE_LUA_API
-int luaopen_bee_filesystem(lua_State* L) {
-    return do_span(L, "=module 'bee.filesystem'", nonstd::embed(filesystem, "script/filesystem.lua"));
-}
-
-#endif

@@ -1,17 +1,22 @@
 #include <lua.hpp>
 #include <bee/lua/binding.h>
-#include <filesystem>
 #include <bee/utility/path_helper.h>
 #include <bee/utility/file_helper.h>
 #include <bee/lua/range.h>
 #include <bee/lua/file.h>
 #include <bee/error.h>
 
+#if __has_include(<filesystem>)
+#include <filesystem>
+namespace fs = std::filesystem;
+#else
+#include <bee/nonstd/filesystem.h>
+namespace fs = ghc::filesystem;
+#endif
+
 #if defined(_WIN32)
 #include <bee/utility/unicode_win.h>
 #endif
-
-namespace fs = std::filesystem;
 
 namespace bee::lua_filesystem {
     namespace path {
