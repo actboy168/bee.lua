@@ -1143,7 +1143,7 @@ template <typename charT, typename traits, typename Alloc>
 inline std::string toUtf8(const std::basic_string<charT, traits, Alloc>& unicodeString)
 {
     using StringType = std::basic_string<charT, traits, Alloc>;
-    if (sizeof(typename StringType::value_type) == 1) {
+    if constexpr (sizeof(typename StringType::value_type) == 1) {
         return std::string(unicodeString.begin(), unicodeString.end());
     }
     std::string result;
@@ -1419,7 +1419,7 @@ inline path resolveSymlink(const path& p, std::error_code& ec)
                 UCHAR DataBuffer[1];
             } GenericReparseBuffer;
         } DUMMYUNIONNAME;
-    } REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
+    } REPARSE_DATA_BUFFER;
 #ifndef MAXIMUM_REPARSE_DATA_BUFFER_SIZE
 #define MAXIMUM_REPARSE_DATA_BUFFER_SIZE (16 * 1024)
 #endif
@@ -1434,10 +1434,8 @@ inline path resolveSymlink(const path& p, std::error_code& ec)
     char buffer[MAXIMUM_REPARSE_DATA_BUFFER_SIZE] = {0};
     REPARSE_DATA_BUFFER& reparseData = *(REPARSE_DATA_BUFFER*)buffer;
     ULONG bufferUsed;
-    ULONG dwError;
     path result;
     if (DeviceIoControl(file.get(), FSCTL_GET_REPARSE_POINT, 0, 0, &reparseData, sizeof(buffer), &bufferUsed, 0)) {
-        dwError = NOERROR;
         if (IsReparseTagMicrosoft(reparseData.ReparseTag)) {
             switch (reparseData.ReparseTag) {
                 case IO_REPARSE_TAG_SYMLINK:
@@ -3642,7 +3640,7 @@ inline bool remove(const path& p, std::error_code& ec) noexcept
     DWORD attr = GetFileAttributesW(np.c_str());
     if (attr == INVALID_FILE_ATTRIBUTES) {
         auto error = ::GetLastError();
-        if (error = ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND) {
+        if (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND) {
             return false;
         }
         ec = std::error_code(error, std::system_category());

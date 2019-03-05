@@ -15,7 +15,7 @@ namespace bee::lua {
 
     inline int push_error(lua_State* L, const std::exception& e)
     {
-#if defined(_WIN32)
+#if defined(_MSC_VER)
         lua_pushstring(L, a2u(e.what()).c_str());
 #else
         lua_pushstring(L, e.what());
