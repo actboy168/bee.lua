@@ -529,11 +529,13 @@ end
 function test_fs:test_list_directory()
     local function list_directory_ok(dir, expected)
         local result = {}
+        local n = 1
         for path in fs.path(dir):list_directory() do
             result[path:string()] = true
+            n = n + 1
         end
         lu.assertEquals(result, expected)
-        fs.remove_all(fs.path(dir))
+        lu.assertEquals(fs.remove_all(fs.path(dir)), n)
     end
     local function list_directory_failed(dir)
         local fsdir = fs.path(dir)
@@ -549,7 +551,6 @@ function test_fs:test_list_directory()
         ['temp/temp2.txt'] = true,
     })
 
-    fs.remove_all(fs.path('temp'))
     fs.create_directories(fs.path('temp'))
     fs.create_directories(fs.path('temp/temp'))
     create_file('temp/temp1.txt')
