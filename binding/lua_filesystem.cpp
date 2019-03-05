@@ -65,7 +65,7 @@ namespace bee::lua_filesystem {
             }
             switch (lua_type(L, 1)) {
             case LUA_TSTRING:
-                return constructor_(L, lua::to_string(L, 1));
+                return constructor_(L, lua::tostring<fs::path::string_type>(L, 1));
             case LUA_TUSERDATA:
                 return constructor_(L, to(L, 1));
             }
@@ -139,7 +139,7 @@ namespace bee::lua_filesystem {
             fs::path& self = path::to(L, 1);
             switch (lua_type(L, 2)) {
             case LUA_TSTRING:
-                self.replace_extension(lua::to_string(L, 2));
+                self.replace_extension(lua::tostring<fs::path::string_type>(L, 2));
                 lua_settop(L, 1);
                 return 1;
             case LUA_TUSERDATA:
@@ -153,7 +153,7 @@ namespace bee::lua_filesystem {
             LUA_TRY_END;
         }
 
-        static int equal_extension(lua_State* L, const fs::path& self, const lua::string_type& ext)
+        static int equal_extension(lua_State* L, const fs::path& self, const fs::path::string_type& ext)
         {
             auto const& selfext = self.extension();
             if (selfext.empty()) {
@@ -161,7 +161,7 @@ namespace bee::lua_filesystem {
                 return 1;
             }
             if (ext[0] != '.') {
-                lua_pushboolean(L, path_helper::equal(selfext, lua::string_type{ '.' } + ext));
+                lua_pushboolean(L, path_helper::equal(selfext, fs::path::string_type{ '.' } + ext));
                 return 1;
             }
             lua_pushboolean(L, path_helper::equal(selfext, ext));
@@ -174,7 +174,7 @@ namespace bee::lua_filesystem {
             fs::path& self = path::to(L, 1);
             switch (lua_type(L, 2)) {
             case LUA_TSTRING:
-                return equal_extension(L, self, lua::to_string(L, 2));
+                return equal_extension(L, self, lua::tostring<fs::path::string_type>(L, 2));
             case LUA_TUSERDATA:
                 return equal_extension(L, self, to(L, 2));
             default:
@@ -230,7 +230,7 @@ namespace bee::lua_filesystem {
             const fs::path& self = path::to(L, 1);
             switch (lua_type(L, 2)) {
             case LUA_TSTRING:
-                return constructor_(L, self / lua::to_string(L, 2));
+                return constructor_(L, self / lua::tostring<fs::path::string_type>(L, 2));
             case LUA_TUSERDATA:
                 return constructor_(L, self / to(L, 2));
             }
@@ -245,7 +245,7 @@ namespace bee::lua_filesystem {
             const fs::path& self = path::to(L, 1);
             switch (lua_type(L, 2)) {
             case LUA_TSTRING:
-                return constructor_(L, self.native() + lua::to_string(L, 2));
+                return constructor_(L, self.native() + lua::tostring<fs::path::string_type>(L, 2));
             case LUA_TUSERDATA:
                 return constructor_(L, self.native() + to(L, 2).native());
             }

@@ -41,6 +41,25 @@ namespace bee::lua {
 #endif
     }
 
+    template <class T>
+    inline T tostring(lua_State* L, int idx);
+
+    template <>
+    inline std::string tostring<std::string>(lua_State* L, int idx) {
+        size_t len = 0;
+        const char* buf = luaL_checklstring(L, idx, &len);
+        return std::string(buf, len);
+    }
+
+#if defined(_WIN32)
+    template <>
+    inline std::wstring tostring<std::wstring>(lua_State* L, int idx) {
+        size_t len = 0;
+        const char* buf = luaL_checklstring(L, idx, &len);
+        return u2w(std::string_view(buf, len));
+    }
+#endif
+
     inline void push_string(lua_State* L, const string_type& str)
     {
 #if defined(_WIN32) 
