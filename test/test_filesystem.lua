@@ -529,13 +529,11 @@ end
 function test_fs:test_list_directory()
     local function list_directory_ok(dir, expected)
         local result = {}
-        local n = 1
         for path in fs.path(dir):list_directory() do
             result[path:string()] = true
-            n = n + 1
         end
         lu.assertEquals(result, expected)
-        lu.assertEquals(fs.remove_all(fs.path(dir)), n)
+        fs.remove_all(fs.path(dir))
     end
     local function list_directory_failed(dir)
         local fsdir = fs.path(dir)
