@@ -540,7 +540,6 @@ function test_fs:test_list_directory()
         lu.assertError(fsdir.list_directory, fsdir)
     end
 
-    fs.remove_all(fs.path('temp'))
     fs.create_directories(fs.path('temp'))
     create_file('temp/temp1.txt')
     create_file('temp/temp2.txt')
