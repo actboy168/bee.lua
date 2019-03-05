@@ -2,14 +2,7 @@
 
 #include <bee/config.h>
 #include <bee/nonstd/expected.h>
-
-#if __has_include(<filesystem>)
-#include <filesystem>
-namespace fs = std::filesystem;
-#else
-#include <bee/nonstd/filesystem.h>
-namespace fs = ghc::filesystem;
-#endif
+#include <bee/filesystem.h>
 
 namespace bee::path_helper {
     _BEE_API auto dll_path(void* module_handle)->nonstd::expected<fs::path, std::exception>;

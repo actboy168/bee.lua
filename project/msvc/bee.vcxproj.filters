@@ -242,5 +242,8 @@
     <ClInclude Include="..\..\bee\nonstd\filesystem.h">
       <Filter>bee\nonstd</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\bee\filesystem.h">
+      <Filter>bee</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
