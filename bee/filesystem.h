@@ -1,6 +1,6 @@
 #pragma once
 
-#if __has_include(<filesystem>)
+#if __has_include(<filesystem>) && !defined(__MINGW32__)
 #include <filesystem>
 namespace fs = std::filesystem;
 #else

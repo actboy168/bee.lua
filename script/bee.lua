@@ -3,46 +3,6 @@ local fs = require 'bee.filesystem'
 local thd = require 'bee.thread'
 local platform = require 'bee.platform'
 
-if platform.CRT == 'mingw' then
-    local fs_remove = fs.remove
-    function fs.remove(path)
-        if not fs.exists(path) then
-            return false
-        end
-        return fs_remove(path)
-    end
-
-    local fs_copy_file = fs.copy_file
-    function fs.copy_file(from, to, flag)
-        if flag and fs.exists(to) then
-            fs.remove(to)
-        end
-        return fs_copy_file(from, to, flag)
-    end
-
-    local path_mt = debug.getmetatable(fs.path())
-    local path_is_absolute = path_mt.is_absolute
-    function path_mt.is_absolute(path)
-        if path:string():sub(1, 2):match '[/\\][/\\]' then
-            return true
-        end
-        return path_is_absolute(path)
-    end
-    function path_mt.is_relative(path)
-        return not path_mt.is_absolute(path)
-    end
-
-    local path_string = path_mt.string
-    function path_mt.string(path)
-        local res = path_string(path):gsub('\\', '/')
-        return res
-    end
-
-    function path_mt.parent_path(path)
-        return fs.path(path:string():match("(.+)[/\\][%w*?_.-]*$") or "")
-    end
-end
-
 local function fork(option)
     if type(option[1]) == 'table' then
         option[1][1] = assert(package.searchpath(option[1][1], package.path))
