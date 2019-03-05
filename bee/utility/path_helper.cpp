@@ -86,7 +86,7 @@ namespace bee::path_helper {
         fs::path rpath = rhs.lexically_normal();
         const fs::path::value_type* l(lpath.c_str());
         const fs::path::value_type* r(rpath.c_str());
-        while ((towlower(*l) == towlower(*r) && *l) {
+        while (towlower(*l) == towlower(*r) && *l) {
             ++l; ++r;
         }
         return *l == *r;
