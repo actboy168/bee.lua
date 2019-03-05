@@ -3637,6 +3637,10 @@ inline bool remove(const path& p)
 inline bool remove(const path& p, std::error_code& ec) noexcept
 {
     ec.clear();
+    bool result = exists(p, ec);
+    if (ec || !result) {
+        return false;
+    }
 #ifdef GHC_OS_WINDOWS
     std::wstring np = detail::fromUtf8<std::wstring>(p.u8string());
     DWORD attr = GetFileAttributesW(np.c_str());
