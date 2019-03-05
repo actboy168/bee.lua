@@ -279,6 +279,7 @@
     <ClInclude Include="..\..\bee\nonstd\embed.h" />
     <ClInclude Include="..\..\bee\nonstd\enum.h" />
     <ClInclude Include="..\..\bee\nonstd\expected.h" />
+    <ClInclude Include="..\..\bee\nonstd\filesystem.h" />
     <ClInclude Include="..\..\bee\nonstd\span.h" />
     <ClInclude Include="..\..\bee\platform.h" />
     <ClInclude Include="..\..\bee\platform\version.h" />

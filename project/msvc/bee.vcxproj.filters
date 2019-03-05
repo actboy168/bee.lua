@@ -239,5 +239,8 @@
     <ClInclude Include="..\..\bee\nonstd\dynarray.h">
       <Filter>bee\nonstd</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\bee\nonstd\filesystem.h">
+      <Filter>bee\nonstd</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

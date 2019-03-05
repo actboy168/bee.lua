@@ -3708,9 +3708,9 @@ inline uintmax_t remove_all(const path& p, std::error_code& ec) noexcept
             ++count;
         }
     }
-    if(!ec) {
+    //if(!ec) {
         remove(p, ec);
-    }
+    //}
     if (ec) {
         return static_cast<uintmax_t>(-1);
     }
