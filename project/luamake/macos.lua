@@ -31,7 +31,6 @@ lm:shared_library 'bee' {
         "binding/*.cpp",
         "!bee/*_win.cpp",
         "!bee/*_linux.cpp",
-        "!bee/utility/path_helper.cpp",
         "!binding/lua_unicode.cpp",
         "!binding/lua_posixfs.cpp",
         "!binding/lua_registry.cpp",
