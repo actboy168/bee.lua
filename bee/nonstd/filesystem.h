@@ -4325,6 +4325,10 @@ public:
                 }
                 else {
                     _current = filesystem::path();
+                    if (_dirHandle != INVALID_HANDLE_VALUE) {
+                        FindClose(_dirHandle);
+                        _dirHandle = INVALID_HANDLE_VALUE;
+                    }
                     break;
                 }
             } while (std::wstring(_findData.cFileName) == L"." || std::wstring(_findData.cFileName) == L"..");
