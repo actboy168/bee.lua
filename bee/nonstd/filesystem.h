@@ -3690,29 +3690,29 @@ inline uintmax_t remove_all(const path& p, std::error_code& ec) noexcept
     std::error_code tec;
     auto fs = status(p, tec);
     if(exists(fs) && is_directory(fs)) {
-    for (auto iter = directory_iterator(p, ec); iter != directory_iterator(); iter.increment(ec)) {
-        if(ec) {
-            break;
-        }
-        if (!iter->is_symlink() && iter->is_directory()) {
-            count += remove_all(iter->path(), ec);
-            if (ec) {
-                return static_cast<uintmax_t>(-1);
+        for (auto iter = directory_iterator(p, ec); iter != directory_iterator(); iter.increment(ec)) {
+            if(ec) {
+                break;
+            }
+            if (!iter->is_symlink() && iter->is_directory()) {
+                count += remove_all(iter->path(), ec);
+                if (ec) {
+                    return static_cast<uintmax_t>(-1);
+                }
+            }
+            else {
+                remove(iter->path(), ec);
+                if (ec) {
+                    return static_cast<uintmax_t>(-1);
+                }
+                ++count;
             }
         }
-        else {
-            remove(iter->path(), ec);
-            if (ec) {
-                return static_cast<uintmax_t>(-1);
-            }
-            ++count;
-        }
-    }
     }
     if(!ec) {
         if(remove(p, ec)) {
-        ++count;
-    }
+            ++count;
+        }
     }
     if (ec) {
         return static_cast<uintmax_t>(-1);
@@ -4327,8 +4327,8 @@ public:
                     copyToDirEntry(ec);
                 }
                 else {
-                        FindClose(_dirHandle);
-                        _dirHandle = INVALID_HANDLE_VALUE;
+                    FindClose(_dirHandle);
+                    _dirHandle = INVALID_HANDLE_VALUE;
                     _current = filesystem::path();
                     break;
                 }
