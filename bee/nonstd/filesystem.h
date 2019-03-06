@@ -104,7 +104,7 @@
 #define LWG_2937_BEHAVIOUR
 
 // ghc::filesystem version in decimal (major * 10000 + minor * 100 + patch)
-#define GHC_FILESYSTEM_VERSION 10006L
+#define GHC_FILESYSTEM_VERSION 10007L
 
 namespace ghc {
 namespace filesystem {
@@ -3658,7 +3658,6 @@ inline bool remove(const path& p, std::error_code& ec) noexcept
         }
     }
 #else
-
     if (::remove(p.c_str()) == -1) {
         auto error = errno;
         if (error == ENOENT) {
@@ -3688,6 +3687,9 @@ inline uintmax_t remove_all(const path& p, std::error_code& ec) noexcept
         ec = detail::make_error_code(detail::portable_error::not_supported);
         return static_cast<uintmax_t>(-1);
     }
+    std::error_code tec;
+    auto fs = status(p, tec);
+    if(exists(fs) && is_directory(fs)) {
     for (auto iter = directory_iterator(p, ec); iter != directory_iterator(); iter.increment(ec)) {
         if(ec) {
             break;
@@ -3706,11 +3708,12 @@ inline uintmax_t remove_all(const path& p, std::error_code& ec) noexcept
             ++count;
         }
     }
-    //if(!ec) {
-    if (remove(p, ec)) {
+    }
+    if(!ec) {
+        if(remove(p, ec)) {
         ++count;
     }
-    //}
+    }
     if (ec) {
         return static_cast<uintmax_t>(-1);
     }
@@ -4324,11 +4327,9 @@ public:
                     copyToDirEntry(ec);
                 }
                 else {
-                    _current = filesystem::path();
-                    if (_dirHandle != INVALID_HANDLE_VALUE) {
                         FindClose(_dirHandle);
                         _dirHandle = INVALID_HANDLE_VALUE;
-                    }
+                    _current = filesystem::path();
                     break;
                 }
             } while (std::wstring(_findData.cFileName) == L"." || std::wstring(_findData.cFileName) == L"..");
