@@ -57,7 +57,6 @@ lm:shared_library 'bee' {
         "!bee/*_osx.cpp",
         "!bee/*_linux.cpp",
         "!bee/*_posix.cpp",
-        "!binding/lua_posixfs.cpp",
     },
     links = {
         "advapi32",

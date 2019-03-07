@@ -243,12 +243,6 @@
     <ClCompile Include="..\..\binding\lua_filesystem.cpp" />
     <ClCompile Include="..\..\binding\lua_filewatch.cpp" />
     <ClCompile Include="..\..\binding\lua_platform.cpp" />
-    <ClCompile Include="..\..\binding\lua_posixfs.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="..\..\binding\lua_serialization.cpp" />
     <ClCompile Include="..\..\binding\lua_socket.cpp" />
     <ClCompile Include="..\..\binding\lua_registry.cpp" />

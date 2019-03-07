@@ -36,7 +36,6 @@ lm:shared_library 'bee' {
         "!bee/*_win.cpp",
         "!bee/*_osx.cpp",
         "!binding/lua_unicode.cpp",
-        "!binding/lua_posixfs.cpp",
         "!binding/lua_filewatch.cpp",
         "!binding/lua_registry.cpp",
     },

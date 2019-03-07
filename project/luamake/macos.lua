@@ -32,7 +32,6 @@ lm:shared_library 'bee' {
         "!bee/*_win.cpp",
         "!bee/*_linux.cpp",
         "!binding/lua_unicode.cpp",
-        "!binding/lua_posixfs.cpp",
         "!binding/lua_registry.cpp",
     },
     ldflags = {
