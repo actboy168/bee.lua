@@ -181,21 +181,23 @@ namespace bee::win::subprocess {
             return true;
         }
 
-        PROCESS_INFORMATION cpi;
-        cpi.dwProcessId = pi.dwProcessId;
-        cpi.dwThreadId = pi.dwThreadId;
-        cpi.hThread = NULL;
+        HANDLE hProcess = NULL;
         if (!::DuplicateHandle(
             ::GetCurrentProcess(),
             pi.hProcess,
             ::GetCurrentProcess(),
-            &cpi.hProcess,
+            &hProcess,
             0, FALSE, DUPLICATE_SAME_ACCESS)
             ) {
             return false;
         }
 
-        std::thread thd([&]() {
+        std::thread thd([=]() {
+            PROCESS_INFORMATION cpi;
+            cpi.dwProcessId = pi.dwProcessId;
+            cpi.dwThreadId = pi.dwThreadId;
+            cpi.hThread = NULL;
+            cpi.hProcess = hProcess;
             process process(std::move(cpi));
             for (;; std::this_thread::sleep_for(std::chrono::milliseconds(10))) {
                 if (!process.is_running()) {
