@@ -25,7 +25,7 @@ namespace bee::win::fsevent {
         void   event_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered);
 
     private:
-        watch*                    m_watch;
+        watch*                        m_watch;
         taskid                        m_id;
         fs::path                      m_path;
         HANDLE                        m_directory;

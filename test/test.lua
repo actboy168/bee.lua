@@ -10,7 +10,7 @@ __EXT__ = package.cpath:match '[/\\]%?%.([a-z]+)'
 package.path = './test/?.lua'
 package.cpath = ('%s/?.%s'):format(__Target__, __EXT__)
 
-local platform = require 'bee.platform'
+--local platform = require 'bee.platform'
 --if platform.Compiler == 'msvc' then
 --    dofile './3rd/luaffi/src/test.lua'
 --end
@@ -24,9 +24,7 @@ require 'test_filesystem'
 require 'test_thread'
 require 'test_subprocess'
 require 'test_socket'
-if platform.OS ~= 'Linux' then
 require 'test_filewatch'
-end
 --require 'test_registry'
 
 os.exit(lu.LuaUnit.run(), true)

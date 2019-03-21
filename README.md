@@ -31,10 +31,9 @@ Lua runtime and toolset
 | thread     |   Yes   |  Yes  |  Yes  |
 | socket     |   Yes   |  Yes  |  Yes  |
 | subprocess |   Yes   |  Yes  |  Yes  |
-| filewatch  |   Yes   | TODO  |  Yes  |
+| filewatch  |   Yes   |  Yes  |  Yes  |
 | registry   |   Yes   |  N/A  |  N/A  |
 
 ## TODO
 
-* Linux filewatch
 * High-level network library
