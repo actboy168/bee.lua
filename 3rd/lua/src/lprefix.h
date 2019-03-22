@@ -51,10 +51,16 @@ __inline unsigned int luafix_makeseed(void *L) {
 	if (seed) {
 		return atoi(seed);
 	}
-	return *(unsigned int*)"Lua\0";
+	return *(unsigned int*)"Lua\0Lua\0";
 }
 
 #define luai_makeseed luafix_makeseed
+
+__inline unsigned int luafix_randomizePivot() {
+	return *(unsigned int*)"Lua\0Lua\0";
+}
+
+#define l_randomizePivot luafix_randomizePivot
 
 #endif
 
