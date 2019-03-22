@@ -164,6 +164,7 @@ namespace bee::win::subprocess {
 
     bool hide_taskbar(HWND w) {
         ITaskbarList* taskbar;
+        ::CoInitializeEx(NULL, COINIT_MULTITHREADED);
         if (SUCCEEDED(CoCreateInstance(CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, IID_ITaskbarList, (void**)&taskbar))) {
             taskbar->HrInit();
             taskbar->DeleteTab(w);
@@ -174,13 +175,6 @@ namespace bee::win::subprocess {
     }
 
     static bool hide_console(PROCESS_INFORMATION& pi) {
-        HWND wnd = console_window(pi.dwProcessId);
-        if (wnd) {
-            SetWindowPos(wnd, NULL, -10000, -10000, 0, 0, SWP_HIDEWINDOW);
-            hide_taskbar(wnd);
-            return true;
-        }
-
         HANDLE hProcess = NULL;
         if (!::DuplicateHandle(
             ::GetCurrentProcess(),
