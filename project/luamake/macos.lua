@@ -8,7 +8,7 @@ lm:executable 'lua' {
     },
     defines = {
         "LUA_USE_MACOSX",
-        "LUAI_MAXCCALLS=200"
+        ("LUAI_MAXCCALLS=%d"):format(LUAI_MAXCCALLS)
     },
     links = { "m", "dl" },
 }
