@@ -1,5 +1,5 @@
 /*
-** $Id: luaconf.h,v 1.270 2018/06/18 12:51:05 roberto Exp $
+** $Id: luaconf.h $
 ** Configuration file for Lua
 ** See Copyright Notice in lua.h
 */
@@ -255,12 +255,10 @@
 
 
 /*
-** More often than not the libs go together with the core;
-** Functions from the auxiliary library must be exported,
-** but opening functions do not.
+** More often than not the libs go together with the core.
 */
 #define LUALIB_API	LUA_API
-#define LUAMOD_API	LUAI_FUNC
+#define LUAMOD_API	LUA_API
 
 
 /*
@@ -279,7 +277,7 @@
 */
 #if defined(__GNUC__) && ((__GNUC__*100 + __GNUC_MINOR__) >= 302) && \
     defined(__ELF__)		/* { */
-#define LUAI_FUNC	__attribute__((visibility("hidden"))) extern
+#define LUAI_FUNC	__attribute__((visibility("internal"))) extern
 #else				/* }{ */
 #define LUAI_FUNC	extern
 #endif				/* } */
@@ -297,7 +295,7 @@
 */
 
 /*
-@@ LUA_COMPAT_5_3 controls other macros for compatibility with Lua 5.2.
+@@ LUA_COMPAT_5_3 controls other macros for compatibility with Lua 5.3.
 ** You can define it to get all options, or change specific options
 ** to fit your specific needs.
 */
@@ -317,6 +315,12 @@
 ** luaL_checkint, luaL_checklong, etc.)
 */
 #define LUA_COMPAT_APIINTCASTS
+
+/*
+@@ LUA_COMPAT_LT_LE controls the emulation of the '__le' metamethod
+** using '__lt'.
+*/
+#define LUA_COMPAT_LT_LE
 
 #endif				/* } */
 
@@ -691,14 +695,14 @@
 /*
 @@ LUAL_BUFFERSIZE is the buffer size used by the lauxlib buffer system.
 ** CHANGE it if it uses too much C-stack space. (For long double,
-** 'string.format("%.99f", -1e4932)' needs 5034 bytes, so a
+** 'string.format("%.99f", -1e4932)' needs 5052 bytes, so a
 ** smaller buffer would force a memory allocation for each call to
 ** 'string.format'.)
 */
 #if LUA_FLOAT_TYPE == LUA_FLOAT_LONGDOUBLE
 #define LUAL_BUFFERSIZE		8192
 #else
-#define LUAL_BUFFERSIZE   ((int)(0x80 * sizeof(void*) * sizeof(lua_Integer)))
+#define LUAL_BUFFERSIZE   ((int)(16 * sizeof(void*) * sizeof(lua_Number)))
 #endif
 
 /*

@@ -1,5 +1,5 @@
 /*
-** $Id: ltm.h,v 2.39 2018/06/18 12:51:05 roberto Exp $
+** $Id: ltm.h $
 ** Tag methods
 ** See Copyright Notice in lua.h
 */
@@ -40,6 +40,7 @@ typedef enum {
   TM_LE,
   TM_CONCAT,
   TM_CALL,
+  TM_CLOSE,
   TM_N		/* number of elements in the enum */
 } TMS;
 
@@ -76,7 +77,7 @@ LUAI_FUNC void luaT_trybinTM (lua_State *L, const TValue *p1, const TValue *p2,
                               StkId res, TMS event);
 LUAI_FUNC void luaT_trybinassocTM (lua_State *L, const TValue *p1,
        const TValue *p2, StkId res, int inv, TMS event);
-LUAI_FUNC void luaT_trybiniTM (lua_State *L, const TValue *p1, int i2,
+LUAI_FUNC void luaT_trybiniTM (lua_State *L, const TValue *p1, lua_Integer i2,
                                int inv, StkId res, TMS event);
 LUAI_FUNC int luaT_callorderTM (lua_State *L, const TValue *p1,
                                 const TValue *p2, TMS event);

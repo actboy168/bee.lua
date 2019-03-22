@@ -1,5 +1,5 @@
 /*
-** $Id: lobject.c,v 2.126 2018/06/01 17:40:38 roberto Exp $
+** $Id: lobject.c $
 ** Some generic functions over Lua objects
 ** See Copyright Notice in lua.h
 */
@@ -83,7 +83,7 @@ static lua_Integer intarith (lua_State *L, int op, lua_Integer v1,
     case LUA_OPSUB:return intop(-, v1, v2);
     case LUA_OPMUL:return intop(*, v1, v2);
     case LUA_OPMOD: return luaV_mod(L, v1, v2);
-    case LUA_OPIDIV: return luaV_div(L, v1, v2);
+    case LUA_OPIDIV: return luaV_idiv(L, v1, v2);
     case LUA_OPBAND: return intop(&, v1, v2);
     case LUA_OPBOR: return intop(|, v1, v2);
     case LUA_OPBXOR: return intop(^, v1, v2);
@@ -106,11 +106,7 @@ static lua_Number numarith (lua_State *L, int op, lua_Number v1,
     case LUA_OPPOW: return luai_numpow(L, v1, v2);
     case LUA_OPIDIV: return luai_numidiv(L, v1, v2);
     case LUA_OPUNM: return luai_numunm(L, v1);
-    case LUA_OPMOD: {
-      lua_Number m;
-      luai_nummod(L, v1, v2, m);
-      return m;
-    }
+    case LUA_OPMOD: return luaV_modf(L, v1, v2);
     default: lua_assert(0); return 0;
   }
 }
@@ -347,7 +343,7 @@ size_t luaO_str2num (const char *s, TValue *o) {
 
 int luaO_utf8esc (char *buff, unsigned long x) {
   int n = 1;  /* number of bytes put in buffer (backwards) */
-  lua_assert(x <= 0x10FFFF);
+  lua_assert(x <= 0x7FFFFFFFu);
   if (x < 0x80)  /* ascii? */
     buff[UTF8BUFFSZ - 1] = cast_char(x);
   else {  /* need continuation bytes */
@@ -439,9 +435,9 @@ const char *luaO_pushvfstring (lua_State *L, const char *fmt, va_list argp) {
         pushstr(L, buff, l);
         break;
       }
-      case 'U': {  /* an 'int' as a UTF-8 sequence */
+      case 'U': {  /* a 'long' as a UTF-8 sequence */
         char buff[UTF8BUFFSZ];
-        int l = luaO_utf8esc(buff, cast(long, va_arg(argp, long)));
+        int l = luaO_utf8esc(buff, va_arg(argp, long));
         pushstr(L, buff + UTF8BUFFSZ - l, l);
         break;
       }

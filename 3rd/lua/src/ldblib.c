@@ -1,5 +1,5 @@
 /*
-** $Id: ldblib.c,v 1.155 2018/03/16 15:33:34 roberto Exp $
+** $Id: ldblib.c $
 ** Interface from Lua to its debug API
 ** See Copyright Notice in lua.h
 */
@@ -55,8 +55,7 @@ static int db_getmetatable (lua_State *L) {
 
 static int db_setmetatable (lua_State *L) {
   int t = lua_type(L, 2);
-  luaL_argcheck(L, t == LUA_TNIL || t == LUA_TTABLE, 2,
-                    "nil or table expected");
+  luaL_argexpected(L, t == LUA_TNIL || t == LUA_TTABLE, 2, "nil or table");
   lua_settop(L, 2);
   lua_setmetatable(L, 1);
   return 1;  /* return 1st argument */
@@ -335,7 +334,6 @@ static int makemask (const char *smask, int count) {
   if (strchr(smask, 'c')) mask |= LUA_MASKCALL;
   if (strchr(smask, 'r')) mask |= LUA_MASKRET;
   if (strchr(smask, 'l')) mask |= LUA_MASKLINE;
-  if (strchr(smask, 'e')) mask |= LUA_MASKEXCEPTION;
   if (count > 0) mask |= LUA_MASKCOUNT;
   return mask;
 }
@@ -349,7 +347,6 @@ static char *unmakemask (int mask, char *smask) {
   if (mask & LUA_MASKCALL) smask[i++] = 'c';
   if (mask & LUA_MASKRET) smask[i++] = 'r';
   if (mask & LUA_MASKLINE) smask[i++] = 'l';
-  if (mask & LUA_MASKEXCEPTION) smask[i++] = 'e';
   smask[i] = '\0';
   return smask;
 }
