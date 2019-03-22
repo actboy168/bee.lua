@@ -47,6 +47,7 @@
     <ClCompile Include="..\..\3rd\lua\src\ltable.c" />
     <ClCompile Include="..\..\3rd\lua\src\ltablib.c" />
     <ClCompile Include="..\..\3rd\lua\src\ltm.c" />
+    <ClCompile Include="..\..\3rd\lua\src\lundump.c" />
     <ClCompile Include="..\..\3rd\lua\src\lutf8lib.c" />
     <ClCompile Include="..\..\3rd\lua\src\lvm.c" />
     <ClCompile Include="..\..\3rd\lua\src\lzio.c" />
@@ -61,11 +62,13 @@
     <ClInclude Include="..\..\3rd\lua\src\ldo.h" />
     <ClInclude Include="..\..\3rd\lua\src\lfunc.h" />
     <ClInclude Include="..\..\3rd\lua\src\lgc.h" />
+    <ClInclude Include="..\..\3rd\lua\src\ljumptab.h" />
     <ClInclude Include="..\..\3rd\lua\src\llex.h" />
     <ClInclude Include="..\..\3rd\lua\src\llimits.h" />
     <ClInclude Include="..\..\3rd\lua\src\lmem.h" />
     <ClInclude Include="..\..\3rd\lua\src\lobject.h" />
     <ClInclude Include="..\..\3rd\lua\src\lopcodes.h" />
+    <ClInclude Include="..\..\3rd\lua\src\lopnames.h" />
     <ClInclude Include="..\..\3rd\lua\src\lparser.h" />
     <ClInclude Include="..\..\3rd\lua\src\lprefix.h" />
     <ClInclude Include="..\..\3rd\lua\src\lstate.h" />

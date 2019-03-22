@@ -115,6 +115,9 @@
       <Filter>standard-library</Filter>
     </ClCompile>
     <ClCompile Include="..\..\3rd\lua\utf8\utf8_crt.c" />
+    <ClCompile Include="..\..\3rd\lua\src\lundump.c">
+      <Filter>core\source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\3rd\lua\src\lua.h">
@@ -194,6 +197,12 @@
     <ClInclude Include="..\..\3rd\lua\utf8\utf8_unicode.h" />
     <ClInclude Include="..\..\3rd\lua\src\lprefix.h">
       <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\lua\src\lopnames.h">
+      <Filter>core\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\3rd\lua\src\ljumptab.h">
+      <Filter>core\include</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
