@@ -206,9 +206,6 @@
     <ClInclude Include="..\..\bee\platform\version.h">
       <Filter>bee\platform</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\bee\nonstd\enum.h">
-      <Filter>bee\nonstd</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\bee\platform.h">
       <Filter>bee</Filter>
     </ClInclude>

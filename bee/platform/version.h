@@ -3,11 +3,10 @@
 #if defined(_WIN32)
 
 #include <bee/config.h>
-#include <bee/nonstd/enum.h>
 #include <stdint.h>
 
 namespace bee::platform {
-    BETTER_ENUM(WinVer, uint8_t,
+    enum class WinVer : uint8_t {
         PreXP,
         XP,
         Server2003,
@@ -17,7 +16,7 @@ namespace bee::platform {
         Win8_1,
         Win10,
         Win10Later
-    );
+    };
 	struct version {
 		WinVer   ver;
 		uint32_t build;

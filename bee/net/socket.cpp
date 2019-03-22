@@ -155,7 +155,7 @@ namespace bee::net::socket {
 #if defined _WIN32
     static bool supportUnixDomainSocket_() {
         auto[ver, build] = bee::platform::get_version();
-        return ver == +bee::platform::WinVer::Win10 && build >= 17763;
+        return ver == bee::platform::WinVer::Win10 && build >= 17763;
     }
 #endif
 
