@@ -280,10 +280,6 @@ OP_RETURN,/*	A B C	return R(A), ... ,R(A+B-2)	(see note)	*/
 OP_RETURN0,/*	  	return 						*/
 OP_RETURN1,/*	A 	return R(A)					*/
 
-OP_FORLOOP1,/*	A Bx	R(A)++;
-			if R(A) <= R(A+1) then { pc-=Bx; R(A+3)=R(A) }	*/
-OP_FORPREP1,/*	A Bx	R(A)--; pc+=Bx					*/
-
 OP_FORLOOP,/*	A Bx	R(A)+=R(A+2);
 			if R(A) <?= R(A+1) then { pc-=Bx; R(A+3)=R(A) }	*/
 OP_FORPREP,/*	A Bx	R(A)-=R(A+2); pc+=Bx				*/
@@ -298,7 +294,7 @@ OP_CLOSURE,/*	A Bx	R(A) := closure(KPROTO[Bx])			*/
 
 OP_VARARG,/*	A C  	R(A), R(A+1), ..., R(A+C-2) = vararg		*/
 
-OP_PREPVARARG,/*A 	(adjust vararg parameters)			*/
+OP_VARARGPREP,/*A 	(adjust vararg parameters)			*/
 
 OP_EXTRAARG/*	Ax	extra (larger) argument for previous opcode	*/
 } OpCode;
@@ -334,6 +330,9 @@ OP_EXTRAARG/*	Ax	extra (larger) argument for previous opcode	*/
   vararg, which must be corrected before returning. When 'k' is true,
   C > 0 means the function is vararg and (C - 1) is its number of
   fixed parameters.
+
+  (*) In comparisons with an immediate operand, C signals whether the
+  original operand was a float.
 
 ===========================================================================*/
 

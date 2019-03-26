@@ -11,7 +11,7 @@ lm:shared_library 'lua54' {
     },
     defines = {
         "LUA_BUILD_AS_DLL",
-        ("LUAI_MAXCCALLS=%d"):format(LUAI_MAXCCALLS)
+        ("LUAI_MAXCSTACK=%d"):format(LUAI_MAXCSTACK)
     }
 }
 

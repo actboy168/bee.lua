@@ -12,7 +12,7 @@ lm:executable 'lua' {
     ldflags = "-Wl,-E",
     defines = {
         "LUA_USE_LINUX",
-        ("LUAI_MAXCCALLS=%d"):format(LUAI_MAXCCALLS)
+        ("LUAI_MAXCSTACK=%d"):format(LUAI_MAXCSTACK)
     },
     links = { "m", "dl" },
 }

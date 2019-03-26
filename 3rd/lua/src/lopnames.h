@@ -84,8 +84,6 @@ static const char *const opnames[] = {
   "RETURN",
   "RETURN0",
   "RETURN1",
-  "FORLOOP1",
-  "FORPREP1",
   "FORLOOP",
   "FORPREP",
   "TFORPREP",
@@ -94,7 +92,7 @@ static const char *const opnames[] = {
   "SETLIST",
   "CLOSURE",
   "VARARG",
-  "PREPVARARG",
+  "VARARGPREP",
   "EXTRAARG",
   NULL
 };
