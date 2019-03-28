@@ -149,14 +149,12 @@ static Node *mainposition (const Table *t, int ktt, const Value *kvl) {
       return hashpointer(t, pvalueraw(*kvl));
     case LUA_TLCF:
       return hashpointer(t, fvalueraw(*kvl));
-	default: {
-		  GCObject *o;
-		  lua_assert(!ttisdeadkey(kvl));
-		  o = gcvalueraw(*kvl);
-		  if (o->gchash == 0)
-			  return hashpointer(t, o);
-		  return hashint(t, withvariant(ktt) * o->gchash);
-	  }
+    case LUA_TTABLE:
+      return hashint(t, gco2t(gcvalueraw(*kvl))->gchash);
+    case LUA_TUSERDATA:
+      return hashint(t, gco2u(gcvalueraw(*kvl))->gchash);
+    default:
+      return hashpointer(t, gcvalueraw(*kvl));
   }
 }
 

@@ -239,7 +239,7 @@ typedef StackValue *StkId;  /* index to stack elements */
 ** Common Header for all collectable objects (in macro form, to be
 ** included in other objects)
 */
-#define CommonHeader	struct GCObject *next; lua_Integer gchash; lu_byte tt; lu_byte marked
+#define CommonHeader	struct GCObject *next; lu_byte tt; lu_byte marked
 
 
 /* Common type for all collectable objects */
@@ -407,6 +407,7 @@ typedef union UValue {
 */
 typedef struct Udata {
   CommonHeader;
+  lua_Integer gchash;
   unsigned short nuvalue;  /* number of user values */
   size_t len;  /* number of bytes */
   struct Table *metatable;
@@ -426,6 +427,7 @@ typedef struct Udata {
 */
 typedef struct Udata0 {
   CommonHeader;
+  lua_Integer gchash;
   unsigned short nuvalue;  /* number of user values */
   size_t len;  /* number of bytes */
   struct Table *metatable;
@@ -675,6 +677,7 @@ typedef union Node {
 
 typedef struct Table {
   CommonHeader;
+  lua_Integer gchash;
   lu_byte flags;  /* 1<<p means tagmethod(p) is not present */
   lu_byte lsizenode;  /* log2 of size of 'node' array */
   unsigned int alimit;  /* "limit" of 'array' array */
