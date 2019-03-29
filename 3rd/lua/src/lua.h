@@ -430,6 +430,7 @@ LUA_API void  (lua_toclose) (lua_State *L, int idx);
 #define LUA_HOOKCOUNT	3
 #define LUA_HOOKTAILCALL 4
 #define LUA_HOOKEXCEPTION 5
+#define LUA_HOOKTHREAD 6
 
 
 /*
@@ -440,6 +441,7 @@ LUA_API void  (lua_toclose) (lua_State *L, int idx);
 #define LUA_MASKLINE	(1 << LUA_HOOKLINE)
 #define LUA_MASKCOUNT	(1 << LUA_HOOKCOUNT)
 #define LUA_MASKEXCEPTION	(1 << LUA_HOOKEXCEPTION)
+#define LUA_MASKTHREAD	(1 << LUA_HOOKTHREAD)
 
 typedef struct lua_Debug lua_Debug;  /* activation record */
 
