@@ -73,29 +73,21 @@
     <OutDir>$(projectDir)..\..\build\msbuild_$(PlatformTarget)_$(Configuration)\bin\</OutDir>
     <IntDir>$(projectDir)..\..\build\msbuild\obj\$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <CustomBuildAfterTargets>PrepareForBuild</CustomBuildAfterTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(projectDir)..\..\build\msbuild_$(PlatformTarget)_$(Configuration)\bin\</OutDir>
     <IntDir>$(projectDir)..\..\build\msbuild\obj\$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <CustomBuildAfterTargets>PrepareForBuild</CustomBuildAfterTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IntDir>$(projectDir)..\..\build\msbuild\obj\$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <OutDir>$(projectDir)..\..\build\msbuild_$(PlatformTarget)_$(Configuration)\bin\</OutDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <CustomBuildAfterTargets>PrepareForBuild</CustomBuildAfterTargets>
-    <CustomBuildBeforeTargets>
-    </CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IntDir>$(projectDir)..\..\build\msbuild\obj\$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <OutDir>$(projectDir)..\..\build\msbuild_$(PlatformTarget)_$(Configuration)\bin\</OutDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <CustomBuildAfterTargets>PrepareForBuild</CustomBuildAfterTargets>
-    <CustomBuildBeforeTargets>
-    </CustomBuildBeforeTargets>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -105,25 +97,9 @@
       <PreprocessorDefinitions>BEE_EXPORTS;span_FEATURE_BYTE_SPAN=1;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
-    <PreBuildEvent>
-      <Command>
-      </Command>
-    </PreBuildEvent>
-    <Link />
     <Link>
       <AdditionalDependencies>ws2_32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <CustomBuildStep>
-      <Command>$(projectDir)..\..\make\lua.exe $(projectDir)..\..\project\embed.lua $(projectDir)..\..\bee\nonstd\embed_detail.h $(projectDir)..\..\binding\lua_embed.cpp
-</Command>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <Outputs>$(projectDir)..\..\bee\nonstd\embed_detail.h</Outputs>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <Inputs>$(projectDir)..\..\script\bee.lua;$(projectDir)..\..\script\filesystem.lua</Inputs>
-      <Message>Build embed ...</Message>
-    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -133,25 +109,9 @@
       <PreprocessorDefinitions>BEE_EXPORTS;span_FEATURE_BYTE_SPAN=1;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
-    <PreBuildEvent>
-      <Command>
-      </Command>
-    </PreBuildEvent>
-    <Link />
     <Link>
       <AdditionalDependencies>ws2_32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <CustomBuildStep>
-      <Command>$(projectDir)..\..\make\lua.exe $(projectDir)..\..\project\embed.lua $(projectDir)..\..\bee\nonstd\embed_detail.h $(projectDir)..\..\binding\lua_embed.cpp
-</Command>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <Outputs>$(projectDir)..\..\bee\nonstd\embed_detail.h</Outputs>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <Inputs>$(projectDir)..\..\script\bee.lua;$(projectDir)..\..\script\filesystem.lua</Inputs>
-      <Message>Build embed ...</Message>
-    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -164,21 +124,6 @@
     <Link>
       <AdditionalDependencies>ws2_32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreBuildEvent>
-      <Command>
-      </Command>
-    </PreBuildEvent>
-    <CustomBuildStep>
-      <Command>$(projectDir)..\..\make\lua.exe $(projectDir)..\..\project\embed.lua $(projectDir)..\..\bee\nonstd\embed_detail.h $(projectDir)..\..\binding\lua_embed.cpp
-</Command>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <Outputs>$(projectDir)..\..\bee\nonstd\embed_detail.h</Outputs>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <Inputs>$(projectDir)..\..\script\bee.lua;$(projectDir)..\..\script\filesystem.lua</Inputs>
-      <Message>Build embed ...</Message>
-    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -195,21 +140,6 @@
     <Link>
       <AdditionalDependencies>ws2_32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreBuildEvent>
-      <Command>
-      </Command>
-    </PreBuildEvent>
-    <CustomBuildStep>
-      <Command>$(projectDir)..\..\make\lua.exe $(projectDir)..\..\project\embed.lua $(projectDir)..\..\bee\nonstd\embed_detail.h $(projectDir)..\..\binding\lua_embed.cpp
-</Command>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <Outputs>$(projectDir)..\..\bee\nonstd\embed_detail.h</Outputs>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <Inputs>$(projectDir)..\..\script\bee.lua;$(projectDir)..\..\script\filesystem.lua</Inputs>
-      <Message>Build embed ...</Message>
-    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\3rd\lua-seri\lua-seri.c" />

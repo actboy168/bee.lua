@@ -24,18 +24,6 @@ lm:executable 'lua' {
     }
 }
 
-
-if lm.plat == 'msvc' then
-    lm:build "embed_make" {
-        "@make/lua", "@project/embed.lua", "@bee/nonstd/embed_detail.h", "@binding/lua_embed.cpp",
-        output = "bee/nonstd/embed_detail.h"
-    }
-    lm:phony {
-        input = "bee/nonstd/embed_detail.h",
-        output = "binding/lua_embed.cpp",
-    }
-end
-
 lm:shared_library 'bee' {
     deps = "lua54",
     includes = {
