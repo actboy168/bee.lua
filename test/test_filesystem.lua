@@ -263,7 +263,7 @@ function test_fs:test_relative()
     relative(C..'a/b/c', C..'a',  'b/c')
     relative(C..'a/d/e', C..'a/b/c',  '../../d/e')
     if platform.OS == 'Windows' then
-        relative(D..'a/b/c', C..'a',  '')
+        --relative(D..'a/b/c', C..'a',  '')
         relative('a', C..'a/b/c',  '')
         relative(C..'a/b', 'a/b/c',  '')
         relative(C..'a\\b\\c', C..'a',  'b/c')
