@@ -20,8 +20,9 @@ Lua runtime and toolset
 * String encoding on windows using utf8
 * Remove randomness when traversing the table
 * Disable load binary chunk (for security)
-* Add error hooks (for debuggers)
-* Add lua_getprotohash (for debuggers)
+* Add error hook (for debugger)
+* Add resume hook (for debugger)
+* Add lua_getprotohash (for debugger)
 
 ## Feature
 
