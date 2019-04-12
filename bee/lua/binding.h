@@ -74,7 +74,7 @@ namespace bee::lua {
 #define LUA_TRY     try {   
 #define LUA_TRY_END } catch (const std::exception& e) { return lua::push_error(L, e); }
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(BEE_STATIC)
 #define BEE_LUA_API extern "C" __declspec(dllexport)
 #else
 #define BEE_LUA_API extern "C"
