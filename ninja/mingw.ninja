@@ -3,7 +3,7 @@ bin = $builddir/bin
 obj = $builddir/obj
 rule C_lua54
   command = gcc -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall $
-      -DLUA_BUILD_AS_DLL -DLUAI_MAXCSTACK=200 -o $out -c $in
+      -DLUA_BUILD_AS_DLL -DLUAI_MAXCSTACK=1000 -o $out -c $in
   description = Compile C $out
   depfile = $out.d
   deps = gcc
