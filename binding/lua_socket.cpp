@@ -10,6 +10,8 @@
 #include <bee/net/endpoint.h>
 #include <bee/error.h>
 #include <limits>
+#include <thread>
+#include <chrono>
 
 namespace bee::lua_socket {
     using namespace bee::net;
@@ -419,8 +421,16 @@ namespace bee::lua_socket {
         int rmax = read_finish ? 0 : (int)luaL_len(L, 1);
         int wmax = write_finish ? 0 : (int)luaL_len(L, 2);
         double timeo = luaL_optnumber(L, 3, -1);
-        if (!rmax && !wmax && timeo == -1) {
-            return luaL_error(L, "no open sockets to check and no timeout set");
+        if (!rmax && !wmax) {
+            if (timeo == -1) {
+                return luaL_error(L, "no open sockets to check and no timeout set");
+            }
+            else {
+                std::this_thread::sleep_for(std::chrono::duration<double>(timeo));
+                lua_newtable(L);
+                lua_newtable(L);
+                return 2;
+            }
         }
         struct timeval timeout, *timeop = &timeout;
         if (timeo < 0) {
