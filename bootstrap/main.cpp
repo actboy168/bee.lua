@@ -4,6 +4,10 @@
 #include <signal.h>
 #include <lua.hpp>
 
+#if !defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#endif
+
 #if !defined(LUA_PROGNAME)
 #define LUA_PROGNAME		"lua"
 #endif
