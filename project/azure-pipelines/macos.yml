@@ -1,6 +1,6 @@
 steps:
 - bash: |
-   sudo xcode-select -s /Applications/Xcode_10.1.app
+   sudo xcode-select -s /Applications/Xcode_10.2.app
    brew install ninja
   displayName: Init
 
