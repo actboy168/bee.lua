@@ -1,7 +1,7 @@
 local lm = require 'luamake'
 
 lm.gcc = 'clang'
-lm.gxx = 'clang'
+lm.gxx = 'clang++'
 
 lm.rootdir = '3rd/lua/'
 lm:executable 'lua' {

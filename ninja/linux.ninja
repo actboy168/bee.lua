@@ -63,7 +63,7 @@ rule C_bee
   deps = gcc
 build $obj/bee/lua-seri.obj: C_bee 3rd/lua-seri/lua-seri.c
 rule CXX_bee
-  command = clang -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall $
+  command = clang++ -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall $
       -I3rd/lua/src -I3rd/lua-seri -I3rd/incbin -I. $
       -Dspan_FEATURE_BYTE_SPAN=1 -fPIC -o $out -c $in
   description = Compile CXX $out
@@ -136,7 +136,7 @@ build $obj/bootstrap/lutf8lib.obj: C_bootstrap 3rd/lua/src/lutf8lib.c
 build $obj/bootstrap/lvm.obj: C_bootstrap 3rd/lua/src/lvm.c
 build $obj/bootstrap/lzio.obj: C_bootstrap 3rd/lua/src/lzio.c
 rule CXX_bootstrap
-  command = clang -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall $
+  command = clang++ -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall $
       -I3rd/lua/src -DLUA_USE_LINUX -DLUAI_MAXCCALLS=200 -o $out -c $in
   description = Compile CXX $out
   depfile = $out.d
