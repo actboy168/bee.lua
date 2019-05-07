@@ -22,7 +22,6 @@ Lua runtime and toolset
 * Disable load binary chunk (for security)
 * Add error hook (for debugger)
 * Add resume hook (for debugger)
-* Add lua_getprotohash (for debugger)
 
 ## Feature
 
