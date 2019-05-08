@@ -51,7 +51,7 @@ namespace bee::path_helper {
     auto exe_path()->nonstd::expected<fs::path, std::exception> {
         uint32_t path_len = 0;
         _NSGetExecutablePath(0, &path_len);
-        if (bufsize <= 1) {
+        if (path_len <= 1) {
             return nonstd::make_unexpected(std::runtime_error("_NSGetExecutablePath failed."));
         }
         std::dynarray<char> buf(path_len);
@@ -59,7 +59,7 @@ namespace bee::path_helper {
         if (rv != 0) {
             return nonstd::make_unexpected(std::runtime_error("_NSGetExecutablePath failed."));
         }
-        return fs::path(buf.data(), buf.data() + path_len);
+        return fs::path(buf.data(), buf.data() + path_len - 1);
     }
 }
 

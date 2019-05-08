@@ -28,6 +28,7 @@ void pushprogdir(lua_State *L) {
 
 #include <mach-o/dyld.h>
 #include <stdlib.h>
+#include <string.h>
 
 void pushprogdir(lua_State *L) {
     uint32_t bufsize = 0;
@@ -43,7 +44,7 @@ void pushprogdir(lua_State *L) {
         luaL_error(L, "unable to get progdir");
         return;
     }
-    linkname[bufsize] = '\0';
+    linkname[bufsize-1] = '\0';
     const char* lb = strrchr(linkname, '/');
     if (lb) {
         lua_pushlstring(L, linkname, lb - linkname + 1);
