@@ -17,7 +17,7 @@ namespace bee::path_helper {
             return nonstd::make_unexpected(make_syserror("GetModuleFileNameW"));
         }
         if (path_len < _countof(buffer)) {
-            return std::move(fs::path(buffer, buffer + path_len));
+            return fs::path(buffer, buffer + path_len);
         }
         for (DWORD buf_len = 0x200; buf_len <= 0x10000; buf_len <<= 1) {
             std::dynarray<wchar_t> buf(buf_len);
@@ -26,7 +26,7 @@ namespace bee::path_helper {
                 return nonstd::make_unexpected(make_syserror("GetModuleFileNameW"));
             }
             if (path_len < _countof(buffer)) {
-                return std::move(fs::path(buf.data(), buf.data() + path_len));
+                return fs::path(buf.data(), buf.data() + path_len);
             }
         }
         return nonstd::make_unexpected(std::runtime_error("::GetModuleFileNameW return too long."));
@@ -41,7 +41,7 @@ namespace bee::path_helper {
     }
 }
 
-#else
+#elif defined(__APPLE__)
 
 #include <dlfcn.h>
 #include <lua.hpp>
@@ -59,6 +59,49 @@ namespace bee::path_helper {
 
     auto exe_path()->nonstd::expected<fs::path, std::exception> {
         return dll_path((void*)&lua_newstate);
+    }
+
+    auto dll_path()->nonstd::expected<fs::path, std::exception> {
+        return dll_path((void*)&exe_path);
+    }
+}
+
+#else
+
+#include <dlfcn.h>
+#include <unistd.h>
+
+namespace bee::path_helper {
+    auto dll_path(void* module_handle)->nonstd::expected<fs::path, std::exception> {
+        ::Dl_info dl_info;
+        dl_info.dli_fname = 0;
+        int const ret = ::dladdr(module_handle, &dl_info);
+        if (0 != ret && dl_info.dli_fname != NULL) {
+            return fs::absolute(dl_info.dli_fname).lexically_normal();
+        }
+        return nonstd::make_unexpected(std::runtime_error("::dladdr failed."));
+    }
+
+    auto exe_path()->nonstd::expected<fs::path, std::exception> {
+        char buffer[0x100];
+        ssize_t path_len = ::readlink("/proc/self/exe", buffer, sizeof(buffer)-1);
+        if (path_len < 0) {
+            return nonstd::make_unexpected(make_syserror("readlink"));
+        }
+        if (path_len < sizeof(buffer)-1) {
+            return fs::path(buffer, buffer + path_len);
+        }
+        for (size_t buf_len = 0x200; buf_len <= 0x10000; buf_len <<= 1) {
+            std::dynarray<char> buf(buf_len);
+            ssize_t path_len = ::readlink("/proc/self/exe", buf.data(), buf_len-1);
+            if (path_len == 0) {
+                return nonstd::make_unexpected(make_syserror("readlink"));
+            }
+            if (path_len < sizeof(buffer)-1) {
+                return fs::path(buf.data(), buf.data() + path_len);
+            }
+        }
+        return nonstd::make_unexpected(std::runtime_error("readlink return too long."));
     }
 
     auto dll_path()->nonstd::expected<fs::path, std::exception> {

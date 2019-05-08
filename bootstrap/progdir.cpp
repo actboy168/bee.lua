@@ -18,13 +18,13 @@ void pushprogdir(lua_State *L) {
     DWORD nsize = sizeof(buff) / sizeof(char);
     DWORD n = utf8_GetModuleFileNameA(NULL, buff, nsize);  /* get exec. name */
     if (n == 0 || n == nsize || (lb = strrchr(buff, '\\')) == NULL)
-        luaL_error(L, "unable to get ModuleFileName");
+        luaL_error(L, "unable to get progdir");
     else {
         lua_pushlstring(L, buff, lb - buff + 1);
     }
 }
 
-#else
+#elif defined(__APPLE__)
 
 #include <dlfcn.h>
 #include <string.h>
@@ -46,6 +46,28 @@ void pushprogdir(lua_State *L) {
         luaL_error(L, "unable to get dli_fname");
     else {
         lua_pushlstring(L, buff, lb - buff + 1);
+    }
+}
+
+#else
+
+#include <unistd.h>
+#include <memory.h>
+
+void pushprogdir(lua_State *L) {
+    char linkname[1024];
+    ssize_t r = readlink("/proc/self/exe", linkname, sizeof(linkname)-1);
+    if (r < 0 || r == sizeof(linkname)-1) {
+        luaL_error(L, "unable to get progdir");
+        return;
+    }
+    linkname[r] = '\0';
+    const char* lb = strrchr(linkname, '/');
+    if (lb) {
+        lua_pushlstring(L, linkname, lb - linkname + 1);
+    }
+    else {
+        lua_pushstring(L, linkname);
     }
 }
 
