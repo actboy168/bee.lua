@@ -26,27 +26,32 @@ void pushprogdir(lua_State *L) {
 
 #elif defined(__APPLE__)
 
-#include <dlfcn.h>
-#include <string.h>
-
-static const char* progdir() {
-    ::Dl_info dl_info;
-    dl_info.dli_fname = 0;
-    int const ret = ::dladdr((void*)&lua_newstate, &dl_info);
-    if (0 != ret) {
-        return dl_info.dli_fname;
-    }
-    return 0;
-}
+#include <mach-o/dyld.h>
+#include <stdlib.h>
 
 void pushprogdir(lua_State *L) {
-    const char* buff = progdir();
-    const char *lb;
-    if (!buff || (lb = strrchr(buff, '/')) == NULL)
-        luaL_error(L, "unable to get dli_fname");
-    else {
-        lua_pushlstring(L, buff, lb - buff + 1);
+    uint32_t bufsize = 0;
+    _NSGetExecutablePath(0, &bufsize);
+    if (bufsize <= 1) {
+        luaL_error(L, "unable to get progdir");
+        return;
     }
+    char* linkname = (char*)malloc(bufsize+1);
+    int rv = _NSGetExecutablePath(linkname, &bufsize);
+    if (rv != 0) {
+        free(linkname);
+        luaL_error(L, "unable to get progdir");
+        return;
+    }
+    linkname[bufsize] = '\0';
+    const char* lb = strrchr(linkname, '/');
+    if (lb) {
+        lua_pushlstring(L, linkname, lb - linkname + 1);
+    }
+    else {
+        lua_pushstring(L, linkname);
+    }
+    free(linkname);
 }
 
 #else
