@@ -5,7 +5,7 @@
             "type": "lua",
             "request": "launch",
             "name": "Test",
-            "luaexe": "${workspaceFolder}/build/msbuild_x86_Debug/bin/lua.exe",
+            "luaexe": "${workspaceFolder}/build/msvc/bin/lua.exe",
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/test/test.lua",
             "stopOnEntry": false
