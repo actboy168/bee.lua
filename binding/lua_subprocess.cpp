@@ -100,7 +100,7 @@ namespace bee::lua_subprocess {
         }
 
         static int constructor(lua_State* L, subprocess::spawn& spawn) {
-            void* storage = lua_newuserdata(L, sizeof(subprocess::process));
+            void* storage = lua_newuserdatauv(L, sizeof(subprocess::process), 1);
 
             if (newObject(L, "subprocess")) {
                 static luaL_Reg mt[] = {

@@ -21,7 +21,8 @@ namespace bee::lua_unicode {
             { "a2u", la2u },
             { NULL, NULL }
         };
-        luaL_newlib(L, lib);
+        lua_newtable(L);
+        luaL_setfuncs(L, lib, 0);
         return 1;
     }
 }

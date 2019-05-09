@@ -59,7 +59,7 @@ namespace bee::lua_filewatch {
     }
 
     int luaopen(lua_State* L) {
-        fsevent::watch* fw = (fsevent::watch*)lua_newuserdata(L, sizeof(fsevent::watch));
+        fsevent::watch* fw = (fsevent::watch*)lua_newuserdatauv(L, sizeof(fsevent::watch), 0);
         new (fw)fsevent::watch;
 
         static luaL_Reg lib[] = {

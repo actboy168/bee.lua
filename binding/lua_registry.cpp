@@ -11,7 +11,7 @@ namespace bee::lua_registry {
         }
 
         key_w* create(lua_State* L, key_w::hkey_type keytype, open_access access) {
-            key_w* storage = (key_w*)lua_newuserdata(L, sizeof(key_w));
+            key_w* storage = (key_w*)lua_newuserdatauv(L, sizeof(key_w), 0);
             lua_pushvalue(L, lua_upvalueindex(1));
             lua_setmetatable(L, -2);
             new (storage)key_w(keytype, access);
@@ -19,7 +19,7 @@ namespace bee::lua_registry {
         }
 
         int copy(lua_State* L, int ud_idx, const key_w* key) {
-            void* storage = lua_newuserdata(L, sizeof(key_w));
+            void* storage = lua_newuserdatauv(L, sizeof(key_w), 0);
             lua_getmetatable(L, ud_idx);
             lua_setmetatable(L, -2);
             new (storage)key_w(*key);

@@ -157,7 +157,7 @@ namespace bee::lua_thread {
             return luaL_error(L, "Can't query channel '%s'", name.c_str());
         }
 
-        boxchannel* bc = (boxchannel*)lua_newuserdata(L, sizeof(boxchannel));
+        boxchannel* bc = (boxchannel*)lua_newuserdatauv(L, sizeof(boxchannel), 0);
         new (bc) boxchannel(c);
         if (newObject(L, "channel")) {
             luaL_Reg mt[] = {
@@ -269,7 +269,7 @@ namespace bee::lua_thread {
             f = lua_tocfunction(L, 2);
         }
         thread_args* args = new thread_args(std::move(source), f);
-        std::thread* thread = (std::thread*)lua_newuserdata(L, sizeof(std::thread));
+        std::thread* thread = (std::thread*)lua_newuserdatauv(L, sizeof(std::thread), 0);
         new (thread) std::thread(std::bind(thread_main, args));
         if (newObject(L, "thread")) {
             luaL_Reg mt[] = {
@@ -320,7 +320,6 @@ namespace bee::lua_thread {
     }
 
     int luaopen(lua_State* L) {
-        luaL_checkversion(L);
         luaL_Reg lib[] = {
             { "sleep", lsleep },
             { "thread", lthread },
@@ -329,7 +328,8 @@ namespace bee::lua_thread {
             { "reset", lreset },
             { NULL, NULL },
         };
-        luaL_newlib(L, lib);
+        lua_newtable(L);
+        luaL_setfuncs(L, lib, 0);
         init_threadid(L);
         lua_setfield(L, -2, "id");
         return 1;

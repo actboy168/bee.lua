@@ -301,7 +301,7 @@ namespace bee::lua_socket {
         return 0;
     }
     static luafd& pushfd(lua_State* L, socket::fd_t fd, socket::protocol protocol) {
-        luafd* self = (luafd*)lua_newuserdata(L, sizeof(luafd));
+        luafd* self = (luafd*)lua_newuserdatauv(L, sizeof(luafd), 0);
         new (self) luafd(fd, protocol);
         if (newObject(L, "socket")) {
             luaL_Reg mt[] = {
@@ -517,7 +517,8 @@ namespace bee::lua_socket {
             { "select",   select },
             { NULL, NULL }
         };
-        luaL_newlib(L, lib);
+        lua_newtable(L);
+        luaL_setfuncs(L, lib, 0);
         return 1;
     }
 }
