@@ -74,7 +74,7 @@ namespace bee::path_helper {
         if (path_len < 0) {
             return nonstd::make_unexpected(make_syserror("readlink"));
         }
-        if (path_len < sizeof(buffer)-1) {
+        if (path_len < (ssize_t)sizeof(buffer)-1) {
             return fs::path(buffer, buffer + path_len);
         }
         for (size_t buf_len = 0x200; buf_len <= 0x10000; buf_len <<= 1) {
@@ -83,7 +83,7 @@ namespace bee::path_helper {
             if (path_len == 0) {
                 return nonstd::make_unexpected(make_syserror("readlink"));
             }
-            if (path_len < sizeof(buffer)-1) {
+            if (path_len < (ssize_t)sizeof(buffer)-1) {
                 return fs::path(buf.data(), buf.data() + path_len);
             }
         }
