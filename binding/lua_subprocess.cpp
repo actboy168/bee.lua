@@ -201,6 +201,7 @@ namespace bee::lua_subprocess {
             case LUA_TUSERDATA: {
                 luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, -1, LUA_FILEHANDLE);
                 if (!p->closef) {
+					lua_pop(L, 1);
                     return file::handle::invalid();
                 }
                 return file::dup(p->f);
