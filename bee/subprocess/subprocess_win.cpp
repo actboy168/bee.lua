@@ -230,7 +230,7 @@ namespace bee::win::subprocess {
     }
 
     bool spawn::set_console(console type) {
-        hide_console_ = false;
+		console_ = type;
         flags_ &= ~(CREATE_NO_WINDOW | CREATE_NEW_CONSOLE | DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP);
         switch (type) {
         case console::eInherit:
@@ -242,11 +242,8 @@ namespace bee::win::subprocess {
             flags_ |= CREATE_NO_WINDOW;
             break;
         case console::eNew:
-            flags_ |= CREATE_NEW_CONSOLE;
-            break;
         case console::eHide:
             flags_ |= CREATE_NEW_CONSOLE;
-            hide_console_ = true;
             break;
         default:
             return false;
@@ -376,7 +373,7 @@ namespace bee::win::subprocess {
         if (!detached_) {
             join_job(pi_.hProcess);
         }
-        if (hide_console_) {
+        if (console_ == console::eHide) {
             hide_console(pi_);
         }
         if (resume) {
