@@ -1,11 +1,11 @@
-#include <bee/subprocess.h>
+#include <bee/error.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/file.h>
 #include <bee/lua/path.h>
-#include <bee/error.h>
+#include <bee/subprocess.h>
+#include <errno.h>
 #include <lua.hpp>
 #include <optional>
-#include <errno.h>
 #include <string.h>
 #if defined(_WIN32)
 #include <bee/utility/unicode_win.h>
@@ -15,7 +15,7 @@
 
 namespace bee::lua_socket {
     net::socket::fd_t checksocket(lua_State* L, int idx);
-    void pushsocket(lua_State* L, net::socket::fd_t fd);
+    void              pushsocket(lua_State* L, net::socket::fd_t fd);
 }
 
 namespace bee::lua_subprocess {
@@ -38,7 +38,7 @@ namespace bee::lua_subprocess {
 
         static int kill(lua_State* L) {
             subprocess::process& self = to(L, 1);
-            bool ok = self.kill((int)luaL_optinteger(L, 2, 15));
+            bool                 ok = self.kill((int)luaL_optinteger(L, 2, 15));
             lua_pushboolean(L, ok);
             return 1;
         }
@@ -104,27 +104,25 @@ namespace bee::lua_subprocess {
 
             if (newObject(L, "subprocess")) {
                 static luaL_Reg mt[] = {
-                    { "wait", process::wait },
-                    { "kill", process::kill },
-                    { "get_id", process::get_id },
-                    { "is_running", process::is_running },
-                    { "resume", process::resume },
-                    { "native_handle", process::native_handle },
-                    { "__gc", process::destructor },
-                    { NULL, NULL }
-                };
+                    {"wait", process::wait},
+                    {"kill", process::kill},
+                    {"get_id", process::get_id},
+                    {"is_running", process::is_running},
+                    {"resume", process::resume},
+                    {"native_handle", process::native_handle},
+                    {"__gc", process::destructor},
+                    {NULL, NULL}};
                 luaL_setfuncs(L, mt, 0);
 
                 static luaL_Reg mt2[] = {
-                    { "__index", process::index },
-                    { "__newindex", process::newindex },
-                    { NULL, NULL }
-                };
+                    {"__index", process::index},
+                    {"__newindex", process::newindex},
+                    {NULL, NULL}};
                 lua_pushvalue(L, -1);
                 luaL_setfuncs(L, mt2, 1);
             }
             lua_setmetatable(L, -2);
-            new (storage)subprocess::process(spawn);
+            new (storage) subprocess::process(spawn);
             return 1;
         }
     }
@@ -201,7 +199,7 @@ namespace bee::lua_subprocess {
             case LUA_TUSERDATA: {
                 luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, -1, LUA_FILEHANDLE);
                 if (!p->closef) {
-					lua_pop(L, 1);
+                    lua_pop(L, 1);
                     return file::handle::invalid();
                 }
                 return file::dup(p->f);
@@ -282,8 +280,7 @@ namespace bee::lua_subprocess {
         }
 
 #if defined(_WIN32)
-        static void cast_option(lua_State* L, subprocess::spawn& self)
-        {
+        static void cast_option(lua_State* L, subprocess::spawn& self) {
             if (LUA_TSTRING == lua_getfield(L, 1, "console")) {
                 std::string console = luaL_checkstring(L, -1);
                 if (console == "new") {
@@ -319,8 +316,7 @@ namespace bee::lua_subprocess {
             lua_pop(L, 1);
         }
 #else
-        static void cast_option(lua_State*, subprocess::spawn&)
-        { }
+        static void cast_option(lua_State*, subprocess::spawn&) {}
 #endif
 
         static void cast_sockets(lua_State* L, subprocess::spawn& self) {
@@ -340,7 +336,7 @@ namespace bee::lua_subprocess {
 
         static int spawn(lua_State* L) {
             luaL_checktype(L, 1, LUA_TTABLE);
-            subprocess::spawn spawn;
+            subprocess::spawn  spawn;
             subprocess::args_t args = cast_args(L);
             if (args.size() == 0) {
                 return 0;
@@ -398,12 +394,12 @@ namespace bee::lua_subprocess {
     }
 
 #if defined(_WIN32)
-#include <io.h>
 #include <fcntl.h>
+#include <io.h>
 
     static int filemode(lua_State* L) {
         luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, 1, LUA_FILEHANDLE);
-        const char* mode = luaL_checkstring(L, 2);
+        const char*  mode = luaL_checkstring(L, 2);
         if (p && p->closef && p->f) {
             if (mode[0] == 'b') {
                 _setmode(_fileno(p->f), _O_BINARY);
@@ -430,12 +426,11 @@ namespace bee::lua_subprocess {
     int luaopen(lua_State* L) {
         net::socket::initialize();
         static luaL_Reg lib[] = {
-            { "spawn", spawn::spawn },
-            { "peek", peek },
-            { "filemode", filemode },
-            { "get_id", get_id },
-            { NULL, NULL }
-        };
+            {"spawn", spawn::spawn},
+            {"peek", peek},
+            {"filemode", filemode},
+            {"get_id", get_id},
+            {NULL, NULL}};
         luaL_newlib(L, lib);
 
         lua_newtable(L);

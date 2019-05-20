@@ -143,9 +143,11 @@ namespace bee::lua_registry {
         key_w::hkey_type basetype;
         if (base == L"HKEY_LOCAL_MACHINE") {
             basetype = HKEY_LOCAL_MACHINE;
-        } else if (base == L"HKEY_CURRENT_USER") {
+        }
+        else if (base == L"HKEY_CURRENT_USER") {
             basetype = HKEY_CURRENT_USER;
-        } else {
+        }
+        else {
             return 0;
         }
         std::wstring sub = key.substr(pos + 1);

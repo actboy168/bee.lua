@@ -1,17 +1,17 @@
 ﻿#include <lua.hpp>
 #if defined _WIN32
-#   include <winsock.h>
-#   include <bee/net/unixsocket_win.h>
+#include <bee/net/unixsocket_win.h>
+#include <winsock.h>
 #else
-#   include <sys/select.h>
+#include <sys/select.h>
 #endif
-#include <bee/lua/binding.h>
-#include <bee/net/socket.h>
-#include <bee/net/endpoint.h>
 #include <bee/error.h>
+#include <bee/lua/binding.h>
+#include <bee/net/endpoint.h>
+#include <bee/net/socket.h>
+#include <chrono>
 #include <limits>
 #include <thread>
-#include <chrono>
 
 namespace bee::lua_socket {
     using namespace bee::net;
@@ -19,10 +19,9 @@ namespace bee::lua_socket {
     struct luafd {
         socket::fd_t     fd;
         socket::protocol protocol;
-        bool connect = false;
-        std::string path;
-        luafd(socket::fd_t s, socket::protocol p) : fd(s) , protocol(p)
-        { }
+        bool             connect = false;
+        std::string      path;
+        luafd(socket::fd_t s, socket::protocol p) : fd(s), protocol(p) {}
     };
     static int push_neterror(lua_State* L, const char* msg) {
         auto error = make_neterror(msg);
@@ -72,7 +71,7 @@ namespace bee::lua_socket {
         return *(luafd*)getObject(L, idx, "socket");
     }
     static luafd& pushfd(lua_State* L, socket::fd_t fd, socket::protocol protocol);
-    socket::fd_t checksocket(lua_State* L, int idx) {
+    socket::fd_t  checksocket(lua_State* L, int idx) {
         return checkfd(L, idx).fd;
     }
     void pushsocket(lua_State* L, socket::fd_t fd) {
@@ -80,7 +79,7 @@ namespace bee::lua_socket {
         pushfd(L, fd, socket::protocol::tcp);
     }
     static int accept(lua_State* L) {
-        luafd& self = checkfd(L, 1);
+        luafd&       self = checkfd(L, 1);
         socket::fd_t newfd;
         if (socket::status::success != socket::accept(self.fd, newfd)) {
             return push_neterror(L, "accept");
@@ -89,7 +88,7 @@ namespace bee::lua_socket {
         return 1;
     }
     static int recv(lua_State* L) {
-        luafd& self = checkfd(L, 1);
+        luafd&      self = checkfd(L, 1);
         lua_Integer len = luaL_optinteger(L, 2, LUAL_BUFFERSIZE);
         if (len > (std::numeric_limits<int>::max)()) {
             return luaL_error(L, "bad argument #1 to 'recv' (invalid number)");
@@ -97,7 +96,7 @@ namespace bee::lua_socket {
         luaL_Buffer b;
         luaL_buffinit(L, &b);
         char* buf = luaL_prepbuffsize(&b, (size_t)len);
-        int rc;
+        int   rc;
         switch (socket::recv(self.fd, rc, buf, (int)len)) {
         case socket::status::close:
             lua_pushnil(L);
@@ -116,10 +115,10 @@ namespace bee::lua_socket {
         }
     }
     static int send(lua_State* L) {
-        luafd& self = checkfd(L, 1);
-        size_t len;
+        luafd&      self = checkfd(L, 1);
+        size_t      len;
         const char* buf = luaL_checklstring(L, 2, &len);
-        int rc;
+        int         rc;
         switch (socket::send(self.fd, rc, buf, (int)len)) {
         case socket::status::wait:
             lua_pushboolean(L, 0);
@@ -135,16 +134,16 @@ namespace bee::lua_socket {
         }
     }
     static int recvfrom(lua_State* L) {
-        luafd& self = checkfd(L, 1);
+        luafd&      self = checkfd(L, 1);
         lua_Integer len = luaL_optinteger(L, 2, LUAL_BUFFERSIZE);
         if (len > (std::numeric_limits<int>::max)()) {
             return luaL_error(L, "bad argument #1 to 'recv' (invalid number)");
         }
-        endpoint ep = endpoint::from_empty();
+        endpoint    ep = endpoint::from_empty();
         luaL_Buffer b;
         luaL_buffinit(L, &b);
         char* buf = luaL_prepbuffsize(&b, (size_t)len);
-        int rc;
+        int   rc;
         switch (socket::recvfrom(self.fd, rc, buf, (int)len, ep)) {
         case socket::status::close:
             lua_pushnil(L);
@@ -154,7 +153,7 @@ namespace bee::lua_socket {
             return 1;
         case socket::status::success: {
             luaL_pushresultsize(&b, rc);
-            auto[ip, port] = ep.info();
+            auto [ip, port] = ep.info();
             lua_pushlstring(L, ip.data(), ip.size());
             lua_pushinteger(L, port);
             return 3;
@@ -167,12 +166,12 @@ namespace bee::lua_socket {
         }
     }
     static int sendto(lua_State* L) {
-        luafd& self = checkfd(L, 1);
-        size_t len;
-        const char* buf = luaL_checklstring(L, 2, &len);
+        luafd&           self = checkfd(L, 1);
+        size_t           len;
+        const char*      buf = luaL_checklstring(L, 2, &len);
         std::string_view ip = lua::to_strview(L, 3);
-        int port = (int)luaL_checkinteger(L, 4);
-        auto ep = endpoint::from_hostname(ip, port);
+        int              port = (int)luaL_checkinteger(L, 4);
+        auto             ep = endpoint::from_hostname(ip, port);
         if (!ep) {
             lua_pushlstring(L, ep.error().data(), ep.error().size());
             return lua_error(L);
@@ -234,7 +233,7 @@ namespace bee::lua_socket {
         if (flag[0] == 'r') {
             return shutdown(L, self, socket::shutdown_flag::read);
         }
-        else if(flag[0] == 'w') {
+        else if (flag[0] == 'w') {
             return shutdown(L, self, socket::shutdown_flag::write);
         }
         lua_pushnil(L);
@@ -265,7 +264,7 @@ namespace bee::lua_socket {
     }
     static int status(lua_State* L) {
         luafd& self = checkfd(L, 1);
-        int err = socket::errcode(self.fd);
+        int    err = socket::errcode(self.fd);
         if (err == 0) {
             lua_pushboolean(L, true);
             return 1;
@@ -276,14 +275,14 @@ namespace bee::lua_socket {
         return 2;
     }
     static int info(lua_State* L) {
-        luafd& self = checkfd(L, 1);
+        luafd&           self = checkfd(L, 1);
         std::string_view which = lua::to_strview(L, 2);
         if (which == "peer") {
             endpoint ep = endpoint::from_empty();
             if (!socket::getpeername(self.fd, ep)) {
                 return push_neterror(L, "getpeername");
             }
-            auto[ip, port] = ep.info();
+            auto [ip, port] = ep.info();
             lua_pushlstring(L, ip.data(), ip.size());
             lua_pushinteger(L, port);
             return 2;
@@ -293,7 +292,7 @@ namespace bee::lua_socket {
             if (!socket::getsockname(self.fd, ep)) {
                 return push_neterror(L, "getsockname");
             }
-            auto[ip, port] = ep.info();
+            auto [ip, port] = ep.info();
             lua_pushlstring(L, ip.data(), ip.size());
             lua_pushinteger(L, port);
             return 2;
@@ -305,18 +304,18 @@ namespace bee::lua_socket {
         new (self) luafd(fd, protocol);
         if (newObject(L, "socket")) {
             luaL_Reg mt[] = {
-                { "accept",   accept },
-                { "recv",     recv },
-                { "send",     send },
-                { "recvfrom", recvfrom },
-                { "sendto",   sendto },
-                { "close",    close },
-                { "shutdown", shutdown },
-                { "status",   status },
-                { "info",     info },
-                { "__tostring", tostring },
-                { "__gc",     gc },
-                { NULL, NULL },
+                {"accept", accept},
+                {"recv", recv},
+                {"send", send},
+                {"recvfrom", recvfrom},
+                {"sendto", sendto},
+                {"close", close},
+                {"shutdown", shutdown},
+                {"status", status},
+                {"info", info},
+                {"__tostring", tostring},
+                {"__gc", gc},
+                {NULL, NULL},
             };
             luaL_setfuncs(L, mt, 0);
             lua_pushvalue(L, -1);
@@ -327,7 +326,7 @@ namespace bee::lua_socket {
     }
     static int connect(lua_State* L) {
         socket::protocol protocol = read_protocol(L, 1);
-        auto ep = read_endpoint(L, protocol, 2);
+        auto             ep = read_endpoint(L, protocol, 2);
         if (!ep) {
             lua_pushlstring(L, ep.error().data(), ep.error().size());
             return lua_error(L);
@@ -354,13 +353,13 @@ namespace bee::lua_socket {
     }
     static int bind(lua_State* L) {
         socket::protocol protocol = read_protocol(L, 1);
-        auto ep = read_endpoint(L, protocol, 2);
+        auto             ep = read_endpoint(L, protocol, 2);
         if (!ep) {
             lua_pushnil(L);
             lua_pushlstring(L, ep.error().data(), ep.error().size());
             return 2;
         }
-        int backlog = read_backlog(L, protocol);
+        int          backlog = read_backlog(L, protocol);
         socket::fd_t fd = socket::open(protocol, *ep);
         if (fd == socket::retired_fd) {
             return push_neterror(L, "socket");
@@ -368,13 +367,13 @@ namespace bee::lua_socket {
 #if defined _WIN32
         luafd& self =
 #endif
-        pushfd(L, fd, protocol);
+            pushfd(L, fd, protocol);
         if (socket::status::success != socket::bind(fd, *ep)) {
             return push_neterror(L, "bind");
         }
 #if defined _WIN32
         if (!socket::supportUnixDomainSocket()) {
-            auto[path, type] = ep->info();
+            auto [path, type] = ep->info();
             if (type == 0) {
                 self.path = path;
             }
@@ -402,9 +401,13 @@ namespace bee::lua_socket {
 #define MAXFD_GET() 0
 #define EXFDS_INIT() fd_set exceptfds
 #define EXFDS_ZERO() FD_ZERO(&exceptfds)
-#define EXFDS_SET(connect, fd) if (connect) FD_SET((fd), &exceptfds) 
+#define EXFDS_SET(connect, fd) \
+    if (connect)               \
+    FD_SET((fd), &exceptfds)
 #define EXFDS_GET() (&exceptfds)
-#define EXFDS_UPDATE(wfds) for (u_int i = 0; i < exceptfds.fd_count; ++i) FD_SET(exceptfds.fd_array[i], &(wfds))
+#define EXFDS_UPDATE(wfds)                         \
+    for (u_int i = 0; i < exceptfds.fd_count; ++i) \
+    FD_SET(exceptfds.fd_array[i], &(wfds))
 #else
 #define MAXFD_INIT() int maxfd = 0
 #define MAXFD_SET(fd) maxfd = (std::max)(maxfd, (int)(fd))
@@ -416,10 +419,10 @@ namespace bee::lua_socket {
 #define EXFDS_UPDATE(wfds)
 #endif
     static int select(lua_State* L) {
-        bool read_finish = lua_type(L, 1) != LUA_TTABLE;
-        bool write_finish = lua_type(L, 2) != LUA_TTABLE;
-        int rmax = read_finish ? 0 : (int)luaL_len(L, 1);
-        int wmax = write_finish ? 0 : (int)luaL_len(L, 2);
+        bool   read_finish = lua_type(L, 1) != LUA_TTABLE;
+        bool   write_finish = lua_type(L, 2) != LUA_TTABLE;
+        int    rmax = read_finish ? 0 : (int)luaL_len(L, 1);
+        int    wmax = write_finish ? 0 : (int)luaL_len(L, 2);
         double timeo = luaL_optnumber(L, 3, -1);
         if (!rmax && !wmax) {
             if (timeo == -1) {
@@ -449,7 +452,7 @@ namespace bee::lua_socket {
         lua_newtable(L);
         lua_newtable(L);
         lua_Integer rout = 0, wout = 0;
-        fd_set readfds, writefds;
+        fd_set      readfds, writefds;
         EXFDS_INIT();
         for (int x = 1; !read_finish || !write_finish; x += FD_SETSIZE) {
             MAXFD_INIT();
@@ -511,12 +514,11 @@ namespace bee::lua_socket {
     int luaopen(lua_State* L) {
         socket::initialize();
         luaL_Reg lib[] = {
-            { "connect",  connect },
-            { "bind",     bind },
-            { "pair",     pair },
-            { "select",   select },
-            { NULL, NULL }
-        };
+            {"connect", connect},
+            {"bind", bind},
+            {"pair", pair},
+            {"select", select},
+            {NULL, NULL}};
         lua_newtable(L);
         luaL_setfuncs(L, lib, 0);
         return 1;

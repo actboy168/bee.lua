@@ -1,6 +1,6 @@
-#include <lua.hpp>      
 #include <bee/lua/binding.h>
 #include <bee/platform.h>
+#include <lua.hpp>
 
 namespace bee::lua_platform {
     int luaopen(lua_State* L) {
