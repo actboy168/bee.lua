@@ -1,5 +1,5 @@
-#include <lua.hpp>      
-#include <bee/registry/key.h>
+#include <lua.hpp>
+#include <bee/registry.h>
 #include <bee/lua/binding.h>
 
 namespace bee::lua_registry {
