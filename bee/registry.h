@@ -29,7 +29,7 @@ namespace bee::registry {
         static result_type create_key(hkey_type hkey, char_type const* sub_key_name, hkey_type* hkey_result, REGSAM samDesired = KEY_ALL_ACCESS);
         static result_type create_key(hkey_type hkey, char_type const* sub_key_name, hkey_type* hkey_result, bool& bCreated, REGSAM samDesired = KEY_ALL_ACCESS);
         static result_type delete_key(hkey_type hkey, char_type const* sub_key_name);
-        static result_type query_value(hkey_type hkey, char_type const* valueName, uint32_t& valueType, void* data, size_type& cbData);
+        static result_type query_value(hkey_type hkey, char_type const* valueName, uint32_t& valueType, void* data, size_type* cbData);
         static result_type set_value(hkey_type hkey, char_type const* valueName, uint32_t valueType, void const* data, size_type cbData);
         static result_type delete_value(hkey_type hkey, char_type const* valueName);
         static result_type delete_tree(hkey_type hkey, char_type const* sub_key_name);
@@ -37,7 +37,7 @@ namespace bee::registry {
         query_info(hkey_type hkey, char_type* key_class, size_type* cch_key_class, uint32_t* c_sub_keys, size_type* cch_sub_key_max, size_type* cch_key_class_max, uint32_t* c_values, size_type* cch_valueName_max, size_type* cb_value_data_max, size_type* cb_security_descriptor_max, time_type* time_last_write);
         static result_type enum_key(hkey_type hkey, uint32_t index, char_type* key_name, size_type* cch_key_name, time_type* time_last_write = NULL);
         static result_type enum_key(hkey_type hkey, uint32_t index, char_type* key_name, size_type* cch_key_name, char_type* key_class, size_type* cch_key_class, time_type* time_last_write);
-        static result_type enum_value(hkey_type hkey, uint32_t index, char_type* valueName, size_type* cch_valueName, uint32_t* valueType, void* data, size_type& cbData);
+        static result_type enum_value(hkey_type hkey, uint32_t index, char_type* valueName, size_type* cch_valueName, uint32_t* valueType, void* data, size_type* cbData);
         static result_type enum_value(hkey_type hkey, uint32_t index, char_type* valueName, size_type* cch_valueName);
         static size_type   expand_environment_strings(char_type const* src,
                                                       char_type*       dest,
@@ -93,9 +93,9 @@ namespace bee::registry {
             return ::RegDeleteKeyA(hkey, sub_key_name);
         }
 
-        static result_type query_value(hkey_type hkey, char_type const* valueName, uint32_t& valueType, void* data, size_type& cbData) {
+        static result_type query_value(hkey_type hkey, char_type const* valueName, uint32_t& valueType, void* data, size_type* cbData) {
             return ::RegQueryValueExA(
-                hkey, valueName, NULL, reinterpret_cast<LPDWORD>(&valueType), static_cast<LPBYTE>(data), reinterpret_cast<LPDWORD>(&cbData));
+                hkey, valueName, NULL, reinterpret_cast<LPDWORD>(&valueType), static_cast<LPBYTE>(data), reinterpret_cast<LPDWORD>(cbData));
         }
 
         static result_type set_value(hkey_type hkey, char_type const* valueName, uint32_t valueType, void const* data, size_type cbData) {
@@ -120,10 +120,6 @@ namespace bee::registry {
 
         static result_type
         query_info(hkey_type hkey, char_type* key_class, size_type* cch_key_class, uint32_t* c_sub_keys, size_type* cch_sub_key_max, size_type* cch_key_class_max, uint32_t* c_values, size_type* cch_valueName_max, size_type* cb_value_data_max, size_type* cb_security_descriptor_max, time_type* time_last_write) {
-            if (NULL == cch_key_class && NULL != key_class) {
-                return ERROR_INVALID_PARAMETER;
-            }
-
             return ::RegQueryInfoKeyA(
                 hkey, key_class, reinterpret_cast<LPDWORD>(cch_key_class), NULL, reinterpret_cast<LPDWORD>(c_sub_keys), reinterpret_cast<LPDWORD>(cch_sub_key_max), reinterpret_cast<LPDWORD>(cch_key_class_max), reinterpret_cast<LPDWORD>(c_values), reinterpret_cast<LPDWORD>(cch_valueName_max), reinterpret_cast<LPDWORD>(cb_value_data_max), reinterpret_cast<LPDWORD>(cb_security_descriptor_max), time_last_write);
         }
@@ -137,9 +133,9 @@ namespace bee::registry {
                 hkey, index, key_name, reinterpret_cast<LPDWORD>(cch_key_name), NULL, key_class, reinterpret_cast<LPDWORD>(cch_key_class), time_last_write);
         }
 
-        static result_type enum_value(hkey_type hkey, uint32_t index, char_type* valueName, size_type* cch_valueName, uint32_t* valueType, void* data, size_type& cbData) {
+        static result_type enum_value(hkey_type hkey, uint32_t index, char_type* valueName, size_type* cch_valueName, uint32_t* valueType, void* data, size_type* cbData) {
             return ::RegEnumValueA(
-                hkey, index, valueName, reinterpret_cast<LPDWORD>(cch_valueName), NULL, reinterpret_cast<LPDWORD>(valueType), reinterpret_cast<LPBYTE>(data), reinterpret_cast<LPDWORD>(&cbData));
+                hkey, index, valueName, reinterpret_cast<LPDWORD>(cch_valueName), NULL, reinterpret_cast<LPDWORD>(valueType), reinterpret_cast<LPBYTE>(data), reinterpret_cast<LPDWORD>(cbData));
         }
 
         static result_type enum_value(hkey_type hkey, uint32_t index, char_type* valueName, size_type* cch_valueName) {
@@ -234,9 +230,9 @@ namespace bee::registry {
             return ::RegDeleteKeyW(hkey, sub_key_name);
         }
 
-        static result_type query_value(hkey_type hkey, char_type const* valueName, uint32_t& valueType, void* data, size_type& cbData) {
+        static result_type query_value(hkey_type hkey, char_type const* valueName, uint32_t& valueType, void* data, size_type* cbData) {
             return ::RegQueryValueExW(
-                hkey, valueName, NULL, reinterpret_cast<LPDWORD>(&valueType), static_cast<LPBYTE>(data), reinterpret_cast<LPDWORD>(&cbData));
+                hkey, valueName, NULL, reinterpret_cast<LPDWORD>(&valueType), static_cast<LPBYTE>(data), reinterpret_cast<LPDWORD>(cbData));
         }
 
         static result_type set_value(hkey_type hkey, char_type const* valueName, uint32_t valueType, void const* data, size_type cbData) {
@@ -262,10 +258,6 @@ namespace bee::registry {
 
         static result_type
         query_info(hkey_type hkey, char_type* key_class, size_type* cch_key_class, uint32_t* c_sub_keys, size_type* cch_sub_key_max, size_type* cch_key_class_max, uint32_t* c_values, size_type* cch_valueName_max, size_type* cb_value_data_max, size_type* cb_security_descriptor_max, time_type* time_last_write) {
-            if (NULL == cch_key_class && NULL != key_class) {
-                return ERROR_INVALID_PARAMETER;
-            }
-
             return ::RegQueryInfoKeyW(
                 hkey, key_class, reinterpret_cast<LPDWORD>(cch_key_class), NULL, reinterpret_cast<LPDWORD>(c_sub_keys), reinterpret_cast<LPDWORD>(cch_sub_key_max), reinterpret_cast<LPDWORD>(cch_key_class_max), reinterpret_cast<LPDWORD>(c_values), reinterpret_cast<LPDWORD>(cch_valueName_max), reinterpret_cast<LPDWORD>(cb_value_data_max), reinterpret_cast<LPDWORD>(cb_security_descriptor_max), time_last_write);
         }
@@ -279,9 +271,9 @@ namespace bee::registry {
                 hkey, index, key_name, reinterpret_cast<LPDWORD>(cch_key_name), NULL, key_class, reinterpret_cast<LPDWORD>(cch_key_class), time_last_write);
         }
 
-        static result_type enum_value(hkey_type hkey, uint32_t index, char_type* valueName, size_type* cch_valueName, uint32_t* valueType, void* data, size_type& cbData) {
+        static result_type enum_value(hkey_type hkey, uint32_t index, char_type* valueName, size_type* cch_valueName, uint32_t* valueType, void* data, size_type* cbData) {
             return ::RegEnumValueW(
-                hkey, index, valueName, reinterpret_cast<LPDWORD>(cch_valueName), NULL, reinterpret_cast<LPDWORD>(valueType), reinterpret_cast<LPBYTE>(data), reinterpret_cast<LPDWORD>(&cbData));
+                hkey, index, valueName, reinterpret_cast<LPDWORD>(cch_valueName), NULL, reinterpret_cast<LPDWORD>(valueType), reinterpret_cast<LPBYTE>(data), reinterpret_cast<LPDWORD>(cbData));
         }
 
         static result_type enum_value(hkey_type hkey, uint32_t index, char_type* valueName, size_type* cch_valueName) {
@@ -514,7 +506,7 @@ namespace bee::registry {
                                               m_name.c_str(),
                                               m_type,
                                               NULL,
-                                              data_size)) {
+                                              &data_size)) {
                 m_bTypeRetrieved = true;
             }
         }
@@ -535,7 +527,7 @@ namespace bee::registry {
         size_type   data_size = 0;
         uint32_t    dw;
         result_type res = traits_type::query_value(
-            m_key.handle(open_access::read), m_name.c_str(), dw, NULL, data_size);
+            m_key.handle(open_access::read), m_name.c_str(), dw, NULL, &data_size);
         check_and_throw_exception("could not determine the data size", res);
 
         if (data_size > 0) {
@@ -547,7 +539,7 @@ namespace bee::registry {
                                          m_name.c_str(),
                                          dw,
                                          buffer.data(),
-                                         data_size);
+                                         &data_size);
             check_and_throw_exception("could not elicit string value", res);
 
             if (data_size > 0) {
@@ -586,7 +578,7 @@ namespace bee::registry {
         size_type   cbData = sizeof(dwValue);
         uint32_t    value_type;
         result_type res =
-            traits_type::query_value(m_key.handle(open_access::read), m_name.c_str(), value_type, &dwValue, cbData);
+            traits_type::query_value(m_key.handle(open_access::read), m_name.c_str(), value_type, &dwValue, &cbData);
         check_and_throw_exception("could not query value", res);
         return dwValue;
     }
@@ -597,7 +589,7 @@ namespace bee::registry {
         size_type   cbData = sizeof(dwValue);
         uint32_t    value_type;
         result_type res =
-            traits_type::query_value(m_key.handle(open_access::read), m_name.c_str(), value_type, &dwValue, cbData);
+            traits_type::query_value(m_key.handle(open_access::read), m_name.c_str(), value_type, &dwValue, &cbData);
         check_and_throw_exception("could not query value", res);
         return dwValue;
     }
@@ -608,7 +600,7 @@ namespace bee::registry {
         size_type   data_size = 0;
         uint32_t    dw;
         result_type res = traits_type::query_value(
-            m_key.handle(open_access::read), m_name.c_str(), dw, NULL, data_size);
+            m_key.handle(open_access::read), m_name.c_str(), dw, NULL, &data_size);
         check_and_throw_exception("could not elicit binary value", res);
 
         assert(dw == REG_BINARY);
@@ -621,7 +613,7 @@ namespace bee::registry {
                                          m_name.c_str(),
                                          dw,
                                          buffer.data(),
-                                         data_size);
+                                         &data_size);
             check_and_throw_exception("could not elicit binary value", res);
             return buffer;
         }
@@ -635,7 +627,7 @@ namespace bee::registry {
         uint8_t     data[1];
         size_type   cbData = sizeof(data);
         result_type res =
-            traits_type::query_value(m_key.handle(open_access::read), m_name.c_str(), valueType, &data[0], cbData);
+            traits_type::query_value(m_key.handle(open_access::read), m_name.c_str(), valueType, &data[0], &cbData);
 
         switch (res) {
         case ERROR_SUCCESS:
@@ -768,17 +760,22 @@ namespace bee::registry {
             std::swap(m_valuemap, rhs.m_valuemap);
         }
 
-        class_type sub_key(const string_type& sub_key_name) const {
+        class_type key(const string_type& key_name) const {
             static const char_type s_separator[] = {'\\', '\0'};
             if (!m_keypath.empty()) {
-                return class_type(m_keybase, m_keypath + s_separator + m_keyname, sub_key_name, m_accessfix);
+                return class_type(m_keybase, m_keypath + s_separator + m_keyname, key_name, m_accessfix);
             }
             else if (!m_keyname.empty()) {
-                return class_type(m_keybase, m_keyname, sub_key_name, m_accessfix);
+                return class_type(m_keybase, m_keyname, key_name, m_accessfix);
             }
             else {
-                return class_type(m_keybase, string_type(), sub_key_name, m_accessfix);
+                return class_type(m_keybase, string_type(), key_name, m_accessfix);
             }
+        }
+
+        class_type key(uint32_t value_idx, char_type* data, size_type* size) {
+            check_and_throw_exception("could not query key", traits_type::enum_key(handle(open_access::read), value_idx, data, size));
+            return key(string_type(data, *size));
         }
 
         value_type& value(const string_type& value_name) {
@@ -791,7 +788,13 @@ namespace bee::registry {
             return *(m_valuemap[value_name].get());
         }
 
-        value_type& operator[](const string_type& value_name) {
+        value_type& value(uint32_t value_idx, char_type* data, size_type* size) {
+            check_and_throw_exception("could not query value", traits_type::enum_value(handle(open_access::read), value_idx, data, size));
+            return value(string_type(data, *size));
+        }
+
+        value_type&
+        operator[](const string_type& value_name) {
             return value(value_name);
         }
 
@@ -817,7 +820,7 @@ namespace bee::registry {
         }
 
         bool del() {
-            hkey_type key = open_key_(m_keybase, m_keypath.c_str(), (REGSAM)open_access::write | (REGSAM)m_accessfix, open_option::fail_if_not_exists);
+            hkey_type key = open_key_(m_keybase, m_keypath, (REGSAM)open_access::write | (REGSAM)m_accessfix, open_option::fail_if_not_exists);
             if (key == NULL) {
                 return false;
             }
@@ -834,6 +837,16 @@ namespace bee::registry {
             }
             traits_type::close(key);
             return suc;
+        }
+
+        void enum_keys(uint32_t* nums, size_type* maxname) {
+            auto res = traits_type::query_info(handle(open_access::read), 0, 0, nums, maxname, 0, 0, 0, 0, 0, 0);
+            check_and_throw_exception("could not query info", res);
+        }
+
+        void enum_values(uint32_t* nums, size_type* maxname) {
+            auto res = traits_type::query_info(handle(open_access::read), 0, 0, 0, 0, 0, nums, maxname, 0, 0, 0);
+            check_and_throw_exception("could not query info", res);
         }
 
     protected:
@@ -926,7 +939,7 @@ namespace bee::registry {
     inline basic_key<C, T>
     operator/(const basic_key<C, T>&                       lhs,
               const typename basic_key<C, T>::string_type& rhs) {
-        return lhs.sub_key(rhs);
+        return lhs.key(rhs);
     }
 
     typedef basic_key<char>    key_a;
