@@ -161,7 +161,8 @@ namespace bee::registry {
 
             if (NULL == hinst) {
                 r = static_cast<result_type>(::GetLastError());
-            } else {
+            }
+            else {
                 union {
                     FARPROC fp;
                     DWORD(__stdcall* pfn)
@@ -305,7 +306,8 @@ namespace bee::registry {
 
             if (NULL == hinst) {
                 r = static_cast<result_type>(::GetLastError());
-            } else {
+            }
+            else {
                 union {
                     FARPROC fp;
                     DWORD(__stdcall* pfn)
@@ -344,7 +346,8 @@ namespace bee::registry {
         if (ERROR_SUCCESS != error_code) {
             if (ERROR_ACCESS_DENIED == error_code) {
                 throw access_denied_exception(reason, error_code);
-            } else {
+            }
+            else {
                 throw registry_exception(reason, error_code);
             }
         }
@@ -565,7 +568,8 @@ namespace bee::registry {
                                                                          size)) {
                             check_and_throw_exception("could not expand environment strings",
                                                       ::GetLastError());
-                        } else {
+                        }
+                        else {
                             ret.assign(buffer2.data(), size);
                         }
                     }
@@ -768,9 +772,11 @@ namespace bee::registry {
             static const char_type s_separator[] = {'\\', '\0'};
             if (!m_keypath.empty()) {
                 return class_type(m_keybase, m_keypath + s_separator + m_keyname, sub_key_name, m_accessfix);
-            } else if (!m_keyname.empty()) {
+            }
+            else if (!m_keyname.empty()) {
                 return class_type(m_keybase, m_keyname, sub_key_name, m_accessfix);
-            } else {
+            }
+            else {
                 return class_type(m_keybase, string_type(), sub_key_name, m_accessfix);
             }
         }
@@ -838,19 +844,23 @@ namespace bee::registry {
                 if (m_key) {
                     if (m_access == open_access::write) {
                         key = m_key;
-                    } else {
+                    }
+                    else {
                         close_key_();
                         key = open_key_(m_keybase, key_name_(), (REGSAM)access | (REGSAM)m_accessfix, option);
                     }
-                } else {
+                }
+                else {
                     key = open_key_(m_keybase, key_name_(), (REGSAM)access | (REGSAM)m_accessfix, option);
                 }
-            } else {
+            }
+            else {
                 assert(access == open_access::read);
                 open_option option = open_option::fail_if_not_exists;
                 if (m_key) {
                     key = m_key;
-                } else {
+                }
+                else {
                     key = open_key_(m_keybase, key_name_(), (REGSAM)access | (REGSAM)m_accessfix, option);
                 }
             }
@@ -879,7 +889,8 @@ namespace bee::registry {
                 result_type res = traits_type::open_key(key_parent, key_name.c_str(), &hkey, access_mask);
                 check_and_throw_exception("could not open key", res);
                 return hkey;
-            } else {
+            }
+            else {
                 assert(option == open_option::create_if_not_exists);
                 static const char_type s_empty_string[] = {'\0'};
                 hkey_type              hbasekey;
