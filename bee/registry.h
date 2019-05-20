@@ -24,23 +24,23 @@ namespace bee::registry {
 
     public:
         static result_type close(hkey_type hkey);
-        static hkey_type   dup_key(hkey_type hkey, REGSAM samDesired = KEY_ALL_ACCESS, result_type *result = NULL);
-        static result_type open_key(hkey_type hkey, char_type const *sub_key_name, hkey_type *hkey_result, REGSAM samDesired = KEY_ALL_ACCESS);
-        static result_type create_key(hkey_type hkey, char_type const *sub_key_name, hkey_type *hkey_result, REGSAM samDesired = KEY_ALL_ACCESS);
-        static result_type create_key(hkey_type hkey, char_type const *sub_key_name, hkey_type *hkey_result, bool &bCreated, REGSAM samDesired = KEY_ALL_ACCESS);
-        static result_type delete_key(hkey_type hkey, char_type const *sub_key_name);
-        static result_type query_value(hkey_type hkey, char_type const *valueName, uint32_t &valueType, void *data, size_type &cbData);
-        static result_type set_value(hkey_type hkey, char_type const *valueName, uint32_t valueType, void const *data, size_type cbData);
-        static result_type delete_value(hkey_type hkey, char_type const *valueName);
-        static result_type delete_tree(hkey_type hkey, char_type const *sub_key_name);
+        static hkey_type   dup_key(hkey_type hkey, REGSAM samDesired = KEY_ALL_ACCESS, result_type* result = NULL);
+        static result_type open_key(hkey_type hkey, char_type const* sub_key_name, hkey_type* hkey_result, REGSAM samDesired = KEY_ALL_ACCESS);
+        static result_type create_key(hkey_type hkey, char_type const* sub_key_name, hkey_type* hkey_result, REGSAM samDesired = KEY_ALL_ACCESS);
+        static result_type create_key(hkey_type hkey, char_type const* sub_key_name, hkey_type* hkey_result, bool& bCreated, REGSAM samDesired = KEY_ALL_ACCESS);
+        static result_type delete_key(hkey_type hkey, char_type const* sub_key_name);
+        static result_type query_value(hkey_type hkey, char_type const* valueName, uint32_t& valueType, void* data, size_type& cbData);
+        static result_type set_value(hkey_type hkey, char_type const* valueName, uint32_t valueType, void const* data, size_type cbData);
+        static result_type delete_value(hkey_type hkey, char_type const* valueName);
+        static result_type delete_tree(hkey_type hkey, char_type const* sub_key_name);
         static result_type
-        query_info(hkey_type hkey, char_type *key_class, size_type *cch_key_class, uint32_t *c_sub_keys, size_type *cch_sub_key_max, size_type *cch_key_class_max, uint32_t *c_values, size_type *cch_valueName_max, size_type *cb_value_data_max, size_type *cb_security_descriptor_max, time_type *time_last_write);
-        static result_type enum_key(hkey_type hkey, uint32_t index, char_type *key_name, size_type *cch_key_name, time_type *time_last_write = NULL);
-        static result_type enum_key(hkey_type hkey, uint32_t index, char_type *key_name, size_type *cch_key_name, char_type *key_class, size_type *cch_key_class, time_type *time_last_write);
-        static result_type enum_value(hkey_type hkey, uint32_t index, char_type *valueName, size_type *cch_valueName, uint32_t *valueType, void *data, size_type &cbData);
-        static result_type enum_value(hkey_type hkey, uint32_t index, char_type *valueName, size_type *cch_valueName);
-        static size_type   expand_environment_strings(char_type const *src,
-                                                      char_type *      dest,
+        query_info(hkey_type hkey, char_type* key_class, size_type* cch_key_class, uint32_t* c_sub_keys, size_type* cch_sub_key_max, size_type* cch_key_class_max, uint32_t* c_values, size_type* cch_valueName_max, size_type* cb_value_data_max, size_type* cb_security_descriptor_max, time_type* time_last_write);
+        static result_type enum_key(hkey_type hkey, uint32_t index, char_type* key_name, size_type* cch_key_name, time_type* time_last_write = NULL);
+        static result_type enum_key(hkey_type hkey, uint32_t index, char_type* key_name, size_type* cch_key_name, char_type* key_class, size_type* cch_key_class, time_type* time_last_write);
+        static result_type enum_value(hkey_type hkey, uint32_t index, char_type* valueName, size_type* cch_valueName, uint32_t* valueType, void* data, size_type& cbData);
+        static result_type enum_value(hkey_type hkey, uint32_t index, char_type* valueName, size_type* cch_valueName);
+        static size_type   expand_environment_strings(char_type const* src,
+                                                      char_type*       dest,
                                                       size_type        cch_dest);
     };
 
@@ -58,7 +58,7 @@ namespace bee::registry {
     public:
         static result_type close(hkey_type hkey) { return ::RegCloseKey(hkey); }
 
-        static hkey_type dup_key(hkey_type hkey, REGSAM samDesired, result_type *result = NULL) {
+        static hkey_type dup_key(hkey_type hkey, REGSAM samDesired, result_type* result = NULL) {
             hkey_type   hkeyDup;
             result_type res = ::RegOpenKeyExA(hkey, "", 0, samDesired, &hkeyDup);
 
@@ -73,15 +73,15 @@ namespace bee::registry {
             return hkeyDup;
         }
 
-        static result_type open_key(hkey_type hkey, char_type const *sub_key_name, hkey_type *hkey_result, REGSAM samDesired = KEY_ALL_ACCESS) {
+        static result_type open_key(hkey_type hkey, char_type const* sub_key_name, hkey_type* hkey_result, REGSAM samDesired = KEY_ALL_ACCESS) {
             return ::RegOpenKeyExA(hkey, sub_key_name, 0, samDesired, hkey_result);
         }
 
-        static result_type create_key(hkey_type hkey, char_type const *sub_key_name, hkey_type *hkey_result, REGSAM samDesired = KEY_ALL_ACCESS) {
+        static result_type create_key(hkey_type hkey, char_type const* sub_key_name, hkey_type* hkey_result, REGSAM samDesired = KEY_ALL_ACCESS) {
             return ::RegCreateKeyExA(hkey, sub_key_name, 0, NULL, 0, samDesired, NULL, hkey_result, NULL);
         }
 
-        static result_type create_key(hkey_type hkey, char_type const *sub_key_name, hkey_type *hkey_result, bool &bCreated, REGSAM samDesired = KEY_ALL_ACCESS) {
+        static result_type create_key(hkey_type hkey, char_type const* sub_key_name, hkey_type* hkey_result, bool& bCreated, REGSAM samDesired = KEY_ALL_ACCESS) {
             DWORD       disposition;
             result_type res =
                 ::RegCreateKeyExA(hkey, sub_key_name, 0, NULL, 0, samDesired, NULL, hkey_result, &disposition);
@@ -89,25 +89,25 @@ namespace bee::registry {
             return res;
         }
 
-        static result_type delete_key(hkey_type hkey, char_type const *sub_key_name) {
+        static result_type delete_key(hkey_type hkey, char_type const* sub_key_name) {
             return ::RegDeleteKeyA(hkey, sub_key_name);
         }
 
-        static result_type query_value(hkey_type hkey, char_type const *valueName, uint32_t &valueType, void *data, size_type &cbData) {
+        static result_type query_value(hkey_type hkey, char_type const* valueName, uint32_t& valueType, void* data, size_type& cbData) {
             return ::RegQueryValueExA(
                 hkey, valueName, NULL, reinterpret_cast<LPDWORD>(&valueType), static_cast<LPBYTE>(data), reinterpret_cast<LPDWORD>(&cbData));
         }
 
-        static result_type set_value(hkey_type hkey, char_type const *valueName, uint32_t valueType, void const *data, size_type cbData) {
-            return ::RegSetValueExA(hkey, valueName, 0, valueType, static_cast<BYTE const *>(data), static_cast<DWORD>(cbData));
+        static result_type set_value(hkey_type hkey, char_type const* valueName, uint32_t valueType, void const* data, size_type cbData) {
+            return ::RegSetValueExA(hkey, valueName, 0, valueType, static_cast<BYTE const*>(data), static_cast<DWORD>(cbData));
         }
 
-        static result_type delete_value(hkey_type hkey, char_type const *valueName) {
+        static result_type delete_value(hkey_type hkey, char_type const* valueName) {
             return ::RegDeleteValueA(hkey, valueName);
         }
 
         static result_type delete_tree(hkey_type        hkey,
-                                       char_type const *sub_key_name) {
+                                       char_type const* sub_key_name) {
             result_type res =
                 execute_dynamic_("advapi32.dll", "RegDeleteTreeA", hkey, sub_key_name);
 
@@ -119,7 +119,7 @@ namespace bee::registry {
         }
 
         static result_type
-        query_info(hkey_type hkey, char_type *key_class, size_type *cch_key_class, uint32_t *c_sub_keys, size_type *cch_sub_key_max, size_type *cch_key_class_max, uint32_t *c_values, size_type *cch_valueName_max, size_type *cb_value_data_max, size_type *cb_security_descriptor_max, time_type *time_last_write) {
+        query_info(hkey_type hkey, char_type* key_class, size_type* cch_key_class, uint32_t* c_sub_keys, size_type* cch_sub_key_max, size_type* cch_key_class_max, uint32_t* c_values, size_type* cch_valueName_max, size_type* cb_value_data_max, size_type* cb_security_descriptor_max, time_type* time_last_write) {
             if (NULL == cch_key_class && NULL != key_class) {
                 return ERROR_INVALID_PARAMETER;
             }
@@ -128,26 +128,26 @@ namespace bee::registry {
                 hkey, key_class, reinterpret_cast<LPDWORD>(cch_key_class), NULL, reinterpret_cast<LPDWORD>(c_sub_keys), reinterpret_cast<LPDWORD>(cch_sub_key_max), reinterpret_cast<LPDWORD>(cch_key_class_max), reinterpret_cast<LPDWORD>(c_values), reinterpret_cast<LPDWORD>(cch_valueName_max), reinterpret_cast<LPDWORD>(cb_value_data_max), reinterpret_cast<LPDWORD>(cb_security_descriptor_max), time_last_write);
         }
 
-        static result_type enum_key(hkey_type hkey, uint32_t index, char_type *key_name, size_type *cch_key_name, time_type *time_last_write = NULL) {
+        static result_type enum_key(hkey_type hkey, uint32_t index, char_type* key_name, size_type* cch_key_name, time_type* time_last_write = NULL) {
             return ::RegEnumKeyExA(hkey, index, key_name, reinterpret_cast<LPDWORD>(cch_key_name), NULL, NULL, NULL, time_last_write);
         }
 
-        static result_type enum_key(hkey_type hkey, uint32_t index, char_type *key_name, size_type *cch_key_name, char_type *key_class, size_type *cch_key_class, time_type *time_last_write) {
+        static result_type enum_key(hkey_type hkey, uint32_t index, char_type* key_name, size_type* cch_key_name, char_type* key_class, size_type* cch_key_class, time_type* time_last_write) {
             return ::RegEnumKeyExA(
                 hkey, index, key_name, reinterpret_cast<LPDWORD>(cch_key_name), NULL, key_class, reinterpret_cast<LPDWORD>(cch_key_class), time_last_write);
         }
 
-        static result_type enum_value(hkey_type hkey, uint32_t index, char_type *valueName, size_type *cch_valueName, uint32_t *valueType, void *data, size_type &cbData) {
+        static result_type enum_value(hkey_type hkey, uint32_t index, char_type* valueName, size_type* cch_valueName, uint32_t* valueType, void* data, size_type& cbData) {
             return ::RegEnumValueA(
                 hkey, index, valueName, reinterpret_cast<LPDWORD>(cch_valueName), NULL, reinterpret_cast<LPDWORD>(valueType), reinterpret_cast<LPBYTE>(data), reinterpret_cast<LPDWORD>(&cbData));
         }
 
-        static result_type enum_value(hkey_type hkey, uint32_t index, char_type *valueName, size_type *cch_valueName) {
+        static result_type enum_value(hkey_type hkey, uint32_t index, char_type* valueName, size_type* cch_valueName) {
             return ::RegEnumValueA(hkey, index, valueName, reinterpret_cast<LPDWORD>(cch_valueName), NULL, NULL, NULL, NULL);
         }
 
-        static size_type expand_environment_strings(char_type const *src,
-                                                    char_type *      dest,
+        static size_type expand_environment_strings(char_type const* src,
+                                                    char_type*       dest,
                                                     size_type        cch_dest) {
             assert(nullptr != src);
             assert(nullptr != dest || 0 == cch_dest);
@@ -155,7 +155,7 @@ namespace bee::registry {
         }
 
     private:
-        static result_type execute_dynamic_(const char *module, const char *function, hkey_type a1, char_type const *a2) {
+        static result_type execute_dynamic_(const char* module, const char* function, hkey_type a1, char_type const* a2) {
             result_type r = ERROR_SUCCESS;
             HINSTANCE   hinst = ::LoadLibraryA(module);
 
@@ -164,7 +164,7 @@ namespace bee::registry {
             } else {
                 union {
                     FARPROC fp;
-                    DWORD(__stdcall *pfn)
+                    DWORD(__stdcall* pfn)
                     (HKEY, LPCSTR);
                 } u;
                 u.fp = ::GetProcAddress(hinst, function);
@@ -198,7 +198,7 @@ namespace bee::registry {
     public:
         static result_type close(hkey_type hkey) { return ::RegCloseKey(hkey); }
 
-        static hkey_type dup_key(hkey_type hkey, REGSAM samDesired, result_type *result = NULL) {
+        static hkey_type dup_key(hkey_type hkey, REGSAM samDesired, result_type* result = NULL) {
             hkey_type   hkeyDup;
             result_type res = ::RegOpenKeyExW(hkey, L"", 0, samDesired, &hkeyDup);
 
@@ -213,15 +213,15 @@ namespace bee::registry {
             return hkeyDup;
         }
 
-        static result_type open_key(hkey_type hkey, char_type const *sub_key_name, hkey_type *hkey_result, REGSAM samDesired = KEY_ALL_ACCESS) {
+        static result_type open_key(hkey_type hkey, char_type const* sub_key_name, hkey_type* hkey_result, REGSAM samDesired = KEY_ALL_ACCESS) {
             return ::RegOpenKeyExW(hkey, sub_key_name, 0, samDesired, hkey_result);
         }
 
-        static result_type create_key(hkey_type hkey, char_type const *sub_key_name, hkey_type *hkey_result, REGSAM samDesired = KEY_ALL_ACCESS) {
+        static result_type create_key(hkey_type hkey, char_type const* sub_key_name, hkey_type* hkey_result, REGSAM samDesired = KEY_ALL_ACCESS) {
             return ::RegCreateKeyExW(hkey, sub_key_name, 0, NULL, 0, samDesired, NULL, hkey_result, NULL);
         }
 
-        static result_type create_key(hkey_type hkey, char_type const *sub_key_name, hkey_type *hkey_result, bool &bCreated, REGSAM samDesired = KEY_ALL_ACCESS) {
+        static result_type create_key(hkey_type hkey, char_type const* sub_key_name, hkey_type* hkey_result, bool& bCreated, REGSAM samDesired = KEY_ALL_ACCESS) {
             DWORD       disposition;
             result_type res =
                 ::RegCreateKeyExW(hkey, sub_key_name, 0, NULL, 0, samDesired, NULL, hkey_result, &disposition);
@@ -229,25 +229,25 @@ namespace bee::registry {
             return res;
         }
 
-        static result_type delete_key(hkey_type hkey, char_type const *sub_key_name) {
+        static result_type delete_key(hkey_type hkey, char_type const* sub_key_name) {
             return ::RegDeleteKeyW(hkey, sub_key_name);
         }
 
-        static result_type query_value(hkey_type hkey, char_type const *valueName, uint32_t &valueType, void *data, size_type &cbData) {
+        static result_type query_value(hkey_type hkey, char_type const* valueName, uint32_t& valueType, void* data, size_type& cbData) {
             return ::RegQueryValueExW(
                 hkey, valueName, NULL, reinterpret_cast<LPDWORD>(&valueType), static_cast<LPBYTE>(data), reinterpret_cast<LPDWORD>(&cbData));
         }
 
-        static result_type set_value(hkey_type hkey, char_type const *valueName, uint32_t valueType, void const *data, size_type cbData) {
-            return ::RegSetValueExW(hkey, valueName, 0, valueType, static_cast<BYTE const *>(data), static_cast<DWORD>(cbData));
+        static result_type set_value(hkey_type hkey, char_type const* valueName, uint32_t valueType, void const* data, size_type cbData) {
+            return ::RegSetValueExW(hkey, valueName, 0, valueType, static_cast<BYTE const*>(data), static_cast<DWORD>(cbData));
         }
 
-        static result_type delete_value(hkey_type hkey, char_type const *valueName) {
+        static result_type delete_value(hkey_type hkey, char_type const* valueName) {
             return ::RegDeleteValueW(hkey, valueName);
         }
 
         static result_type delete_tree(hkey_type        hkey,
-                                       char_type const *sub_key_name) {
+                                       char_type const* sub_key_name) {
             result_type res =
                 execute_dynamic_(L"advapi32.dll", "RegDeleteTreeW", hkey, sub_key_name);
 
@@ -260,7 +260,7 @@ namespace bee::registry {
         }
 
         static result_type
-        query_info(hkey_type hkey, char_type *key_class, size_type *cch_key_class, uint32_t *c_sub_keys, size_type *cch_sub_key_max, size_type *cch_key_class_max, uint32_t *c_values, size_type *cch_valueName_max, size_type *cb_value_data_max, size_type *cb_security_descriptor_max, time_type *time_last_write) {
+        query_info(hkey_type hkey, char_type* key_class, size_type* cch_key_class, uint32_t* c_sub_keys, size_type* cch_sub_key_max, size_type* cch_key_class_max, uint32_t* c_values, size_type* cch_valueName_max, size_type* cb_value_data_max, size_type* cb_security_descriptor_max, time_type* time_last_write) {
             if (NULL == cch_key_class && NULL != key_class) {
                 return ERROR_INVALID_PARAMETER;
             }
@@ -269,26 +269,26 @@ namespace bee::registry {
                 hkey, key_class, reinterpret_cast<LPDWORD>(cch_key_class), NULL, reinterpret_cast<LPDWORD>(c_sub_keys), reinterpret_cast<LPDWORD>(cch_sub_key_max), reinterpret_cast<LPDWORD>(cch_key_class_max), reinterpret_cast<LPDWORD>(c_values), reinterpret_cast<LPDWORD>(cch_valueName_max), reinterpret_cast<LPDWORD>(cb_value_data_max), reinterpret_cast<LPDWORD>(cb_security_descriptor_max), time_last_write);
         }
 
-        static result_type enum_key(hkey_type hkey, uint32_t index, char_type *key_name, size_type *cch_key_name, time_type *time_last_write = NULL) {
+        static result_type enum_key(hkey_type hkey, uint32_t index, char_type* key_name, size_type* cch_key_name, time_type* time_last_write = NULL) {
             return ::RegEnumKeyExW(hkey, index, key_name, reinterpret_cast<LPDWORD>(cch_key_name), NULL, NULL, NULL, time_last_write);
         }
 
-        static result_type enum_key(hkey_type hkey, uint32_t index, char_type *key_name, size_type *cch_key_name, char_type *key_class, size_type *cch_key_class, time_type *time_last_write) {
+        static result_type enum_key(hkey_type hkey, uint32_t index, char_type* key_name, size_type* cch_key_name, char_type* key_class, size_type* cch_key_class, time_type* time_last_write) {
             return ::RegEnumKeyExW(
                 hkey, index, key_name, reinterpret_cast<LPDWORD>(cch_key_name), NULL, key_class, reinterpret_cast<LPDWORD>(cch_key_class), time_last_write);
         }
 
-        static result_type enum_value(hkey_type hkey, uint32_t index, char_type *valueName, size_type *cch_valueName, uint32_t *valueType, void *data, size_type &cbData) {
+        static result_type enum_value(hkey_type hkey, uint32_t index, char_type* valueName, size_type* cch_valueName, uint32_t* valueType, void* data, size_type& cbData) {
             return ::RegEnumValueW(
                 hkey, index, valueName, reinterpret_cast<LPDWORD>(cch_valueName), NULL, reinterpret_cast<LPDWORD>(valueType), reinterpret_cast<LPBYTE>(data), reinterpret_cast<LPDWORD>(&cbData));
         }
 
-        static result_type enum_value(hkey_type hkey, uint32_t index, char_type *valueName, size_type *cch_valueName) {
+        static result_type enum_value(hkey_type hkey, uint32_t index, char_type* valueName, size_type* cch_valueName) {
             return ::RegEnumValueW(hkey, index, valueName, reinterpret_cast<LPDWORD>(cch_valueName), NULL, NULL, NULL, NULL);
         }
 
-        static size_type expand_environment_strings(char_type const *src,
-                                                    char_type *      dest,
+        static size_type expand_environment_strings(char_type const* src,
+                                                    char_type*       dest,
                                                     size_type        cch_dest) {
             assert(nullptr != src);
             assert(nullptr != dest || 0 == cch_dest);
@@ -296,10 +296,10 @@ namespace bee::registry {
         }
 
     private:
-        static result_type execute_dynamic_(const wchar_t *  module,
-                                            const char *     function,
+        static result_type execute_dynamic_(const wchar_t*   module,
+                                            const char*      function,
                                             hkey_type        a1,
-                                            char_type const *a2) {
+                                            char_type const* a2) {
             result_type r = ERROR_SUCCESS;
             HINSTANCE   hinst = ::LoadLibraryW(module);
 
@@ -308,7 +308,7 @@ namespace bee::registry {
             } else {
                 union {
                     FARPROC fp;
-                    DWORD(__stdcall *pfn)
+                    DWORD(__stdcall* pfn)
                     (HKEY, LPCWSTR);
                 } u;
                 u.fp = ::GetProcAddress(hinst, function);
@@ -330,17 +330,17 @@ namespace bee::registry {
 
     class registry_exception : public std::system_error {
     public:
-        registry_exception(const char *reason, int error_code)
+        registry_exception(const char* reason, int error_code)
             : std::system_error(error_code, std::system_category(), reason) {}
     };
 
     class access_denied_exception : public registry_exception {
     public:
-        access_denied_exception(const char *reason, int error_code)
+        access_denied_exception(const char* reason, int error_code)
             : registry_exception(reason, error_code) {}
     };
 
-    inline void check_and_throw_exception(const char *reason, int error_code) {
+    inline void check_and_throw_exception(const char* reason, int error_code) {
         if (ERROR_SUCCESS != error_code) {
             if (ERROR_ACCESS_DENIED == error_code) {
                 throw access_denied_exception(reason, error_code);
@@ -383,7 +383,7 @@ namespace bee::registry {
     };
 
     template <class Target, class Source>
-    inline Target reg_dispatch(const Source &s) {
+    inline Target reg_dispatch(const Source& s) {
         return std::move(Target(std::begin(s), std::end(s)));
     }
 
@@ -400,14 +400,14 @@ namespace bee::registry {
         typedef std::dynarray<uint8_t>            blob_type;
         typedef typename traits_type::result_type result_type;
 
-        basic_value(key_type &key, const string_type &name);
+        basic_value(key_type& key, const string_type& name);
         ~basic_value();
 
-        basic_value(class_type &rhs);
-        class_type &operator=(class_type &rhs);
+        basic_value(class_type& rhs);
+        class_type& operator=(class_type& rhs);
 
-        basic_value(class_type &&rhs);
-        class_type &operator=(class_type &&rhs);
+        basic_value(class_type&& rhs);
+        class_type& operator=(class_type&& rhs);
 
     public:
         uint32_t    type() const;
@@ -423,7 +423,7 @@ namespace bee::registry {
         Result
         get(typename std::enable_if<
                 is_stringable<char_type, typename std::decay<Result>::type>::value,
-                int>::type * = 0) const {
+                int>::type* = 0) const {
             return std::move(reg_dispatch<Result>(get_string()));
         }
 
@@ -434,20 +434,20 @@ namespace bee::registry {
         bool del();
         bool set_uint32_t(uint32_t value);
         bool set_uint64_t(uint64_t value);
-        bool set(const char *value);
-        bool set(const wchar_t *value);
-        bool set(const std::string &value);
-        bool set(const std::wstring &value);
-        bool set(const char *value, size_type length);
-        bool set(const wchar_t *value, size_type length);
-        bool set(void const *value, size_type length);
-        bool set(uint32_t type, void const *value, size_type length);
+        bool set(const char* value);
+        bool set(const wchar_t* value);
+        bool set(const std::string& value);
+        bool set(const std::wstring& value);
+        bool set(const char* value, size_type length);
+        bool set(const wchar_t* value, size_type length);
+        bool set(void const* value, size_type length);
+        bool set(uint32_t type, void const* value, size_type length);
 
         template <typename Source>
         bool set(Source value,
                  typename std::enable_if<std::is_unsigned<Source>::value &&
                                              (sizeof(Source) == sizeof(uint32_t)),
-                                         int>::type * = 0) {
+                                         int>::type* = 0) {
             return set_uint32_t(value);
         }
 
@@ -455,7 +455,7 @@ namespace bee::registry {
         bool set(Source value,
                  typename std::enable_if<std::is_unsigned<Source>::value &&
                                              (sizeof(Source) == sizeof(uint64_t)),
-                                         int>::type * = 0) {
+                                         int>::type* = 0) {
             return set_uint64_t(value);
         }
 
@@ -464,29 +464,29 @@ namespace bee::registry {
         set(Source value,
             typename std::enable_if<
                 is_stringable<char_type, typename std::decay<Source>::type>::value,
-                int>::type * = 0) {
+                int>::type* = 0) {
             return set(reg_dispatch<string_type>(value));
         }
 
         template <typename Source>
-        class_type &operator=(Source s) {
+        class_type& operator=(Source s) {
             set(s);
             return *this;
         }
 
     protected:
-        key_type &       m_key;
+        key_type&        m_key;
         string_type      m_name;
         mutable uint32_t m_type;
         mutable bool     m_bTypeRetrieved;
     };
 
     template <typename C, typename T, typename K>
-    inline basic_value<C, T, K>::basic_value(key_type &key, const string_type &name)
+    inline basic_value<C, T, K>::basic_value(key_type& key, const string_type& name)
         : m_key(key), m_name(name), m_type(REG_NONE), m_bTypeRetrieved(false) {}
 
     template <typename C, typename T, typename K>
-    inline basic_value<C, T, K>::basic_value(class_type &&rhs)
+    inline basic_value<C, T, K>::basic_value(class_type&& rhs)
         : m_key(rhs.m_key), m_name(rhs.m_name), m_type(rhs.m_type),
           m_bTypeRetrieved(rhs.m_bTypeRetrieved) {}
 
@@ -494,8 +494,8 @@ namespace bee::registry {
     inline basic_value<C, T, K>::~basic_value() {}
 
     template <typename C, typename T, typename K>
-    inline typename basic_value<C, T, K>::class_type &basic_value<C, T, K>::
-    operator=(class_type &&rhs) {
+    inline typename basic_value<C, T, K>::class_type& basic_value<C, T, K>::
+    operator=(class_type&& rhs) {
         m_key = rhs.m_key;
         m_name = rhs.m_name;
         m_type = rhs.m_type;
@@ -656,42 +656,42 @@ namespace bee::registry {
     }
 
     template <typename C, typename T, typename K>
-    inline bool basic_value<C, T, K>::set(const char *value) {
+    inline bool basic_value<C, T, K>::set(const char* value) {
         return set(value, std::string::traits_type::length(value));
     }
 
     template <typename C, typename T, typename K>
-    inline bool basic_value<C, T, K>::set(const wchar_t *value) {
+    inline bool basic_value<C, T, K>::set(const wchar_t* value) {
         return set(value, std::wstring::traits_type::length(value));
     }
 
     template <typename C, typename T, typename K>
-    inline bool basic_value<C, T, K>::set(const std::string &value) {
+    inline bool basic_value<C, T, K>::set(const std::string& value) {
         return set(value.c_str(), value.size());
     }
 
     template <typename C, typename T, typename K>
-    inline bool basic_value<C, T, K>::set(const std::wstring &value) {
+    inline bool basic_value<C, T, K>::set(const std::wstring& value) {
         return set(value.c_str(), value.size());
     }
 
     template <typename C, typename T, typename K>
-    inline bool basic_value<C, T, K>::set(const char *value, size_type length) {
+    inline bool basic_value<C, T, K>::set(const char* value, size_type length) {
         return set(REG_SZ, value, length * sizeof(char));
     }
 
     template <typename C, typename T, typename K>
-    inline bool basic_value<C, T, K>::set(const wchar_t *value, size_type length) {
+    inline bool basic_value<C, T, K>::set(const wchar_t* value, size_type length) {
         return set(REG_SZ, value, length * sizeof(wchar_t));
     }
 
     template <typename C, typename T, typename K>
-    inline bool basic_value<C, T, K>::set(void const *value, size_type length) {
+    inline bool basic_value<C, T, K>::set(void const* value, size_type length) {
         return set(REG_BINARY, value, length);
     }
 
     template <typename C, typename T, typename K>
-    inline bool basic_value<C, T, K>::set(uint32_t type, void const *value, size_type length) {
+    inline bool basic_value<C, T, K>::set(uint32_t type, void const* value, size_type length) {
         result_type res = traits_type::set_value(m_key.handle(open_access::write),
                                                  m_name.c_str(),
                                                  type,
@@ -733,11 +733,11 @@ namespace bee::registry {
             : m_keybase(keybase), m_keypath(), m_keyname(), m_key(NULL),
               m_access(open_access::read), m_accessfix(accessfix), m_valuemap() {}
 
-        basic_key(hkey_type keybase, const string_type &keypath, const string_type &keyname, open_access accessfix = open_access::none)
+        basic_key(hkey_type keybase, const string_type& keypath, const string_type& keyname, open_access accessfix = open_access::none)
             : m_keybase(keybase), m_keypath(keypath), m_keyname(keyname), m_key(NULL),
               m_access(open_access::read), m_accessfix(accessfix), m_valuemap() {}
 
-        basic_key(class_type const &rhs)
+        basic_key(class_type const& rhs)
             : m_keybase(rhs.m_keybase), m_keypath(rhs.m_keypath),
               m_keyname(rhs.m_keyname), m_key(rhs.m_key), m_access(rhs.m_access),
               m_accessfix(rhs.m_accessfix), m_valuemap() {}
@@ -748,13 +748,13 @@ namespace bee::registry {
             }
         }
 
-        class_type &operator=(class_type const &rhs) {
+        class_type& operator=(class_type const& rhs) {
             class_type _this(rhs);
             swap(_this);
             return *this;
         }
 
-        void swap(class_type &rhs) throw() {
+        void swap(class_type& rhs) throw() {
             std::swap(m_keybase, rhs.m_keybase);
             std::swap(m_keypath, rhs.m_keypath);
             std::swap(m_keyname, rhs.m_keyname);
@@ -764,7 +764,7 @@ namespace bee::registry {
             std::swap(m_valuemap, rhs.m_valuemap);
         }
 
-        class_type sub_key(const string_type &sub_key_name) const {
+        class_type sub_key(const string_type& sub_key_name) const {
             static const char_type s_separator[] = {'\\', '\0'};
             if (!m_keypath.empty()) {
                 return class_type(m_keybase, m_keypath + s_separator + m_keyname, sub_key_name, m_accessfix);
@@ -775,7 +775,7 @@ namespace bee::registry {
             }
         }
 
-        value_type &value(const string_type &value_name) {
+        value_type& value(const string_type& value_name) {
             auto it = m_valuemap.find(value_name);
             if (it == m_valuemap.end()) {
                 m_valuemap.insert(std::make_pair(
@@ -785,7 +785,7 @@ namespace bee::registry {
             return *(m_valuemap[value_name].get());
         }
 
-        value_type &operator[](const string_type &value_name) {
+        value_type& operator[](const string_type& value_name) {
             return value(value_name);
         }
 
@@ -794,7 +794,7 @@ namespace bee::registry {
             return m_key;
         }
 
-        bool del(const string_type &subkey_name, bool delete_tree) {
+        bool del(const string_type& subkey_name, bool delete_tree) {
             result_type res = delete_tree
                                   ? traits_type::delete_tree(handle(open_access::write),
                                                              subkey_name.c_str())
@@ -873,7 +873,7 @@ namespace bee::registry {
             m_access = open_access::read;
         }
 
-        static hkey_type open_key_(hkey_type key_parent, const string_type &key_name, REGSAM access_mask, open_option option) {
+        static hkey_type open_key_(hkey_type key_parent, const string_type& key_name, REGSAM access_mask, open_option option) {
             if (option == open_option::fail_if_not_exists) {
                 hkey_type   hkey;
                 result_type res = traits_type::open_key(key_parent, key_name.c_str(), &hkey, access_mask);
@@ -913,8 +913,8 @@ namespace bee::registry {
 
     template <typename C, typename T>
     inline basic_key<C, T>
-    operator/(const basic_key<C, T> &                      lhs,
-              const typename basic_key<C, T>::string_type &rhs) {
+    operator/(const basic_key<C, T>&                       lhs,
+              const typename basic_key<C, T>::string_type& rhs) {
         return lhs.sub_key(rhs);
     }
 
@@ -932,13 +932,13 @@ namespace bee::registry {
     };
 
     template <typename C>
-    inline basic_key<C> operator/(const predefined_key &      lhs,
-                                  const std::basic_string<C> &rhs) {
+    inline basic_key<C> operator/(const predefined_key&       lhs,
+                                  const std::basic_string<C>& rhs) {
         return basic_key<C>(lhs.handle(), rhs);
     }
 
     template <typename C>
-    inline basic_key<C> operator/(const predefined_key &lhs, const C *rhs) {
+    inline basic_key<C> operator/(const predefined_key& lhs, const C* rhs) {
         return basic_key<C>(lhs.handle(), basic_key<C>::string_type(), rhs, open_access::none);
     }
 

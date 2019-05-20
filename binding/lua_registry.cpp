@@ -1,6 +1,6 @@
-#include <lua.hpp>
-#include <bee/registry.h>
 #include <bee/lua/binding.h>
+#include <bee/registry.h>
+#include <lua.hpp>
 
 namespace bee::lua_registry {
     using namespace bee::registry;
@@ -14,7 +14,7 @@ namespace bee::lua_registry {
             key_w* storage = (key_w*)lua_newuserdatauv(L, sizeof(key_w), 0);
             lua_pushvalue(L, lua_upvalueindex(1));
             lua_setmetatable(L, -2);
-            new (storage)key_w(keytype, access);
+            new (storage) key_w(keytype, access);
             return storage;
         }
 
@@ -22,14 +22,14 @@ namespace bee::lua_registry {
             void* storage = lua_newuserdatauv(L, sizeof(key_w), 0);
             lua_getmetatable(L, ud_idx);
             lua_setmetatable(L, -2);
-            new (storage)key_w(*key);
+            new (storage) key_w(*key);
             return 1;
         }
 
         int mt_index(lua_State* L) {
             try {
-                key_w*       self = read(L, 1);
-                std::wstring key = lua::to_string(L, 2);
+                key_w*             self = read(L, 1);
+                std::wstring       key = lua::to_string(L, 2);
                 key_w::value_type& value = self->value(key);
                 switch (value.type()) {
                 case REG_DWORD:
@@ -60,8 +60,8 @@ namespace bee::lua_registry {
 
         int mt_newindex(lua_State* L) {
             LUA_TRY;
-            key_w*       self = read(L, 1);
-            std::wstring key = lua::to_string(L, 2);
+            key_w*             self = read(L, 1);
+            std::wstring       key = lua::to_string(L, 2);
             key_w::value_type& value = self->value(key);
             switch (lua_type(L, 3)) {
             case LUA_TSTRING:
@@ -87,7 +87,7 @@ namespace bee::lua_registry {
                     value.set(lua::to_string(L, -1));
                     break;
                 case REG_MULTI_SZ: {
-                    lua_Integer len = luaL_len(L, 3);
+                    lua_Integer  len = luaL_len(L, 3);
                     std::wstring str = L"";
                     for (lua_Integer i = 2; i <= len; ++i) {
                         lua_geti(L, 3, i);
@@ -101,7 +101,7 @@ namespace bee::lua_registry {
                 }
                 case REG_BINARY: {
                     lua_geti(L, 3, 2);
-                    size_t len = 0;
+                    size_t      len = 0;
                     const char* buf = luaL_checklstring(L, -1, &len);
                     value.set((const void*)buf, len);
                     break;
@@ -130,30 +130,27 @@ namespace bee::lua_registry {
             static_cast<key_w*>(lua_touserdata(L, 1))->~key_w();
             return 0;
         }
-
     }
 
     int open(lua_State* L) {
         LUA_TRY;
         std::wstring key = lua::to_string(L, 1);
-        size_t pos = key.find(L'\\');
+        size_t       pos = key.find(L'\\');
         if (pos == std::wstring::npos) {
             return 0;
         }
-        std::wstring base =  key.substr(0, pos);
+        std::wstring     base = key.substr(0, pos);
         key_w::hkey_type basetype;
         if (base == L"HKEY_LOCAL_MACHINE") {
             basetype = HKEY_LOCAL_MACHINE;
-        }
-        else if (base == L"HKEY_CURRENT_USER") {
+        } else if (base == L"HKEY_CURRENT_USER") {
             basetype = HKEY_CURRENT_USER;
-        }
-        else {
+        } else {
             return 0;
         }
         std::wstring sub = key.substr(pos + 1);
-        key_w* rkey = rkey::create(L, basetype, open_access::none);
-        key_w ret = *rkey / sub;
+        key_w*       rkey = rkey::create(L, basetype, open_access::none);
+        key_w        ret = *rkey / sub;
         return rkey::copy(L, lua_absindex(L, -1), &ret);
         LUA_TRY_END;
     }
@@ -161,31 +158,29 @@ namespace bee::lua_registry {
     int del(lua_State* L) {
         LUA_TRY;
         key_w* self = rkey::read(L, 1);
-        lua_pushboolean(L, self->del()? 1: 0);
+        lua_pushboolean(L, self->del() ? 1 : 0);
         return 1;
         LUA_TRY_END;
     }
 
     int luaopen(lua_State* L) {
         static luaL_Reg func[] = {
-            { "open", open },
-            { "del", del },
-            { NULL, NULL }
-        };
+            {"open", open},
+            {"del", del},
+            {NULL, NULL}};
         static luaL_Reg rkey_mt[] = {
-            { "__index", rkey::mt_index },
-            { "__newindex", rkey::mt_newindex },
-            { "__div", rkey::mt_div },
-            { "__gc", rkey::mt_gc },
-            { NULL, NULL }
-        };
+            {"__index", rkey::mt_index},
+            {"__newindex", rkey::mt_newindex},
+            {"__div", rkey::mt_div},
+            {"__gc", rkey::mt_gc},
+            {NULL, NULL}};
         luaL_newlibtable(L, func);
         luaL_newlib(L, rkey_mt);
         luaL_setfuncs(L, func, 1);
 
 #define LUA_PUSH_CONST(L, val) \
     lua_pushinteger(L, (val)); \
-    lua_setfield(L, -2, # val);
+    lua_setfield(L, -2, #val);
 
         LUA_PUSH_CONST(L, REG_DWORD);
         LUA_PUSH_CONST(L, REG_QWORD);

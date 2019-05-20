@@ -9,3 +9,7 @@ AccessModifierOffset: -4
 FixNamespaceComments: false
 NamespaceIndentation: All
 AlignConsecutiveDeclarations: true
+PointerAlignment: Left
+BreakBeforeBraces: Custom
+BraceWrapping:
+    BeforeCatch: true
