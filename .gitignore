@@ -1,5 +1,6 @@
 /build/
 .vs/
 *.user
+/.vscode/ipch/
 
 /test/temp.lua
