@@ -191,6 +191,8 @@ namespace bee::lua_thread {
     };
 
     static int thread_luamain(lua_State* L) {
+        lua_pushboolean(L, 1);
+        lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
         luaL_openlibs(L);
         void*        ud = lua_touserdata(L, 1);
         thread_args* args = (thread_args*)ud;
