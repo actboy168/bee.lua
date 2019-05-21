@@ -1,6 +1,6 @@
-#include <lua.hpp>
 #include <bee/lua/binding.h>
 #include <bee/utility/unicode_win.h>
+#include <lua.hpp>
 
 namespace bee::lua_unicode {
     static int lu2a(lua_State* L) {
@@ -17,10 +17,9 @@ namespace bee::lua_unicode {
 
     int luaopen(lua_State* L) {
         luaL_Reg lib[] = {
-            { "u2a", lu2a },
-            { "a2u", la2u },
-            { NULL, NULL }
-        };
+            {"u2a", lu2a},
+            {"a2u", la2u},
+            {NULL, NULL}};
         lua_newtable(L);
         luaL_setfuncs(L, lib, 0);
         return 1;

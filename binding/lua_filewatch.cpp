@@ -1,5 +1,5 @@
-#include <bee/fsevent.h>
 #include <bee/error.h>
+#include <bee/fsevent.h>
 #include <bee/lua/binding.h>
 
 namespace bee::lua_filewatch {
@@ -8,7 +8,7 @@ namespace bee::lua_filewatch {
     }
     static int add(lua_State* L) {
         fsevent::watch& self = to(L);
-        auto path = lua::to_string(L, 1);
+        auto            path = lua::to_string(L, 1);
         fsevent::taskid id = self.add(path);
         if (id == fsevent::kInvalidTaskId) {
             lua_pushnil(L);
@@ -60,15 +60,14 @@ namespace bee::lua_filewatch {
 
     int luaopen(lua_State* L) {
         fsevent::watch* fw = (fsevent::watch*)lua_newuserdatauv(L, sizeof(fsevent::watch), 0);
-        new (fw)fsevent::watch;
+        new (fw) fsevent::watch;
 
         static luaL_Reg lib[] = {
-            { "add",    add },
-            { "remove", remove },
-            { "select", select },
-            { "__gc",   gc },
-            { NULL, NULL }
-        };
+            {"add", add},
+            {"remove", remove},
+            {"select", select},
+            {"__gc", gc},
+            {NULL, NULL}};
         lua_newtable(L);
         lua_pushvalue(L, -2);
         luaL_setfuncs(L, lib, 1);

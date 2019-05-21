@@ -1,5 +1,5 @@
-#include <lua.hpp>      
 #include <bee/lua/binding.h>
+#include <lua.hpp>
 
 extern "C" {
 #include <lua-seri.h>
@@ -30,11 +30,10 @@ namespace bee::lua_serialization {
     }
     int luaopen(lua_State* L) {
         luaL_Reg lib[] = {
-            { "unpack",     unpack },
-            { "pack",       pack },
-            { "packstring", packstring },
-            { NULL, NULL }
-        };
+            {"unpack", unpack},
+            {"pack", pack},
+            {"packstring", packstring},
+            {NULL, NULL}};
         luaL_newlib(L, lib);
         return 1;
     }
