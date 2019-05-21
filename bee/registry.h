@@ -478,12 +478,17 @@ namespace bee::registry {
 
     template <typename C, typename T, typename K>
     inline basic_value<C, T, K>::basic_value(key_type& key, const string_type& name)
-        : m_key(key), m_name(name), m_type(REG_NONE), m_bTypeRetrieved(false) {}
+        : m_key(key)
+        , m_name(name)
+        , m_type(REG_NONE)
+        , m_bTypeRetrieved(false) {}
 
     template <typename C, typename T, typename K>
     inline basic_value<C, T, K>::basic_value(class_type&& rhs)
-        : m_key(rhs.m_key), m_name(rhs.m_name), m_type(rhs.m_type),
-          m_bTypeRetrieved(rhs.m_bTypeRetrieved) {}
+        : m_key(rhs.m_key)
+        , m_name(rhs.m_name)
+        , m_type(rhs.m_type)
+        , m_bTypeRetrieved(rhs.m_bTypeRetrieved) {}
 
     template <typename C, typename T, typename K>
     inline basic_value<C, T, K>::~basic_value() {}
@@ -726,17 +731,28 @@ namespace bee::registry {
         typedef std::map<string_type, std::unique_ptr<value_type>> value_map_type;
 
         basic_key(hkey_type keybase, open_access accessfix = open_access::none)
-            : m_keybase(keybase), m_keyname(), m_key(NULL),
-              m_access(open_access::read), m_accessfix(accessfix), m_valuemap() {}
+            : m_keybase(keybase)
+            , m_keyname()
+            , m_key(NULL)
+            , m_access(open_access::read)
+            , m_accessfix(accessfix)
+            , m_valuemap() {}
 
         basic_key(hkey_type keybase, const string_type& keyname, open_access accessfix = open_access::none)
-            : m_keybase(keybase), m_keyname(keyname), m_key(NULL),
-              m_access(open_access::read), m_accessfix(accessfix), m_valuemap() {}
+            : m_keybase(keybase)
+            , m_keyname(keyname)
+            , m_key(NULL)
+            , m_access(open_access::read)
+            , m_accessfix(accessfix)
+            , m_valuemap() {}
 
         basic_key(class_type const& rhs)
-            : m_keybase(rhs.m_keybase),
-              m_keyname(rhs.m_keyname), m_key(rhs.m_key), m_access(rhs.m_access),
-              m_accessfix(rhs.m_accessfix), m_valuemap() {}
+            : m_keybase(rhs.m_keybase)
+            , m_keyname(rhs.m_keyname)
+            , m_key(rhs.m_key)
+            , m_access(rhs.m_access)
+            , m_accessfix(rhs.m_accessfix)
+            , m_valuemap() {}
 
         ~basic_key() throw() {
             if (m_key != NULL) {
@@ -950,7 +966,8 @@ namespace bee::registry {
     class predefined_key {
     public:
         typedef HKEY hkey_type;
-        predefined_key(hkey_type hkey) : m_hkey(hkey) {}
+        predefined_key(hkey_type hkey)
+            : m_hkey(hkey) {}
         hkey_type handle() const { return m_hkey; }
 
     private:

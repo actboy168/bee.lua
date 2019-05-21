@@ -11,6 +11,7 @@ NamespaceIndentation: All
 AlignConsecutiveDeclarations: true
 PointerAlignment: Left
 BreakBeforeBraces: Custom
+BreakConstructorInitializers: BeforeComma
 BraceWrapping:
     BeforeCatch: true
     BeforeElse: true
