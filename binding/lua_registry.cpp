@@ -12,30 +12,25 @@ namespace bee::lua_registry {
             return *static_cast<key_w*>(getObject(L, idx, "registry::key"));
         }
 
-        int create(lua_State* L, const key_w& key) {
-            key_w* storage = newuserdata(L);
-            new (storage) key_w(key);
-            return 1;
+        key_w& create(lua_State* L, const key_w& key) {
+            key_w* self = newuserdata(L);
+            new (self) key_w(key);
+            return *self;
         }
 
-        int create(lua_State* L, const std::wstring& key) {
-            size_t pos = key.find(L'\\');
-            if (pos == std::wstring::npos) {
-                return luaL_error(L, "Need predefined key.");
+        key_w& create(lua_State* L, const std::wstring& key) {
+            key_w* self = newuserdata(L);
+            new (self) key_w(key);
+            return *self;
+        }
+
+        key_w& getEx(lua_State* L, int idx) {
+            if (lua_type(L, 1) == LUA_TSTRING) {
+                key_w& res = create(L, lua::to_string(L, idx));
+                lua_replace(L, idx);
+                return res;
             }
-            std::wstring              base = key.substr(0, pos);
-            std::wstring              sub = key.substr(pos + 1);
-            predefined_key::hkey_type basetype;
-            if (base == L"HKEY_LOCAL_MACHINE") {
-                basetype = HKEY_LOCAL_MACHINE;
-            }
-            else if (base == L"HKEY_CURRENT_USER") {
-                basetype = HKEY_CURRENT_USER;
-            }
-            else {
-                return luaL_error(L, "Unknown predefined key.");
-            }
-            return create(L, predefined_key(basetype) / sub);
+            return get(L, idx);
         }
 
         int push_value(lua_State* L, key_w::value_type& value) {
@@ -137,7 +132,8 @@ namespace bee::lua_registry {
             LUA_TRY;
             key_w&       self = get(L, 1);
             std::wstring rht = lua::to_string(L, 2);
-            return create(L, self / rht);
+            create(L, self / rht);
+            return 1;
             LUA_TRY_END;
         }
 
@@ -168,13 +164,14 @@ namespace bee::lua_registry {
 
     static int open(lua_State* L) {
         LUA_TRY;
-        return rkey::create(L, lua::to_string(L, 1));
+        rkey::create(L, lua::to_string(L, 1));
+        return 1;
         LUA_TRY_END;
     }
 
     static int del(lua_State* L) {
         LUA_TRY;
-        key_w& self = rkey::get(L, 1);
+        key_w& self = rkey::getEx(L, 1);
         lua_pushboolean(L, self.del() ? 1 : 0);
         return 1;
         LUA_TRY_END;
@@ -201,7 +198,7 @@ namespace bee::lua_registry {
 
     static int keys(lua_State* L) {
         LUA_TRY;
-        key_w&   self = rkey::get(L, 1);
+        key_w&   self = rkey::getEx(L, 1);
         uint32_t nums = 0;
         size_t   maxname = 0;
         self.enum_keys(&nums, &maxname);
@@ -236,7 +233,7 @@ namespace bee::lua_registry {
 
     static int values(lua_State* L) {
         LUA_TRY;
-        key_w&   self = rkey::get(L, 1);
+        key_w&   self = rkey::getEx(L, 1);
         uint32_t nums = 0;
         size_t   maxname = 0;
         self.enum_values(&nums, &maxname);

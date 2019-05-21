@@ -746,6 +746,40 @@ namespace bee::registry {
             , m_accessfix(accessfix)
             , m_valuemap() {}
 
+        basic_key(const string_type& keyname, open_access accessfix = open_access::none)
+            : m_keybase(0)
+            , m_keyname(keyname)
+            , m_key(NULL)
+            , m_access(open_access::read)
+            , m_accessfix(accessfix)
+            , m_valuemap() {
+            size_t pos = keyname.find(char_type('\\'));
+            if (pos == std::wstring::npos) {
+                throw std::runtime_error("Need predefined key.");
+            }
+            m_keyname = keyname.substr(pos + 1);
+            string_type            base = keyname.substr(0, pos);
+            static const char_type LocalMachine[] = {
+                'H', 'K', 'E', 'Y', '_',
+                'L', 'O', 'C', 'A', 'L', '_',
+                'M', 'A', 'C', 'H', 'I', 'N', 'E',
+                '\0'};
+            static const char_type CurrentUser[] = {
+                'H', 'K', 'E', 'Y', '_',
+                'C', 'U', 'R', 'R', 'E', 'N', 'T', '_',
+                'U', 'S', 'E', 'R',
+                '\0'};
+            if (base == LocalMachine) {
+                m_keybase = HKEY_LOCAL_MACHINE;
+            }
+            else if (base == CurrentUser) {
+                m_keybase = HKEY_CURRENT_USER;
+            }
+            else {
+                throw std::runtime_error("Unknown predefined key.");
+            }
+        }
+
         basic_key(class_type const& rhs)
             : m_keybase(rhs.m_keybase)
             , m_keyname(rhs.m_keyname)
@@ -829,11 +863,6 @@ namespace bee::registry {
             case ERROR_FILE_NOT_FOUND:
                 return false;
             }
-        }
-
-        void SplitFilename(const std::string& str) {
-            std::cout << "Splitting: " << str << '\n';
-            std::size_t found = str.find_last_of("/\\");
         }
 
         bool del() {
