@@ -27,11 +27,11 @@
 #    define net_success(x) ((x) == 0)
 #endif
 
-#define net_assert_success(x) \
-    do { \
-        auto r = (x); \
-        assert(net_success(r)); \
-    } while (0)
+#if defined(NDEBUG)
+#define net_assert_success(x) ((void)x)
+#else
+#define net_assert_success(x) assert(net_success(x))
+#endif
 
 
 #if defined(__MINGW32__)
