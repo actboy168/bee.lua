@@ -62,6 +62,7 @@ namespace bee::lua_registry {
                 std::wstring       key = lua::to_string(L, 2);
                 key_w::value_type& value = self.value(key);
                 push_value(L, value);
+            return 1;
             }
             catch (const std::exception&) {
             }
