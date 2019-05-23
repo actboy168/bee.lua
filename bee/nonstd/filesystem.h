@@ -2888,7 +2888,7 @@ inline bool copy_file(const path& from, const path& to, copy_options options, st
         ec = std::error_code(errno, std::system_category());
         return false;
     }
-    std::shared_ptr<void> guard_out(nullptr, [out](void*) { ::close(out); });
+    std::shared_ptr<void> guard_in(nullptr, [in](void*) { ::close(in); });
     int mode = O_CREAT | O_WRONLY | O_TRUNC;
     if (!overwrite) {
         mode |= O_EXCL;
@@ -2897,7 +2897,7 @@ inline bool copy_file(const path& from, const path& to, copy_options options, st
         ec = std::error_code(errno, std::system_category());
         return false;
     }
-    std::shared_ptr<void> guard_in(nullptr, [in](void*) { ::close(in); });
+    std::shared_ptr<void> guard_out(nullptr, [out](void*) { ::close(out); });
     ssize_t br, bw;
     while ((br = ::read(in, buffer.data(), buffer.size())) > 0) {
         int offset = 0;
