@@ -10,7 +10,7 @@ __EXT__ = package.cpath:match '[/\\]%?%.([a-z]+)'
 package.path = './test/?.lua'
 package.cpath = ('%s/?.%s'):format(__Target__, __EXT__)
 
---local platform = require 'bee.platform'
+local platform = require 'bee.platform'
 --if platform.Compiler == 'msvc' then
 --    dofile './3rd/luaffi/src/test.lua'
 --end
@@ -27,4 +27,15 @@ require 'test_socket'
 require 'test_filewatch'
 --require 'test_registry'
 
-os.exit(lu.LuaUnit.run(), true)
+local code = lu.LuaUnit.run()
+
+if platform.OS ~= "Windows" then
+    collectgarbage "collect"
+    local ls = require "bee.socket"
+    local sock = assert(ls.bind("tcp", "127.0.0.1", 0))
+    local fd = tostring(sock):gsub("socket %((%d+)%)", "%1")
+    sock:close()
+    assert(tonumber(fd) == 3)
+end
+
+os.exit(code, true)
