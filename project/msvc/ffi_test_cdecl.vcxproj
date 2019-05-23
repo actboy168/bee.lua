@@ -104,11 +104,11 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(projectDir)..\..\build\msbuild\bin\$(PlatformTarget)_$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(projectDir)..\..\build\msbuild_$(PlatformTarget)_$(Configuration)\bin\</OutDir>
+    <OutDir>$(projectDir)..\..\build\msbuild\bin\$(PlatformTarget)_$(Configuration)\</OutDir>
     <IntDir>$(projectDir)..\..\build\msbuild\obj\$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(projectDir)..\..\build\msbuild_$(PlatformTarget)_$(Configuration)\bin\</OutDir>
+    <OutDir>$(projectDir)..\..\build\msbuild\bin\$(PlatformTarget)_$(Configuration)\</OutDir>
     <IntDir>$(projectDir)..\..\build\msbuild\obj\$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

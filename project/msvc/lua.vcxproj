@@ -73,7 +73,7 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(projectDir)..\..\build\msbuild_$(PlatformTarget)_$(Configuration)\bin\</OutDir>
+    <OutDir>$(projectDir)..\..\build\msbuild\bin\$(PlatformTarget)_$(Configuration)\</OutDir>
     <IntDir>$(projectDir)..\..\build\msbuild\obj\$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
@@ -83,7 +83,7 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(projectDir)..\..\build\msbuild_$(PlatformTarget)_$(Configuration)\bin\</OutDir>
+    <OutDir>$(projectDir)..\..\build\msbuild\bin\$(PlatformTarget)_$(Configuration)\</OutDir>
     <IntDir>$(projectDir)..\..\build\msbuild\obj\$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>

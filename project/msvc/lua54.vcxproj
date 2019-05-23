@@ -154,11 +154,11 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(projectDir)..\..\build\msbuild\bin\$(PlatformTarget)_$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(projectDir)..\..\build\msbuild_$(PlatformTarget)_$(Configuration)\bin\</OutDir>
+    <OutDir>$(projectDir)..\..\build\msbuild\bin\$(PlatformTarget)_$(Configuration)\</OutDir>
     <IntDir>$(projectDir)..\..\build\msbuild\obj\$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(projectDir)..\..\build\msbuild_$(PlatformTarget)_$(Configuration)\bin\</OutDir>
+    <OutDir>$(projectDir)..\..\build\msbuild\bin\$(PlatformTarget)_$(Configuration)\</OutDir>
     <IntDir>$(projectDir)..\..\build\msbuild\obj\$(PlatformTarget)_$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -174,7 +174,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;WIN32;_DEBUG;_LIB;LUAI_MAXCCALLS=50;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;LUAI_MAXCSTACK=1000</PreprocessorDefinitions>
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
@@ -199,7 +199,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;WIN32;NDEBUG;_LIB;LUAI_MAXCCALLS=200;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;LUAI_MAXCSTACK=1000;NDEBUG</PreprocessorDefinitions>
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
