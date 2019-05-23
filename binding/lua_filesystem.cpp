@@ -15,7 +15,8 @@ namespace bee::lua_filesystem {
     namespace path {
         class directory_container {
         public:
-            directory_container(fs::path const& o) : p(o) {}
+            directory_container(fs::path const& o)
+                : p(o) {}
             fs::directory_iterator begin() const { return fs::directory_iterator(p); }
             fs::directory_iterator end() const { return fs::directory_iterator(); }
 
@@ -156,7 +157,7 @@ namespace bee::lua_filesystem {
 
         static int equal_extension(lua_State* L) {
             LUA_TRY;
-            fs::path& self = path::to(L, 1);
+            const fs::path& self = path::to(L, 1);
             switch (lua_type(L, 2)) {
             case LUA_TSTRING:
                 return equal_extension(L, self, lua::tostring<fs::path::string_type>(L, 2));
@@ -190,7 +191,7 @@ namespace bee::lua_filesystem {
         static int add_permissions(lua_State* L) {
             LUA_TRY;
             const fs::path& self = path::to(L, 1);
-            fs::perms       perms = fs::perms::mask & fs::perms(luaL_checkinteger(L, 2));
+            const fs::perms perms = fs::perms::mask & fs::perms(luaL_checkinteger(L, 2));
             fs::permissions(self, perms, fs::perm_options::add);
             return 0;
             LUA_TRY_END;
@@ -199,7 +200,7 @@ namespace bee::lua_filesystem {
         static int remove_permissions(lua_State* L) {
             LUA_TRY;
             const fs::path& self = path::to(L, 1);
-            fs::perms       perms = fs::perms::mask & fs::perms(luaL_checkinteger(L, 2));
+            const fs::perms perms = fs::perms::mask & fs::perms(luaL_checkinteger(L, 2));
             fs::permissions(self, perms, fs::perm_options::remove);
             return 0;
             LUA_TRY_END;
@@ -283,7 +284,8 @@ namespace bee::lua_filesystem {
                     {"__gc", path::destructor},
                     {"__tostring", path::mt_tostring},
                     {"__debugger_tostring", path::mt_tostring},
-                    {NULL, NULL}};
+                    {NULL, NULL},
+                };
                 luaL_setfuncs(L, mt, 0);
                 lua_pushvalue(L, -1);
                 lua_setfield(L, -2, "__index");
@@ -373,7 +375,7 @@ namespace bee::lua_filesystem {
         LUA_TRY;
         const fs::path& from = path::to(L, 1);
         const fs::path& to = path::to(L, 2);
-        bool            overwritten = !!lua_toboolean(L, 3);
+        const bool      overwritten = !!lua_toboolean(L, 3);
         fs::copy_file(from, to, overwritten ? fs::copy_options::overwrite_existing : fs::copy_options::none);
         return 0;
         LUA_TRY_END;
@@ -475,7 +477,8 @@ namespace bee::lua_filesystem {
             {"exe_path", exe_path},
             {"dll_path", dll_path},
             {"filelock", filelock},
-            {NULL, NULL}};
+            {NULL, NULL},
+        };
         lua_newtable(L);
         luaL_setfuncs(L, lib, 0);
         return 1;
