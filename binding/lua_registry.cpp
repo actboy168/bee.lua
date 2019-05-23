@@ -57,17 +57,12 @@ namespace bee::lua_registry {
         }
 
         int mt_index(lua_State* L) {
-            try {
-                key_w&             self = get(L, 1);
-                std::wstring       key = lua::to_string(L, 2);
-                key_w::value_type& value = self.value(key);
-                push_value(L, value);
-                return 1;
-            }
-            catch (const std::exception&) {
-            }
-            lua_pushnil(L);
-            return 1;
+            LUA_TRY;
+            key_w&             self = get(L, 1);
+            std::wstring       key = lua::to_string(L, 2);
+            key_w::value_type& value = self.value(key);
+            return push_value(L, value);
+            LUA_TRY_END;
         }
 
         int mt_newindex(lua_State* L) {
@@ -155,8 +150,6 @@ namespace bee::lua_registry {
                     {NULL, NULL},
                 };
                 luaL_setfuncs(L, mt, 0);
-                lua_pushvalue(L, -1);
-                lua_setfield(L, -2, "__index");
             }
             lua_setmetatable(L, -2);
             return storage;
