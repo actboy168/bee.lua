@@ -50,6 +50,7 @@ namespace bee::net::socket {
 #if defined(_WIN32)
             WSADATA wd;
             int rc = WSAStartup(MAKEWORD(2, 2), &wd);
+            (void)rc;
             assert(rc >= 0);
 #else
             struct sigaction sa;
@@ -86,6 +87,7 @@ namespace bee::net::socket {
     }
     static bool no_inherit(fd_t s) {
         DWORD flags = 0;
+        (void)flags;
         assert(::GetHandleInformation((HANDLE)s, &flags) && (flags & HANDLE_FLAG_INHERIT) == 0);
         return true;
     }
