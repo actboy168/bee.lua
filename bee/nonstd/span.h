@@ -12,7 +12,7 @@
 #define NONSTD_SPAN_HPP_INCLUDED
 
 #define span_lite_MAJOR  0
-#define span_lite_MINOR  4
+#define span_lite_MINOR  5
 #define span_lite_PATCH  0
 
 #define span_lite_VERSION  span_STRINGIFY(span_lite_MAJOR) "." span_STRINGIFY(span_lite_MINOR) "." span_STRINGIFY(span_lite_PATCH)
@@ -53,7 +53,7 @@
 #endif
 
 #ifndef  span_FEATURE_MEMBER_BACK_FRONT
-# define span_FEATURE_MEMBER_BACK_FRONT  0
+# define span_FEATURE_MEMBER_BACK_FRONT  1
 #endif
 
 #ifndef  span_FEATURE_MEMBER_CALL_OPERATOR
@@ -66,6 +66,10 @@
 
 #ifndef  span_FEATURE_NON_MEMBER_FIRST_LAST_SUB
 # define span_FEATURE_NON_MEMBER_FIRST_LAST_SUB  0
+#endif
+
+#ifndef  span_FEATURE_COMPARISON
+# define span_FEATURE_COMPARISON  1  // Note: C++20 does not provide comparison
 #endif
 
 #ifndef  span_FEATURE_SAME
@@ -174,14 +178,15 @@
 
 namespace nonstd {
 
-    using std::span;
+using std::span;
 
-    using std::operator==;
-    using std::operator!=;
-    using std::operator<;
-    using std::operator<=;
-    using std::operator>;
-    using std::operator>=;
+// Note: C++20 does not provide comparison
+// using std::operator==;
+// using std::operator!=;
+// using std::operator<;
+// using std::operator<=;
+// using std::operator>;
+// using std::operator>=;
 }  // namespace nonstd
 
 #else  // span_USES_STD_SPAN
@@ -251,7 +256,7 @@ namespace nonstd {
 // - C26481: gsl::b.1 : don't use pointer arithmetic. Use span instead
 // - C26490: gsl::t.1 : don't use reinterpret_cast
 
-span_DISABLE_MSVC_WARNINGS(26439 26440 26472 26473 26481 26490)
+span_DISABLE_MSVC_WARNINGS( 26439 26440 26472 26473 26481 26490 )
 
 #else
 # define span_RESTORE_WARNINGS()  /*empty*/
@@ -399,8 +404,7 @@ span_DISABLE_MSVC_WARNINGS(26439 26440 26472 26473 26481 26490)
 
 // Other features:
 
-#define span_HAVE_CONSTRAINED_SPAN_CONTAINER_CTOR  \
-    ( span_HAVE_DEFAULT_FUNCTION_TEMPLATE_ARG && span_HAVE_CONTAINER_DATA_METHOD )
+#define span_HAVE_CONSTRAINED_SPAN_CONTAINER_CTOR  span_HAVE_DEFAULT_FUNCTION_TEMPLATE_ARG
 
 // Additional includes:
 
@@ -414,6 +418,10 @@ span_DISABLE_MSVC_WARNINGS(26439 26440 26472 26473 26481 26490)
 
 #if span_HAVE( BYTE )
 # include <cstddef>
+#endif
+
+#if span_HAVE( DATA )
+# include <iterator> // for std::data(), std::size()
 #endif
 
 #if span_HAVE( TYPE_TRAITS )
@@ -463,112 +471,253 @@ span_DISABLE_MSVC_WARNINGS(26439 26440 26472 26473 26481 26490)
 # define span_LOCATION( file, line )  file "(" span_STRINGIFY( line ) ")"
 #endif
 
+// Method enabling
+
+#define span_REQUIRES_0(VA) \
+    template< bool B = (VA), typename std::enable_if<B, int>::type = 0 >
+
+#define span_REQUIRES_T(VA) \
+    , typename = typename std::enable_if< (VA), nonstd::span_lite::detail::enabler >::type
+
+#define span_REQUIRES_R(R, VA) \
+    typename std::enable_if< (VA), R>::type
+
+#define span_REQUIRES_A(VA) \
+    , typename std::enable_if< (VA), void*>::type = nullptr
+
 namespace nonstd {
-    namespace span_lite {
+namespace span_lite {
 
-        // [views.constants], constants
+// [views.constants], constants
 
-        typedef span_CONFIG_INDEX_TYPE index_t;
+typedef span_CONFIG_INDEX_TYPE index_t;
 
-        typedef std::ptrdiff_t extent_t;
+typedef std::ptrdiff_t extent_t;
 
-        span_constexpr const extent_t dynamic_extent = -1;
+span_constexpr const extent_t dynamic_extent = -1;
 
-        template< class T, extent_t Extent = dynamic_extent >
-        class span;
+template< class T, extent_t Extent = dynamic_extent >
+class span;
 
-        // Tag to select span constructor taking a container (prevent ms-gsl warning C26426):
+// Tag to select span constructor taking a container (prevent ms-gsl warning C26426):
 
-        struct with_container_t { span_constexpr with_container_t() span_noexcept {} };
-        const  span_constexpr   with_container_t with_container;
+struct with_container_t { span_constexpr with_container_t() span_noexcept {} };
+const  span_constexpr   with_container_t with_container;
 
-        // Implementation details:
+// C++11 emulation:
 
-        namespace detail {
-
-#if span_HAVE( BYTE )
-            using std::byte;
-#elif span_HAVE( NONSTD_BYTE )
-            using nonstd::byte;
-#endif
-
-#if span_HAVE( TYPE_TRAITS )
-            using std::is_same;
-            using std::true_type;
-            using std::false_type;
-#endif
+namespace std11 {
 
 #if span_HAVE( REMOVE_CONST )
 
-            using std::remove_cv;
-            using std::remove_const;
-            using std::remove_volatile;
+using std::remove_cv;
+using std::remove_const;
+using std::remove_volatile;
 
 #else
 
-            template< class T > struct remove_const { typedef T type; };
-            template< class T > struct remove_const< T const > { typedef T type; };
+template< class T > struct remove_const            { typedef T type; };
+template< class T > struct remove_const< T const > { typedef T type; };
 
-            template< class T > struct remove_volatile { typedef T type; };
-            template< class T > struct remove_volatile< T volatile > { typedef T type; };
+template< class T > struct remove_volatile               { typedef T type; };
+template< class T > struct remove_volatile< T volatile > { typedef T type; };
 
-            template< class T >
-            struct remove_cv
-            {
-                typedef typename detail::remove_volatile< typename detail::remove_const< T >::type >::type type;
-            };
+template< class T >
+struct remove_cv
+{
+    typedef typename std11::remove_volatile< typename std11::remove_const< T >::type >::type type;
+};
 
 #endif  // span_HAVE( REMOVE_CONST )
 
-#if ! span_HAVE( TYPE_TRAITS )
+#if span_HAVE( TYPE_TRAITS )
 
-            struct true_type { enum { value = true }; };
-            struct false_type { enum { value = false }; };
+using std::is_same;
+using std::integral_constant;
+using std::true_type;
+using std::false_type;
 
-            template< class T, class U > struct is_same : false_type {};
-            template< class T          > struct is_same<T, T> : true_type {};
+#else
+
+template< class T, T v > struct integral_constant { enum { value = v }; };
+typedef integral_constant< bool, true  > true_type;
+typedef integral_constant< bool, false > false_type;
+
+template< class T, class U > struct is_same : false_type{};
+template< class T          > struct is_same<T, T> : true_type{};
 
 #endif
+
+} // namespace std11
+
+// C++17 emulation:
+
+namespace std17 {
+
+template< bool v > struct bool_constant : std11::integral_constant<bool, v>{};
+
+#if span_CPP11_120
+
+template< class...>
+using void_t = void;
+
+#endif
+
+#if span_HAVE( DATA )
+
+using std::data;
+using std::size;
+
+#elif span_HAVE_CONSTRAINED_SPAN_CONTAINER_CTOR
+
+template< typename T, size_t N >
+inline span_constexpr auto size( const T(&)[N] ) span_noexcept -> size_t
+{
+    return N;
+}
+
+template< typename C >
+inline span_constexpr auto size( C const & cont ) -> decltype( cont.size() )
+{
+    return cont.size();
+}
+
+template< typename T, size_t N >
+inline span_constexpr auto data( T(&arr)[N] ) span_noexcept -> T*
+{
+    return &arr[0];
+}
+
+template< typename C >
+inline span_constexpr auto data( C & cont ) -> decltype( cont.data() )
+{
+    return cont.data();
+}
+
+template< typename C >
+inline span_constexpr auto data( C const & cont ) -> decltype( cont.data() )
+{
+    return cont.data();
+}
+
+template< typename E >
+inline span_constexpr auto data( std::initializer_list<E> il ) span_noexcept -> E const *
+{
+    return il.begin();
+}
+
+#endif // span_HAVE( DATA )
+
+#if span_HAVE( BYTE )
+using std::byte;
+#elif span_HAVE( NONSTD_BYTE )
+using nonstd::byte;
+#endif
+
+} // namespace std17
+
+// Implementation details:
+
+namespace detail {
+
+/*enum*/ struct enabler{};
 
 #if span_HAVE( TYPE_TRAITS )
 
-            template< class Q >
-            struct is_span_oracle : std::false_type {};
+template< class Q >
+struct is_span_oracle : std::false_type{};
 
-            template< class T, std::ptrdiff_t Extent >
-            struct is_span_oracle< span<T, Extent> > : std::true_type {};
+template< class T, std::ptrdiff_t Extent >
+struct is_span_oracle< span<T, Extent> > : std::true_type{};
 
-            template< class Q >
-            struct is_span : is_span_oracle< typename std::remove_cv<Q>::type > {};
+template< class Q >
+struct is_span : is_span_oracle< typename std::remove_cv<Q>::type >{};
 
-            template< class Q >
-            struct is_std_array_oracle : std::false_type {};
+template< class Q >
+struct is_std_array_oracle : std::false_type{};
 
 #if span_HAVE( ARRAY )
 
-            template< class T, std::size_t Extent >
-            struct is_std_array_oracle< std::array<T, Extent> > : std::true_type {};
+template< class T, std::size_t Extent >
+struct is_std_array_oracle< std::array<T, Extent> > : std::true_type{};
 
 #endif
 
-            template< class Q >
-            struct is_std_array : is_std_array_oracle< typename std::remove_cv<Q>::type > {};
+template< class Q >
+struct is_std_array : is_std_array_oracle< typename std::remove_cv<Q>::type >{};
 
-            template< class Q >
-            struct is_array : std::false_type {};
+template< class Q >
+struct is_array : std::false_type {};
 
-            template< class T >
-            struct is_array<T[]> : std::true_type {};
+template< class T >
+struct is_array<T[]> : std::true_type {};
 
-            template< class T, std::size_t N >
-            struct is_array<T[N]> : std::true_type {};
+template< class T, std::size_t N >
+struct is_array<T[N]> : std::true_type {};
+
+#if span_CPP11_140 && ! span_BETWEEN( span_COMPILER_GNUC_VERSION, 1, 500 )
+
+template< class, class = void >
+struct has_size_and_data : std::false_type{};
+
+template< class C >
+struct has_size_and_data
+<
+    C, std17::void_t<
+        decltype( std17::size(std::declval<C>()) ),
+        decltype( std17::data(std::declval<C>()) ) >
+> : std::true_type{};
+
+template< class, class, class = void >
+struct is_compatible_element : std::false_type {};
+
+template< class C, class E >
+struct is_compatible_element
+<
+    C, E, std17::void_t<
+        decltype( std17::data(std::declval<C>()) ) >
+> : std::is_convertible< typename std::remove_pointer<decltype( std17::data( std::declval<C&>() ) )>::type(*)[], E(*)[] >{};
+
+template< class C >
+struct is_container : std17::bool_constant
+<
+    ! is_span< C >::value
+    && ! is_array< C >::value
+    && ! is_std_array< C >::value
+    &&   has_size_and_data< C >::value
+>{};
+
+template< class C, class E >
+struct is_compatible_container : std17::bool_constant
+<
+    is_container<C>::value
+    && is_compatible_element<C,E>::value
+>{};
+
+#else // span_CPP11_140
+
+template<
+    class C, class E
+        span_REQUIRES_T((
+            ! is_span< C >::value
+            && ! is_array< C >::value
+            && ! is_std_array< C >::value
+            && ( std::is_convertible< typename std::remove_pointer<decltype( std17::data( std::declval<C&>() ) )>::type(*)[], E(*)[] >::value)
+        //  &&   has_size_and_data< C >::value
+        ))
+        , class = decltype( std17::size(std::declval<C>()) )
+        , class = decltype( std17::data(std::declval<C>()) )
+>
+struct is_compatible_container : std::true_type{};
+
+#endif // span_CPP11_140
 
 #endif // span_HAVE( TYPE_TRAITS )
 
 #if ! span_CONFIG( NO_EXCEPTIONS )
 #if   span_FEATURE( MEMBER_AT ) > 1
 
-            // format index and size:
+// format index and size:
 
 #if defined(__clang__)
 # pragma clang diagnostic ignored "-Wlong-long"
@@ -577,689 +726,671 @@ namespace nonstd {
 # pragma GCC   diagnostic ignored "-Wlong-long"
 #endif
 
-            inline void throw_out_of_range(index_t idx, index_t size)
-            {
-                const char fmt[] = "span::at(): index '%lli' is out of range [0..%lli)";
-                char buffer[2 * 20 + sizeof fmt];
-                sprintf(buffer, fmt, static_cast<long long>(idx), static_cast<long long>(size));
+inline void throw_out_of_range( index_t idx, index_t size )
+{
+    const char fmt[] = "span::at(): index '%lli' is out of range [0..%lli)";
+    char buffer[ 2 * 20 + sizeof fmt ];
+    sprintf( buffer, fmt, static_cast<long long>(idx), static_cast<long long>(size) );
 
-                throw std::out_of_range(buffer);
-            }
+    throw std::out_of_range( buffer );
+}
 
 #else // MEMBER_AT
 
-            inline void throw_out_of_range(index_t /*idx*/, index_t /*size*/)
-            {
-                throw std::out_of_range("span::at(): index outside span");
-            }
+inline void throw_out_of_range( index_t /*idx*/, index_t /*size*/ )
+{
+    throw std::out_of_range( "span::at(): index outside span" );
+}
 #endif  // MEMBER_AT
 #endif  // NO_EXCEPTIONS
 
 #if span_CONFIG( CONTRACT_VIOLATION_THROWS_V )
 
-            struct contract_violation : std::logic_error
-            {
-                explicit contract_violation(char const * const message)
-                    : std::logic_error(message)
-                {}
-            };
+struct contract_violation : std::logic_error
+{
+    explicit contract_violation( char const * const message )
+        : std::logic_error( message )
+    {}
+};
 
-            inline void report_contract_violation(char const * msg)
-            {
-                throw contract_violation(msg);
-            }
+inline void report_contract_violation( char const * msg )
+{
+    throw contract_violation( msg );
+}
 
 #else // span_CONFIG( CONTRACT_VIOLATION_THROWS_V )
 
-            span_noreturn inline void report_contract_violation(char const * /*msg*/) span_noexcept
-            {
-                std::terminate();
-            }
+span_noreturn inline void report_contract_violation( char const * /*msg*/ ) span_noexcept
+{
+    std::terminate();
+}
 
 #endif // span_CONFIG( CONTRACT_VIOLATION_THROWS_V )
 
-        }  // namespace detail
+}  // namespace detail
 
-        // Prevent signed-unsigned mismatch:
+// Prevent signed-unsigned mismatch:
 
 #define span_sizeof(T)  static_cast<extent_t>( sizeof(T) )
 
-        template< class T >
-        inline span_constexpr index_t to_size(T size)
-        {
-            return static_cast<index_t>(size);
-        }
+template< class T >
+inline span_constexpr index_t to_size( T size )
+{
+    return static_cast<index_t>( size );
+}
 
-#if span_HAVE( CONSTRAINED_SPAN_CONTAINER_CTOR )
+//
+// [views.span] - A view over a contiguous, single-dimension sequence of objects
+//
+template< class T, extent_t Extent /*= dynamic_extent*/ >
+class span
+{
+public:
+    // constants and types
 
-        // Can construct from containers that:
+    typedef T element_type;
+    typedef typename std11::remove_cv< T >::type value_type;
 
-        template<
-            class Container, class ElementType
-            , class = typename std::enable_if<
-            !detail::is_span< Container >::value &&
-            !detail::is_array< Container >::value &&
-            !detail::is_std_array< Container >::value &&
-            std::is_convertible<typename std::remove_pointer<decltype(std::declval<Container>().data())>::type(*)[], ElementType(*)[] >::value
-            >::type
-#if span_HAVE( DATA )
-            // data(cont) and size(cont) well-formed:
-            , class = decltype(std::data(std::declval<Container>()))
-            , class = decltype(std::size(std::declval<Container>()))
-#endif
-        >
-            struct can_construct_from : detail::true_type {};
+    typedef T &       reference;
+    typedef T *       pointer;
+    typedef T const * const_pointer;
+    typedef T const & const_reference;
 
-#endif
+    typedef index_t   index_type;
+    typedef extent_t  extent_type;
 
-        //
-        // [views.span] - A view over a contiguous, single-dimension sequence of objects
-        //
-        template< class T, extent_t Extent /*= dynamic_extent*/ >
-        class span
-        {
-        public:
-            // constants and types
+    typedef pointer        iterator;
+    typedef const_pointer  const_iterator;
 
-            typedef T element_type;
-            typedef typename detail::remove_cv< T >::type value_type;
+    typedef std::ptrdiff_t difference_type;
 
-            typedef T &       reference;
-            typedef T *       pointer;
-            typedef T const * const_pointer;
-            typedef T const & const_reference;
+    typedef std::reverse_iterator< iterator >       reverse_iterator;
+    typedef std::reverse_iterator< const_iterator > const_reverse_iterator;
 
-            typedef index_t   index_type;
-            typedef extent_t  extent_type;
+//    static constexpr extent_type extent = Extent;
+    enum { extent = Extent };
 
-            typedef pointer        iterator;
-            typedef const_pointer  const_iterator;
-
-            typedef std::ptrdiff_t difference_type;
-
-            typedef std::reverse_iterator< iterator >       reverse_iterator;
-            typedef std::reverse_iterator< const_iterator > const_reverse_iterator;
-
-            //    static constexpr extent_type extent = Extent;
-            enum { extent = Extent };
-
-            // 26.7.3.2 Constructors, copy, and assignment [span.cons]
+    // 26.7.3.2 Constructors, copy, and assignment [span.cons]
 
 #if span_HAVE( DEFAULT_FUNCTION_TEMPLATE_ARG )
-            template< bool Dependent = false
-                , class = typename std::enable_if< (Dependent || Extent <= 0) >::type >
+    span_REQUIRES_0(( Extent <= 0 ))
 #endif
-                span_constexpr span() span_noexcept
-                : data_(span_nullptr)
-                , size_(0)
-            {
-                // span_EXPECTS( data() == span_nullptr );
-                // span_EXPECTS( size() == 0 );
-            }
+    span_constexpr span() span_noexcept
+        : data_( span_nullptr )
+        , size_( 0 )
+    {
+        // span_EXPECTS( data() == span_nullptr );
+        // span_EXPECTS( size() == 0 );
+    }
 
-            span_constexpr_exp span(pointer ptr, index_type count)
-                : data_(ptr)
-                , size_(count)
-            {
-                span_EXPECTS(
-                    (ptr == span_nullptr && count == 0) ||
-                    (ptr != span_nullptr && count >= 0)
-                );
-            }
+    span_constexpr_exp span( pointer ptr, index_type count )
+        : data_( ptr )
+        , size_( count )
+    {
+        span_EXPECTS(
+            ( ptr == span_nullptr && count == 0 ) ||
+            ( ptr != span_nullptr && count >= 0 )
+        );
+    }
 
-            span_constexpr_exp span(pointer firstElem, pointer lastElem)
-                : data_(firstElem)
-                , size_(to_size(std::distance(firstElem, lastElem)))
-            {
-                span_EXPECTS(
-                    std::distance(firstElem, lastElem) >= 0
-                );
-            }
+    span_constexpr_exp span( pointer firstElem, pointer lastElem )
+        : data_( firstElem )
+        , size_( to_size( std::distance( firstElem, lastElem ) ) )
+    {
+        span_EXPECTS(
+            std::distance( firstElem, lastElem ) >= 0
+        );
+    }
 
-            template< size_t N
+    template< size_t N
 #if span_HAVE( DEFAULT_FUNCTION_TEMPLATE_ARG )
-                , class = typename std::enable_if<
-                (Extent == dynamic_extent || Extent == static_cast<extent_t>(N)) &&
-                std::is_convertible<value_type(*)[], element_type(*)[] >::value
-                >::type
+        span_REQUIRES_T((
+            (Extent == dynamic_extent || Extent == static_cast<extent_t>(N))
+            && std::is_convertible< value_type(*)[], element_type(*)[] >::value
+        ))
 #endif
-            >
-                span_constexpr span(element_type(&arr)[N]) span_noexcept
-                : data_(span_ADDRESSOF(arr[0]))
-                , size_(N)
-            {}
+    >
+    span_constexpr span( element_type ( &arr )[ N ] ) span_noexcept
+        : data_( span_ADDRESSOF( arr[0] ) )
+        , size_( N  )
+    {}
 
 #if span_HAVE( ARRAY )
 
-            template< size_t N
+    template< size_t N
 # if span_HAVE( DEFAULT_FUNCTION_TEMPLATE_ARG )
-                , class = typename std::enable_if<
-                (Extent == dynamic_extent || Extent == static_cast<extent_t>(N)) &&
-                std::is_convertible<value_type(*)[], element_type(*)[] >::value
-                >::type
+        span_REQUIRES_T((
+            (Extent == dynamic_extent || Extent == static_cast<extent_t>(N))
+            && std::is_convertible< value_type(*)[], element_type(*)[] >::value
+        ))
 # endif
-            >
+    >
 # if span_FEATURE( CONSTRUCTION_FROM_STDARRAY_ELEMENT_TYPE )
-                span_constexpr span(std::array< element_type, N > & arr) span_noexcept
+        span_constexpr span( std::array< element_type, N > & arr ) span_noexcept
 # else
-                span_constexpr span(std::array< value_type, N > & arr) span_noexcept
+        span_constexpr span( std::array< value_type, N > & arr ) span_noexcept
 # endif
-                : data_(span_ADDRESSOF(arr[0]))
-                , size_(to_size(arr.size()))
-            {}
+        : data_( span_ADDRESSOF( arr[0] ) )
+        , size_( to_size( arr.size() ) )
+    {}
 
-            template< size_t N
+    template< size_t N
 # if span_HAVE( DEFAULT_FUNCTION_TEMPLATE_ARG )
-                , class = typename std::enable_if<
-                (Extent == dynamic_extent || Extent == static_cast<extent_t>(N)) &&
-                std::is_convertible<value_type(*)[], element_type(*)[] >::value
-                >::type
+        span_REQUIRES_T((
+            (Extent == dynamic_extent || Extent == static_cast<extent_t>(N))
+            && std::is_convertible< value_type(*)[], element_type(*)[] >::value
+        ))
 # endif
-            >
-                span_constexpr span(std::array< value_type, N> const & arr) span_noexcept
-                : data_(span_ADDRESSOF(arr[0]))
-                , size_(to_size(arr.size()))
-            {}
+    >
+    span_constexpr span( std::array< value_type, N> const & arr ) span_noexcept
+        : data_( span_ADDRESSOF( arr[0] ) )
+        , size_( to_size( arr.size() ) )
+    {}
 
 #endif // span_HAVE( ARRAY )
 
 #if span_HAVE( CONSTRAINED_SPAN_CONTAINER_CTOR )
-            template< class Container
-                , class = typename std::enable_if<
-                can_construct_from< Container, element_type >::value
-                >::type
-            >
-                span_constexpr span(Container & cont)
-                : data_(cont.data())
-                , size_(to_size(cont.size()))
-            {}
+    template< class Container
+        span_REQUIRES_T((
+            detail::is_compatible_container< Container, element_type >::value
+        ))
+    >
+    span_constexpr span( Container & cont )
+        : data_( std17::data( cont ) )
+        , size_( to_size( std17::size( cont ) ) )
+    {}
 
-            template< class Container
-                , class = typename std::enable_if<
-                std::is_const< element_type >::value &&
-                can_construct_from< Container, element_type >::value
-                >::type
-            >
-                span_constexpr span(Container const & cont)
-                : data_(cont.data())
-                , size_(to_size(cont.size()))
-            {}
+    template< class Container
+        span_REQUIRES_T((
+            std::is_const< element_type >::value
+            && detail::is_compatible_container< Container, element_type >::value
+        ))
+    >
+    span_constexpr span( Container const & cont )
+        : data_( std17::data( cont ) )
+        , size_( to_size( std17::size( cont ) ) )
+    {}
 
 #endif // span_HAVE( CONSTRAINED_SPAN_CONTAINER_CTOR )
 
 #if span_FEATURE( WITH_CONTAINER )
 
-            template< class Container >
-            span_constexpr span(with_container_t, Container & cont)
-                : data_(cont.size() == 0 ? span_nullptr : span_ADDRESSOF(cont[0]))
-                , size_(to_size(cont.size()))
-            {}
+    template< class Container >
+    span_constexpr span( with_container_t, Container & cont )
+        : data_( cont.size() == 0 ? span_nullptr : span_ADDRESSOF( cont[0] ) )
+        , size_( to_size( cont.size() ) )
+    {}
 
-            template< class Container >
-            span_constexpr span(with_container_t, Container const & cont)
-                : data_(cont.size() == 0 ? span_nullptr : const_cast<pointer>(span_ADDRESSOF(cont[0])))
-                , size_(to_size(cont.size()))
-            {}
+    template< class Container >
+    span_constexpr span( with_container_t, Container const & cont )
+        : data_( cont.size() == 0 ? span_nullptr : const_cast<pointer>( span_ADDRESSOF( cont[0] ) ) )
+        , size_( to_size( cont.size() ) )
+    {}
 #endif
 
 #if span_HAVE( IS_DEFAULT )
-            span_constexpr span(span const & other) span_noexcept = default;
+    span_constexpr span( span const & other ) span_noexcept = default;
 
-            ~span() span_noexcept = default;
+    ~span() span_noexcept = default;
 
-            span_constexpr14 span & operator=(span const & other) span_noexcept = default;
+    span_constexpr14 span & operator=( span const & other ) span_noexcept = default;
 #else
-            span_constexpr span(span const & other) span_noexcept
-                : data_(other.data_)
-                , size_(other.size_)
-            {}
+    span_constexpr span( span const & other ) span_noexcept
+        : data_( other.data_ )
+        , size_( other.size_ )
+    {}
 
-            ~span() span_noexcept
-            {}
+    ~span() span_noexcept
+    {}
 
-            span_constexpr14 span & operator=(span const & other) span_noexcept
-            {
-                data_ = other.data_;
-                size_ = other.size_;
+    span_constexpr14 span & operator=( span const & other ) span_noexcept
+    {
+        data_ = other.data_;
+        size_ = other.size_;
 
-                return *this;
-            }
+        return *this;
+    }
 #endif
 
-            template< class OtherElementType, extent_type OtherExtent
+    template< class OtherElementType, extent_type OtherExtent
 #if span_HAVE( DEFAULT_FUNCTION_TEMPLATE_ARG )
-                , class = typename std::enable_if<
-                (Extent == dynamic_extent || Extent == OtherExtent) &&
-                std::is_convertible<OtherElementType(*)[], element_type(*)[]>::value
-                >::type
+        span_REQUIRES_T((
+            (Extent == dynamic_extent || Extent == OtherExtent)
+            && std::is_convertible<OtherElementType(*)[], element_type(*)[]>::value
+        ))
 #endif
-            >
-                span_constexpr_exp span(span<OtherElementType, OtherExtent> const & other) span_noexcept
-                : data_(reinterpret_cast<pointer>(other.data()))
-                , size_(other.size())
-            {
-                span_EXPECTS(OtherExtent == dynamic_extent || other.size() == to_size(OtherExtent));
-            }
+    >
+    span_constexpr_exp span( span<OtherElementType, OtherExtent> const & other ) span_noexcept
+        : data_( reinterpret_cast<pointer>( other.data() ) )
+        , size_( other.size() )
+    {
+        span_EXPECTS( OtherExtent == dynamic_extent || other.size() == to_size(OtherExtent) );
+    }
 
-            // 26.7.3.3 Subviews [span.sub]
+    // 26.7.3.3 Subviews [span.sub]
 
-            template< extent_type Count >
-            span_constexpr_exp span< element_type, Count >
-                first() const
-            {
-                span_EXPECTS(0 <= Count && Count <= size());
+    template< extent_type Count >
+    span_constexpr_exp span< element_type, Count >
+    first() const
+    {
+        span_EXPECTS( 0 <= Count && Count <= size() );
 
-                return span< element_type, Count >(data(), Count);
-            }
+        return span< element_type, Count >( data(), Count );
+    }
 
-            template< extent_type Count >
-            span_constexpr_exp span< element_type, Count >
-                last() const
-            {
-                span_EXPECTS(0 <= Count && Count <= size());
+    template< extent_type Count >
+    span_constexpr_exp span< element_type, Count >
+    last() const
+    {
+        span_EXPECTS( 0 <= Count && Count <= size() );
 
-                return span< element_type, Count >(data() + (size() - Count), Count);
-            }
+        return span< element_type, Count >( data() + (size() - Count), Count );
+    }
 
 #if span_HAVE( DEFAULT_FUNCTION_TEMPLATE_ARG )
-            template< index_type Offset, extent_type Count = dynamic_extent >
+    template< index_type Offset, extent_type Count = dynamic_extent >
 #else
-            template< index_type Offset, extent_type Count /*= dynamic_extent*/ >
+    template< index_type Offset, extent_type Count /*= dynamic_extent*/ >
 #endif
-            span_constexpr_exp span< element_type, Count >
-                subspan() const
-            {
-                span_EXPECTS(
-                    (0 <= Offset && Offset <= size()) &&
-                    (Count == dynamic_extent || (0 <= Count && Count + Offset <= size()))
-                );
+    span_constexpr_exp span< element_type, Count >
+    subspan() const
+    {
+        span_EXPECTS(
+            ( 0 <= Offset && Offset <= size() ) &&
+            ( Count == dynamic_extent || (0 <= Count && Count + Offset <= size()) )
+        );
 
-                return span< element_type, Count >(
-                    data() + Offset, Count != dynamic_extent ? Count : (Extent != dynamic_extent ? Extent - Offset : size() - Offset));
-            }
+        return span< element_type, Count >(
+            data() + Offset, Count != dynamic_extent ? Count : (Extent != dynamic_extent ? Extent - Offset : size() - Offset) );
+    }
 
-            span_constexpr_exp span< element_type, dynamic_extent >
-                first(index_type count) const
-            {
-                span_EXPECTS(0 <= count && count <= size());
+    span_constexpr_exp span< element_type, dynamic_extent >
+    first( index_type count ) const
+    {
+        span_EXPECTS( 0 <= count && count <= size() );
 
-                return span< element_type, dynamic_extent >(data(), count);
-            }
+        return span< element_type, dynamic_extent >( data(), count );
+    }
 
-            span_constexpr_exp span< element_type, dynamic_extent >
-                last(index_type count) const
-            {
-                span_EXPECTS(0 <= count && count <= size());
+    span_constexpr_exp span< element_type, dynamic_extent >
+    last( index_type count ) const
+    {
+        span_EXPECTS( 0 <= count && count <= size() );
 
-                return span< element_type, dynamic_extent >(data() + (size() - count), count);
-            }
+        return span< element_type, dynamic_extent >( data() + ( size() - count ), count );
+    }
 
-            span_constexpr_exp span< element_type, dynamic_extent >
-                subspan(index_type offset, index_type count = static_cast<index_type>(dynamic_extent)) const
-            {
-                span_EXPECTS(
-                    ((0 <= offset && offset <= size())) &&
-                    (count == static_cast<index_type>(dynamic_extent) || (0 <= count && offset + count <= size()))
-                );
+    span_constexpr_exp span< element_type, dynamic_extent >
+    subspan( index_type offset, index_type count = static_cast<index_type>(dynamic_extent) ) const
+    {
+        span_EXPECTS(
+            ( ( 0 <= offset  && offset <= size() ) ) &&
+            ( count == static_cast<index_type>(dynamic_extent) || ( 0 <= count && offset + count <= size() ) )
+        );
 
-                return span< element_type, dynamic_extent >(
-                    data() + offset, count == static_cast<index_type>(dynamic_extent) ? size() - offset : count);
-            }
+        return span< element_type, dynamic_extent >(
+            data() + offset, count == static_cast<index_type>(dynamic_extent) ? size() - offset : count );
+    }
 
-            // 26.7.3.4 Observers [span.obs]
+    // 26.7.3.4 Observers [span.obs]
 
-            span_constexpr index_type size() const span_noexcept
-            {
-                return size_;
-            }
+    span_constexpr index_type size() const span_noexcept
+    {
+        return size_;
+    }
 
-            span_constexpr std::ptrdiff_t ssize() const span_noexcept
-            {
-                return static_cast<std::ptrdiff_t>(size_);
-            }
+    span_constexpr std::ptrdiff_t ssize() const span_noexcept
+    {
+        return static_cast<std::ptrdiff_t>( size_ );
+    }
 
-            span_constexpr index_type size_bytes() const span_noexcept
-            {
-                return size() * to_size(sizeof(element_type));
-            }
+    span_constexpr index_type size_bytes() const span_noexcept
+    {
+        return size() * to_size( sizeof( element_type ) );
+    }
 
-            span_nodiscard span_constexpr bool empty() const span_noexcept
-            {
-                return size() == 0;
-            }
+    span_nodiscard span_constexpr bool empty() const span_noexcept
+    {
+        return size() == 0;
+    }
 
-            // 26.7.3.5 Element access [span.elem]
+    // 26.7.3.5 Element access [span.elem]
 
-            span_constexpr_exp reference operator[](index_type idx) const
-            {
-                span_EXPECTS(0 <= idx && idx < size());
+    span_constexpr_exp reference operator[]( index_type idx ) const
+    {
+        span_EXPECTS( 0 <= idx && idx < size() );
 
-                return *(data() + idx);
-            }
+        return *( data() + idx );
+    }
 
 #if span_FEATURE( MEMBER_CALL_OPERATOR )
-            span_deprecated("replace operator() with operator[]")
+    span_deprecated("replace operator() with operator[]")
 
-                span_constexpr_exp reference operator()(index_type idx) const
-            {
-                span_EXPECTS(0 <= idx && idx < size());
+    span_constexpr_exp reference operator()( index_type idx ) const
+    {
+        span_EXPECTS( 0 <= idx && idx < size() );
 
-                return *(data() + idx);
-            }
+        return *( data() + idx );
+    }
 #endif
 
 #if span_FEATURE( MEMBER_AT )
-            span_constexpr14 reference at(index_type idx) const
-            {
+    span_constexpr14 reference at( index_type idx ) const
+    {
 #if span_CONFIG( NO_EXCEPTIONS )
-                return this->operator[](idx);
+        return this->operator[]( idx );
 #else
-                if (idx < 0 || size() <= idx)
-                {
-                    detail::throw_out_of_range(idx, size());
-                }
-                return *(data() + idx);
+        if ( idx < 0 || size() <= idx )
+        {
+            detail::throw_out_of_range( idx, size() );
+        }
+        return *( data() + idx );
 #endif
-            }
+    }
 #endif
 
-            span_constexpr pointer data() const span_noexcept
-            {
-                return data_;
-            }
+    span_constexpr pointer data() const span_noexcept
+    {
+        return data_;
+    }
 
 #if span_FEATURE( MEMBER_BACK_FRONT )
 
-            span_constexpr_exp reference front() const span_noexcept
-            {
-                span_EXPECTS(!empty());
+    span_constexpr_exp reference front() const span_noexcept
+    {
+        span_EXPECTS( ! empty() );
 
-                return *data();
-            }
+        return *data();
+    }
 
-            span_constexpr_exp reference back() const span_noexcept
-            {
-                span_EXPECTS(!empty());
+    span_constexpr_exp reference back() const span_noexcept
+    {
+        span_EXPECTS( ! empty() );
 
-                return *(data() + size() - 1);
-            }
+        return *( data() + size() - 1 );
+    }
 
 #endif
 
-            // xx.x.x.x Modifiers [span.modifiers]
+    // xx.x.x.x Modifiers [span.modifiers]
 
 #if span_FEATURE( MEMBER_SWAP )
 
-            span_constexpr14 void swap(span & other) span_noexcept
-            {
-                using std::swap;
-                swap(data_, other.data_);
-                swap(size_, other.size_);
-            }
+    span_constexpr14 void swap( span & other ) span_noexcept
+    {
+        using std::swap;
+        swap( data_, other.data_ );
+        swap( size_, other.size_ );
+    }
 #endif
 
-            // 26.7.3.6 Iterator support [span.iterators]
+    // 26.7.3.6 Iterator support [span.iterators]
 
-            span_constexpr iterator begin() const span_noexcept
-            {
+    span_constexpr iterator begin() const span_noexcept
+    {
 #if span_CPP11_OR_GREATER
-                return { data() };
+        return { data() };
 #else
-                return iterator(data());
+        return iterator( data() );
 #endif
-            }
+    }
 
-            span_constexpr iterator end() const span_noexcept
-            {
+    span_constexpr iterator end() const span_noexcept
+    {
 #if span_CPP11_OR_GREATER
-                return { data() + size() };
+        return { data() + size() };
 #else
-                return iterator(data() + size());
+        return iterator( data() + size() );
 #endif
-            }
+    }
 
-            span_constexpr const_iterator cbegin() const span_noexcept
-            {
+    span_constexpr const_iterator cbegin() const span_noexcept
+    {
 #if span_CPP11_OR_GREATER
-                return { data() };
+        return { data() };
 #else
-                return const_iterator(data());
+        return const_iterator( data() );
 #endif
-            }
+    }
 
-            span_constexpr const_iterator cend() const span_noexcept
-            {
+    span_constexpr const_iterator cend() const span_noexcept
+    {
 #if span_CPP11_OR_GREATER
-                return { data() + size() };
+        return { data() + size() };
 #else
-                return const_iterator(data() + size());
+        return const_iterator( data() + size() );
 #endif
-            }
+    }
 
-            span_constexpr reverse_iterator rbegin() const span_noexcept
-            {
-                return reverse_iterator(end());
-            }
+    span_constexpr reverse_iterator rbegin() const span_noexcept
+    {
+        return reverse_iterator( end() );
+    }
 
-            span_constexpr reverse_iterator rend() const span_noexcept
-            {
-                return reverse_iterator(begin());
-            }
+    span_constexpr reverse_iterator rend() const span_noexcept
+    {
+        return reverse_iterator( begin() );
+    }
 
-            span_constexpr const_reverse_iterator crbegin() const span_noexcept
-            {
-                return const_reverse_iterator(cend());
-            }
+    span_constexpr const_reverse_iterator crbegin() const span_noexcept
+    {
+        return const_reverse_iterator ( cend() );
+    }
 
-            span_constexpr const_reverse_iterator crend() const span_noexcept
-            {
-                return const_reverse_iterator(cbegin());
-            }
+    span_constexpr const_reverse_iterator crend() const span_noexcept
+    {
+        return const_reverse_iterator( cbegin() );
+    }
 
-        private:
-            pointer    data_;
-            index_type size_;
-        };
+private:
+    pointer    data_;
+    index_type size_;
+};
 
-        // class template argument deduction guides:
+// class template argument deduction guides:
 
 #if span_HAVE( DEDUCTION_GUIDES )   // span_CPP17_OR_GREATER
 
-        template< class T, size_t N >
-        span(T(&)[N])->span<T, static_cast<extent_t>(N)>;
+template< class T, size_t N >
+span( T (&)[N] ) -> span<T, static_cast<extent_t>(N)>;
 
-        template< class T, size_t N >
-        span(std::array<T, N> &)->span<T, static_cast<extent_t>(N)>;
+template< class T, size_t N >
+span( std::array<T, N> & ) -> span<T, static_cast<extent_t>(N)>;
 
-        template< class T, size_t N >
-        span(std::array<T, N> const &)->span<const T, static_cast<extent_t>(N)>;
+template< class T, size_t N >
+span( std::array<T, N> const & ) -> span<const T, static_cast<extent_t>(N)>;
 
-        template< class Container >
-        span(Container&)->span<typename Container::value_type>;
+template< class Container >
+span( Container& ) -> span<typename Container::value_type>;
 
-        template< class Container >
-        span(Container const &)->span<const typename Container::value_type>;
+template< class Container >
+span( Container const & ) -> span<const typename Container::value_type>;
 
 #endif // span_HAVE( DEDUCTION_GUIDES )
 
-        // 26.7.3.7 Comparison operators [span.comparison]
+// 26.7.3.7 Comparison operators [span.comparison]
 
+#if span_FEATURE( COMPARISON )
 #if span_FEATURE( SAME )
 
-        template< class T1, extent_t E1, class T2, extent_t E2  >
-        inline span_constexpr bool same(span<T1, E1> const & l, span<T2, E2> const & r) span_noexcept
-        {
-            return detail::is_same<T1, T2>::value
-                && l.size() == r.size()
-                && static_cast<void const*>(l.data()) == r.data();
-        }
+template< class T1, extent_t E1, class T2, extent_t E2  >
+inline span_constexpr bool same( span<T1,E1> const & l, span<T2,E2> const & r ) span_noexcept
+{
+    return std11::is_same<T1, T2>::value
+        && l.size() == r.size()
+        && static_cast<void const*>( l.data() ) == r.data();
+}
 
 #endif
 
-        template< class T1, extent_t E1, class T2, extent_t E2  >
-        inline span_constexpr bool operator==(span<T1, E1> const & l, span<T2, E2> const & r)
-        {
-            return
+template< class T1, extent_t E1, class T2, extent_t E2  >
+inline span_constexpr bool operator==( span<T1,E1> const & l, span<T2,E2> const & r )
+{
+    return
 #if span_FEATURE( SAME )
-                same(l, r) ||
+        same( l, r ) ||
 #endif
-                (l.size() == r.size() && std::equal(l.begin(), l.end(), r.begin()));
-        }
+        ( l.size() == r.size() && std::equal( l.begin(), l.end(), r.begin() ) );
+}
 
-        template< class T1, extent_t E1, class T2, extent_t E2  >
-        inline span_constexpr bool operator<(span<T1, E1> const & l, span<T2, E2> const & r)
-        {
-            return std::lexicographical_compare(l.begin(), l.end(), r.begin(), r.end());
-        }
+template< class T1, extent_t E1, class T2, extent_t E2  >
+inline span_constexpr bool operator<( span<T1,E1> const & l, span<T2,E2> const & r )
+{
+    return std::lexicographical_compare( l.begin(), l.end(), r.begin(), r.end() );
+}
 
-        template< class T1, extent_t E1, class T2, extent_t E2  >
-        inline span_constexpr bool operator!=(span<T1, E1> const & l, span<T2, E2> const & r)
-        {
-            return !(l == r);
-        }
+template< class T1, extent_t E1, class T2, extent_t E2  >
+inline span_constexpr bool operator!=( span<T1,E1> const & l, span<T2,E2> const & r )
+{
+    return !( l == r );
+}
 
-        template< class T1, extent_t E1, class T2, extent_t E2  >
-        inline span_constexpr bool operator<=(span<T1, E1> const & l, span<T2, E2> const & r)
-        {
-            return !(r < l);
-        }
+template< class T1, extent_t E1, class T2, extent_t E2  >
+inline span_constexpr bool operator<=( span<T1,E1> const & l, span<T2,E2> const & r )
+{
+    return !( r < l );
+}
 
-        template< class T1, extent_t E1, class T2, extent_t E2  >
-        inline span_constexpr bool operator>(span<T1, E1> const & l, span<T2, E2> const & r)
-        {
-            return (r < l);
-        }
+template< class T1, extent_t E1, class T2, extent_t E2  >
+inline span_constexpr bool operator>( span<T1,E1> const & l, span<T2,E2> const & r )
+{
+    return ( r < l );
+}
 
-        template< class T1, extent_t E1, class T2, extent_t E2  >
-        inline span_constexpr bool operator>=(span<T1, E1> const & l, span<T2, E2> const & r)
-        {
-            return !(l < r);
-        }
+template< class T1, extent_t E1, class T2, extent_t E2  >
+inline span_constexpr bool operator>=( span<T1,E1> const & l, span<T2,E2> const & r )
+{
+    return !( l < r );
+}
 
-        // 26.7.2.6 views of object representation [span.objectrep]
+#endif // span_FEATURE( COMPARISON )
+
+// 26.7.2.6 views of object representation [span.objectrep]
 
 #if span_HAVE( BYTE ) || span_HAVE( NONSTD_BYTE )
 
-        template< class T, extent_t Extent >
-        inline span_constexpr span< const detail::byte, ((Extent == dynamic_extent) ? dynamic_extent : (span_sizeof(T) * Extent)) >
-            as_bytes(span<T, Extent> spn) span_noexcept
-        {
+template< class T, extent_t Extent >
+inline span_constexpr span< const std17::byte, ( (Extent == dynamic_extent) ? dynamic_extent : (span_sizeof(T) * Extent) ) >
+as_bytes( span<T,Extent> spn ) span_noexcept
+{
 #if 0
-            return { reinterpret_cast<detail::byte const *>(spn.data()), spn.size_bytes() };
+    return { reinterpret_cast< std17::byte const * >( spn.data() ), spn.size_bytes() };
 #else
-            return span< const detail::byte, ((Extent == dynamic_extent) ? dynamic_extent : (span_sizeof(T) * Extent)) >(
-                reinterpret_cast<detail::byte const *>(spn.data()), spn.size_bytes());  // NOLINT
+    return span< const std17::byte, ( (Extent == dynamic_extent) ? dynamic_extent : (span_sizeof(T) * Extent) ) >(
+        reinterpret_cast< std17::byte const * >( spn.data() ), spn.size_bytes() );  // NOLINT
 #endif
-        }
+}
 
-        template< class T, extent_t Extent >
-        inline span_constexpr span< detail::byte, ((Extent == dynamic_extent) ? dynamic_extent : (span_sizeof(T) * Extent)) >
-            as_writeable_bytes(span<T, Extent> spn) span_noexcept
-        {
+template< class T, extent_t Extent >
+inline span_constexpr span< std17::byte, ( (Extent == dynamic_extent) ? dynamic_extent : (span_sizeof(T) * Extent) ) >
+as_writeable_bytes( span<T,Extent> spn ) span_noexcept
+{
 #if 0
-            return { reinterpret_cast<detail::byte *>(spn.data()), spn.size_bytes() };
+    return { reinterpret_cast< std17::byte * >( spn.data() ), spn.size_bytes() };
 #else
-            return span< detail::byte, ((Extent == dynamic_extent) ? dynamic_extent : (span_sizeof(T) * Extent)) >(
-                reinterpret_cast<detail::byte *>(spn.data()), spn.size_bytes());  // NOLINT
+    return span< std17::byte, ( (Extent == dynamic_extent) ? dynamic_extent : (span_sizeof(T) * Extent) ) >(
+        reinterpret_cast< std17::byte * >( spn.data() ), spn.size_bytes() );  // NOLINT
 #endif
-        }
+}
 
 #endif // span_HAVE( BYTE ) || span_HAVE( NONSTD_BYTE )
 
-        // extensions: non-member views:
-        // this feature implies the presence of make_span()
+// extensions: non-member views:
+// this feature implies the presence of make_span()
 
 #if span_FEATURE( NON_MEMBER_FIRST_LAST_SUB ) && span_CPP11_120
 
-        template< extent_t Count, class T >
-        span_constexpr auto
-            first(T & t) -> decltype(make_span(t).template first<Count>())
-        {
-            return make_span(t).template first<Count>();
-        }
+template< extent_t Count, class T >
+span_constexpr auto
+first( T & t ) -> decltype( make_span(t).template first<Count>() )
+{
+    return make_span( t ).template first<Count>();
+}
 
-        template< class T >
-        span_constexpr auto
-            first(T & t, index_t count) -> decltype(make_span(t).first(count))
-        {
-            return make_span(t).first(count);
-        }
+template< class T >
+span_constexpr auto
+first( T & t, index_t count ) -> decltype( make_span(t).first(count) )
+{
+    return make_span( t ).first( count );
+}
 
-        template< extent_t Count, class T >
-        span_constexpr auto
-            last(T & t) -> decltype(make_span(t).template last<Count>())
-        {
-            return make_span(t).template last<Count>();
-        }
+template< extent_t Count, class T >
+span_constexpr auto
+last( T & t ) -> decltype( make_span(t).template last<Count>() )
+{
+    return make_span(t).template last<Count>();
+}
 
-        template< class T >
-        span_constexpr auto
-            last(T & t, extent_t count) -> decltype(make_span(t).last(count))
-        {
-            return make_span(t).last(count);
-        }
+template< class T >
+span_constexpr auto
+last( T & t, extent_t count ) -> decltype( make_span(t).last(count) )
+{
+    return make_span( t ).last( count );
+}
 
-        template< index_t Offset, extent_t Count = dynamic_extent, class T >
-        span_constexpr auto
-            subspan(T & t) -> decltype(make_span(t).template subspan<Offset, Count>())
-        {
-            return make_span(t).template subspan<Offset, Count>();
-        }
+template< index_t Offset, extent_t Count = dynamic_extent, class T >
+span_constexpr auto
+subspan( T & t ) -> decltype( make_span(t).template subspan<Offset, Count>() )
+{
+    return make_span( t ).template subspan<Offset, Count>();
+}
 
-        template< class T >
-        span_constexpr auto
-            subspan(T & t, index_t offset, extent_t count = dynamic_extent) -> decltype(make_span(t).subspan(offset, count))
-        {
-            return make_span(t).subspan(offset, count);
-        }
+template< class T >
+span_constexpr auto
+subspan( T & t, index_t offset, extent_t count = dynamic_extent ) -> decltype( make_span(t).subspan(offset, count) )
+{
+    return make_span( t ).subspan( offset, count );
+}
 
 #endif // span_FEATURE( NON_MEMBER_FIRST_LAST_SUB )
 
-        // 27.8 Container and view access [iterator.container]
+// 27.8 Container and view access [iterator.container]
 
-        template< class T, extent_t Extent /*= dynamic_extent*/ >
-        span_constexpr std::size_t size(span<T, Extent> const & spn)
-        {
-            return static_cast<std::size_t>(spn.size());
-        }
+template< class T, extent_t Extent /*= dynamic_extent*/ >
+span_constexpr std::size_t size( span<T,Extent> const & spn )
+{
+    return static_cast<std::size_t>( spn.size() );
+}
 
-        template< class T, extent_t Extent /*= dynamic_extent*/ >
-        span_constexpr std::ptrdiff_t ssize(span<T, Extent> const & spn)
-        {
-            return static_cast<std::ptrdiff_t>(spn.size());
-        }
+template< class T, extent_t Extent /*= dynamic_extent*/ >
+span_constexpr std::ptrdiff_t ssize( span<T,Extent> const & spn )
+{
+    return static_cast<std::ptrdiff_t>( spn.size() );
+}
 
-    }  // namespace span_lite
+}  // namespace span_lite
 }  // namespace nonstd
 
 // make available in nonstd:
 
 namespace nonstd {
 
-    using span_lite::dynamic_extent;
+using span_lite::dynamic_extent;
 
-    using span_lite::span;
+using span_lite::span;
 
-    using span_lite::with_container;
+using span_lite::with_container;
 
-    using span_lite::operator==;
-    using span_lite::operator!=;
-    using span_lite::operator<;
-    using span_lite::operator<=;
-    using span_lite::operator>;
-    using span_lite::operator>=;
+#if span_FEATURE( COMPARISON )
+#if span_FEATURE( SAME )
+using span_lite::same;
+#endif
+
+using span_lite::operator==;
+using span_lite::operator!=;
+using span_lite::operator<;
+using span_lite::operator<=;
+using span_lite::operator>;
+using span_lite::operator>=;
+#endif
 
 #if span_HAVE( BYTE )
-    using span_lite::as_bytes;
-    using span_lite::as_writeable_bytes;
+using span_lite::as_bytes;
+using span_lite::as_writeable_bytes;
 #endif
 
-#if span_FEATURE( SAME )
-    using span_lite::same;
-#endif
-
-    using span_lite::size;
-    using span_lite::ssize;
+using span_lite::size;
+using span_lite::ssize;
 
 }  // namespace nonstd
 
@@ -1270,107 +1401,107 @@ namespace nonstd {
 #if span_FEATURE( MAKE_SPAN ) || span_FEATURE( NON_MEMBER_FIRST_LAST_SUB )
 
 namespace nonstd {
-    namespace span_lite {
+namespace span_lite {
 
-        template< class T >
-        inline span_constexpr span<T>
-            make_span(T * ptr, index_t count) span_noexcept
-        {
-            return span<T>(ptr, count);
-        }
+template< class T >
+inline span_constexpr span<T>
+make_span( T * ptr, index_t count ) span_noexcept
+{
+    return span<T>( ptr, count );
+}
 
-        template< class T >
-        inline span_constexpr span<T>
-            make_span(T * first, T * last) span_noexcept
-        {
-            return span<T>(first, last);
-        }
+template< class T >
+inline span_constexpr span<T>
+make_span( T * first, T * last ) span_noexcept
+{
+    return span<T>( first, last );
+}
 
-        template< class T, size_t N >
-        inline span_constexpr span<T, static_cast<extent_t>(N)>
-            make_span(T(&arr)[N]) span_noexcept
-        {
-            return span<T, static_cast<extent_t>(N)>(&arr[0], N);
-        }
+template< class T, size_t N >
+inline span_constexpr span<T, static_cast<extent_t>(N)>
+make_span( T ( &arr )[ N ] ) span_noexcept
+{
+    return span<T, static_cast<extent_t>(N)>( &arr[ 0 ], N );
+}
 
 #if span_USES_STD_SPAN || span_HAVE( ARRAY )
 
-        template< class T, size_t N >
-        inline span_constexpr span<T, static_cast<extent_t>(N)>
-            make_span(std::array< T, N > & arr) span_noexcept
-        {
-            return span<T, static_cast<extent_t>(N)>(arr);
-        }
+template< class T, size_t N >
+inline span_constexpr span<T, static_cast<extent_t>(N)>
+make_span( std::array< T, N > & arr ) span_noexcept
+{
+    return span<T, static_cast<extent_t>(N)>( arr );
+}
 
-        template< class T, size_t N >
-        inline span_constexpr span< const T, static_cast<extent_t>(N) >
-            make_span(std::array< T, N > const & arr) span_noexcept
-        {
-            return span<const T, static_cast<extent_t>(N)>(arr);
-        }
+template< class T, size_t N >
+inline span_constexpr span< const T, static_cast<extent_t>(N) >
+make_span( std::array< T, N > const & arr ) span_noexcept
+{
+    return span<const T, static_cast<extent_t>(N)>( arr );
+}
 
 #endif // span_HAVE( ARRAY )
 
 #if span_USES_STD_SPAN || ( span_HAVE( CONSTRAINED_SPAN_CONTAINER_CTOR ) && span_HAVE( AUTO ) )
 
-        template< class Container, class = decltype(std::declval<Container>().data()) >
-        inline span_constexpr auto
-            make_span(Container & cont) span_noexcept -> span< typename Container::value_type >
-        {
-            return span< typename Container::value_type >(cont);
-        }
+template< class Container, class EP = decltype( std17::data(std::declval<Container&>())) >
+inline span_constexpr auto
+make_span( Container & cont ) span_noexcept -> span< typename std::remove_pointer<EP>::type >
+{
+    return span< typename std::remove_pointer<EP>::type >( cont );
+}
 
-        template< class Container, class = decltype(std::declval<Container>().data()) >
-        inline span_constexpr auto
-            make_span(Container const & cont) span_noexcept -> span< const typename Container::value_type >
-        {
-            return span< const typename Container::value_type >(cont);
-        }
+template< class Container, class EP = decltype( std17::data(std::declval<Container&>())) >
+inline span_constexpr auto
+make_span( Container const & cont ) span_noexcept -> span< const typename std::remove_pointer<EP>::type >
+{
+    return span< const typename std::remove_pointer<EP>::type >( cont );
+}
 
 #else
 
-        template< class T, class Allocator >
-        inline span_constexpr span<T>
-            make_span(std::vector<T, Allocator> & cont) span_noexcept
-        {
-            return span<T>(with_container, cont);
-        }
+template< class T, class Allocator >
+inline span_constexpr span<T>
+make_span( std::vector<T, Allocator> & cont ) span_noexcept
+{
+    return span<T>( with_container, cont );
+}
 
-        template< class T, class Allocator >
-        inline span_constexpr span<const T>
-            make_span(std::vector<T, Allocator> const & cont) span_noexcept
-        {
-            return span<const T>(with_container, cont);
-        }
+template< class T, class Allocator >
+inline span_constexpr span<const T>
+make_span( std::vector<T, Allocator> const & cont ) span_noexcept
+{
+    return span<const T>( with_container, cont );
+}
 
 #endif // span_USES_STD_SPAN || ( ... )
 
 #if ! span_USES_STD_SPAN && span_FEATURE( WITH_CONTAINER )
 
-        template< class Container >
-        inline span_constexpr span<typename Container::value_type>
-            make_span(with_container_t, Container & cont) span_noexcept
-        {
-            return span< typename Container::value_type >(with_container, cont);
-        }
+template< class Container >
+inline span_constexpr span<typename Container::value_type>
+make_span( with_container_t, Container & cont ) span_noexcept
+{
+    return span< typename Container::value_type >( with_container, cont );
+}
 
-        template< class Container >
-        inline span_constexpr span<const typename Container::value_type>
-            make_span(with_container_t, Container const & cont) span_noexcept
-        {
-            return span< const typename Container::value_type >(with_container, cont);
-        }
+template< class Container >
+inline span_constexpr span<const typename Container::value_type>
+make_span( with_container_t, Container const & cont ) span_noexcept
+{
+    return span< const typename Container::value_type >( with_container, cont );
+}
 
 #endif // ! span_USES_STD_SPAN && span_FEATURE( WITH_CONTAINER )
 
 
-    }  // namespace span_lite
+}  // namespace span_lite
 }  // namespace nonstd
 
 // make available in nonstd:
 
 namespace nonstd {
-    using span_lite::make_span;
+using span_lite::make_span;
 }  // namespace nonstd
 
 #endif // #if span_FEATURE_TO_STD( MAKE_SPAN )
@@ -1378,29 +1509,29 @@ namespace nonstd {
 #if span_CPP11_OR_GREATER && span_FEATURE( BYTE_SPAN ) && ( span_HAVE( BYTE ) || span_HAVE( NONSTD_BYTE ) )
 
 namespace nonstd {
-    namespace span_lite {
+namespace span_lite {
 
-        template< class T >
-        inline span_constexpr auto
-            byte_span(T & t) span_noexcept -> span< detail::byte, span_sizeof(T) >
-        {
-            return span< detail::byte, span_sizeof(t) >(reinterpret_cast<detail::byte *>(&t), span_sizeof(T));
-        }
+template< class T >
+inline span_constexpr auto
+byte_span( T & t ) span_noexcept -> span< std17::byte, span_sizeof(T) >
+{
+    return span< std17::byte, span_sizeof(t) >( reinterpret_cast< std17::byte * >( &t ), span_sizeof(T) );
+}
 
-        template< class T >
-        inline span_constexpr auto
-            byte_span(T const & t) span_noexcept -> span< const detail::byte, span_sizeof(T) >
-        {
-            return span< const detail::byte, span_sizeof(t) >(reinterpret_cast<detail::byte const *>(&t), span_sizeof(T));
-        }
+template< class T >
+inline span_constexpr auto
+byte_span( T const & t ) span_noexcept -> span< const std17::byte, span_sizeof(T) >
+{
+    return span< const std17::byte, span_sizeof(t) >( reinterpret_cast< std17::byte const * >( &t ), span_sizeof(T) );
+}
 
-    }  // namespace span_lite
+}  // namespace span_lite
 }  // namespace nonstd
 
 // make available in nonstd:
 
 namespace nonstd {
-    using span_lite::byte_span;
+using span_lite::byte_span;
 }  // namespace nonstd
 
 #endif // span_FEATURE( BYTE_SPAN )
