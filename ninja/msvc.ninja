@@ -85,12 +85,10 @@ rule CXX_bee
   description = Compile CXX $out
   deps = msvc
 build $obj/bee/error.obj: CXX_bee bee/error.cpp
-build $obj/bee/category_win.obj: CXX_bee bee/error/category_win.cpp
 build $obj/bee/exception.obj: CXX_bee bee/error/exception.cpp
 build $obj/bee/fsevent_win.obj: CXX_bee bee/fsevent/fsevent_win.cpp
 build $obj/bee/endpoint.obj: CXX_bee bee/net/endpoint.cpp
 build $obj/bee/socket.obj: CXX_bee bee/net/socket.cpp
-build $obj/bee/unixsocket_win.obj: CXX_bee bee/net/unixsocket_win.cpp
 build $obj/bee/version_win.obj: CXX_bee bee/platform/version_win.cpp
 build $obj/bee/sharedmemory_win.obj: CXX_bee $
     bee/subprocess/sharedmemory_win.cpp
@@ -116,9 +114,8 @@ rule LINK_bee
       /DLL /IMPLIB:$bin/bee.lib
   description = Link SharedLibrary $out
 build $bin/bee.dll | $bin/bee.lib: LINK_bee $obj/bee/lua-seri.obj $
-    $obj/bee/error.obj $obj/bee/category_win.obj $obj/bee/exception.obj $
-    $obj/bee/fsevent_win.obj $obj/bee/endpoint.obj $obj/bee/socket.obj $
-    $obj/bee/unixsocket_win.obj $obj/bee/version_win.obj $
+    $obj/bee/error.obj $obj/bee/exception.obj $obj/bee/fsevent_win.obj $
+    $obj/bee/endpoint.obj $obj/bee/socket.obj $obj/bee/version_win.obj $
     $obj/bee/sharedmemory_win.obj $obj/bee/subprocess_win.obj $
     $obj/bee/file_helper.obj $obj/bee/module_version_win.obj $
     $obj/bee/path_helper.obj $obj/bee/unicode_win.obj $
