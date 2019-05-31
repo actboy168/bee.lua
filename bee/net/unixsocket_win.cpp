@@ -6,45 +6,29 @@
 #include <limits>
 
 namespace bee::net::socket {
-	class file {
-	public:
-		static std::string read_all(const std::string& filename) {
-			return file(filename, std::ios::in).read<std::string>();
-		}
-		static bool write_all(const std::string& filename, const std::string& value) {
-			return file(filename, std::ios::out).write(value);
-		}
-	private:
-		file(const std::string& filename, std::ios_base::openmode mode)
 #if defined(_MSC_VER)
-			: self(u2w(filename), std::ios::binary | mode)
+#define FILENAME(n) u2w(n)
 #else
-			: self(filename, std::ios::binary | mode)
+#define FILENAME(n) (n)
 #endif
-		{ }
-		operator bool() const {
-			return !!self;
-		}
-		template <class SequenceT>
-		SequenceT read() {
-			if (!self) return SequenceT();
-			return std::move(SequenceT((std::istreambuf_iterator<char>(self)), (std::istreambuf_iterator<char>())));
-		}
-		template <class SequenceT>
-		bool write(SequenceT buf) {
-			if (!self) return false;
-			std::copy(buf.begin(), buf.end(), std::ostreambuf_iterator<char>(self));
-			return true;
-		}
-		std::fstream self;
-	};
+	static std::string file_read(const std::string& filename) {
+		std::fstream fs(FILENAME(filename), std::ios::binary | std::ios::in);
+		if (!fs) return std::string();
+		return std::string((std::istreambuf_iterator<char>(fs)), (std::istreambuf_iterator<char>()));
+	}
+	static bool file_write(const std::string& filename, const std::string& value) {
+		std::fstream fs(FILENAME(filename), std::ios::binary | std::ios::out);
+		if (!fs) return false;
+		std::copy(value.begin(), value.end(), std::ostreambuf_iterator<char>(fs));
+		return true;
+	}
 
 	static bool read_tcp_port(const endpoint& ep, int& tcpport) {
 		auto[path, type] = ep.info(); 
         if (type != 0) {
             return false;
         }
-		auto unixpath = file::read_all(path);
+		auto unixpath = file_read(path);
 		if (unixpath.empty()) {
 			return false;
 		}
@@ -74,7 +58,7 @@ namespace bee::net::socket {
         if (type != 0) {
             return true;
         }
-		return file::write_all(path, portstr.data());
+		return file_write(path, portstr.data());
 	}
 
     status u_connect(fd_t s, const endpoint& ep) {
