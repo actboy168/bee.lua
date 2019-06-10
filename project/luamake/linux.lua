@@ -3,11 +3,11 @@ local lm = require 'luamake'
 lm.gcc = 'clang'
 lm.gxx = 'clang++'
 
-lm.rootdir = '3rd/lua/'
+lm.rootdir = '3rd/lua/src'
 lm:executable 'lua' {
     sources = {
-        "src/*.c",
-        "!src/luac.c",
+        "*.c",
+        "!luac.c",
     },
     ldflags = "-Wl,-E",
     defines = {
