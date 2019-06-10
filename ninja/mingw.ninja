@@ -68,7 +68,7 @@ rule LINK_lua
 build $bin/lua.exe: LINK_lua $obj/lua/utf8_lua.obj $bin/lua54.dll
 rule C_bee
   command = gcc -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall -I3rd/lua/src $
-      -I3rd/lua-seri -I3rd/incbin -I. -D_WIN32_WINNT=0x0601 -DBEE_EXPORTS $
+      -I3rd/lua-seri -I. -D_WIN32_WINNT=0x0601 -DBEE_EXPORTS $
       -D_CRT_SECURE_NO_WARNINGS -Dspan_FEATURE_BYTE_SPAN=1 -DNDEBUG $
       -I3rd/lua/src -o $out -c $in
   description = Compile C $out
@@ -77,7 +77,7 @@ rule C_bee
 build $obj/bee/lua-seri.obj: C_bee 3rd/lua-seri/lua-seri.c
 rule CXX_bee
   command = g++ -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall -I3rd/lua/src $
-      -I3rd/lua-seri -I3rd/incbin -I. -D_WIN32_WINNT=0x0601 -DBEE_EXPORTS $
+      -I3rd/lua-seri -I. -D_WIN32_WINNT=0x0601 -DBEE_EXPORTS $
       -D_CRT_SECURE_NO_WARNINGS -Dspan_FEATURE_BYTE_SPAN=1 -DNDEBUG $
       -I3rd/lua/src -o $out -c $in
   description = Compile CXX $out

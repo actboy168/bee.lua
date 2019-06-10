@@ -23,7 +23,6 @@ lm:shared_library 'bee' {
     includes = {
         "3rd/lua/src",
         "3rd/lua-seri",
-        "3rd/incbin",
         "."
     },
     defines = {
