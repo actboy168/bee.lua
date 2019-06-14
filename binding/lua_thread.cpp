@@ -194,6 +194,9 @@ namespace bee::lua_thread {
         lua_pushboolean(L, 1);
         lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
         luaL_openlibs(L);
+#if LUA_VERSION_NUM >= 504
+        lua_gc(L, LUA_GCGEN, 0, 0);
+#endif
         void*        ud = lua_touserdata(L, 1);
         thread_args* args = (thread_args*)ud;
         if (luaL_loadbuffer(L, args->source.data(), args->source.size(), args->source.c_str()) != LUA_OK) {
