@@ -48,22 +48,7 @@
 
 #include <stdlib.h>
 
-__inline unsigned int luafix_makeseed(void *L) {
-	(void)L;
-	const char* seed = getenv("LUA_SEED");
-	if (seed) {
-		return atoi(seed);
-	}
-	return *(unsigned int*)"Lua\0Lua\0";
-}
-
-#define luai_makeseed luafix_makeseed
-
-__inline unsigned int luafix_randomizePivot() {
-	return *(unsigned int*)"Lua\0Lua\0";
-}
-
-#define l_randomizePivot luafix_randomizePivot
+#define l_randomizePivot() (*(unsigned int*)"Lua\0Lua\0")
+#define luai_makeseed(L) (getenv("LUA_SEED")? atoi(getenv("LUA_SEED")): l_randomizePivot())
 
 #endif
-
