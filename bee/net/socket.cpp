@@ -251,16 +251,11 @@ namespace bee::net::socket {
         auto[ver, build] = bee::platform::get_version();
         return ver == bee::platform::WinVer::Win10 && build >= 17763;
     }
-#endif
-
     bool supportUnixDomainSocket() {
-#if defined _WIN32
         static bool support = supportUnixDomainSocket_();
         return support;
-#else
-        return true;
-#endif
     }
+#endif
 
     bool shutdown(fd_t s, shutdown_flag flag)
     {
