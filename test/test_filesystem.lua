@@ -196,26 +196,26 @@ function test_fs:test_add_remove_permissions()
 end
 
 function test_fs:test_div()
-    local function div(A, B)
-        return (fs.path(A) / B):string()
+    local function eq_div(A, B, C)
+        lu.assertEquals(fs.path(A) / B, fs.path(C))
     end
-    lu.assertEquals(div('a', 'b'), 'a/b')
-    lu.assertEquals(div('a/b', 'c'), 'a/b/c')
-    lu.assertEquals(div('a/', 'b'), 'a/b')
-    lu.assertEquals(div('a', '/b'), '/b')
-    lu.assertEquals(div('', 'a/b'), 'a/b')
-    lu.assertEquals(div(C..'a', D..'b'), D..'b')
-    lu.assertEquals(div(C..'a/', D..'b'), D..'b')
+    eq_div('a', 'b', 'a/b')
+    eq_div('a/b', 'c', 'a/b/c')
+    eq_div('a/', 'b', 'a/b')
+    eq_div('a', '/b', '/b')
+    eq_div('', 'a/b', 'a/b')
+    eq_div(C..'a', D..'b', D..'b')
+    eq_div(C..'a/', D..'b', D..'b')
     if platform.OS == 'Windows' then
-        lu.assertEquals(div('a/', '\\b'), '/b')
-        lu.assertEquals(div('a\\b', 'c'), 'a/b/c')
-        lu.assertEquals(div('a\\', 'b'), 'a/b')
-        lu.assertEquals(div(C..'a', '/b'), C..'b')
-        lu.assertEquals(div(C..'a/', '\\b'), C..'b')
+        eq_div('a/', '\\b', '/b')
+        eq_div('a\\b', 'c', 'a/b/c')
+        eq_div('a\\', 'b', 'a/b')
+        eq_div(C..'a', '/b', C..'b')
+        eq_div(C..'a/', '\\b', C..'b')
     else
-        lu.assertEquals(div('a/b', 'c'), 'a/b/c')
-        lu.assertEquals(div(C..'a', '/b'), '/b')
-        lu.assertEquals(div(C..'a/', '/b'), '/b')
+        eq_div('a/b', 'c', 'a/b/c')
+        eq_div(C..'a', '/b', '/b')
+        eq_div(C..'a/', '/b', '/b')
     end
 end
 
@@ -488,7 +488,7 @@ function test_fs:test_rename()
 end
 
 function test_fs:test_current_path()
-    lu.assertEquals(fs.current_path():string(), shell:pwd())
+    lu.assertEquals(fs.current_path(), fs.path(shell:pwd()))
 end
 
 function test_fs:test_copy_file()

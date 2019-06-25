@@ -22,7 +22,7 @@ end
 
 function shell:pwd()
     local command = (platform.OS == 'Windows') and 'echo %cd%' or 'pwd'
-    return (io.popen(command):read 'a'):gsub('[\n\r]*$', ''):gsub('\\', '/')
+    return (io.popen(command):read 'a'):gsub('[\n\r]*$', '')
 end
 
 function shell:path()
