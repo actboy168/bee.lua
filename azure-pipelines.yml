@@ -17,6 +17,12 @@ jobs:
   steps:
   - template: project/azure-pipelines/macos.yml
 
+- job: linux_clang
+  pool:
+    name: Hosted Ubuntu 1604
+  steps:
+  - template: project/azure-pipelines/linux.yml
+
 #- job: windows_msbuild
 #  pool:
 #    name: Hosted VS2017
@@ -29,9 +35,3 @@ jobs:
 #        PLATFORM: x86
 #  steps:
 #  - template: project/azure-pipelines/msbuild.yml
-
-#- job: linux_clang
-#  pool:
-#    name: Hosted Ubuntu 1604
-#  steps:
-#  - template: project/azure-pipelines/linux.yml
