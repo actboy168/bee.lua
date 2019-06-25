@@ -8,6 +8,7 @@
 #include <bee/lua/binding.h>
 #include <bee/net/endpoint.h>
 #include <bee/net/socket.h>
+#include <bee/filesystem.h>
 #include <chrono>
 #include <limits>
 #include <thread>
@@ -330,6 +331,17 @@ namespace bee::lua_socket {
             lua_pushlstring(L, ep.error().data(), ep.error().size());
             return lua_error(L);
         }
+#if defined _WIN32
+        if (ep->family() == AF_UNIX) {
+            auto [path, type] = ep->info();
+            if (type == 0 && !fs::exists(fs::path(path))) {
+                auto error = make_error(WSAECONNREFUSED, "socket");
+                lua_pushnil(L);
+                lua_pushfstring(L, "(%d) %s", error.code().value(), error.what());
+                return 2;
+            }
+        }
+#endif
         socket::fd_t fd = socket::open(protocol, *ep);
         if (fd == socket::retired_fd) {
             return push_neterror(L, "socket");

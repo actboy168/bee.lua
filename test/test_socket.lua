@@ -48,12 +48,7 @@ function test_socket:test_tcp_connect()
 end
 
 function test_socket:test_unix_connect()
-    os.remove('test.unixsock')
     lu.assertIsNil(ls.connect('unix', 'test.unixsock'))
-    if platform.OS == 'Windows' then
-        -- Windows的bug？
-        os.remove('test.unixsock')
-    end
     lu.assertIsFalse(file_exists('test.unixsock'))
 
     local server = ls.bind('unix', 'test.unixsock')
