@@ -367,17 +367,20 @@ namespace bee::lua_socket {
         luafd& self =
 #endif
             pushfd(L, fd, protocol);
+        if (ep->family() == AF_UNIX) {
+            socket::unlink(*ep);
+#if defined _WIN32
+            if (!socket::supportUnixDomainSocket()) {
+                auto [path, type] = ep->info();
+                if (type == 0) {
+                    self.path = path;
+                }
+            }
+#endif
+        }
         if (socket::status::success != socket::bind(fd, *ep)) {
             return push_neterror(L, "bind");
         }
-#if defined _WIN32
-        if (!socket::supportUnixDomainSocket()) {
-            auto [path, type] = ep->info();
-            if (type == 0) {
-                self.path = path;
-            }
-        }
-#endif
         if (protocol != socket::protocol::udp) {
             if (socket::status::success != socket::listen(fd, backlog)) {
                 return push_neterror(L, "listen");

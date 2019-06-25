@@ -20,7 +20,6 @@ end
 test_socket = {}
 
 function test_socket:test_bind()
-    os.remove('test.unixsock')
     local function assert_ok(fd, err)
         lu.assertUserdata(fd, err)
         fd:close()
@@ -91,7 +90,6 @@ function test_socket:test_tcp_accept()
 end
 
 function test_socket:test_unix_accept()
-    os.remove('test.unixsock')
     local server = ls.bind('unix', 'test.unixsock')
     lu.assertUserdata(server)
     lu.assertIsTrue(file_exists('test.unixsock'))
@@ -177,7 +175,6 @@ local function createTcpEchoTest(name, f)
 end
 
 local function createUnixEchoTest(name, f)
-    os.remove('test.unixsock')
     local server, errmsg = ls.bind('unix', 'test.unixsock')
     lu.assertUserdata(server, errmsg)
     local client = createEchoThread(name, [['unix', 'test.unixsock']])

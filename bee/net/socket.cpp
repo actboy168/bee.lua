@@ -514,6 +514,10 @@ namespace bee::net::socket {
         if (!socket::getsockname(s, ep)) {
             return false;
         }
+        return unlink(ep);
+    }
+
+    bool unlink(const endpoint& ep) {
         if (ep.family() != AF_UNIX) {
             return false;
         }
