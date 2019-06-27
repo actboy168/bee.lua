@@ -2,10 +2,10 @@ local lu = require 'luaunit'
 local ls = require 'bee.socket'
 local platform = require 'bee.platform'
 local thread = require 'bee.thread'
-local err = thread.channel "errlog"
+local errlog = thread.channel "errlog"
 
 local function assertNotThreadError()
-    lu.assertIsFalse(err:pop())
+    lu.assertIsFalse(errlog:pop())
 end
 
 local function file_exists(filename)
@@ -41,9 +41,11 @@ function test_socket:test_tcp_connect()
     local address, port = server:info('socket')
     lu.assertString(address)
     lu.assertNumber(port)
-    local client, err = ls.connect('tcp', '127.0.0.1', port)
-    lu.assertUserdata(client, err)
-    client:close()
+    for _ = 1, 2 do
+        local client, err = ls.connect('tcp', '127.0.0.1', port)
+        lu.assertUserdata(client, err)
+        client:close()
+    end
     server:close()
 end
 
@@ -54,9 +56,11 @@ function test_socket:test_unix_connect()
     local server = ls.bind('unix', 'test.unixsock')
     lu.assertUserdata(server)
     lu.assertIsTrue(file_exists('test.unixsock'))
-    local client = ls.connect('unix', 'test.unixsock')
-    lu.assertUserdata(client)
-    client:close()
+    for _ = 1, 2 do
+        local client = ls.connect('unix', 'test.unixsock')
+        lu.assertUserdata(client)
+        client:close()
+    end
     server:close()
     lu.assertIsFalse(file_exists('test.unixsock'))
 end
@@ -67,20 +71,22 @@ function test_socket:test_tcp_accept()
     local address, port = server:info('socket')
     lu.assertString(address)
     lu.assertNumber(port)
-    local client = ls.connect('tcp', '127.0.0.1', port)
-    lu.assertUserdata(client)
-    local rd, _ = ls.select({server}, nil)
-    local _, wr = ls.select(nil, {client})
-    lu.assertTable(rd)
-    lu.assertTable(wr)
-    lu.assertEquals(rd[1], server)
-    lu.assertEquals(wr[1], client)
-    local session = server:accept()
-    lu.assertUserdata(session)
-    lu.assertIsTrue(client:status())
-    lu.assertIsTrue(session:status())
-    session:close()
-    client:close()
+    for _ = 1, 2 do
+        local client = ls.connect('tcp', '127.0.0.1', port)
+        lu.assertUserdata(client)
+        local rd, _ = ls.select({server}, nil)
+        local _, wr = ls.select(nil, {client})
+        lu.assertTable(rd)
+        lu.assertTable(wr)
+        lu.assertEquals(rd[1], server)
+        lu.assertEquals(wr[1], client)
+        local session = server:accept()
+        lu.assertUserdata(session)
+        lu.assertIsTrue(client:status())
+        lu.assertIsTrue(session:status())
+        session:close()
+        client:close()
+    end
     server:close()
 end
 
@@ -88,8 +94,8 @@ function test_socket:test_unix_accept()
     local server = ls.bind('unix', 'test.unixsock')
     lu.assertUserdata(server)
     lu.assertIsTrue(file_exists('test.unixsock'))
-    local client = ls.connect('unix', 'test.unixsock')
-    lu.assertUserdata(client)
+    local client, err = ls.connect('unix', 'test.unixsock')
+    lu.assertUserdata(client, err)
     local rd, _ = ls.select({server}, nil)
     local _, wr = ls.select(nil, {client})
     lu.assertTable(rd)
@@ -102,6 +108,9 @@ function test_socket:test_unix_accept()
     lu.assertIsTrue(session:status())
     session:close()
     client:close()
+
+    lu.assertIsNil(ls.connect('unix', 'test.unixsock'))
+
     server:close()
     lu.assertIsFalse(file_exists('test.unixsock'))
 end
