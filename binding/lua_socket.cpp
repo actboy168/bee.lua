@@ -17,11 +17,17 @@ namespace bee::lua_socket {
     using namespace bee::net;
     static const int kDefaultBackLog = 5;
     struct luafd {
+        enum class tag {
+            unknown,
+            connect,
+            listen,
+            accept,
+        };
         socket::fd_t     fd;
         socket::protocol protocol;
-        bool             connect = false;
+        tag              type;
         std::string      path;
-        luafd(socket::fd_t s, socket::protocol p) : fd(s), protocol(p) {}
+        luafd(socket::fd_t s, socket::protocol p, tag t) : fd(s), protocol(p), type(t) {}
     };
     static int push_neterror(lua_State* L, const char* msg) {
         auto error = make_neterror(msg);
@@ -70,13 +76,13 @@ namespace bee::lua_socket {
     static luafd& checkfd(lua_State* L, int idx) {
         return *(luafd*)getObject(L, idx, "socket");
     }
-    static luafd& pushfd(lua_State* L, socket::fd_t fd, socket::protocol protocol);
+    static luafd& pushfd(lua_State* L, socket::fd_t fd, socket::protocol protocol, luafd::tag type);
     socket::fd_t  checksocket(lua_State* L, int idx) {
         return checkfd(L, idx).fd;
     }
     void pushsocket(lua_State* L, socket::fd_t fd) {
         // 鉴于protocol目前的作用，硬编码为tcp也没问题？
-        pushfd(L, fd, socket::protocol::tcp);
+        pushfd(L, fd, socket::protocol::tcp, luafd::tag::unknown);
     }
     static int accept(lua_State* L) {
         luafd&       self = checkfd(L, 1);
@@ -84,7 +90,7 @@ namespace bee::lua_socket {
         if (socket::status::success != socket::accept(self.fd, newfd)) {
             return push_neterror(L, "accept");
         }
-        pushfd(L, newfd, self.protocol);
+        pushfd(L, newfd, self.protocol, luafd::tag::accept);
         return 1;
     }
     static int recv(lua_State* L) {
@@ -199,7 +205,7 @@ namespace bee::lua_socket {
         }
         socket::fd_t fd = self.fd;
         self.fd = socket::retired_fd;
-        if (self.protocol == socket::protocol::unix) {
+        if (self.protocol == socket::protocol::unix && self.type == luafd::tag::listen) {
 #if defined _WIN32
             if (!socket::supportUnixDomainSocket()) {
                 ::DeleteFileW(u2w(self.path).c_str());
@@ -299,9 +305,9 @@ namespace bee::lua_socket {
         }
         return 0;
     }
-    static luafd& pushfd(lua_State* L, socket::fd_t fd, socket::protocol protocol) {
+    static luafd& pushfd(lua_State* L, socket::fd_t fd, socket::protocol protocol, luafd::tag type) {
         luafd* self = (luafd*)lua_newuserdatauv(L, sizeof(luafd), 0);
-        new (self) luafd(fd, protocol);
+        new (self) luafd(fd, protocol, type);
         if (newObject(L, "socket")) {
             luaL_Reg mt[] = {
                 {"accept", accept},
@@ -346,8 +352,7 @@ namespace bee::lua_socket {
         if (fd == socket::retired_fd) {
             return push_neterror(L, "socket");
         }
-        luafd& self = pushfd(L, fd, protocol);
-        self.connect = true;
+        luafd& self = pushfd(L, fd, protocol, luafd::tag::connect);
         switch (socket::connect(fd, *ep)) {
         case socket::status::success:
             lua_pushboolean(L, true);
@@ -378,7 +383,7 @@ namespace bee::lua_socket {
 #if defined _WIN32
         luafd& self =
 #endif
-            pushfd(L, fd, protocol);
+            pushfd(L, fd, protocol, luafd::tag::listen);
         if (ep->family() == AF_UNIX) {
             socket::unlink(*ep);
 #if defined _WIN32
@@ -405,8 +410,8 @@ namespace bee::lua_socket {
         if (!socket::pair(sv)) {
             return push_neterror(L, "socketpair");
         }
-        pushfd(L, sv[0], socket::protocol::unix);
-        pushfd(L, sv[1], socket::protocol::unix);
+        pushfd(L, sv[0], socket::protocol::unix, luafd::tag::accept);
+        pushfd(L, sv[1], socket::protocol::unix, luafd::tag::connect);
         return 2;
     }
 #if defined(_WIN32)
@@ -495,7 +500,7 @@ namespace bee::lua_socket {
                 luafd& self = checkfd(L, -1);
                 MAXFD_SET(self.fd);
                 FD_SET(self.fd, &writefds);
-                EXFDS_SET(self.connect, self.fd);
+                EXFDS_SET(self.type == luafd::tag::connect, self.fd);
                 lua_pop(L, 1);
             }
             int ok = ::select(MAXFD_GET(), &readfds, &writefds, EXFDS_GET(), timeop);
