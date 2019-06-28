@@ -173,7 +173,7 @@ local function createTcpEchoTest(name, f)
 
     session:close()
     server:close()
-    client:wait()
+    thread.wait(client)
     assertNotThreadError()
 end
 
@@ -190,7 +190,7 @@ local function createUnixEchoTest(name, f)
 
     session:close()
     server:close()
-    client:wait()
+    thread.wait(client)
     assertNotThreadError()
     lu.assertIsFalse(file_exists('test.unixsock'))
 end

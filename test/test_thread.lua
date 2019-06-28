@@ -36,7 +36,7 @@ function test_thread:test_thread_1()
     local thd = createThread [[
         io.open('temp.txt', 'w'):close()
     ]]
-    thd:wait()
+    thread.wait(thd)
     lu.assertIsTrue(file_exists('temp.txt'))
     os.remove('temp.txt')
     assertNotThreadError()
@@ -52,7 +52,7 @@ function test_thread:test_thread_2()
         THREAD = true
         assert(GLOBAL == nil)
     ]]
-    thd:wait()
+    thread.wait(thd)
     assertNotThreadError()
     lu.assertNotNil(GLOBAL)
     lu.assertIsNil(THREAD)
@@ -65,7 +65,7 @@ function test_thread:test_thread_3()
     local thd = createThread [[
         error 'Test thread error.'
     ]]
-    thd:wait()
+    thread.wait(thd)
     assertHasThreadError('Test thread error.')
     assertNotThreadError()
 end
@@ -93,7 +93,7 @@ function test_thread:test_id_1()
         local thread = require "bee.thread"
         assert(thread.id ~= 0)
     ]]
-    thd:wait()
+    thread.wait(thd)
     assertNotThreadError()
 end
 
@@ -106,7 +106,7 @@ function test_thread:test_id_2()
         local thread = require "bee.thread"
         assert(thread.id ~= 0)
     ]]
-    thd:wait()
+    thread.wait(thd)
     assertNotThreadError()
 end
 
@@ -128,7 +128,7 @@ function test_thread:test_reset_2()
         local thread = require "bee.thread"
         thread.reset()
     ]]
-    thd:wait()
+    thread.wait(thd)
     assertHasThreadError('reset must call from main thread')
     assertNotThreadError()
 end
@@ -231,7 +231,7 @@ function test_thread:test_thread_bpop()
     end
     TestSuit(test_ok)
     req:push 'exit'
-    thd:wait()
+    thread.wait(thd)
     assertNotThreadError()
 end
 
@@ -279,6 +279,6 @@ function test_thread:test_thread_pop()
     end
     TestSuit(test_ok)
     req:push 'exit'
-    thd:wait()
+    thread.wait(thd)
     assertNotThreadError()
 end

@@ -247,23 +247,6 @@ namespace bee::lua_thread {
         lua_close(L);
     }
 
-    static int lthread_wait(lua_State* L) {
-        std::thread* thread = (std::thread*)getObject(L, 1, "thread");
-        if (thread->joinable()) {
-            thread->join();
-        }
-        return 0;
-    }
-
-    static int lthread_gc(lua_State* L) {
-        std::thread* thread = (std::thread*)getObject(L, 1, "thread");
-        if (thread->joinable()) {
-            thread->detach();
-        }
-        thread->~thread();
-        return 0;
-    }
-
     static int lthread(lua_State* L) {
         std::string   source = checkstring(L, 1);
         lua_CFunction f = NULL;
@@ -274,19 +257,8 @@ namespace bee::lua_thread {
             f = lua_tocfunction(L, 2);
         }
         thread_args* args = new thread_args(std::move(source), f);
-        std::thread* thread = (std::thread*)lua_newuserdatauv(L, sizeof(std::thread), 0);
-        new (thread) std::thread(std::bind(thread_main, args));
-        if (newObject(L, "thread")) {
-            luaL_Reg mt[] = {
-                {"wait", lthread_wait},
-                {"__gc", lthread_gc},
-                {NULL, NULL},
-            };
-            luaL_setfuncs(L, mt, 0);
-            lua_pushvalue(L, -1);
-            lua_setfield(L, -2, "__index");
-        }
-        lua_setmetatable(L, -2);
+        std::thread* thread = new std::thread(std::bind(thread_main, args));
+        lua_pushlightuserdata(L, thread);
         return 1;
     }
 
@@ -299,6 +271,19 @@ namespace bee::lua_thread {
         }
         g_channel.clear();
         g_thread_id = 0;
+        return 0;
+    }
+
+    static int lwait(lua_State* L) {
+        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+        std::thread* thread = (std::thread*)lua_touserdata(L, 1);
+        if (thread->joinable()) {
+            thread->join();
+        }
+        else {
+            thread->detach();
+        }
+        thread->~thread();
         return 0;
     }
 
@@ -331,6 +316,7 @@ namespace bee::lua_thread {
             {"newchannel", lnewchannel},
             {"channel", lchannel},
             {"reset", lreset},
+            {"wait", lwait},
             {NULL, NULL},
         };
         lua_newtable(L);
