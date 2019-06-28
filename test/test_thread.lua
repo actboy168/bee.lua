@@ -9,10 +9,6 @@ local function createThread(script)
     return thread.thread(cpath_template .. script)
 end
 
-local function createNamedThread(name, script)
-    return thread.named_thread(name, cpath_template .. script)
-end
-
 local function assertNotThreadError()
     lu.assertIsFalse(err:pop())
 end
@@ -284,26 +280,5 @@ function test_thread:test_thread_pop()
     TestSuit(test_ok)
     req:push 'exit'
     thd:wait()
-    assertNotThreadError()
-end
-
-function test_thread:test_named_thread()
-    assertNotThreadError()
-    thread.reset()
-    thread.newchannel 'testReq'
-    local thd1 = createNamedThread("TEST_THREAD", [[
-        local thread = require "bee.thread"
-        local req = thread.channel "testReq"
-        assert("EXIT" == req:bpop())
-    ]])
-    local thd2 = createThread([[
-        local thread = require "bee.thread"
-        local thd = thread.named_thread "TEST_THREAD"
-        local req = thread.channel "testReq"
-        req:push "EXIT"
-        thd:wait()
-    ]])
-    thd2:wait()
-    thd1:wait()
     assertNotThreadError()
 end

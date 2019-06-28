@@ -290,84 +290,6 @@ namespace bee::lua_thread {
         return 1;
     }
 
-    class threadmgr {
-    public:
-        std::shared_ptr<std::thread> query(const std::string& name) {
-            std::unique_lock<std::mutex> lk(mutex);
-            auto                         it = threads.find(name);
-            if (it != threads.end()) {
-                return it->second;
-            }
-            return nullptr;
-        }
-        std::shared_ptr<std::thread> query_or_create(const std::string& name, void (*thread_main)(void*), thread_args* args) {
-            std::unique_lock<std::mutex> lk(mutex);
-            auto                         it = threads.find(name);
-            if (it != threads.end()) {
-                delete args;
-                return it->second;
-            }
-            auto res = threads.insert(std::make_pair(name, new std::thread(std::bind(thread_main, args))));
-            return res.first->second;
-        }
-        void clear() {
-            threads.clear();
-        }
-
-    private:
-        std::map<std::string, std::shared_ptr<std::thread>> threads;
-        std::mutex                                          mutex;
-    };
-    struct boxthread {
-        std::shared_ptr<std::thread> c;
-        boxthread(std::shared_ptr<std::thread> c_) : c(c_) {}
-    };
-    threadmgr g_thread;
-
-    static int lnamed_thread_wait(lua_State* L) {
-        boxthread* thread = (boxthread*)getObject(L, 1, "named_thread");
-        if (thread->c->joinable()) {
-            thread->c->join();
-        }
-        return 0;
-    }
-
-    static int lnamed_thread(lua_State* L) {
-        std::string                  name = checkstring(L, 1);
-        std::shared_ptr<std::thread> thread;
-        if (!lua_isnoneornil(L, 2)) {
-            std::string   source = checkstring(L, 2);
-            lua_CFunction f = NULL;
-            if (!lua_isnoneornil(L, 3)) {
-                if (!lua_iscfunction(L, 3) || lua_getupvalue(L, 3, 1) != NULL) {
-                    return luaL_error(L, "2nd param should be a C function without upvalue");
-                }
-                f = lua_tocfunction(L, 3);
-            }
-            thread_args* args = new thread_args(std::move(source), f);
-            thread = g_thread.query_or_create(name, thread_main, args);
-        }
-        else {
-            thread = g_thread.query(name);
-            if (!thread) {
-                return luaL_error(L, "Can't query thread '%s'", name.c_str());
-            }
-        }
-        boxthread* bt = (boxthread*)lua_newuserdatauv(L, sizeof(boxthread), 0);
-        new (bt) boxthread(thread);
-        if (newObject(L, "named_thread")) {
-            luaL_Reg mt[] = {
-                {"wait", lnamed_thread_wait},
-                {NULL, NULL},
-            };
-            luaL_setfuncs(L, mt, 0);
-            lua_pushvalue(L, -1);
-            lua_setfield(L, -2, "__index");
-        }
-        lua_setmetatable(L, -2);
-        return 1;
-    }
-
     static int lreset(lua_State* L) {
         lua_rawgetp(L, LUA_REGISTRYINDEX, &THREADID);
         int threadid = (int)lua_tointeger(L, -1);
@@ -376,7 +298,6 @@ namespace bee::lua_thread {
             return luaL_error(L, "reset must call from main thread");
         }
         g_channel.clear();
-        g_thread.clear();
         g_thread_id = 0;
         return 0;
     }
@@ -407,7 +328,6 @@ namespace bee::lua_thread {
         luaL_Reg lib[] = {
             {"sleep", lsleep},
             {"thread", lthread},
-            {"named_thread", lnamed_thread},
             {"newchannel", lnewchannel},
             {"channel", lchannel},
             {"reset", lreset},
