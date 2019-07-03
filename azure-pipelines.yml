@@ -1,31 +1,32 @@
 jobs:
 - job: windows_msvc
   pool:
-    name: Hosted VS2017
+    vmImage: 'windows-latest'
   steps:
   - template: project/azure-pipelines/msvc.yml
 
 - job: windows_mingw
   pool:
-    name: Hosted VS2017
+    vmImage: 'windows-latest'
   steps:
   - template: project/azure-pipelines/mingw.yml
 
 - job: macos
   pool:
     name: Hosted macOS
+    vmImage: 'macos-latest'
   steps:
   - template: project/azure-pipelines/macos.yml
 
 - job: linux
   pool:
-    name: Hosted Ubuntu 1604
+    vmImage: 'ubuntu-latest'
   steps:
   - template: project/azure-pipelines/linux.yml
 
 #- job: windows_msbuild
 #  pool:
-#    name: Hosted VS2017
+#    vmImage: 'windows-latest'
 #  strategy:
 #    maxParallel: 2
 #    matrix:
