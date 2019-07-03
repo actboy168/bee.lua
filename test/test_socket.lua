@@ -50,6 +50,7 @@ function test_socket:test_tcp_connect()
 end
 
 function test_socket:test_unix_connect()
+    os.remove 'test.unixsock'
     lu.assertIsNil(ls.connect('unix', 'test.unixsock'))
     lu.assertIsFalse(file_exists('test.unixsock'))
 

@@ -330,6 +330,16 @@ namespace bee::lua_socket {
         lua_setmetatable(L, -2);
         return *self;
     }
+#if defined _WIN32
+    static bool safe_exists(std::string& path) {
+        FILE* f = _wfopen(u2w(path).c_str(), L"rb");
+        if (f) {
+            fclose(f);
+            return true;
+        }
+        return errno != ENOENT;
+    }
+#endif
     static int connect(lua_State* L) {
         socket::protocol protocol = read_protocol(L, 1);
         auto             ep = read_endpoint(L, protocol, 2);
@@ -340,7 +350,7 @@ namespace bee::lua_socket {
 #if defined _WIN32
         if (ep->family() == AF_UNIX) {
             auto [path, type] = ep->info();
-            if (type == 0 && !fs::exists(fs::path(path))) {
+            if (type == 0 && !safe_exists(path)) {
                 auto error = make_error(WSAECONNREFUSED, "socket");
                 lua_pushnil(L);
                 lua_pushfstring(L, "(%d) %s", error.code().value(), error.what());
