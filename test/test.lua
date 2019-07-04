@@ -46,7 +46,7 @@ if platform.OS ~= "Windows" then
     local sock = assert(ls.bind("tcp", "127.0.0.1", 0))
     local fd = tostring(sock):gsub("socket %((%d+)%)", "%1")
     sock:close()
-    assert(tonumber(fd) == 3)
+    assert(tonumber(fd) == 3, "fd count = " .. fd)
 end
 
 os.exit(code, true)
