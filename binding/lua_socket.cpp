@@ -362,7 +362,7 @@ namespace bee::lua_socket {
         if (fd == socket::retired_fd) {
             return push_neterror(L, "socket");
         }
-        luafd& self = pushfd(L, fd, protocol, luafd::tag::connect);
+        pushfd(L, fd, protocol, luafd::tag::connect);
         switch (socket::connect(fd, *ep)) {
         case socket::status::success:
             lua_pushboolean(L, true);
