@@ -539,11 +539,13 @@ namespace bee::lua_socket {
         }
         return 2;
     }
+#if defined _WIN32
     static int simulationUDS(lua_State* L) {
         bool open = !!lua_toboolean(L, 1);
         socket::simulationUnixDomainSocket(open);
         return 0;
     }
+#endif
     int luaopen(lua_State* L) {
         socket::initialize();
         luaL_Reg lib[] = {
