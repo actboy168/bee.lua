@@ -15,6 +15,16 @@ local platform = require 'bee.platform'
 --    dofile './3rd/luaffi/src/test.lua'
 --end
 
+local function fd_count()
+    local ls = require "bee.socket"
+    local sock = assert(ls.bind("tcp", "127.0.0.1", 0))
+    local fd = tostring(sock):gsub("socket %((%d+)%)", "%1")
+    sock:close()
+    return tonumber(fd)
+end
+
+local initfd = fd_count()
+
 local lu = require 'luaunit'
 
 require 'test_lua'
@@ -42,11 +52,8 @@ local code = lu.LuaUnit.run()
 
 if platform.OS ~= "Windows" then
     collectgarbage "collect"
-    local ls = require "bee.socket"
-    local sock = assert(ls.bind("tcp", "127.0.0.1", 0))
-    local fd = tostring(sock):gsub("socket %((%d+)%)", "%1")
-    sock:close()
-    assert(tonumber(fd) == 3, "fd count = " .. fd)
+    local fd = fd_count()
+    assert(fd == initfd, "fd count = " .. fd)
 end
 
 os.exit(code, true)
