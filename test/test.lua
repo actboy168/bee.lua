@@ -23,8 +23,8 @@ require 'test_serialization'
 require 'test_filesystem'
 require 'test_thread'
 require 'test_subprocess'
-require 'test_filewatch'
 require 'test_socket'
+require 'test_filewatch'
 
 if platform.OS == "Windows" then
     test_socket_1 = {UDS = true}
