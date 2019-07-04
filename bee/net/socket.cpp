@@ -247,13 +247,20 @@ namespace bee::net::socket {
     }
 
 #if defined _WIN32
+    static bool forceSimulationUDS = false;
     static bool supportUnixDomainSocket_() {
         auto[ver, build] = bee::platform::get_version();
         return ver == bee::platform::WinVer::Win10 && build >= 17763;
     }
     bool supportUnixDomainSocket() {
+        if (forceSimulationUDS) {
+            return false;
+        }
         static bool support = supportUnixDomainSocket_();
         return support;
+    }
+    void simulationUnixDomainSocket(bool open) {
+        forceSimulationUDS = open;
     }
 #endif
 

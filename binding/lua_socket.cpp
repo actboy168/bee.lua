@@ -539,7 +539,11 @@ namespace bee::lua_socket {
         }
         return 2;
     }
-
+    static int simulationUDS(lua_State* L) {
+        bool open = !!lua_toboolean(L, 1);
+        socket::simulationUnixDomainSocket(open);
+        return 0;
+    }
     int luaopen(lua_State* L) {
         socket::initialize();
         luaL_Reg lib[] = {
@@ -547,6 +551,9 @@ namespace bee::lua_socket {
             {"bind", bind},
             {"pair", pair},
             {"select", select},
+#if defined _WIN32
+            {"simulationUDS", simulationUDS},
+#endif
             {NULL, NULL}};
         lua_newtable(L);
         luaL_setfuncs(L, lib, 0);

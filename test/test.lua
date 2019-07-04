@@ -23,8 +23,19 @@ require 'test_serialization'
 require 'test_filesystem'
 require 'test_thread'
 require 'test_subprocess'
-require 'test_socket'
 require 'test_filewatch'
+require 'test_socket'
+
+if platform.OS == "Windows" then
+    test_socket_1 = {UDS = true}
+    test_socket_2 = {UDS = false}
+    for k, v in pairs(test_socket) do
+        test_socket_1[k] = v
+        test_socket_2[k] = v
+    end
+    test_socket = nil
+end
+
 --require 'test_registry'
 
 local code = lu.LuaUnit.run()

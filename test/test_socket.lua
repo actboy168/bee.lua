@@ -19,6 +19,12 @@ end
 
 test_socket = {}
 
+function test_socket:setup()
+    if platform.OS == "Windows" then
+        ls.simulationUDS(self.UDS)
+    end
+end
+
 function test_socket:test_bind()
     local function assert_ok(fd, err)
         lu.assertUserdata(fd, err)
