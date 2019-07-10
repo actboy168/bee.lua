@@ -11,3 +11,8 @@ steps:
 - script: |
    build\msvc\bin\bootstrap.exe test\test.lua
   displayName: Test
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: build\msvc\bin
+    artifactName: bee-msvc
