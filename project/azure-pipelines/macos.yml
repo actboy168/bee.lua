@@ -11,3 +11,8 @@ steps:
 - bash: |
    build/macos/bin/bootstrap test/test.lua
   displayName: Test
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: build/macos/bin
+    artifactName: bee-macos

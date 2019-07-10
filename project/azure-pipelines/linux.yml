@@ -11,3 +11,8 @@ steps:
 - bash: |
    build/linux/bin/bootstrap test/test.lua
   displayName: Test
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: build/linux/bin
+    artifactName: bee-linux

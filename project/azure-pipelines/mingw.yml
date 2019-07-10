@@ -23,3 +23,8 @@ steps:
    cd make
    lua mingw.lua build\mingw\bin\bootstrap.exe .\test\test.lua
   displayName: Test
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: build\mingw\bin
+    artifactName: bee-mingw
