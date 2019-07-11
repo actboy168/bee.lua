@@ -19,3 +19,8 @@ steps:
       **
     SourceFolder: 'build/linux/bin'
     TargetFolder: '$(Build.ArtifactStagingDirectory)/linux'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: $(Build.ArtifactStagingDirectory)
+    artifactName: bee

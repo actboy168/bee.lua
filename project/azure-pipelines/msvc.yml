@@ -20,3 +20,8 @@ steps:
       *.lua
     SourceFolder: 'build/msvc/bin'
     TargetFolder: '$(Build.ArtifactStagingDirectory)/windows'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: $(Build.ArtifactStagingDirectory)
+    artifactName: bee

@@ -1,11 +1,11 @@
 jobs:
-- job: windows_msvc
+- job: msvc
   pool:
     vmImage: 'windows-latest'
   steps:
   - template: project/azure-pipelines/msvc.yml
 
-- job: windows_mingw
+- job: mingw
   pool:
     vmImage: 'windows-latest'
   steps:
@@ -22,16 +22,3 @@ jobs:
     vmImage: 'ubuntu-latest'
   steps:
   - template: project/azure-pipelines/linux.yml
-
-- job: publish
-  dependsOn:
-    - windows_msvc
-    - linux
-    - macos
-  pool:
-    vmImage: 'windows-latest'
-  steps:
-    - task: PublishBuildArtifacts@1
-      inputs:
-        pathToPublish: $(Build.ArtifactStagingDirectory)
-        artifactName: bee
