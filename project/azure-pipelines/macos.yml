@@ -13,10 +13,10 @@ steps:
   displayName: Test
 
 - task: CopyFiles@2
-  displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
   inputs:
     Contents: |
-     build/macos/bin/**
+      **
+    SourceFolder: 'build/macos/bin'
     TargetFolder: '$(Build.ArtifactStagingDirectory)/macos'
 
 - task: PublishBuildArtifacts@1

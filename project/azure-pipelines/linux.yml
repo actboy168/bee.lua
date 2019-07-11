@@ -14,10 +14,10 @@ steps:
 
 
 - task: CopyFiles@2
-  displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
   inputs:
     Contents: |
-     build/linux/bin/**
+      **
+    SourceFolder: 'build/linux/bin'
     TargetFolder: '$(Build.ArtifactStagingDirectory)/linux'
 
 - task: PublishBuildArtifacts@1

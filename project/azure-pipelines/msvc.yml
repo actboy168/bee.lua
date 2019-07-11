@@ -13,11 +13,11 @@ steps:
   displayName: Test
 
 - task: CopyFiles@2
-  displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
   inputs:
     Contents: |
-     build/msvc/bin/*.exe
-     build/msvc/bin/*.dll
+      *.exe
+      *.dll
+    SourceFolder: 'build/msvc/bin'
     TargetFolder: '$(Build.ArtifactStagingDirectory)/msvc'
 
 - task: PublishBuildArtifacts@1

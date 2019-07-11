@@ -28,7 +28,8 @@ steps:
   displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
   inputs:
     Contents: |
-     build/mingw/bin/**
+      **
+    SourceFolder: 'build/mingw/bin'
     TargetFolder: '$(Build.ArtifactStagingDirectory)/mingw'
 
 - task: PublishBuildArtifacts@1
