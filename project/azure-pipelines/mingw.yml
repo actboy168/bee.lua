@@ -23,11 +23,3 @@ steps:
    cd make
    lua mingw.lua build\mingw\bin\bootstrap.exe .\test\test.lua
   displayName: Test
-
-- task: CopyFiles@2
-  displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
-  inputs:
-    Contents: |
-      **
-    SourceFolder: 'build/mingw/bin'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)/mingw'

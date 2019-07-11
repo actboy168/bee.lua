@@ -17,5 +17,6 @@ steps:
     Contents: |
       *.exe
       *.dll
+      *.lua
     SourceFolder: 'build/msvc/bin'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)/msvc'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/windows'

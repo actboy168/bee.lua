@@ -26,7 +26,6 @@ jobs:
 - job: publish
   dependsOn:
     - windows_msvc
-    - windows_mingw
     - linux
     - macos
   pool:
