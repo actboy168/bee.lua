@@ -12,7 +12,14 @@ steps:
    build/macos/bin/bootstrap test/test.lua
   displayName: Test
 
+- task: CopyFiles@2
+  displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
+  inputs:
+    Contents: |
+     build/macos/bin/**
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/macos'
+
 - task: PublishBuildArtifacts@1
   inputs:
-    pathToPublish: build/macos/bin
-    artifactName: bee-macos
+    pathToPublish: $(Build.ArtifactStagingDirectory)
+    artifactName: bee

@@ -12,7 +12,15 @@ steps:
    build\msvc\bin\bootstrap.exe test\test.lua
   displayName: Test
 
+- task: CopyFiles@2
+  displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
+  inputs:
+    Contents: |
+     build/msvc/bin/*.exe
+     build/msvc/bin/*.dll
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/msvc'
+
 - task: PublishBuildArtifacts@1
   inputs:
-    pathToPublish: build\msvc\bin
-    artifactName: bee-msvc
+    pathToPublish: $(Build.ArtifactStagingDirectory)
+    artifactName: bee

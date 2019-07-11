@@ -24,7 +24,15 @@ steps:
    lua mingw.lua build\mingw\bin\bootstrap.exe .\test\test.lua
   displayName: Test
 
+- task: CopyFiles@2
+  displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
+  inputs:
+    Contents: |
+     build/mingw/bin/**
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/mingw'
+
 - task: PublishBuildArtifacts@1
   inputs:
-    pathToPublish: build\mingw\bin
-    artifactName: bee-mingw
+    pathToPublish: $(Build.ArtifactStagingDirectory)
+    artifactName: bee
+
