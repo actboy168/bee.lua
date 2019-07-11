@@ -23,15 +23,16 @@ jobs:
   steps:
   - template: project/azure-pipelines/linux.yml
 
-#- job: windows_msbuild
-#  pool:
-#    vmImage: 'windows-latest'
-#  strategy:
-#    maxParallel: 2
-#    matrix:
-#      x64:
-#        PLATFORM: x64
-#      x86:
-#        PLATFORM: x86
-#  steps:
-#  - template: project/azure-pipelines/msbuild.yml
+- job: publish
+  dependsOn:
+    - windows_msvc
+    - windows_mingw
+    - linux
+    - macos
+  pool:
+    vmImage: 'windows-latest'
+  steps:
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: $(Build.ArtifactStagingDirectory)
+        artifactName: bee

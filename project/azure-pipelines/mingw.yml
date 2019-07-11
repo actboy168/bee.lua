@@ -31,9 +31,3 @@ steps:
       **
     SourceFolder: 'build/mingw/bin'
     TargetFolder: '$(Build.ArtifactStagingDirectory)/mingw'
-
-- task: PublishBuildArtifacts@1
-  inputs:
-    pathToPublish: $(Build.ArtifactStagingDirectory)
-    artifactName: bee
-
