@@ -8,7 +8,6 @@ lm:executable 'lua' {
     },
     defines = {
         "LUA_USE_MACOSX",
-        ("LUAI_MAXCSTACK=%d"):format(LUAI_MAXCSTACK)
     },
     links = { "m", "dl" },
 }
@@ -51,7 +50,6 @@ lm:executable 'bootstrap' {
     },
     defines = {
         "LUA_USE_MACOSX",
-        ("LUAI_MAXCSTACK=%d"):format(LUAI_MAXCSTACK)
     },
     links = { "m", "dl" },
 }

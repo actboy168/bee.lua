@@ -12,7 +12,6 @@ lm:executable 'lua' {
     ldflags = "-Wl,-E",
     defines = {
         "LUA_USE_LINUX",
-        ("LUAI_MAXCSTACK=%d"):format(LUAI_MAXCSTACK)
     },
     links = { "m", "dl" },
 }
@@ -57,7 +56,6 @@ lm:executable 'bootstrap' {
     ldflags = "-Wl,-E",
     defines = {
         "LUA_USE_LINUX",
-        ("LUAI_MAXCSTACK=%d"):format(LUAI_MAXCSTACK)
     },
     links = { "m", "dl" },
 }

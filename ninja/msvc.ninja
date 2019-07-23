@@ -3,8 +3,7 @@ bin = $builddir/bin
 obj = $builddir/obj
 rule C_lua54
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /O2 /GL $
-      /Zc:inline /W3 /permissive- /MD /DLUA_BUILD_AS_DLL $
-      /DLUAI_MAXCSTACK=1000 /DNDEBUG 
+      /Zc:inline /W3 /permissive- /MD /DLUA_BUILD_AS_DLL /DNDEBUG 
   description = Compile C $out
   deps = msvc
 build $obj/lua54/lapi.obj: C_lua54 3rd/lua/src/lapi.c

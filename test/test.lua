@@ -27,6 +27,8 @@ local initfd = fd_count()
 
 local lu = require 'luaunit'
 
+debug.setCstacklimit(1000)
+
 require 'test_lua'
 require 'test_platform'
 require 'test_serialization'
