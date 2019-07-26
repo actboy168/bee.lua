@@ -145,7 +145,6 @@
     <ClCompile Include="..\..\3rd\lua-seri\lua-seri.c" />
     <ClCompile Include="..\..\bee\error.cpp" />
     <ClCompile Include="..\..\bee\error\exception.cpp" />
-    <ClCompile Include="..\..\bee\error\category_win.cpp" />
     <ClCompile Include="..\..\bee\fsevent\fsevent_osx.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -155,7 +154,6 @@
     <ClCompile Include="..\..\bee\fsevent\fsevent_win.cpp" />
     <ClCompile Include="..\..\bee\net\endpoint.cpp" />
     <ClCompile Include="..\..\bee\net\socket.cpp" />
-    <ClCompile Include="..\..\bee\net\unixsocket_win.cpp" />
     <ClCompile Include="..\..\bee\platform\version_win.cpp" />
     <ClCompile Include="..\..\bee\subprocess\sharedmemory_win.cpp" />
     <ClCompile Include="..\..\bee\subprocess\subprocess_posix.cpp">
@@ -185,7 +183,6 @@
     <ClInclude Include="..\..\bee\config.h" />
     <ClInclude Include="..\..\bee\error.h" />
     <ClInclude Include="..\..\bee\error\exception.h" />
-    <ClInclude Include="..\..\bee\error\category_win.h" />
     <ClInclude Include="..\..\bee\filesystem.h" />
     <ClInclude Include="..\..\bee\fsevent.h" />
     <ClInclude Include="..\..\bee\fsevent\fsevent_osx.h">
@@ -199,7 +196,6 @@
     <ClInclude Include="..\..\bee\lua\range.h" />
     <ClInclude Include="..\..\bee\net\endpoint.h" />
     <ClInclude Include="..\..\bee\net\socket.h" />
-    <ClInclude Include="..\..\bee\net\unixsocket_win.h" />
     <ClInclude Include="..\..\bee\nonstd\dynarray.h" />
     <ClInclude Include="..\..\bee\nonstd\embed.h" />
     <ClInclude Include="..\..\bee\nonstd\expected.h" />

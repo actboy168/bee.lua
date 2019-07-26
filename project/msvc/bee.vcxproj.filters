@@ -105,14 +105,8 @@
     <ClCompile Include="..\..\bee\utility\file_helper.cpp">
       <Filter>bee\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\bee\error\category_win.cpp">
-      <Filter>bee\error</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\bee\platform\version_win.cpp">
       <Filter>bee\platform</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\bee\net\unixsocket_win.cpp">
-      <Filter>bee\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\bee\utility\module_version_win.cpp">
       <Filter>bee\utility</Filter>
@@ -217,12 +211,6 @@
     </ClInclude>
     <ClInclude Include="..\..\bee\utility\file_helper.h">
       <Filter>bee\utility</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\bee\error\category_win.h">
-      <Filter>bee\error</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\bee\net\unixsocket_win.h">
-      <Filter>bee\net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\bee\utility\module_version_win.h">
       <Filter>bee\utility</Filter>
