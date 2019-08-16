@@ -93,8 +93,8 @@ namespace bee::lua_thread {
         boxchannel(std::shared_ptr<channel> c_) : c(c_) {}
     };
 
-    channelmgr       g_channel;
-    std::atomic<int> g_thread_id = -1;
+    static channelmgr       g_channel;
+    static std::atomic<int> g_thread_id = -1;
     static int       THREADID;
 
     static std::string checkstring(lua_State* L, int idx) {
@@ -309,7 +309,7 @@ namespace bee::lua_thread {
         }
     }
 
-    int luaopen(lua_State* L) {
+    static int luaopen(lua_State* L) {
         luaL_Reg lib[] = {
             {"sleep", lsleep},
             {"thread", lthread},

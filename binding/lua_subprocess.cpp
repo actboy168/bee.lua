@@ -423,7 +423,7 @@ namespace bee::lua_subprocess {
         return 1;
     }
 
-    int luaopen(lua_State* L) {
+    static int luaopen(lua_State* L) {
         net::socket::initialize();
         static luaL_Reg lib[] = {
             {"spawn", spawn::spawn},

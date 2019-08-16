@@ -3,7 +3,7 @@
 #include <lua.hpp>
 
 namespace bee::lua_platform {
-    int luaopen(lua_State* L) {
+    static int luaopen(lua_State* L) {
         lua_newtable(L);
         lua_pushstring(L, BEE_OS_NAME);
         lua_setfield(L, -2, "OS");

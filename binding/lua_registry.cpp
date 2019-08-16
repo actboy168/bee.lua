@@ -6,25 +6,25 @@ namespace bee::lua_registry {
     using namespace bee::registry;
 
     namespace rkey {
-        key_w* newuserdata(lua_State* L);
+        static key_w* newuserdata(lua_State* L);
 
-        key_w& get(lua_State* L, int idx) {
+        static key_w& get(lua_State* L, int idx) {
             return *static_cast<key_w*>(getObject(L, idx, "registry::key"));
         }
 
-        key_w& create(lua_State* L, const key_w& key) {
+        static key_w& create(lua_State* L, const key_w& key) {
             key_w* self = newuserdata(L);
             new (self) key_w(key);
             return *self;
         }
 
-        key_w& create(lua_State* L, const std::wstring& key) {
+        static key_w& create(lua_State* L, const std::wstring& key) {
             key_w* self = newuserdata(L);
             new (self) key_w(key);
             return *self;
         }
 
-        key_w& getEx(lua_State* L, int idx) {
+        static key_w& getEx(lua_State* L, int idx) {
             if (lua_type(L, 1) == LUA_TSTRING) {
                 key_w& res = create(L, lua::to_string(L, idx));
                 lua_replace(L, idx);
@@ -33,7 +33,7 @@ namespace bee::lua_registry {
             return get(L, idx);
         }
 
-        int push_value(lua_State* L, key_w::value_type& value) {
+        static int push_value(lua_State* L, key_w::value_type& value) {
             switch (value.type()) {
             case REG_DWORD:
                 lua_pushinteger(L, value.get_uint32_t());
@@ -56,7 +56,7 @@ namespace bee::lua_registry {
             }
         }
 
-        int mt_index(lua_State* L) {
+        static int mt_index(lua_State* L) {
             LUA_TRY;
             key_w&             self = get(L, 1);
             std::wstring       key = lua::to_string(L, 2);
@@ -65,7 +65,7 @@ namespace bee::lua_registry {
             LUA_TRY_END;
         }
 
-        int mt_newindex(lua_State* L) {
+        static int mt_newindex(lua_State* L) {
             LUA_TRY;
             key_w&             self = get(L, 1);
             std::wstring       key = lua::to_string(L, 2);
@@ -124,7 +124,7 @@ namespace bee::lua_registry {
             LUA_TRY_END;
         }
 
-        int mt_div(lua_State* L) {
+        static int mt_div(lua_State* L) {
             LUA_TRY;
             key_w&       self = get(L, 1);
             std::wstring rht = lua::to_string(L, 2);
@@ -133,13 +133,13 @@ namespace bee::lua_registry {
             LUA_TRY_END;
         }
 
-        int mt_gc(lua_State* L) {
+        static int mt_gc(lua_State* L) {
             key_w& self = get(L, 1);
             self.~key_w();
             return 0;
         }
 
-        key_w* newuserdata(lua_State* L) {
+        static key_w* newuserdata(lua_State* L) {
             key_w* storage = (key_w*)lua_newuserdatauv(L, sizeof(key_w), 0);
             if (newObject(L, "registry::key")) {
                 luaL_Reg mt[] = {
@@ -241,7 +241,7 @@ namespace bee::lua_registry {
         LUA_TRY_END;
     }
 
-    int luaopen(lua_State* L) {
+    static int luaopen(lua_State* L) {
         static luaL_Reg func[] = {
             {"open", open},
             {"del", del},

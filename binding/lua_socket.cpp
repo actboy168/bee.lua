@@ -546,7 +546,7 @@ namespace bee::lua_socket {
         return 0;
     }
 #endif
-    int luaopen(lua_State* L) {
+    static int luaopen(lua_State* L) {
         socket::initialize();
         luaL_Reg lib[] = {
             {"connect", connect},

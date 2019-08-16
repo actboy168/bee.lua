@@ -406,7 +406,7 @@ namespace bee::lua_filesystem {
     }
 
     template <class DestClock, class SourceClock, class Duration>
-    auto clock_cast(const std::chrono::time_point<SourceClock, Duration>& t) {
+    static auto clock_cast(const std::chrono::time_point<SourceClock, Duration>& t) {
         return DestClock::now() + (t - SourceClock::now());
     }
 
@@ -458,7 +458,7 @@ namespace bee::lua_filesystem {
         LUA_TRY_END;
     }
 
-    int luaopen(lua_State* L) {
+    static int luaopen(lua_State* L) {
         static luaL_Reg lib[] = {
             {"path", path::constructor},
             {"exists", exists},

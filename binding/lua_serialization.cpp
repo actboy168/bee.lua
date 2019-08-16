@@ -28,7 +28,7 @@ namespace bee::lua_serialization {
         free(data);
         return 1;
     }
-    int luaopen(lua_State* L) {
+    static int luaopen(lua_State* L) {
         luaL_Reg lib[] = {
             {"unpack", unpack},
             {"pack", pack},
