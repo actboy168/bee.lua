@@ -36,6 +36,9 @@ lm:shared_library 'bee' {
         "!binding/lua_unicode.cpp",
         "!binding/lua_registry.cpp",
     },
+    flags = {
+        "-fvisibility=hidden",
+    },
     links = {
         "pthread",
         "stdc++fs",

@@ -48,6 +48,9 @@ lm:executable 'bootstrap' {
         "!3rd/lua/src/luac.c",
         "bootstrap/*.cpp",
     },
+    flags = {
+        "-fvisibility=hidden",
+    },
     defines = {
         "LUA_USE_MACOSX",
     },
