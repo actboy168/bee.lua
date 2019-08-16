@@ -13,6 +13,7 @@ lm:executable 'lua' {
     defines = {
         "LUA_USE_LINUX",
     },
+    visibility = "default",
     links = { "m", "dl" },
 }
 
@@ -36,9 +37,6 @@ lm:shared_library 'bee' {
         "!binding/lua_unicode.cpp",
         "!binding/lua_registry.cpp",
     },
-    flags = {
-        "-fvisibility=hidden",
-    },
     links = {
         "pthread",
         "stdc++fs",
@@ -60,6 +58,7 @@ lm:executable 'bootstrap' {
     defines = {
         "LUA_USE_LINUX",
     },
+    visibility = "default",
     links = { "m", "dl" },
 }
 
