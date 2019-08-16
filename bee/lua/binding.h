@@ -80,6 +80,8 @@ namespace bee::lua {
 #    else
 #        define BEE_LUA_API extern "C" __attribute__((visibility("default")))
 #    endif
+#else
+#    define BEE_LUA_API extern "C"
 #endif
 
 #define DEFINE_LUAOPEN(name) \
