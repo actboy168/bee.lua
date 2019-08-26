@@ -121,7 +121,7 @@ namespace bee::win::fsevent {
     }
 
     void task::event_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered) {
-        if (dwErrorCode == ERROR_OPERATION_ABORTED) {
+        if (dwErrorCode != 0) {
             remove();
             return;
         }
