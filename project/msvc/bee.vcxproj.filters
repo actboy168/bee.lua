@@ -13,9 +13,6 @@
     <Filter Include="bee\utility">
       <UniqueIdentifier>{e96a350e-8bb0-4c5c-9985-c36c965b1fbb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="bee\registry">
-      <UniqueIdentifier>{320fcbac-33a2-45b9-bf37-73ee502df548}</UniqueIdentifier>
-    </Filter>
     <Filter Include="bee\lua">
       <UniqueIdentifier>{67c6b0db-6490-41d3-a39a-cf043ef94c09}</UniqueIdentifier>
     </Filter>
@@ -131,21 +128,6 @@
     <ClInclude Include="..\..\bee\utility\path_helper.h">
       <Filter>bee\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\bee\registry\exception.h">
-      <Filter>bee\registry</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\bee\registry\key.h">
-      <Filter>bee\registry</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\bee\registry\predefined_keys.h">
-      <Filter>bee\registry</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\bee\registry\traits.h">
-      <Filter>bee\registry</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\bee\registry\value.h">
-      <Filter>bee\registry</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\bee\lua\binding.h">
       <Filter>bee\lua</Filter>
     </ClInclude>
@@ -225,6 +207,9 @@
       <Filter>bee\nonstd</Filter>
     </ClInclude>
     <ClInclude Include="..\..\bee\filesystem.h">
+      <Filter>bee</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\registry.h">
       <Filter>bee</Filter>
     </ClInclude>
   </ItemGroup>

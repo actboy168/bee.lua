@@ -203,11 +203,7 @@
     <ClInclude Include="..\..\bee\nonstd\span.h" />
     <ClInclude Include="..\..\bee\platform.h" />
     <ClInclude Include="..\..\bee\platform\version.h" />
-    <ClInclude Include="..\..\bee\registry\exception.h" />
-    <ClInclude Include="..\..\bee\registry\key.h" />
-    <ClInclude Include="..\..\bee\registry\predefined_keys.h" />
-    <ClInclude Include="..\..\bee\registry\traits.h" />
-    <ClInclude Include="..\..\bee\registry\value.h" />
+    <ClInclude Include="..\..\bee\registry.h" />
     <ClInclude Include="..\..\bee\subprocess.h" />
     <ClInclude Include="..\..\bee\subprocess\args_helper.h" />
     <ClInclude Include="..\..\bee\subprocess\sharedmemory_win.h" />
