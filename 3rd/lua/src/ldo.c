@@ -696,6 +696,8 @@ LUA_API int lua_resume (lua_State *L, lua_State *from, int nargs,
   }
   *nresults = (status == LUA_YIELD) ? L->ci->u2.nyield
                                     : cast_int(L->top - (L->ci->func + 1));
+  if (from->hookmask & LUA_MASKTHREAD)
+    luaD_hook(from, LUA_HOOKTHREAD, -1, 0, 0);
   lua_unlock(L);
   return status;
 }
