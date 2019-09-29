@@ -376,6 +376,11 @@ namespace bee::lua_filesystem {
         const fs::path& from = path::to(L, 1);
         const fs::path& to = path::to(L, 2);
         const bool      overwritten = !!lua_toboolean(L, 3);
+#   if defined(__MINGW32__) && defined(BEE_ENABLE_FILESYSTEM)
+        if (overwritten && fs::exists(from)) {
+            fs::remove(to);
+        }
+#endif
         fs::copy_file(from, to, overwritten ? fs::copy_options::overwrite_existing : fs::copy_options::none);
         return 0;
         LUA_TRY_END;
