@@ -6,6 +6,10 @@
 #       if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 101500
 #           define BEE_ENABLE_FILESYSTEM 1
 #       endif
+#   elif defined(__ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__)
+#       if __ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__ >= 130000
+#           define BEE_ENABLE_FILESYSTEM 1
+#       endif
 #   else
 #       define BEE_ENABLE_FILESYSTEM 1
 #   endif
