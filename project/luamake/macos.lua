@@ -33,6 +33,9 @@ lm:shared_library 'bee' {
         "!binding/lua_unicode.cpp",
         "!binding/lua_registry.cpp",
     },
+    flags = {
+        "-mmacosx-version-min=10.13",
+    },
     ldflags = {
         "-framework CoreFoundation",
         "-framework CoreServices",
