@@ -515,9 +515,9 @@ static int traverseudata (global_State *g, Udata *u) {
   if (g->gckind == KGC_GEN) {
     linkgclist(u, g->grayagain);  /* keep it in some gray list */
     black2gray(u);
-    }
-  return 1 + u->nuvalue;
   }
+  return 1 + u->nuvalue;
+}
 
 
 /*
@@ -807,11 +807,11 @@ static GCObject **sweeptolive (lua_State *L, GCObject **p) {
 static void checkSizes (lua_State *L, global_State *g) {
   if (!g->gcemergency) {
     if (g->strt.nuse < g->strt.size / 4) {  /* string table too big? */
-    l_mem olddebt = g->GCdebt;
+      l_mem olddebt = g->GCdebt;
       luaS_resize(L, g->strt.size / 2);
-    g->GCestimate += g->GCdebt - olddebt;  /* correct estimate */
+      g->GCestimate += g->GCdebt - olddebt;  /* correct estimate */
+    }
   }
-}
 }
 
 
@@ -861,9 +861,9 @@ static void GCTM (lua_State *L) {
     if (unlikely(status != LUA_OK)) {  /* error while running __gc? */
       luaE_warnerror(L, "__gc metamethod");
       L->top--;  /* pops error object */
-      }
     }
   }
+}
 
 
 /*
@@ -1333,13 +1333,13 @@ static void genstep (lua_State *L, global_State *g) {
         g->lastatomic = numobjs;  /* signal that last collection was bad */
         setpause(g);  /* do a long wait for next (major) collection */
       }
-  }
+    }
     else {  /* regular case; do a minor collection */
-    youngcollection(L, g);
+      youngcollection(L, g);
       setminordebt(g);
-    g->GCestimate = majorbase;  /* preserve base value */
+      g->GCestimate = majorbase;  /* preserve base value */
+    }
   }
-}
   lua_assert(isdecGCmodegen(g));
 }
 

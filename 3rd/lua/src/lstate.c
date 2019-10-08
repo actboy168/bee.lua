@@ -96,7 +96,7 @@ void luaE_setdebt (global_State *g, l_mem debt) {
 }
 
 
-LUA_API int lua_setCstacklimit (lua_State *L, unsigned int limit) {
+LUA_API int lua_setcstacklimit (lua_State *L, unsigned int limit) {
   global_State *g = G(L);
   int ccalls;
   luaE_freeCI(L);  /* release unused CIs */
@@ -144,11 +144,11 @@ void luaE_enterCcall (lua_State *L) {
       else if (ncalls >= CSTACKMARK) {
         /* not in error-handling zone; raise the error now */
         L->nCcalls = (CSTACKMARK - 1);  /* enter error-handling zone */
-      luaG_runerror(L, "C stack overflow");
-  }
+        luaG_runerror(L, "C stack overflow");
+      }
       /* else stack is in the error-handling zone;
          allow message handler to work */
-}
+    }
   }
 }
 
