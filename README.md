@@ -17,7 +17,6 @@ Lua runtime and toolset
 * Enable ansi escape code on windows
 * String encoding on windows using utf8
 * Remove randomness when traversing the table
-* Disable load binary chunk (for security)
 * Add error hook (for debugger)
 * Add resume hook (for debugger)
 
