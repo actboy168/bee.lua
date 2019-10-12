@@ -18,7 +18,7 @@ Lua runtime and toolset
 * String encoding on windows using utf8
 * Remove randomness when traversing the table
 * Add error hook (for debugger)
-* Add resume hook (for debugger)
+* Add resume/yield hook (for debugger)
 
 ## Feature
 
