@@ -407,11 +407,11 @@ typedef union UValue {
 */
 typedef struct Udata {
   CommonHeader;
-  lua_Integer gchash;
   unsigned short nuvalue;  /* number of user values */
   size_t len;  /* number of bytes */
   struct Table *metatable;
   GCObject *gclist;
+  unsigned int gchash;
   UValue uv[1];  /* user values */
 } Udata;
 
@@ -427,10 +427,10 @@ typedef struct Udata {
 */
 typedef struct Udata0 {
   CommonHeader;
-  lua_Integer gchash;
   unsigned short nuvalue;  /* number of user values */
   size_t len;  /* number of bytes */
   struct Table *metatable;
+  unsigned int gchash;
   union {LUAI_MAXALIGN;} bindata;
 } Udata0;
 
@@ -676,7 +676,6 @@ typedef union Node {
 
 typedef struct Table {
   CommonHeader;
-  lua_Integer gchash;
   lu_byte flags;  /* 1<<p means tagmethod(p) is not present */
   lu_byte lsizenode;  /* log2 of size of 'node' array */
   unsigned int alimit;  /* "limit" of 'array' array */
@@ -685,6 +684,7 @@ typedef struct Table {
   Node *lastfree;  /* any free position is before this position */
   struct Table *metatable;
   GCObject *gclist;
+  unsigned int gchash;
 } Table;
 
 
