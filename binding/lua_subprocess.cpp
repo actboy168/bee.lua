@@ -72,7 +72,7 @@ namespace bee::lua_subprocess {
             if (LUA_TNIL != lua_rawget(L, lua_upvalueindex(1))) {
                 return 1;
             }
-            if (LUA_TTABLE == lua_getuservalue(L, 1)) {
+            if (LUA_TTABLE == lua_getiuservalue(L, 1, 1)) {
                 lua_pushvalue(L, 2);
                 if (LUA_TNIL != lua_rawget(L, -2)) {
                     return 1;
@@ -82,17 +82,13 @@ namespace bee::lua_subprocess {
         }
 
         static int newindex(lua_State* L) {
-            if (LUA_TTABLE != lua_getuservalue(L, 1)) {
+            if (LUA_TTABLE != lua_getiuservalue(L, 1, 1)) {
                 lua_pop(L, 1);
                 lua_newtable(L);
                 lua_pushvalue(L, -1);
-#if LUA_VERSION_NUM >= 504
-                if (!lua_setuservalue(L, 1)) {
+                if (!lua_setiuservalue(L, 1, 1)) {
                     return 0;
                 }
-#else
-                lua_setuservalue(L, 1);
-#endif
             }
             lua_insert(L, -3);
             lua_rawset(L, -3);
