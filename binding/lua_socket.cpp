@@ -97,7 +97,7 @@ namespace bee::lua_socket {
         luafd&      self = checkfd(L, 1);
         lua_Integer len = luaL_optinteger(L, 2, LUAL_BUFFERSIZE);
         if (len > (std::numeric_limits<int>::max)()) {
-            return luaL_error(L, "bad argument #1 to 'recv' (invalid number)");
+            return luaL_argerror(L, 2, "invalid number");
         }
         luaL_Buffer b;
         luaL_buffinit(L, &b);
@@ -143,7 +143,7 @@ namespace bee::lua_socket {
         luafd&      self = checkfd(L, 1);
         lua_Integer len = luaL_optinteger(L, 2, LUAL_BUFFERSIZE);
         if (len > (std::numeric_limits<int>::max)()) {
-            return luaL_error(L, "bad argument #1 to 'recv' (invalid number)");
+            return luaL_argerror(L, 2, "invalid number");
         }
         endpoint    ep = endpoint::from_empty();
         luaL_Buffer b;
