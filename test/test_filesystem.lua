@@ -654,3 +654,18 @@ function test_fs:test_filelock_2()
     f:close()
     fs.remove(fs.path("temp.lock"))
 end
+
+function test_fs:test_tostring()
+    local function test(s)
+        lu.assertEquals(fs.path(s):string(), s)
+        lu.assertEquals(tostring(fs.path(s)), s)
+    end
+    test ""
+    test "简体中文"
+    test "繁體中文"
+    test "日本語"
+    test "한국어"
+    test "العربية"
+    test "עברית"
+    test "🤣🤪"
+end
