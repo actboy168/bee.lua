@@ -3,7 +3,7 @@ name: build
 on: [push, pull_request]
 
 jobs:
-  msvc:
+  windows:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@master
@@ -20,35 +20,6 @@ jobs:
     - name: Test
       run: |
         build\msvc\bin\bootstrap.exe test\test.lua
-
-  mingw:
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@master
-      with:
-        fetch-depth: 1
-        submodules : recursive
-    - name: Init msys2
-      run: |
-        choco install -y msys2
-        refreshenv
-        c:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -Syu"
-        exit
-    - name: Update mingw
-      run: |
-        c:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -Syu mingw-w64-x86_64-gcc ninja"
-        c:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -Su"
-        exit
-    - name: Compile
-      run: |
-        cd make
-        .\lua.exe mingw-init.lua c:\tools\msys64
-        .\lua.exe mingw.lua gcc --version
-        .\lua.exe mingw.lua ninja -f ninja/mingw.ninja
-    - name: Test
-      run: |
-        cd make
-        .\lua.exe mingw.lua build\mingw\bin\bootstrap.exe .\test\test.lua
 
   linux:
     runs-on: ubuntu-latest
