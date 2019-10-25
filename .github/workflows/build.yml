@@ -1,0 +1,71 @@
+name: build
+
+on: [push, pull_request]
+
+jobs:
+  msvc:
+    runs-on: windows-latest
+    steps:
+    - name: Init
+      run: |
+        choco install -y ninja
+        refreshenv
+    - name: Compile
+      run: |
+        make\lua.exe make\msvc.lua ninja -f ninja\msvc.ninja
+    - name: Test
+      run: |
+        build\msvc\bin\bootstrap.exe test\test.lua
+
+  mingw:
+    runs-on: windows-latest
+    steps:
+    - name: Init msys2
+      run: |
+        choco install -y msys2
+        refreshenv
+        c:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -Syu"
+        exit
+    - name: Update mingw
+      run: |
+        c:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -Syu mingw-w64-x86_64-gcc ninja"
+        c:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -Su"
+        exit
+    - name: Compile
+      run: |
+        cd make
+        lua mingw-init.lua c:\tools\msys64
+        lua mingw.lua gcc --version
+        lua mingw.lua ninja -f ninja/mingw.ninja
+    - name: Test
+      run: |
+        cd make
+        lua mingw.lua build\mingw\bin\bootstrap.exe .\test\test.lua
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Init
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libreadline-dev ninja-build
+    - name: Compile
+      run: |
+        ninja -f ninja/linux.ninja
+    - name: Test
+      run: |
+        build/linux/bin/bootstrap test/test.lua
+
+  macos:
+    runs-on: macOS-latest
+    steps:
+    - name: Init
+      run: |
+        sudo xcode-select -s /Applications/Xcode_10.2.app
+        brew install ninja
+    - name: Compile
+      run: |
+        ninja -f ninja/macos.ninja
+    - name: Test
+      run: |
+        build/macos/bin/bootstrap test/test.lua
