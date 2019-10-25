@@ -6,6 +6,10 @@ jobs:
   msvc:
     runs-on: windows-latest
     steps:
+    - uses: actions/checkout@master
+      with:
+        fetch-depth: 1
+        submodules : recursive
     - name: Init
       run: |
         choco install -y ninja
@@ -20,6 +24,10 @@ jobs:
   mingw:
     runs-on: windows-latest
     steps:
+    - uses: actions/checkout@master
+      with:
+        fetch-depth: 1
+        submodules : recursive
     - name: Init msys2
       run: |
         choco install -y msys2
@@ -45,6 +53,10 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@master
+      with:
+        fetch-depth: 1
+        submodules : recursive
     - name: Init
       run: |
         sudo apt-get update
@@ -59,6 +71,10 @@ jobs:
   macos:
     runs-on: macOS-latest
     steps:
+    - uses: actions/checkout@master
+      with:
+        fetch-depth: 1
+        submodules : recursive
     - name: Init
       run: |
         sudo xcode-select -s /Applications/Xcode_10.2.app
