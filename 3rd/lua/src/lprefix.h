@@ -43,8 +43,37 @@
 
 #endif			/* } */
 
-#include <assert.h>
-#define lua_assert(e) assert(e)
+
+#if !defined(NDEBUG)
+
+#include <stdlib.h>
+#include "lauxlib.h"
+
+inline void _lua_assert(const char* file, unsigned line, const char* message) {
+    fprintf(stderr, "(%s:%d) %s\n", file, line, message);
+    fflush(stderr);
+    abort();
+}
+
+#define lua_assert(e) (void)(                                \
+        (!!(e)) ||                                           \
+        (_lua_assert(__FILE__, (unsigned)(__LINE__), #e), 0) \
+    )
+
+#define luai_apicheck(l, e)                  \
+    do {                                     \
+        if (!(e)) {                          \
+            lua_checkstack((l), 6);          \
+            luaL_traceback((l), (l), #e, 0); \
+            _lua_assert(                     \
+                __FILE__,                    \
+                (unsigned)(__LINE__),        \
+                lua_tostring((l), -1));      \
+            lua_pop((l), 1);                 \
+        }                                    \
+    } while(0)
+
+#endif
 
 #include <stdlib.h>
 
