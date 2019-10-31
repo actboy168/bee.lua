@@ -49,27 +49,34 @@
 #include <stdlib.h>
 #include "lauxlib.h"
 
-inline void _lua_assert(const char* file, unsigned line, const char* message) {
-    fprintf(stderr, "(%s:%d) %s\n", file, line, message);
-    fflush(stderr);
-    abort();
-}
-
-#define lua_assert(e) (void)(                                \
-        (!!(e)) ||                                           \
-        (_lua_assert(__FILE__, (unsigned)(__LINE__), #e), 0) \
+#define lua_assert(e) (void)(               \
+        (!!(e)) ||                          \
+        (                                   \
+            fprintf(stderr, "(%s:%d) %s\n", \
+                __FILE__,                   \
+                (unsigned)(__LINE__),       \
+                #e),                        \
+            fflush(stderr),                 \
+            abort(),                        \
+            0                               \
+        )                                   \
     )
 
 #define luai_apicheck(l, e)                  \
     do {                                     \
         if (!(e)) {                          \
-            lua_checkstack((l), 6);          \
-            luaL_traceback((l), (l), #e, 0); \
-            _lua_assert(                     \
+            fprintf(stderr, "(%s:%d) %s\n",  \
                 __FILE__,                    \
                 (unsigned)(__LINE__),        \
+                #e);                         \
+            fflush(stderr);                  \
+            lua_checkstack((l), 6);          \
+            luaL_traceback((l), (l), 0, 0);  \
+            fprintf(stderr, "%s\n",          \
                 lua_tostring((l), -1));      \
+            fflush(stderr);                  \
             lua_pop((l), 1);                 \
+            abort();                         \
         }                                    \
     } while(0)
 
