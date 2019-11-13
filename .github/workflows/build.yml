@@ -48,7 +48,6 @@ jobs:
         submodules : recursive
     - name: Init
       run: |
-        sudo xcode-select -s /Applications/Xcode_10.2.app
         brew install ninja
     - name: Compile
       run: |
