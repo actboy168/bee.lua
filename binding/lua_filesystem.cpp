@@ -380,7 +380,7 @@ namespace bee::lua_filesystem {
         const fs::path& from = path::to(L, 1);
         const fs::path& to = path::to(L, 2);
         const bool      overwritten = !!lua_toboolean(L, 3);
-#   if defined(__MINGW32__) && defined(BEE_ENABLE_FILESYSTEM) || defined(__APPLE__) && !BEE_ENABLE_FILESYSTEM
+#   if defined(__MINGW32__) && defined(BEE_ENABLE_FILESYSTEM) || defined(__APPLE__) && !BEE_ENABLE_FILESYSTEM || defined(__linux__)
         if (overwritten && fs::exists(from)) {
             fs::remove(to);
         }
