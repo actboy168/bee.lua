@@ -102,7 +102,7 @@
 #	define BEE_CRT_NAME "bionic"
 #elif defined(_MSC_VER)
 #   define BEE_CRT_NAME "msvc"
-#	define BEE_CRT_NAME BEE_COMPILER_VERSION
+#	define BEE_CRT_VERSION BEE_COMPILER_VERSION
 #elif defined(__GLIBC__)
 #   define BEE_CRT_NAME "glibc"
 #	define BEE_CRT_VERSION "glibc " \
