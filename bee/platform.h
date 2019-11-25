@@ -110,8 +110,7 @@
 #elif defined(__apple_build_version__) || defined(__ORBIS__) || defined(__EMSCRIPTEN__) || defined(__llvm__)
 #   define BEE_CRT_NAME "libc++"
 #	define BEE_CRT_VERSION "libc++ " \
-		BEE_STRINGIZE(_LIBCPP_VERSION) "." \
-		BEE_STRINGIZE(_LIBCPP_ABI_VERSION)
+		BEE_STRINGIZE(_LIBCPP_VERSION)
 #else
 #   define BEE_CRT_NAME "none"
 #	define BEE_CRT_VERSION "none"
