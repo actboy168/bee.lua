@@ -15,6 +15,12 @@ local platform = require 'bee.platform'
 --    dofile './3rd/luaffi/src/test.lua'
 --end
 
+print("OS:       ", platform.OS)
+print("Arch:     ", platform.Arch)
+print("Compiler: ", platform.CompilerVersion)
+print("CRT:      ", platform.CRTVersion)
+print("DEBUG:    ", platform.DEBUG)
+
 local function fd_count()
     local ls = require "bee.socket"
     local sock = assert(ls.bind("tcp", "127.0.0.1", 0))

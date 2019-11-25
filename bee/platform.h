@@ -34,7 +34,7 @@
 // clang defines __GNUC__ or _MSC_VER
 #	define BEE_COMPILER_CLANG (__clang_major__ * 10000 + __clang_minor__ * 100 + __clang_patchlevel__)
 #   define BEE_COMPILER_NAME "clang"
-#	define BEE_COMPILER_FULL_NAME "Clang " \
+#	define BEE_COMPILER_VERSION "Clang " \
 		BEE_STRINGIZE(__clang_major__) "." \
 		BEE_STRINGIZE(__clang_minor__) "." \
 		BEE_STRINGIZE(__clang_patchlevel__)
@@ -43,52 +43,52 @@
 #	define BEE_COMPILER_MSVC _MSC_VER
 #   define BEE_COMPILER_NAME "msvc"
 #	if _MSC_VER >= 1923
-#		define BEE_COMPILER_FULL_NAME "MSVC 16.3"
+#		define BEE_COMPILER_VERSION "MSVC 16.3"
 #	elif _MSC_VER >= 1922
-#		define BEE_COMPILER_FULL_NAME "MSVC 16.2"
+#		define BEE_COMPILER_VERSION "MSVC 16.2"
 #	elif _MSC_VER >= 1921
-#		define BEE_COMPILER_FULL_NAME "MSVC 16.1"
+#		define BEE_COMPILER_VERSION "MSVC 16.1"
 #	elif _MSC_VER >= 1920
-#		define BEE_COMPILER_FULL_NAME "MSVC 16.0"
+#		define BEE_COMPILER_VERSION "MSVC 16.0"
 #	elif _MSC_VER >= 1916
-#		define BEE_COMPILER_FULL_NAME "MSVC 15.9"
+#		define BEE_COMPILER_VERSION "MSVC 15.9"
 #	elif _MSC_VER >= 1915
-#		define BEE_COMPILER_FULL_NAME "MSVC 15.8"
+#		define BEE_COMPILER_VERSION "MSVC 15.8"
 #	elif _MSC_VER >= 1914
-#		define BEE_COMPILER_FULL_NAME "MSVC 15.7"
+#		define BEE_COMPILER_VERSION "MSVC 15.7"
 #	elif _MSC_VER >= 1913
-#		define BEE_COMPILER_FULL_NAME "MSVC 15.6"
+#		define BEE_COMPILER_VERSION "MSVC 15.6"
 #	elif _MSC_VER >= 1912
-#		define BEE_COMPILER_FULL_NAME "MSVC 15.5"
+#		define BEE_COMPILER_VERSION "MSVC 15.5"
 #	elif _MSC_VER >= 1911
-#		define BEE_COMPILER_FULL_NAME "MSVC 15.3"
+#		define BEE_COMPILER_VERSION "MSVC 15.3"
 #	elif _MSC_VER >= 1910
-#		define BEE_COMPILER_FULL_NAME "MSVC 15.0"
+#		define BEE_COMPILER_VERSION "MSVC 15.0"
 #	elif _MSC_VER >= 1900
-#		define BEE_COMPILER_FULL_NAME "MSVC 14.0"
+#		define BEE_COMPILER_VERSION "MSVC 14.0"
 #	elif _MSC_VER >= 1800
-#		define BEE_COMPILER_FULL_NAME "MSVC 12.0"
+#		define BEE_COMPILER_VERSION "MSVC 12.0"
 #	elif _MSC_VER >= 1700
-#		define BEE_COMPILER_FULL_NAME "MSVC 11.0"
+#		define BEE_COMPILER_VERSION "MSVC 11.0"
 #	elif _MSC_VER >= 1600
-#		define BEE_COMPILER_FULL_NAME "MSVC 10.0"
+#		define BEE_COMPILER_VERSION "MSVC 10.0"
 #	elif _MSC_VER >= 1500
-#		define BEE_COMPILER_FULL_NAME "MSVC 9.0"
+#		define BEE_COMPILER_VERSION "MSVC 9.0"
 #	elif _MSC_VER >= 1400
-#		define BEE_COMPILER_FULL_NAME "MSVC 8.0"
+#		define BEE_COMPILER_VERSION "MSVC 8.0"
 #	elif _MSC_VER >= 1310
-#		define BEE_COMPILER_FULL_NAME "MSVC 7.1"
+#		define BEE_COMPILER_VERSION "MSVC 7.1"
 #	elif _MSC_VER >= 1300
-#		define BEE_COMPILER_FULL_NAME "MSVC 7.0"
+#		define BEE_COMPILER_VERSION "MSVC 7.0"
 #	elif _MSC_VER >= 1200
-#		define BEE_COMPILER_FULL_NAME "MSVC 6.0"
+#		define BEE_COMPILER_VERSION "MSVC 6.0"
 #	else
-#		define BEE_COMPILER_FULL_NAME "MSVC"
+#		define BEE_COMPILER_VERSION "MSVC"
 #	endif //
 #elif defined(__GNUC__)
 #	define BEE_COMPILER_GCC (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 #	define BEE_COMPILER_NAME "gcc"
-#	define BEE_COMPILER_FULL_NAME "GCC " \
+#	define BEE_COMPILER_VERSION "GCC " \
 		BEE_STRINGIZE(__GNUC__) "." \
 		BEE_STRINGIZE(__GNUC_MINOR__) "." \
 		BEE_STRINGIZE(__GNUC_PATCHLEVEL__)
@@ -98,23 +98,30 @@
 
 // see https://sourceforge.net/p/predef/wiki/Libraries/
 #if defined(__BIONIC__)
-#	define BEE_CRT_BIONIC 1
 #   define BEE_CRT_NAME "bionic"
+#	define BEE_CRT_NAME "bionic"
 #elif defined(_MSC_VER)
-#	define BEE_CRT_MSVC 1
 #   define BEE_CRT_NAME "msvc"
+#	define BEE_CRT_NAME BEE_COMPILER_VERSION
 #elif defined(__GLIBC__)
-#	define BEE_CRT_GLIBC (__GLIBC__ * 10000 + __GLIBC_MINOR__ * 100)
 #   define BEE_CRT_NAME "glibc"
+#	define BEE_CRT_VERSION "glibc " \
+		BEE_STRINGIZE(__GLIBC__) "." \
+		BEE_STRINGIZE(__GLIBC_MINOR__)
 #elif defined(__MINGW32__) || defined(__MINGW64__)
-#	define BEE_CRT_MINGW 1
 #   define BEE_CRT_NAME "mingw"
+#	define BEE_CRT_VERSION "MinGW " \
+		BEE_STRINGIZE(__GNUC__) "." \
+		BEE_STRINGIZE(__GNUC_MINOR__) "." \
+		BEE_STRINGIZE(__GNUC_PATCHLEVEL__)
 #elif defined(__apple_build_version__) || defined(__ORBIS__) || defined(__EMSCRIPTEN__) || defined(__llvm__)
-#	define BEE_CRT_LIBCXX 1
 #   define BEE_CRT_NAME "libc++"
+#	define BEE_CRT_VERSION "libc++ " \
+		BEE_STRINGIZE(_LIBCPP_VERSION) "." \
+		BEE_STRINGIZE(_LIBCPP_ABI_VERSION)
 #else
-#	define BEE_CRT_NONE 1
 #   define BEE_CRT_NAME "none"
+#	define BEE_CRT_VERSION "none"
 #endif
 
 #if defined(__x86_64__)    \

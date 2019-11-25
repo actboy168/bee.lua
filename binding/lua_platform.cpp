@@ -15,6 +15,10 @@ namespace bee::lua_platform {
         lua_setfield(L, -2, "Compiler");
         lua_pushboolean(L, BEE_DEBUG);
         lua_setfield(L, -2, "DEBUG");
+        lua_pushstring(L, BEE_COMPILER_VERSION);
+        lua_setfield(L, -2, "CompilerVersion");
+        lua_pushstring(L, BEE_CRT_VERSION);
+        lua_setfield(L, -2, "CRTVersion");
         return 1;
     }
 }

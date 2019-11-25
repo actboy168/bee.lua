@@ -58,5 +58,11 @@ function test_plat:test_1()
         lu.assertIsTrue(platform.Compiler == 'gcc' or platform.Compiler == 'clang')
         support.linux.Compiler = platform.Compiler
     end
-    lu.assertEquals(support[plat], platform)
+    local info = {}
+    for k, v in pairs(platform) do
+        info[k] = v
+    end
+    info.CompilerVersion = nil
+    info.CRTVersion = nil
+    lu.assertEquals(support[plat], info)
 end
