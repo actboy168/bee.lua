@@ -31,6 +31,20 @@ end
 
 test_fs = {}
 
+local ALLOW_WRITE = 0x92
+local USER_WRITE = 0x80
+
+function test_fs:test_setup()
+    if fs.exists(fs.path('temp1.txt')) then
+        fs.path('temp1.txt'):add_permissions(ALLOW_WRITE)
+        os.remove('temp1.txt')
+    end
+    if fs.exists(fs.path('temp2.txt')) then
+        fs.path('temp2.txt'):add_permissions(ALLOW_WRITE)
+        os.remove('temp2.txt')
+    end
+end
+
 function test_fs:test_path()
     local path = fs.path('')
     lu.assertIsTrue(type(path) == 'userdata' or type(path) == 'table')
@@ -166,9 +180,6 @@ function test_fs:test_equal_extension()
     equal_extension('a/b/c..lua', '.lua')
     equal_extension('a/b/c..lua', 'lua')
 end
-
-local ALLOW_WRITE = 0x92
-local USER_WRITE = 0x80
 
 function test_fs:test_permissions()
     local filename = 'temp.txt'
@@ -525,6 +536,24 @@ function test_fs:test_copy_file()
     create_file('temp1.txt', tostring(os.time()))
     create_file('temp2.txt', tostring(os.clock()))
     copy_file_failed('temp1.txt', 'temp2.txt')
+
+    create_file('temp1.txt', tostring(os.time()))
+    create_file('temp2.txt', tostring(os.clock()))
+    lu.assertEquals(fs.path('temp1.txt'):permissions() & USER_WRITE, USER_WRITE)
+    fs.path('temp1.txt'):remove_permissions(ALLOW_WRITE)
+    lu.assertEquals(fs.path('temp1.txt'):permissions() & USER_WRITE, 0)
+    lu.assertEquals(fs.path('temp2.txt'):permissions() & USER_WRITE, USER_WRITE)
+    fs.copy_file(fs.path('temp1.txt'), fs.path('temp2.txt'), true)
+    lu.assertIsTrue(fs.exists(fs.path('temp1.txt')), 'temp1.txt')
+    lu.assertIsTrue(fs.exists(fs.path('temp2.txt')), 'temp2.txt')
+    lu.assertEquals(fs.path('temp2.txt'):permissions() & USER_WRITE, 0)
+    lu.assertEquals(read_file('temp1.txt'), read_file('temp2.txt'))
+    fs.path('temp1.txt'):add_permissions(ALLOW_WRITE)
+    fs.path('temp2.txt'):add_permissions(ALLOW_WRITE)
+    os.remove('temp1.txt')
+    os.remove('temp2.txt')
+    lu.assertIsFalse(fs.exists(fs.path('temp1.txt')), 'temp1.txt')
+    lu.assertIsFalse(fs.exists(fs.path('temp2.txt')), 'temp2.txt')
 end
 
 function test_fs:test_list_directory()

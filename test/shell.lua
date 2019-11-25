@@ -21,7 +21,7 @@ function shell:del_readonly(filename)
 end
 
 function shell:pwd()
-    local command = (platform.OS == 'Windows') and 'echo %cd%' or 'pwd'
+    local command = (platform.OS == 'Windows') and 'echo %cd%' or 'pwd -P'
     return (io.popen(command):read 'a'):gsub('[\n\r]*$', '')
 end
 
