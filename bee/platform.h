@@ -103,17 +103,10 @@
 #elif defined(_MSC_VER)
 #   define BEE_CRT_NAME "msvc"
 #	define BEE_CRT_VERSION BEE_COMPILER_VERSION
-#elif defined(__GLIBC__)
-#   define BEE_CRT_NAME "glibc"
-#	define BEE_CRT_VERSION "glibc " \
-		BEE_STRINGIZE(__GLIBC__) "." \
-		BEE_STRINGIZE(__GLIBC_MINOR__)
-#elif defined(__MINGW32__) || defined(__MINGW64__)
-#   define BEE_CRT_NAME "mingw"
-#	define BEE_CRT_VERSION "MinGW " \
-		BEE_STRINGIZE(__GNUC__) "." \
-		BEE_STRINGIZE(__GNUC_MINOR__) "." \
-		BEE_STRINGIZE(__GNUC_PATCHLEVEL__)
+#elif defined(__GLIBCXX__)
+#   define BEE_CRT_NAME "libstdc++"
+#	define BEE_CRT_VERSION "libstdc++ " \
+		BEE_STRINGIZE(__GLIBCXX__)
 #elif defined(__apple_build_version__) || defined(__ORBIS__) || defined(__EMSCRIPTEN__) || defined(__llvm__)
 #   define BEE_CRT_NAME "libc++"
 #	define BEE_CRT_VERSION "libc++ " \

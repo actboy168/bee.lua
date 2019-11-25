@@ -109,7 +109,7 @@ function test_fs:test_absolute_relative()
         lu.assertIsTrue(fs.path(path):is_relative(), path)
     end
     assertIsAbsolute(C..'a/b')
-    if platform.CRT ~= 'mingw' then
+    if not (platform.OS == 'Windows' and platform.CRT == 'libstdc++') then
         -- TODO: mingw bug
         assertIsAbsolute('//a/b')
     end

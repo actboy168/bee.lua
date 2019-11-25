@@ -27,14 +27,14 @@ support.mingw = {
     OS = 'Windows',
     Arch = '64',
     Compiler = 'gcc',
-    CRT = 'mingw',
+    CRT = 'libstdc++',
     DEBUG = false,
 }
 support.linux = {
     OS = 'Linux',
     Arch = '64',
     Compiler = 'clang',
-    CRT = 'glibc',
+    CRT = 'libstdc++',
     DEBUG = false,
 }
 support.macos = {
