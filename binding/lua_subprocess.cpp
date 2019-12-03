@@ -190,10 +190,35 @@ namespace bee::lua_subprocess {
             return args;
         }
 
+        static luaL_Stream* get_file(lua_State* L, int idx) {
+            void *p = lua_touserdata(L, idx);
+            void* r = NULL;
+            if (p) {
+                if (lua_getmetatable(L, idx)) {
+                    do {
+                        luaL_getmetatable(L, "bee::file");
+                        if (lua_rawequal(L, -1, -2)) {
+                            r = p;
+                            break;
+                        }
+                        lua_pop(L, 1);
+                        luaL_getmetatable(L, LUA_FILEHANDLE);
+                        if (lua_rawequal(L, -1, -2)) {
+                            r = p;
+                            break;
+                        }
+                    } while (false);
+                    lua_pop(L, 2);
+                }
+            }
+            luaL_argexpected(L, r != NULL, idx, LUA_FILEHANDLE);
+            return (luaL_Stream*)r;
+        }
+
         static file::handle cast_stdio(lua_State* L, const char* name) {
             switch (lua_getfield(L, 1, name)) {
             case LUA_TUSERDATA: {
-                luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, -1, LUA_FILEHANDLE);
+                luaL_Stream* p = get_file(L, -1);
                 if (!p->closef) {
                     lua_pop(L, 1);
                     return file::handle::invalid();
@@ -371,7 +396,7 @@ namespace bee::lua_subprocess {
     }
 
     static int peek(lua_State* L) {
-        luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, 1, LUA_FILEHANDLE);
+        luaL_Stream* p = spawn::get_file(L, 1);
         if (!p->closef) {
             auto ec = std::make_error_code(std::errc::broken_pipe);
             lua_pushnil(L);
@@ -394,7 +419,7 @@ namespace bee::lua_subprocess {
 #include <io.h>
 
     static int filemode(lua_State* L) {
-        luaL_Stream* p = (luaL_Stream*)luaL_checkudata(L, 1, LUA_FILEHANDLE);
+        luaL_Stream* p = spawn::get_file(L, 1);
         const char*  mode = luaL_checkstring(L, 2);
         if (p && p->closef && p->f) {
             if (mode[0] == 'b') {
