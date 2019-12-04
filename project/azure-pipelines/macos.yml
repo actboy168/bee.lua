@@ -7,19 +7,3 @@ steps:
 - bash: |
    ninja -f ninja/macos.ninja
   displayName: Compile
-
-- bash: |
-   build/macos/bin/bootstrap test/test.lua
-  displayName: Test
-
-- task: CopyFiles@2
-  inputs:
-    Contents: |
-      **
-    SourceFolder: 'build/macos/bin'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)/macos'
-
-- task: PublishBuildArtifacts@1
-  inputs:
-    pathToPublish: $(Build.ArtifactStagingDirectory)
-    artifactName: bee
