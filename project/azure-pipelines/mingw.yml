@@ -12,7 +12,7 @@ steps:
    exit
   displayName: 'Update mingw'
 
-- script: |
+- powershell: |
    c:\tools\msys64\usr\bin\bash.exe -lc "cd '$PWD';ninja -f ninja/mingw.ninja"
   displayName: Compile
 
