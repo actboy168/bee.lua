@@ -39,7 +39,7 @@ jobs:
         c:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -Su"
     - name: Compile
       run: |
-        c:\tools\msys64\usr\bin\bash.exe -lc "cd '${PWD}';ninja -f ninja/mingw.ninja"
+        c:\tools\msys64\usr\bin\bash.exe -lc "export PATH=/mingw64/bin:$PATH;cd '${PWD}';ninja -f ninja/mingw.ninja"
     - name: Test
       run: |
         c:\tools\msys64\usr\bin\bash.exe -lc "cd '${PWD}';build/mingw/bin/bootstrap test/test.lua"
