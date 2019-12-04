@@ -40,13 +40,13 @@ jobs:
     - name: Compile
       run: |
         cd make
-        lua mingw-init.lua c:\tools\msys64
-        lua mingw.lua gcc --version
-        lua mingw.lua ninja -f ninja/mingw.ninja
+        lua.exe mingw-init.lua c:\tools\msys64
+        lua.exe mingw.lua gcc --version
+        lua.exe mingw.lua ninja -f ninja/mingw.ninja
     - name: Test
       run: |
         cd make
-        lua mingw.lua build\mingw\bin\bootstrap.exe .\test\test.lua
+        lua.exe mingw.lua build\mingw\bin\bootstrap.exe .\test\test.lua
 
   linux:
     runs-on: ubuntu-latest
