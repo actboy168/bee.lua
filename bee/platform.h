@@ -5,9 +5,9 @@
 
 // see http://sourceforge.net/apps/mediawiki/predef/index.php?title=Operating_Systems
 #if defined(_WIN32)
-#   ifndef _WIN32_WINNT
-#       error "_WIN32_WINNT* is not defined!"
-#   endif
+#	ifndef _WIN32_WINNT
+#		error "_WIN32_WINNT* is not defined!"
+#	endif
 #	define BEE_OS_WINDOWS _WIN32_WINNT
 #	define BEE_OS_NAME "Windows"
 #elif defined(__ANDROID__)
@@ -33,7 +33,7 @@
 #if defined(__clang__)
 // clang defines __GNUC__ or _MSC_VER
 #	define BEE_COMPILER_CLANG (__clang_major__ * 10000 + __clang_minor__ * 100 + __clang_patchlevel__)
-#   define BEE_COMPILER_NAME "clang"
+#	define BEE_COMPILER_NAME "clang"
 #	define BEE_COMPILER_VERSION "Clang " \
 		BEE_STRINGIZE(__clang_major__) "." \
 		BEE_STRINGIZE(__clang_minor__) "." \
@@ -41,8 +41,8 @@
 #elif defined(_MSC_VER)
 // see https://docs.microsoft.com/en-us/cpp/preprocessor/predefined-macros
 #	define BEE_COMPILER_MSVC _MSC_VER
-#   define BEE_COMPILER_NAME "msvc"
-#if _MSC_VER >= 1924
+#	define BEE_COMPILER_NAME "msvc"
+#	if _MSC_VER >= 1924
 #		define BEE_COMPILER_VERSION "MSVC 16.4"
 #	elif _MSC_VER >= 1923
 #		define BEE_COMPILER_VERSION "MSVC 16.3"
@@ -100,21 +100,21 @@
 
 // see https://sourceforge.net/p/predef/wiki/Libraries/
 #if defined(__BIONIC__)
-#   define BEE_CRT_NAME "bionic"
+#	define BEE_CRT_NAME "bionic"
 #	define BEE_CRT_NAME "bionic"
 #elif defined(_MSC_VER)
-#   define BEE_CRT_NAME "msvc"
+#	define BEE_CRT_NAME "msvc"
 #	define BEE_CRT_VERSION BEE_COMPILER_VERSION
 #elif defined(__GLIBCXX__)
-#   define BEE_CRT_NAME "libstdc++"
+#	define BEE_CRT_NAME "libstdc++"
 #	define BEE_CRT_VERSION "libstdc++ " \
 		BEE_STRINGIZE(__GLIBCXX__)
 #elif defined(__apple_build_version__) || defined(__ORBIS__) || defined(__EMSCRIPTEN__) || defined(__llvm__)
-#   define BEE_CRT_NAME "libc++"
+#	define BEE_CRT_NAME "libc++"
 #	define BEE_CRT_VERSION "libc++ " \
 		BEE_STRINGIZE(_LIBCPP_VERSION)
 #else
-#   define BEE_CRT_NAME "none"
+#	define BEE_CRT_NAME "none"
 #	define BEE_CRT_VERSION "none"
 #endif
 
