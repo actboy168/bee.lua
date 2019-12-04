@@ -16,7 +16,6 @@ steps:
    c:\tools\msys64\usr\bin\bash.exe -lc "export PATH=/mingw64/bin:/usr/bin;cd '$PWD';ninja -f ninja/mingw.ninja"
   displayName: Compile
 
-- script: |
-   cd make
-   lua mingw.lua build\mingw\bin\bootstrap.exe .\test\test.lua
+- powershell: |
+   c:\tools\msys64\usr\bin\bash.exe -lc "cd '$PWD';build/mingw/bin/bootstrap test/test.lua"
   displayName: Test
