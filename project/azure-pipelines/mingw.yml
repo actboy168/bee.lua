@@ -13,7 +13,7 @@ steps:
   displayName: 'Update mingw'
 
 - powershell: |
-   c:\tools\msys64\usr\bin\bash.exe -lc "cd '$PWD';ninja -f ninja/mingw.ninja"
+   c:\tools\msys64\usr\bin\bash.exe -lc "export PATH=/mingw64/bin:$PATH;cd '$PWD';ninja -f ninja/mingw.ninja"
   displayName: Compile
 
 - script: |
