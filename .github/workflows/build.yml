@@ -39,14 +39,10 @@ jobs:
         c:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -Su"
     - name: Compile
       run: |
-        cd make
-        .\lua mingw-init.lua c:\tools\msys64
-        .\lua mingw.lua gcc --version
-        .\lua mingw.lua ninja -f ninja/mingw.ninja
+        c:\tools\msys64\usr\bin\bash.exe -lc "cd '${PWD}';ninja -f ninja/mingw.ninja"
     - name: Test
       run: |
-        cd make
-        .\lua mingw.lua build\mingw\bin\bootstrap.exe .\test\test.lua
+        c:\tools\msys64\usr\bin\bash.exe -lc "cd '${PWD}';build/mingw/bin/bootstrap test/test.lua"
 
   linux:
     runs-on: ubuntu-latest
