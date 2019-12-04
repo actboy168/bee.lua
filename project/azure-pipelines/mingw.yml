@@ -13,10 +13,7 @@ steps:
   displayName: 'Update mingw'
 
 - script: |
-   cd make
-   lua mingw-init.lua c:\tools\msys64
-   lua mingw.lua gcc --version
-   lua mingw.lua ninja -f ninja/mingw.ninja
+   c:\tools\msys64\usr\bin\bash.exe -lc "cd '$PWD';ninja -f ninja/mingw.ninja"
   displayName: Compile
 
 - script: |
