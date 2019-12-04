@@ -6,8 +6,9 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v1
       with:
+        ref: refs/heads/master
         fetch-depth: 1
         submodules : recursive
     - name: Init
