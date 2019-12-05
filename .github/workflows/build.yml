@@ -17,7 +17,11 @@ jobs:
         refreshenv
     - name: Compile
       run: |
-        make\lua.exe make\msvc.lua ninja -f ninja\msvc.ninja
+        for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (
+            set InstallDir=%%i
+        )
+        call "%InstallDir%\Common7\Tools\vsdevcmd.bat"
+        ninja -f ninja\msvc.ninja
 
   mingw:
     runs-on: windows-latest
