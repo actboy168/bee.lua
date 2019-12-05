@@ -6,6 +6,16 @@
 #include <bee/lua/binding.h>
 
 namespace bee::lua {
+#if defined(LUA_USE_POSIX)
+#define l_getc(f)			getc_unlocked(f)
+#define l_lockfile(f)		flockfile(f)
+#define l_unlockfile(f)		funlockfile(f)
+#else
+#define l_getc(f)			getc(f)
+#define l_lockfile(f)		((void)0)
+#define l_unlockfile(f)		((void)0)
+#endif
+
     inline luaL_Stream* tolstream(lua_State* L) {
         return (luaL_Stream*)getObject(L, 1, "file");
     }
@@ -46,6 +56,24 @@ namespace bee::lua {
         luaL_addsize(&b, nr);
         luaL_pushresult(&b);
         return (nr > 0);
+    }
+    static int read_line(lua_State* L, FILE *f, int chop) {
+        luaL_Buffer b;
+        int c;
+        luaL_buffinit(L, &b);
+        do {
+            char *buff = luaL_prepbuffer(&b);
+            int i = 0;
+            l_lockfile(f);
+            while (i < LUAL_BUFFERSIZE && (c = l_getc(f)) != EOF && c != '\n')
+            buff[i++] = c;
+            l_unlockfile(f);
+            luaL_addsize(&b, i);
+        } while (c != EOF && c != '\n');
+        if (!chop && c == '\n')
+            luaL_addchar(&b, c);
+        luaL_pushresult(&b);
+        return (c == '\n' || lua_rawlen(L, -1) > 0);
     }
     inline int f_read(lua_State* L) {
         FILE* f = tofile(L);
@@ -94,6 +122,28 @@ namespace bee::lua {
         }
         return luaL_fileresult(L, status, NULL);
     }
+    static int io_readline (lua_State *L) {
+        luaL_Stream *p = (luaL_Stream *)lua_touserdata(L, lua_upvalueindex(1));
+        if (isclosed(p))
+            return luaL_error(L, "file is already closed");
+        lua_settop(L , 1);
+        int n = read_line(L, p->f, 1);
+        lua_assert(n > 0);
+        if (lua_toboolean(L, -n))
+            return n;
+        else {
+            if (n > 1) {
+                return luaL_error(L, "%s", lua_tostring(L, -n + 1));
+            }
+            return 0;
+        }
+    }
+    inline int f_lines(lua_State* L) {
+        tofile(L);
+        lua_pushvalue(L, 1);
+        lua_pushcclosure(L, io_readline, 1);
+        return 1;
+    }
     inline int _fileclose(lua_State* L) {
         luaL_Stream* p = tolstream(L);
         int ok = fclose(p->f);
@@ -141,7 +191,7 @@ namespace bee::lua {
             const luaL_Reg meth[] = {
                 {"read", f_read},
                 {"write", f_write},
-                //{"lines", f_lines},
+                {"lines", f_lines},
                 //{"flush", f_flush},
                 //{"seek", f_seek},
                 {"close", f_close},
