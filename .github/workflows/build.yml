@@ -23,7 +23,7 @@ jobs:
         ninja -f ninja\msvc.ninja
     - run: |
         mkdir publish
-        xcopy /I /E /Y /Q build\msvc\bin publish\msvc
+        xcopy /I /E /Y /Q  /EXCLUDE:.github\workflows\msvc_exclude build\msvc\bin publish\msvc
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
       with:
@@ -58,7 +58,7 @@ jobs:
         path: publish
 
   linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v1
       with:
