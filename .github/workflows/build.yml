@@ -67,8 +67,8 @@ jobs:
         submodules : recursive
     - name: Init
       run: |
-        sudo apt update
-        sudo apt install -y libreadline-dev ninja-build
+        sudo apt-get update --allow-releaseinfo-change
+        sudo apt-get install -y libreadline-dev ninja-build
     - name: Compile
       run: |
         ninja -f ninja/linux.ninja
