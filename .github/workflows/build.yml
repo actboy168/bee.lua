@@ -21,6 +21,11 @@ jobs:
     - name: Compile
       run: |
         ninja -f ninja\msvc.ninja
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: bee
+        path: build/msvc/bin
 
   mingw:
     runs-on: windows-latest
