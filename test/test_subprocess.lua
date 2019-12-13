@@ -359,3 +359,21 @@ function test_subprocess:test_fork()
     lu.assertEquals(process:wait(), 0)
     os.remove('./test/test_fork.lua')
 end
+
+function test_subprocess:test_setenv()
+    lu.assertEquals(os.getenv "TEST_ENV", nil)
+    local process = createLua([[
+        assert(os.getenv "TEST_ENV" == nil)
+    ]], { stderr = true })
+    lu.assertEquals(process:wait(), 0)
+    lu.assertEquals(process.stderr:read "a", "")
+
+    subprocess.setenv("TEST_ENV", "OK")
+
+    lu.assertEquals(os.getenv "TEST_ENV", "OK")
+    local process = createLua([[
+        assert(os.getenv "TEST_ENV" == "OK")
+    ]], { stderr = true })
+    lu.assertEquals(process:wait(), 0)
+    lu.assertEquals(process.stderr:read "a", "")
+end

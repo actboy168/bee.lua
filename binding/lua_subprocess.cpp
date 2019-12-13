@@ -435,6 +435,18 @@ namespace bee::lua_subprocess {
     static int filemode(lua_State*) { return 0; }
 #endif
 
+    static int lsetenv(lua_State* L) {
+        const char* name = luaL_checkstring(L, 1);
+        const char* value = luaL_checkstring(L, 2);
+#if defined(_WIN32)
+        lua_pushfstring(L, "%s=%s", name, value);
+        ::_putenv(lua_tostring(L, -1));
+#else
+        ::setenv(name, value, 1);
+#endif
+        return 0;
+    }
+
     static int get_id(lua_State* L) {
 #if defined(_WIN32)
         lua_pushinteger(L, ::GetCurrentProcessId());
@@ -450,6 +462,7 @@ namespace bee::lua_subprocess {
             {"spawn", spawn::spawn},
             {"peek", peek},
             {"filemode", filemode},
+            {"setenv", lsetenv},
             {"get_id", get_id},
             {NULL, NULL}};
         luaL_newlib(L, lib);
