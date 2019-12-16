@@ -54,9 +54,13 @@ test_plat = {}
 function test_plat:test_1()
     lu.assertNotNil(__Target__)
     local plat = fs.path(__Target__):parent_path():filename():string():lower()
-    if platform.OS == 'Linux' then
+    if plat == 'linux' then
         lu.assertIsTrue(platform.Compiler == 'gcc' or platform.Compiler == 'clang')
         support.linux.Compiler = platform.Compiler
+    end
+    if plat == 'msvc' then
+        lu.assertIsTrue(platform.Arch == '32' or platform.Arch == '64')
+        support.msvc.Arch = platform.Arch
     end
     local info = {}
     for k, v in pairs(platform) do
