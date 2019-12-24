@@ -218,7 +218,7 @@ const char *luaG_findlocal (lua_State *L, CallInfo *ci, int n, StkId *pos) {
       return NULL;  /* no name */
   }
   if (pos)
-  *pos = base + (n - 1);
+    *pos = base + (n - 1);
   return name;
 }
 
@@ -529,7 +529,7 @@ static const char *gxf (const Proto *p, int pc, Instruction i, int isup) {
 
 
 static const char *getobjname (const Proto *p, int lastpc, int reg,
-                         const char **name) {
+                               const char **name) {
   int pc;
   *name = luaF_getlocalname(p, reg + 1, lastpc);
   if (*name)  /* is a local? */
