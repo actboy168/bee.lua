@@ -5,9 +5,12 @@ local function getProcDir()
     end
     return arg[i + 1]:match("(.+)[/\\][%w_.-]+$")
 end
+local function getTestDir()
+    return arg[0]:match("(.+)[/\\][%w_.-]+$")
+end
 __Target__ = getProcDir()
 __EXT__ = package.cpath:match '[/\\]%?%.([a-z]+)'
-package.path = './test/?.lua'
+package.path = getTestDir() .. '/?.lua'
 package.cpath = ('%s/?.%s'):format(__Target__, __EXT__)
 
 local platform = require 'bee.platform'
