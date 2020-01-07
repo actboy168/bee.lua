@@ -574,7 +574,10 @@ LUA_API void lua_pushcclosure (lua_State *L, lua_CFunction fn, int n) {
 
 LUA_API void lua_pushboolean (lua_State *L, int b) {
   lua_lock(L);
-  setbvalue(s2v(L->top), (b != 0));  /* ensure that true is 1 */
+  if (b)
+    setbtvalue(s2v(L->top));
+  else
+    setbfvalue(s2v(L->top));
   api_incr_top(L);
   lua_unlock(L);
 }
@@ -856,9 +859,9 @@ static void aux_rawset (lua_State *L, int idx, TValue *key, int n) {
   t = gettable(L, idx);
   slot = luaH_set(L, t, key);
   setobj2t(L, slot, s2v(L->top - 1));
-  L->top -= n;
   invalidateTMcache(t);
   luaC_barrierback(L, obj2gco(t), s2v(L->top - 1));
+  L->top -= n;
   lua_unlock(L);
 }
 
