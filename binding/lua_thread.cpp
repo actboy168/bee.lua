@@ -280,9 +280,6 @@ namespace bee::lua_thread {
         if (thread->joinable()) {
             thread->join();
         }
-        else {
-            thread->detach();
-        }
         thread->~thread();
         return 0;
     }
