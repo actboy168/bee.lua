@@ -43,7 +43,8 @@ namespace bee::win::subprocess {
         struct open_result {
             file::handle rd;
             file::handle wr;
-            FILE*  open_file(file::mode m);
+            FILE*        open_read();
+            FILE*        open_write();
             operator bool() { return rd && wr; }
         };
         extern std::vector<net::socket::fd_t> sockets;

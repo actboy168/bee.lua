@@ -235,7 +235,7 @@ namespace bee::lua_subprocess {
                 }
                 lua_pop(L, 1);
                 if (strcmp(name, "stdin") == 0) {
-                    FILE* f = pipe.open_file(file::mode::eWrite);
+                    FILE* f = pipe.open_write();
                     if (!f) {
                         return file::handle::invalid();
                     }
@@ -243,7 +243,7 @@ namespace bee::lua_subprocess {
                     return pipe.rd;
                 }
                 else {
-                    FILE* f = pipe.open_file(file::mode::eRead);
+                    FILE* f = pipe.open_read();
                     if (!f) {
                         return file::handle::invalid();
                     }

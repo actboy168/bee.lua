@@ -396,8 +396,11 @@ namespace bee::posix::subprocess {
     }
 
     namespace pipe {
-        FILE* open_result::open_file(file::mode m) {
-            return file::open(m == file::mode::eRead ? rd : wr, m);
+        FILE* open_result::open_read() {
+            return file::open_read(rd);
+        }
+        FILE* open_result::open_write() {
+            return file::open_write(wr);
         }
         open_result open() {
             int fds[2];

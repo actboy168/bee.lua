@@ -27,11 +27,8 @@ namespace bee::file {
         value_type value;
     };
 
-    enum class mode {
-        eRead,
-        eWrite,
-    };
-    FILE*  open(handle h, mode m);
+    FILE*  open_read(handle h);
+    FILE*  open_write(handle h);
     handle get_handle(FILE* f);
     handle dup(FILE* f);
     handle lock(const handle::string_type& filename);

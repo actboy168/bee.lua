@@ -1,5 +1,4 @@
 #include <bee/utility/file_helper.h>
-#include <assert.h>
 #include <fcntl.h>
 #if defined(_WIN32)
 #include <io.h>
@@ -12,26 +11,20 @@
 namespace bee::file {
 
 #if defined(_WIN32)
-    FILE* open(handle h, mode m) {
-        switch (m) {
-        case mode::eRead: {
-            int fn = _open_osfhandle((intptr_t)(HANDLE)h, _O_RDONLY | _O_BINARY);
-            if (fn == -1) {
-                return 0;
-            }
-            return _fdopen(fn, "rb");
-        }
-        case mode::eWrite: {
-            int fn = _open_osfhandle((intptr_t)(HANDLE)h, _O_WRONLY | _O_BINARY);
-            if (fn == -1) {
-                return 0;
-            }
-            return _fdopen(fn, "wb");
-        }
-        default:
-            assert(false);
+    FILE* open_read(handle h) {
+        int fn = _open_osfhandle((intptr_t)(HANDLE)h, _O_RDONLY | _O_BINARY);
+        if (fn == -1) {
             return 0;
         }
+        return _fdopen(fn, "rb");
+    }
+
+    FILE* open_write(handle h) {
+        int fn = _open_osfhandle((intptr_t)(HANDLE)h, _O_WRONLY | _O_BINARY);
+        if (fn == -1) {
+            return 0;
+        }
+        return _fdopen(fn, "wb");
     }
 
     handle get_handle(FILE* f) {
@@ -64,16 +57,12 @@ namespace bee::file {
         ));
     }
 #else
-    FILE* open(handle h, mode m) {
-        switch (m) {
-        case mode::eRead:
-            return fdopen(h, "rb");
-        case mode::eWrite:
-            return fdopen(h, "wb");
-        default:
-            assert(false);
-            return 0;
-        }
+    FILE* open_read(handle h) {
+        return fdopen(h, "rb");
+    }
+
+    FILE* open_write(handle h) {
+        return fdopen(h, "wb");
     }
 
     handle get_handle(FILE* f) {

@@ -472,7 +472,7 @@ namespace bee::lua_filesystem {
             lua_pushstring(L, make_syserror().what());
             return 2;
         }
-        FILE* f = file::open(fd, file::mode::eWrite);
+        FILE* f = file::open_write(fd);
         if (!f) {
             lua_pushnil(L);
             lua_pushstring(L, make_crterror().what());
