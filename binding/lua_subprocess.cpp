@@ -239,7 +239,7 @@ namespace bee::lua_subprocess {
                     if (!f) {
                         return file::handle::invalid();
                     }
-                    bee::lua::newfile(L, f);
+                    lua::newfile(L, f);
                     return pipe.rd;
                 }
                 else {
@@ -247,7 +247,7 @@ namespace bee::lua_subprocess {
                     if (!f) {
                         return file::handle::invalid();
                     }
-                    bee::lua::newfile(L, f);
+                    lua::newfile(L, f);
                     return pipe.wr;
                 }
             }
