@@ -4,7 +4,7 @@ obj = $builddir/obj
 rule C_lua
   command = gcc -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall $
       -DLUA_USE_MACOSX -DNDEBUG -o $out -c $in
-  description = Compile C $out
+  description = Compile C   $out
   depfile = $out.d
   deps = gcc
 build $obj/lua/lapi.obj: C_lua 3rd/lua/src/lapi.c
@@ -42,7 +42,7 @@ build $obj/lua/lvm.obj: C_lua 3rd/lua/src/lvm.c
 build $obj/lua/lzio.obj: C_lua 3rd/lua/src/lzio.c
 rule LINK_lua
   command = gcc $in -o $out  -lm -ldl && strip -u -r -x $out
-  description = Link Executable $out
+  description = Link    Exe $out
 build $bin/lua: LINK_lua $obj/lua/lapi.obj $obj/lua/lauxlib.obj $
     $obj/lua/lbaselib.obj $obj/lua/lcode.obj $obj/lua/lcorolib.obj $
     $obj/lua/lctype.obj $obj/lua/ldblib.obj $obj/lua/ldebug.obj $
@@ -59,7 +59,7 @@ rule C_bee
       -fvisibility=hidden -I3rd/lua/src -I3rd/lua-seri -I. $
       -Dspan_FEATURE_BYTE_SPAN=1 -DNDEBUG -fPIC -mmacosx-version-min=10.13 $
       -o $out -c $in
-  description = Compile C $out
+  description = Compile C   $out
   depfile = $out.d
   deps = gcc
 build $obj/bee/lua-seri.obj: C_bee 3rd/lua-seri/lua-seri.c
@@ -68,7 +68,7 @@ rule CXX_bee
       -fvisibility=hidden -I3rd/lua/src -I3rd/lua-seri -I. $
       -Dspan_FEATURE_BYTE_SPAN=1 -DNDEBUG -fPIC -mmacosx-version-min=10.13 $
       -o $out -c $in
-  description = Compile CXX $out
+  description = Compile C++ $out
   depfile = $out.d
   deps = gcc
 build $obj/bee/error.obj: CXX_bee bee/error.cpp
@@ -92,7 +92,7 @@ rule LINK_bee
   command = gcc -dynamiclib -Wl,-undefined,dynamic_lookup $in -o $out $
       -framework CoreFoundation -framework CoreServices  && strip -u -r -x $
       $out
-  description = Link SharedLibrary $out
+  description = Link    Dll $out
 build $bin/bee.so: LINK_bee $obj/bee/lua-seri.obj $obj/bee/error.obj $
     $obj/bee/exception.obj $obj/bee/fsevent_osx.obj $obj/bee/endpoint.obj $
     $obj/bee/socket.obj $obj/bee/subprocess_posix.obj $
@@ -104,7 +104,7 @@ build $bin/bee.so: LINK_bee $obj/bee/lua-seri.obj $obj/bee/error.obj $
 rule C_bootstrap
   command = gcc -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall -I3rd/lua/src $
       -DLUA_USE_MACOSX -DNDEBUG -o $out -c $in
-  description = Compile C $out
+  description = Compile C   $out
   depfile = $out.d
   deps = gcc
 build $obj/bootstrap/lapi.obj: C_bootstrap 3rd/lua/src/lapi.c
@@ -142,14 +142,14 @@ build $obj/bootstrap/lzio.obj: C_bootstrap 3rd/lua/src/lzio.c
 rule CXX_bootstrap
   command = g++ -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall -I3rd/lua/src $
       -DLUA_USE_MACOSX -DNDEBUG -o $out -c $in
-  description = Compile CXX $out
+  description = Compile C++ $out
   depfile = $out.d
   deps = gcc
 build $obj/bootstrap/main.obj: CXX_bootstrap bootstrap/main.cpp
 build $obj/bootstrap/progdir.obj: CXX_bootstrap bootstrap/progdir.cpp
 rule LINK_bootstrap
   command = gcc $in -o $out  -lm -ldl && strip -u -r -x $out
-  description = Link Executable $out
+  description = Link    Exe $out
 build $bin/bootstrap: LINK_bootstrap $obj/bootstrap/lapi.obj $
     $obj/bootstrap/lauxlib.obj $obj/bootstrap/lbaselib.obj $
     $obj/bootstrap/lcode.obj $obj/bootstrap/lcorolib.obj $

@@ -4,7 +4,7 @@ obj = $builddir/obj
 rule C_lua54
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /O2 /GL $
       /Zc:inline /W3 /permissive- /MD /DLUA_BUILD_AS_DLL /DNDEBUG 
-  description = Compile C $out
+  description = Compile C   $out
   deps = msvc
 build $obj/lua54/lapi.obj: C_lua54 3rd/lua/src/lapi.c
 build $obj/lua54/lauxlib.obj: C_lua54 3rd/lua/src/lauxlib.c
@@ -42,7 +42,7 @@ build $obj/lua54/utf8_crt.obj: C_lua54 3rd/lua/utf8/utf8_crt.c
 rule LINK_lua54
   command = cl /nologo $in  /link /DEBUG:NONE /LTCG /out:$out /DLL $
       /IMPLIB:$bin/lua54.lib
-  description = Link SharedLibrary $out
+  description = Link    Dll $out
 build $bin/lua54.dll | $bin/lua54.lib: LINK_lua54 $obj/lua54/lapi.obj $
     $obj/lua54/lauxlib.obj $obj/lua54/lbaselib.obj $obj/lua54/lcode.obj $
     $obj/lua54/lcorolib.obj $obj/lua54/lctype.obj $obj/lua54/ldblib.obj $
@@ -58,19 +58,19 @@ build $bin/lua54.dll | $bin/lua54.lib: LINK_lua54 $obj/lua54/lapi.obj $
 rule C_lua
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /O2 /GL $
       /Zc:inline /W3 /permissive- /MD /DNDEBUG /I3rd/lua/src 
-  description = Compile C $out
+  description = Compile C   $out
   deps = msvc
 build $obj/lua/utf8_lua.obj: C_lua 3rd/lua/utf8/utf8_lua.c
 rule LINK_lua
   command = cl /nologo $in  /link /DEBUG:NONE /LTCG /out:$out
-  description = Link Executable $out
+  description = Link    Exe $out
 build $bin/lua.exe: LINK_lua $obj/lua/utf8_lua.obj $bin/lua54.lib
 rule C_bee
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /O2 /GL $
       /Zc:inline /W3 /permissive- /MD /I3rd/lua/src /I3rd/lua-seri /I. $
       /D_WIN32_WINNT=0x0601 /DBEE_EXPORTS /D_CRT_SECURE_NO_WARNINGS $
       /Dspan_FEATURE_BYTE_SPAN=1 /DNDEBUG /I3rd/lua/src 
-  description = Compile C $out
+  description = Compile C   $out
   deps = msvc
 build $obj/bee/lua-seri.obj: C_bee 3rd/lua-seri/lua-seri.c
 rule CXX_bee
@@ -78,7 +78,7 @@ rule CXX_bee
       /Zc:inline /W3 /permissive- /MD /I3rd/lua/src /I3rd/lua-seri /I. $
       /D_WIN32_WINNT=0x0601 /DBEE_EXPORTS /D_CRT_SECURE_NO_WARNINGS $
       /Dspan_FEATURE_BYTE_SPAN=1 /DNDEBUG /I3rd/lua/src /std:c++17
-  description = Compile CXX $out
+  description = Compile C++ $out
   deps = msvc
 build $obj/bee/error.obj: CXX_bee bee/error.cpp
 build $obj/bee/exception.obj: CXX_bee bee/error/exception.cpp
@@ -107,7 +107,7 @@ build $obj/bee/lua_unicode.obj: CXX_bee binding/lua_unicode.cpp
 rule LINK_bee
   command = cl /nologo $in advapi32.lib ws2_32.lib ole32.lib user32.lib $
       version.lib /link /DEBUG:NONE /LTCG /out:$out /DLL /IMPLIB:$bin/bee.lib
-  description = Link SharedLibrary $out
+  description = Link    Dll $out
 build $bin/bee.dll | $bin/bee.lib: LINK_bee $obj/bee/lua-seri.obj $
     $obj/bee/error.obj $obj/bee/exception.obj $obj/bee/fsevent_win.obj $
     $obj/bee/endpoint.obj $obj/bee/socket.obj $obj/bee/version_win.obj $
@@ -123,13 +123,13 @@ rule CXX_bootstrap
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /O2 /GL $
       /Zc:inline /W3 /permissive- /MD /I3rd/lua/src /DNDEBUG /I3rd/lua/src $
       /std:c++17
-  description = Compile CXX $out
+  description = Compile C++ $out
   deps = msvc
 build $obj/bootstrap/main.obj: CXX_bootstrap bootstrap/main.cpp
 build $obj/bootstrap/progdir.obj: CXX_bootstrap bootstrap/progdir.cpp
 rule LINK_bootstrap
   command = cl /nologo $in  /link /DEBUG:NONE /LTCG /out:$out
-  description = Link Executable $out
+  description = Link    Exe $out
 build $bin/bootstrap.exe: LINK_bootstrap $obj/bootstrap/main.obj $
     $obj/bootstrap/progdir.obj $bin/lua54.lib
 rule command
