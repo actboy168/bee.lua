@@ -1,9 +1,0 @@
-steps:
-- bash: |
-   sudo xcode-select -s /Applications/Xcode_10.2.app
-   brew install ninja
-  displayName: Init
-
-- bash: |
-   ninja -f ninja/macos.ninja
-  displayName: Compile

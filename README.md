@@ -2,7 +2,7 @@
 
 Lua runtime and toolset
 
-[![Build Status](https://github.com/actboy168/bee.lua/workflows/build/badge.svg)](https://github.com/actboy168/bee.lua/actions?workflow=build) [![Build Status](https://dev.azure.com/actboy168/bee.lua/_apis/build/status/bee.lua?branchName=master)](https://dev.azure.com/actboy168/bee.lua/_build/latest?definitionId=5?branchName=master)
+[![Build Status](https://github.com/actboy168/bee.lua/workflows/build/badge.svg)](https://github.com/actboy168/bee.lua/actions?workflow=build)
 
 ## Build
 
