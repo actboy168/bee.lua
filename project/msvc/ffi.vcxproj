@@ -131,10 +131,10 @@
       <AdditionalLibraryDirectories>$(projectDir)..\..\..\Lua\build\bin\$(ConfigurationName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
-      <Command>"$(projectDir)..\..\make\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(projectDir)..\..\3rd\luaffi\src\call_x86.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
-"$(projectDir)..\..\make\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -o  "$(projectDir)..\..\3rd\luaffi\src\call_x64.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
-"$(projectDir)..\..\make\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -D X64WIN -o  "$(projectDir)..\..\3rd\luaffi\src\call_x64win.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
-"$(projectDir)..\..\make\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -o  "$(projectDir)..\..\3rd\luaffi\src\call_arm.h"  "$(projectDir)..\..\3rd\luaffi\src\call_arm.dasc"</Command>
+      <Command>"$(projectDir)..\..\build\msvc\bin\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(projectDir)..\..\3rd\luaffi\src\call_x86.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
+"$(projectDir)..\..\build\msvc\bin\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -o  "$(projectDir)..\..\3rd\luaffi\src\call_x64.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
+"$(projectDir)..\..\build\msvc\bin\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -D X64WIN -o  "$(projectDir)..\..\3rd\luaffi\src\call_x64win.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
+"$(projectDir)..\..\build\msvc\bin\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -o  "$(projectDir)..\..\3rd\luaffi\src\call_arm.h"  "$(projectDir)..\..\3rd\luaffi\src\call_arm.dasc"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -151,10 +151,10 @@
       <AdditionalLibraryDirectories>$(projectDir)..\..\..\Lua\build\bin\$(ConfigurationName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
-      <Command>"$(projectDir)..\..\make\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(projectDir)..\..\3rd\luaffi\src\call_x86.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
-"$(projectDir)..\..\make\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -o  "$(projectDir)..\..\3rd\luaffi\src\call_x64.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
-"$(projectDir)..\..\make\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -D X64WIN -o  "$(projectDir)..\..\3rd\luaffi\src\call_x64win.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
-"$(projectDir)..\..\make\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -o  "$(projectDir)..\..\3rd\luaffi\src\call_arm.h"  "$(projectDir)..\..\3rd\luaffi\src\call_arm.dasc"</Command>
+      <Command>"$(projectDir)..\..\build\msvc\bin\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(projectDir)..\..\3rd\luaffi\src\call_x86.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
+"$(projectDir)..\..\build\msvc\bin\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -o  "$(projectDir)..\..\3rd\luaffi\src\call_x64.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
+"$(projectDir)..\..\build\msvc\bin\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -D X64WIN -o  "$(projectDir)..\..\3rd\luaffi\src\call_x64win.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
+"$(projectDir)..\..\build\msvc\bin\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -o  "$(projectDir)..\..\3rd\luaffi\src\call_arm.h"  "$(projectDir)..\..\3rd\luaffi\src\call_arm.dasc"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -173,10 +173,10 @@
       <AdditionalLibraryDirectories>$(projectDir)..\..\..\Lua\build\bin\$(ConfigurationName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
-      <Command>"$(projectDir)..\..\make\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(projectDir)..\..\3rd\luaffi\src\call_x86.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
-"$(projectDir)..\..\make\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -o  "$(projectDir)..\..\3rd\luaffi\src\call_x64.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
-"$(projectDir)..\..\make\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -D X64WIN -o  "$(projectDir)..\..\3rd\luaffi\src\call_x64win.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
-"$(projectDir)..\..\make\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -o  "$(projectDir)..\..\3rd\luaffi\src\call_arm.h"  "$(projectDir)..\..\3rd\luaffi\src\call_arm.dasc"</Command>
+      <Command>"$(projectDir)..\..\build\msvc\bin\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(projectDir)..\..\3rd\luaffi\src\call_x86.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
+"$(projectDir)..\..\build\msvc\bin\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -o  "$(projectDir)..\..\3rd\luaffi\src\call_x64.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
+"$(projectDir)..\..\build\msvc\bin\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -D X64WIN -o  "$(projectDir)..\..\3rd\luaffi\src\call_x64win.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
+"$(projectDir)..\..\build\msvc\bin\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -o  "$(projectDir)..\..\3rd\luaffi\src\call_arm.h"  "$(projectDir)..\..\3rd\luaffi\src\call_arm.dasc"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -195,10 +195,10 @@
       <AdditionalLibraryDirectories>$(projectDir)..\..\..\Lua\build\bin\$(ConfigurationName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
-      <Command>"$(projectDir)..\..\make\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(projectDir)..\..\3rd\luaffi\src\call_x86.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
-"$(projectDir)..\..\make\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -o  "$(projectDir)..\..\3rd\luaffi\src\call_x64.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
-"$(projectDir)..\..\make\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -D X64WIN -o  "$(projectDir)..\..\3rd\luaffi\src\call_x64win.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
-"$(projectDir)..\..\make\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -o  "$(projectDir)..\..\3rd\luaffi\src\call_arm.h"  "$(projectDir)..\..\3rd\luaffi\src\call_arm.dasc"</Command>
+      <Command>"$(projectDir)..\..\build\msvc\bin\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X32WIN -o "$(projectDir)..\..\3rd\luaffi\src\call_x86.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
+"$(projectDir)..\..\build\msvc\bin\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -o  "$(projectDir)..\..\3rd\luaffi\src\call_x64.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
+"$(projectDir)..\..\build\msvc\bin\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -D X64 -D X64WIN -o  "$(projectDir)..\..\3rd\luaffi\src\call_x64win.h"  "$(projectDir)..\..\3rd\luaffi\src\call_x86.dasc"
+"$(projectDir)..\..\build\msvc\bin\lua.exe" "$(projectDir)..\..\3rd\luaffi\src\dynasm\dynasm.lua" -LNE -o  "$(projectDir)..\..\3rd\luaffi\src\call_arm.h"  "$(projectDir)..\..\3rd\luaffi\src\call_arm.dasc"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
