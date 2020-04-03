@@ -453,7 +453,7 @@ namespace bee::win::subprocess {
         if (!::GetExitCodeProcess(pi_.hProcess, &ret)) {
             return 0;
         }
-        return (int32_t)ret;
+        return (uint32_t)ret;
     }
 
     uint32_t process::get_id() const {
