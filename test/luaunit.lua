@@ -1953,6 +1953,7 @@ TapOutput.__class__ = 'TapOutput'
 
     function TapOutput:addStatus( node )
         io.stdout:write("not ok ", self.result.currentTestNumber, "\t", node.testName, "\n")
+        io.stdout:flush()
         if self.verbosity > M.VERBOSITY_LOW then
            print( prefixString( '#   ', node.msg ) )
         end
@@ -1964,6 +1965,7 @@ TapOutput.__class__ = 'TapOutput'
     function TapOutput:endTest( node )
         if node:isPassed() then
             io.stdout:write("ok     ", self.result.currentTestNumber, "\t", node.testName, "\n")
+            io.stdout:flush()
         end
     end
 
@@ -2185,6 +2187,7 @@ TextOutput.__class__ = 'TextOutput'
     function TextOutput:startTest(testName)
         if self.verbosity > M.VERBOSITY_DEFAULT then
             io.stdout:write( "    ", self.result.currentNode.testName, " ... " )
+            io.stdout:flush()
         end
     end
 
@@ -2192,6 +2195,7 @@ TextOutput.__class__ = 'TextOutput'
         if node:isPassed() then
             if self.verbosity > M.VERBOSITY_DEFAULT then
                 io.stdout:write("Ok\n")
+                io.stdout:flush()
             else
                 io.stdout:write(".")
                 io.stdout:flush()
