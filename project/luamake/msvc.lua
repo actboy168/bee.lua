@@ -1,11 +1,12 @@
 local lm = require 'luamake'
 
 lm:shared_library 'lua54' {
+    rootdir = '3rd/lua/src',
     sources = {
-        "3rd/lua/src/*.c",
-        "!3rd/lua/src/lua.c",
-        "!3rd/lua/src/luac.c",
-        "3rd/lua/utf8/utf8_crt.c",
+        "*.c",
+        "!lua.c",
+        "!luac.c",
+        "../utf8_crt.c",
     },
     defines = {
         "LUA_BUILD_AS_DLL",
@@ -13,9 +14,10 @@ lm:shared_library 'lua54' {
 }
 
 lm:executable 'lua' {
+    rootdir = '3rd/lua/src',
     deps = "lua54",
     sources = {
-        "3rd/lua/utf8/utf8_lua.c",
+        "../utf8/utf8_lua.c",
     }
 }
 

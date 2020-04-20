@@ -1,10 +1,11 @@
 local lm = require 'luamake'
 
 lm:source_set 'source_lua' {
+    rootdir = '3rd/lua/src',
     sources = {
-        "3rd/lua/src/*.c",
-        "!3rd/lua/src/luac.c",
-        "!3rd/lua/src/lua.c",
+        "*.c",
+        "!luac.c",
+        "!lua.c",
     },
     defines = {
         "LUA_USE_MACOSX",
@@ -13,9 +14,10 @@ lm:source_set 'source_lua' {
 }
 
 lm:executable 'lua' {
+    rootdir = '3rd/lua/src',
     deps = "source_lua",
     sources = {
-        "3rd/lua/src/lua.c",
+        "lua.c",
     },
     defines = {
         "LUA_USE_MACOSX",
