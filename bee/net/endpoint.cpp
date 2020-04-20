@@ -33,6 +33,8 @@
 #endif
 
 namespace bee::net {
+#if defined(__linux__) && defined(BEE_DISABLE_DLOPEN)
+#else
     struct autorelease_addrinfo {
         autorelease_addrinfo(autorelease_addrinfo const&) = delete;
         autorelease_addrinfo& operator=(autorelease_addrinfo const&) = delete;
@@ -68,7 +70,6 @@ namespace bee::net {
         }
         return false;
     }
-
     static autorelease_addrinfo gethostaddr(const addrinfo& hint, const std::string_view& ip, const char* port) {
         addrinfo* info = 0;
         int err = ::getaddrinfo(ip.data(), port, &hint, &info);
@@ -78,6 +79,8 @@ namespace bee::net {
         }
         return autorelease_addrinfo(info);
     }
+#endif
+
     nonstd::expected<endpoint, std::string> endpoint::from_unixpath(const std::string_view& path) {
         if (path.size() >= UNIX_PATH_MAX) {
             return nonstd::make_unexpected("unix domain sockect: pathname too long");
@@ -90,6 +93,26 @@ namespace bee::net {
         return std::move(ep);
     }
     nonstd::expected<endpoint, std::string> endpoint::from_hostname(const std::string_view& ip, int port) {
+#if defined(__linux__) && defined(BEE_DISABLE_DLOPEN)
+        struct sockaddr_in sa4;
+        if (1 == inet_pton(AF_INET, ip.data(), &sa4.sin_addr)) {
+            sa4.sin_family = AF_INET;
+            sa4.sin_port = htons(port);
+            sa4.sin_port = htons(port);
+            endpoint ep(sizeof(struct sockaddr_in));
+            memcpy(ep.data(), &sa4, ep.size());
+            return std::move(ep);
+        }
+        struct sockaddr_in6 sa6;
+        if (1 == inet_pton(AF_INET6, ip.data(), &sa6.sin6_addr)) {
+            sa4.sin_family = AF_INET6;
+            sa6.sin6_port = htons(port);
+            endpoint ep(sizeof(struct sockaddr_in6));
+            memcpy(ep.data(), &sa6, ep.size());
+            return std::move(ep);
+        }
+        return nonstd::make_unexpected("unknown address family");
+#else
         addrinfo hint = { };
         hint.ai_family = AF_UNSPEC;
         if (needsnolookup(ip)) {
@@ -117,6 +140,7 @@ namespace bee::net {
         endpoint ep(addrinfo.ai_addrlen);
         memcpy(ep.data(), addrinfo.ai_addr, ep.size());
         return std::move(ep);
+#endif
     }
     endpoint endpoint::from_empty() {
         return endpoint(endpoint::kMaxSize);
