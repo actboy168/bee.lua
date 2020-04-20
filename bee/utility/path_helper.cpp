@@ -93,6 +93,19 @@ namespace bee::path_helper {
 
 #endif
 
+#if defined(BEE_DISABLE_DLOPEN)
+
+namespace bee::path_helper {
+    auto dll_path(void* module_handle)->nonstd::expected<fs::path, std::exception> {
+        return nonstd::make_unexpected(std::runtime_error("disable dl."));
+    }
+    auto dll_path()->nonstd::expected<fs::path, std::exception> {
+        return dll_path(nullptr);
+    }
+}
+
+#else
+
 #include <dlfcn.h>
 
 namespace bee::path_helper {
@@ -110,6 +123,8 @@ namespace bee::path_helper {
         return dll_path((void*)&exe_path);
     }
 }
+
+#endif
 
 #endif
 
