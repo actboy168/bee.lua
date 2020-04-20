@@ -3,21 +3,28 @@ local lm = require 'luamake'
 lm.gcc = 'clang'
 lm.gxx = 'clang++'
 
-lm.rootdir = '3rd/lua/src'
-lm:executable 'lua' {
+lm:source_set 'source_lua' {
     sources = {
-        "*.c",
-        "!luac.c",
+        "3rd/lua/src/*.c",
+        "!3rd/lua/src/luac.c",
+        "!3rd/lua/src/lua.c",
     },
-    ldflags = "-Wl,-E",
     defines = {
         "LUA_USE_LINUX",
     },
     visibility = "default",
-    links = { "m", "dl" },
 }
 
-lm.rootdir = ''
+lm:executable 'lua' {
+    deps = "source_lua",
+    sources = {
+        "3rd/lua/src/lua.c",
+    },
+    defines = {
+        "LUA_USE_LINUX",
+    },
+    links = { "m", "dl" },
+}
 
 lm:shared_library 'bee' {
     includes = {
@@ -45,20 +52,17 @@ lm:shared_library 'bee' {
 }
 
 lm:executable 'bootstrap' {
+    deps = "source_lua",
     includes = {
         "3rd/lua/src"
     },
     sources = {
-        "3rd/lua/src/*.c",
-        "!3rd/lua/src/lua.c",
-        "!3rd/lua/src/luac.c",
         "bootstrap/*.cpp",
     },
     ldflags = "-Wl,-E",
     defines = {
         "LUA_USE_LINUX",
     },
-    visibility = "default",
     links = { "m", "dl" },
 }
 
