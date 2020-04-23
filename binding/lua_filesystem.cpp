@@ -180,7 +180,12 @@ namespace bee::lua_filesystem {
                 return nreslut;
                 LUA_TRY_END;
             }
-            static int destroy(lua_State* L) {
+            static int close(lua_State* L) {
+                pairs_directory& self = get(L);
+                self.cur = self.end;
+                return 0;
+            }
+            static int gc(lua_State* L) {
                 get(L).~pairs_directory();
                 return 0;
             }
@@ -195,9 +200,14 @@ namespace bee::lua_filesystem {
             LUA_TRY;
             const fs::path& self = path::to(L, 1);
             void* storage = lua_newuserdatauv(L, sizeof(pairs_directory), 0);
-            lua_newtable(L);
-            lua_pushcclosure(L, pairs_directory::destroy, 0);
-            lua_setfield(L, -2, "__gc");
+            if (newObject(L, "pairs_directory")) {
+                static luaL_Reg mt[] = {
+                    {"__gc", pairs_directory::gc},
+                    {"__close", pairs_directory::close},
+                    {NULL, NULL},
+                };
+                luaL_setfuncs(L, mt, 0);
+            }
             lua_setmetatable(L, -2);
             lua_pushcclosure(L, pairs_directory::next, 1);
             new (storage) pairs_directory(self);
