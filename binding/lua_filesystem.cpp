@@ -203,7 +203,7 @@ namespace bee::lua_filesystem {
             if (newObject(L, "pairs_directory")) {
                 static luaL_Reg mt[] = {
                     {"__gc", pairs_directory::gc},
-                    {"__close", pairs_directory::close},
+                    //{"__close", pairs_directory::close},
                     {NULL, NULL},
                 };
                 luaL_setfuncs(L, mt, 0);

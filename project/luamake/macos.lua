@@ -74,6 +74,6 @@ lm:build "copy_script" {
 }
 
 lm:build "test" {
-    "$bin/bootstrap", fs.path "test/test.lua", "-v",
+    "$bin/bootstrap", fs.path "test/test.lua",
     deps = { "bootstrap", "copy_script", "bee" },
 }
