@@ -41,7 +41,8 @@ build $obj/source_lua/lvm.obj: C_source_lua 3rd/lua/src/lvm.c
 build $obj/source_lua/lzio.obj: C_source_lua 3rd/lua/src/lzio.c
 rule C_lua
   command = gcc -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall $
-      -fvisibility=hidden -DLUA_USE_MACOSX -DNDEBUG -I. -o $out -c $in
+      -fvisibility=hidden -DLUA_USE_MACOSX -DNDEBUG -I3rd/lua/src -o $out $
+      -c $in
   description = Compile C   $out
   depfile = $out.d
   deps = gcc
@@ -115,8 +116,8 @@ build $bin/bee.so: LINK_bee $obj/bee/lua-seri.obj $obj/bee/error.obj $
     $obj/bee/lua_subprocess.obj $obj/bee/lua_thread.obj
 rule CXX_bootstrap
   command = g++ -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall $
-      -fvisibility=hidden -I3rd/lua/src -DLUA_USE_MACOSX -DNDEBUG -I. -o $
-      $out -c $in
+      -fvisibility=hidden -I3rd/lua/src -DLUA_USE_MACOSX -DNDEBUG $
+      -I3rd/lua/src -o $out -c $in
   description = Compile C++ $out
   depfile = $out.d
   deps = gcc
@@ -150,4 +151,4 @@ build $builddir/_/copy_script: command
   COMMAND = mkdir -p $bin && cp bootstrap/main.lua $bin/main.lua
 build $builddir/_/test: command | $bin/bootstrap $builddir/_/copy_script $
     $bin/bee.so
-  COMMAND = $bin/bootstrap test/test.lua
+  COMMAND = $bin/bootstrap test/test.lua -v

@@ -57,7 +57,7 @@ build $bin/lua54.dll | $bin/lua54.lib: LINK_lua54 $obj/lua54/lapi.obj $
     $obj/lua54/lzio.obj $obj/lua54/utf8_crt.obj
 rule C_lua
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /O2 /GL $
-      /Zc:inline /W3 /permissive- /MD /DNDEBUG /I. 
+      /Zc:inline /W3 /permissive- /MD /DNDEBUG /I3rd/lua/src 
   description = Compile C   $out
   deps = msvc
 build $obj/lua/utf8_lua.obj: C_lua 3rd/lua/utf8/utf8_lua.c
@@ -69,7 +69,7 @@ rule C_bee
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /O2 /GL $
       /Zc:inline /W3 /permissive- /MD /I3rd/lua/src /I3rd/lua-seri /I. $
       /D_WIN32_WINNT=0x0601 /DBEE_EXPORTS /D_CRT_SECURE_NO_WARNINGS $
-      /Dspan_FEATURE_BYTE_SPAN=1 /DNDEBUG /I. 
+      /Dspan_FEATURE_BYTE_SPAN=1 /DNDEBUG /I3rd/lua/src 
   description = Compile C   $out
   deps = msvc
 build $obj/bee/lua-seri.obj: C_bee 3rd/lua-seri/lua-seri.c
@@ -77,7 +77,7 @@ rule CXX_bee
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /O2 /GL $
       /Zc:inline /W3 /permissive- /MD /I3rd/lua/src /I3rd/lua-seri /I. $
       /D_WIN32_WINNT=0x0601 /DBEE_EXPORTS /D_CRT_SECURE_NO_WARNINGS $
-      /Dspan_FEATURE_BYTE_SPAN=1 /DNDEBUG /I. /std:c++17
+      /Dspan_FEATURE_BYTE_SPAN=1 /DNDEBUG /I3rd/lua/src /std:c++17
   description = Compile C++ $out
   deps = msvc
 build $obj/bee/error.obj: CXX_bee bee/error.cpp
@@ -121,7 +121,8 @@ build $bin/bee.dll | $bin/bee.lib: LINK_bee $obj/bee/lua-seri.obj $
     $obj/bee/lua_thread.obj $obj/bee/lua_unicode.obj $bin/lua54.lib
 rule CXX_bootstrap
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /O2 /GL $
-      /Zc:inline /W3 /permissive- /MD /I3rd/lua/src /DNDEBUG /I. /std:c++17
+      /Zc:inline /W3 /permissive- /MD /I3rd/lua/src /DNDEBUG /I3rd/lua/src $
+      /std:c++17
   description = Compile C++ $out
   deps = msvc
 build $obj/bootstrap/main.obj: CXX_bootstrap bootstrap/main.cpp
