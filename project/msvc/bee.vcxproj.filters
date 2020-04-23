@@ -131,9 +131,6 @@
     <ClInclude Include="..\..\bee\lua\binding.h">
       <Filter>bee\lua</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\bee\lua\range.h">
-      <Filter>bee\lua</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\3rd\lua-seri\lua-seri.h">
       <Filter>3rd</Filter>
     </ClInclude>

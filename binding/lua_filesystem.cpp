@@ -2,7 +2,6 @@
 #include <bee/filesystem.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/file.h>
-#include <bee/lua/range.h>
 #include <bee/utility/file_helper.h>
 #include <bee/utility/path_helper.h>
 #include <lua.hpp>
@@ -11,19 +10,14 @@
 #include <bee/utility/unicode_win.h>
 #endif
 
+
+#include <bee/config.h>
+#include <utility> 
+#include <lua.hpp>
+#include <bee/lua/binding.h>
+
 namespace bee::lua_filesystem {
     namespace path {
-        class directory_container {
-        public:
-            directory_container(fs::path const& o)
-                : p(o) {}
-            fs::directory_iterator begin() const { return fs::directory_iterator(p); }
-            fs::directory_iterator end() const { return fs::directory_iterator(); }
-
-        private:
-            const fs::path& p;
-        };
-
         static void* newudata(lua_State* L);
 
         static fs::path& to(lua_State* L, int idx) {
@@ -170,13 +164,44 @@ namespace bee::lua_filesystem {
             LUA_TRY_END;
         }
 
+        struct pairs_directory {
+            static pairs_directory& get(lua_State* L) {
+                return *static_cast<pairs_directory*>(lua_touserdata(L, lua_upvalueindex(1)));
+            }
+            static int next(lua_State* L) {
+                LUA_TRY;
+                pairs_directory& self = get(L);
+                if (self.cur == self.end) {
+                    lua_pushnil(L);
+                    return 1;
+                }
+                const int nreslut = path::constructor_(L, self.cur->path());
+                ++self.cur;
+                return nreslut;
+                LUA_TRY_END;
+            }
+            static int destroy(lua_State* L) {
+                get(L).~pairs_directory();
+                return 0;
+            }
+            pairs_directory(const fs::path& path)
+                : cur(fs::directory_iterator(path))
+                , end(fs::directory_iterator()) {}
+            fs::directory_iterator cur;
+            fs::directory_iterator end;
+        };
+
         static int list_directory(lua_State* L) {
             LUA_TRY;
             const fs::path& self = path::to(L, 1);
-            lua::make_range(L, directory_container(self));
-            lua_pushnil(L);
-            lua_pushnil(L);
-            return 3;
+            void* storage = lua_newuserdatauv(L, sizeof(pairs_directory), 0);
+            lua_newtable(L);
+            lua_pushcclosure(L, pairs_directory::destroy, 0);
+            lua_setfield(L, -2, "__gc");
+            lua_setmetatable(L, -2);
+            lua_pushcclosure(L, pairs_directory::next, 1);
+            new (storage) pairs_directory(self);
+            return 1;
             LUA_TRY_END;
         }
 
@@ -506,14 +531,6 @@ namespace bee::lua_filesystem {
         };
         lua_newtable(L);
         luaL_setfuncs(L, lib, 0);
-        return 1;
-    }
-}
-
-namespace bee::lua {
-    template <>
-    int convert_to_lua(lua_State* L, const fs::directory_entry& v) {
-        lua_filesystem::path::constructor_(L, v.path());
         return 1;
     }
 }

@@ -193,7 +193,6 @@
     </ClInclude>
     <ClInclude Include="..\..\bee\fsevent\fsevent_win.h" />
     <ClInclude Include="..\..\bee\lua\binding.h" />
-    <ClInclude Include="..\..\bee\lua\range.h" />
     <ClInclude Include="..\..\bee\net\endpoint.h" />
     <ClInclude Include="..\..\bee\net\socket.h" />
     <ClInclude Include="..\..\bee\nonstd\dynarray.h" />
