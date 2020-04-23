@@ -165,12 +165,12 @@ namespace bee::lua_filesystem {
         }
 
         struct pairs_directory {
-            static pairs_directory& get(lua_State* L) {
-                return *static_cast<pairs_directory*>(lua_touserdata(L, lua_upvalueindex(1)));
+            static pairs_directory& get(lua_State* L, int idx) {
+                return *static_cast<pairs_directory*>(lua_touserdata(L, idx));
             }
             static int next(lua_State* L) {
                 LUA_TRY;
-                pairs_directory& self = get(L);
+                pairs_directory& self = get(L, lua_upvalueindex(1));
                 if (self.cur == self.end) {
                     lua_pushnil(L);
                     return 1;
@@ -181,12 +181,12 @@ namespace bee::lua_filesystem {
                 LUA_TRY_END;
             }
             static int close(lua_State* L) {
-                pairs_directory& self = get(L);
+                pairs_directory& self = get(L, 1);
                 self.cur = self.end;
                 return 0;
             }
             static int gc(lua_State* L) {
-                get(L).~pairs_directory();
+                get(L, 1).~pairs_directory();
                 return 0;
             }
             pairs_directory(const fs::path& path)
