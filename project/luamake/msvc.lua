@@ -6,7 +6,7 @@ lm:shared_library 'lua54' {
         "*.c",
         "!lua.c",
         "!luac.c",
-        "../utf8_crt.c",
+        "../utf8/utf8_crt.c",
     },
     defines = {
         "LUA_BUILD_AS_DLL",
