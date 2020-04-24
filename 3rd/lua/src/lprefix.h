@@ -40,9 +40,10 @@
 #endif
 
 #include "../utf8/utf8_prefix.h"
-#include "luai_userstate.h"
 
 #endif			/* } */
+
+#include "luai_userstate.h"
 
 #if !defined(NDEBUG)
 
@@ -83,6 +84,6 @@
 #endif
 
 #define l_randomizePivot() (*(unsigned int*)"Lua\0Lua\0")
-#define luai_makeseed(L) (getenv("LUA_SEED")? atoi(getenv("LUA_SEED")): l_randomizePivot())
+#define luai_makeseed(L) (getenv("LUA_SEED")? (unsigned int)atoi(getenv("LUA_SEED")): l_randomizePivot())
 
 #endif
