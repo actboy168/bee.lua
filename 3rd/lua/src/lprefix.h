@@ -43,7 +43,6 @@
 
 #endif			/* } */
 
-
 #if !defined(NDEBUG)
 
 #include <stdlib.h>
@@ -81,8 +80,6 @@
     } while(0)
 
 #endif
-
-#include <stdlib.h>
 
 #define l_randomizePivot() (*(unsigned int*)"Lua\0Lua\0")
 #define luai_makeseed(L) (getenv("LUA_SEED")? atoi(getenv("LUA_SEED")): l_randomizePivot())
