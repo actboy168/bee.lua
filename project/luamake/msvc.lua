@@ -7,6 +7,7 @@ lm:shared_library 'lua54' {
         "!lua.c",
         "!luac.c",
         "../utf8/utf8_crt.c",
+        "../utf8/utf8_unicode.c",
     },
     defines = {
         "LUA_BUILD_AS_DLL",
@@ -18,6 +19,7 @@ lm:executable 'lua' {
     deps = "lua54",
     sources = {
         "../utf8/utf8_lua.c",
+        "../utf8/utf8_unicode.c",
     }
 }
 
