@@ -11,6 +11,7 @@
 #endif
 #include <bee/utility/format.h>
 #include <bee/error.h>
+#include <array>
 #if __has_include(<charconv>)
 #   include <charconv>
 #endif

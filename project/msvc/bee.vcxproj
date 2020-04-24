@@ -203,6 +203,7 @@
     <ClInclude Include="..\..\bee\platform.h" />
     <ClInclude Include="..\..\bee\platform\version.h" />
     <ClInclude Include="..\..\bee\registry.h" />
+    <ClInclude Include="..\..\bee\span.h" />
     <ClInclude Include="..\..\bee\subprocess.h" />
     <ClInclude Include="..\..\bee\subprocess\args_helper.h" />
     <ClInclude Include="..\..\bee\subprocess\sharedmemory_win.h" />

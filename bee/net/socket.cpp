@@ -7,6 +7,7 @@
 #   include <fstream>
 #   include <charconv>
 #   include <limits>
+#   include <array>
 #else
 #   include <fcntl.h>
 #   include <netinet/tcp.h>

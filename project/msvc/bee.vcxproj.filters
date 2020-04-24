@@ -209,5 +209,8 @@
     <ClInclude Include="..\..\bee\registry.h">
       <Filter>bee</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\bee\span.h">
+      <Filter>bee</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

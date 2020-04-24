@@ -1,6 +1,6 @@
 #include <bee/subprocess.h>
 #include <bee/subprocess/sharedmemory_win.h>
-#include <bee/nonstd/span.h>
+#include <bee/span.h>
 #include <bee/utility/format.h>
 #include <bee/subprocess/args_helper.h>
 #include <Windows.h>

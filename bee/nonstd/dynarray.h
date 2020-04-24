@@ -1,6 +1,8 @@
 #pragma once
 
-#include <bee/nonstd/span.h>
+#include <bee/span.h>
+#include <new>
+#include <limits>
 
 namespace std {
     template <class T>
@@ -30,7 +32,7 @@ namespace std {
             }
             catch (...) {
                 for (; i >= mybase::begin(); --i) {
-                    i->~T();
+                    (*i).~T();
                 }
                 throw;
             } 

@@ -9,6 +9,7 @@
 #include <string>
 #include <system_error>
 #include <vector>
+#include <memory>
 
 namespace bee::registry {
     template <class C>
