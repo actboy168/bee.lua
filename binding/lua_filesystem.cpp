@@ -189,9 +189,9 @@ namespace bee::lua_filesystem {
                 get(L, 1).~pairs_directory();
                 return 0;
             }
-            pairs_directory(const fs::path& path)
-                : cur(fs::directory_iterator(path))
-                , end(fs::directory_iterator()) {}
+            pairs_directory(const fs::directory_iterator& first, const fs::directory_iterator& last)
+                : cur(first)
+                , end(last) {}
             fs::directory_iterator cur;
             fs::directory_iterator end;
         };
@@ -199,18 +199,20 @@ namespace bee::lua_filesystem {
         static int list_directory(lua_State* L) {
             LUA_TRY;
             const fs::path& self = path::to(L, 1);
+            const fs::directory_iterator& first = fs::directory_iterator(self);
+            const fs::directory_iterator& last  = fs::directory_iterator();
             void* storage = lua_newuserdatauv(L, sizeof(pairs_directory), 0);
             if (newObject(L, "pairs_directory")) {
                 static luaL_Reg mt[] = {
                     {"__gc", pairs_directory::gc},
-                    //{"__close", pairs_directory::close},
+                    {"__close", pairs_directory::close},
                     {NULL, NULL},
                 };
                 luaL_setfuncs(L, mt, 0);
             }
             lua_setmetatable(L, -2);
             lua_pushcclosure(L, pairs_directory::next, 1);
-            new (storage) pairs_directory(self);
+            new (storage) pairs_directory(first, last);
             return 1;
             LUA_TRY_END;
         }
