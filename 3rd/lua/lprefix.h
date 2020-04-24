@@ -39,7 +39,7 @@
 #define _CRT_SECURE_NO_WARNINGS  /* avoid warnings about ISO C functions */
 #endif
 
-#include "../utf8/utf8_prefix.h"
+#include "utf8_prefix.h"
 
 #endif			/* } */
 
