@@ -26,7 +26,7 @@ namespace bee {
         typedef size_t                                size_type;
         typedef ptrdiff_t                             difference_type;
 
-        static_assert(std::is_pod<value_type>::value, "hybrid_array::value_type must be a pod type.");
+        static_assert(std::is_trivially_copyable<value_type>::value, "hybrid_array::value_type must be a pod type.");
 
         hybrid_array() 
             : size_(0)
