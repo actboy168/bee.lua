@@ -97,7 +97,7 @@
       </PrecompiledHeader>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>$(projectDir)..\..\3rd\lua\src\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(projectDir)..\..\3rd\lua\</AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link />
@@ -118,7 +118,7 @@
       </PrecompiledHeader>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>$(projectDir)..\..\3rd\lua\src\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(projectDir)..\..\3rd\lua\</AdditionalIncludeDirectories>
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link />
@@ -143,7 +143,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>$(projectDir)..\..\3rd\lua\src\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(projectDir)..\..\3rd\lua\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link />
     <PreBuildEvent />
@@ -167,7 +167,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>$(projectDir)..\..\3rd\lua\src\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(projectDir)..\..\3rd\lua\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link />
     <PreBuildEvent />

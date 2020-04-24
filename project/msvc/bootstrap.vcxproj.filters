@@ -4,7 +4,4 @@
     <ClCompile Include="..\..\bootstrap\main.cpp" />
     <ClCompile Include="..\..\bootstrap\progdir.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\bootstrap\unicode.h" />
-  </ItemGroup>
 </Project>
