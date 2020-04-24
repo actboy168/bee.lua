@@ -7,46 +7,45 @@ rule C_source_lua
   description = Compile C   $out
   depfile = $out.d
   deps = gcc
-build $obj/source_lua/lapi.obj: C_source_lua 3rd/lua/src/lapi.c
-build $obj/source_lua/lauxlib.obj: C_source_lua 3rd/lua/src/lauxlib.c
-build $obj/source_lua/lbaselib.obj: C_source_lua 3rd/lua/src/lbaselib.c
-build $obj/source_lua/lcode.obj: C_source_lua 3rd/lua/src/lcode.c
-build $obj/source_lua/lcorolib.obj: C_source_lua 3rd/lua/src/lcorolib.c
-build $obj/source_lua/lctype.obj: C_source_lua 3rd/lua/src/lctype.c
-build $obj/source_lua/ldblib.obj: C_source_lua 3rd/lua/src/ldblib.c
-build $obj/source_lua/ldebug.obj: C_source_lua 3rd/lua/src/ldebug.c
-build $obj/source_lua/ldo.obj: C_source_lua 3rd/lua/src/ldo.c
-build $obj/source_lua/ldump.obj: C_source_lua 3rd/lua/src/ldump.c
-build $obj/source_lua/lfunc.obj: C_source_lua 3rd/lua/src/lfunc.c
-build $obj/source_lua/lgc.obj: C_source_lua 3rd/lua/src/lgc.c
-build $obj/source_lua/linit.obj: C_source_lua 3rd/lua/src/linit.c
-build $obj/source_lua/liolib.obj: C_source_lua 3rd/lua/src/liolib.c
-build $obj/source_lua/llex.obj: C_source_lua 3rd/lua/src/llex.c
-build $obj/source_lua/lmathlib.obj: C_source_lua 3rd/lua/src/lmathlib.c
-build $obj/source_lua/lmem.obj: C_source_lua 3rd/lua/src/lmem.c
-build $obj/source_lua/loadlib.obj: C_source_lua 3rd/lua/src/loadlib.c
-build $obj/source_lua/lobject.obj: C_source_lua 3rd/lua/src/lobject.c
-build $obj/source_lua/lopcodes.obj: C_source_lua 3rd/lua/src/lopcodes.c
-build $obj/source_lua/loslib.obj: C_source_lua 3rd/lua/src/loslib.c
-build $obj/source_lua/lparser.obj: C_source_lua 3rd/lua/src/lparser.c
-build $obj/source_lua/lstate.obj: C_source_lua 3rd/lua/src/lstate.c
-build $obj/source_lua/lstring.obj: C_source_lua 3rd/lua/src/lstring.c
-build $obj/source_lua/lstrlib.obj: C_source_lua 3rd/lua/src/lstrlib.c
-build $obj/source_lua/ltable.obj: C_source_lua 3rd/lua/src/ltable.c
-build $obj/source_lua/ltablib.obj: C_source_lua 3rd/lua/src/ltablib.c
-build $obj/source_lua/ltm.obj: C_source_lua 3rd/lua/src/ltm.c
-build $obj/source_lua/lundump.obj: C_source_lua 3rd/lua/src/lundump.c
-build $obj/source_lua/lutf8lib.obj: C_source_lua 3rd/lua/src/lutf8lib.c
-build $obj/source_lua/lvm.obj: C_source_lua 3rd/lua/src/lvm.c
-build $obj/source_lua/lzio.obj: C_source_lua 3rd/lua/src/lzio.c
+build $obj/source_lua/lapi.obj: C_source_lua 3rd/lua/lapi.c
+build $obj/source_lua/lauxlib.obj: C_source_lua 3rd/lua/lauxlib.c
+build $obj/source_lua/lbaselib.obj: C_source_lua 3rd/lua/lbaselib.c
+build $obj/source_lua/lcode.obj: C_source_lua 3rd/lua/lcode.c
+build $obj/source_lua/lcorolib.obj: C_source_lua 3rd/lua/lcorolib.c
+build $obj/source_lua/lctype.obj: C_source_lua 3rd/lua/lctype.c
+build $obj/source_lua/ldblib.obj: C_source_lua 3rd/lua/ldblib.c
+build $obj/source_lua/ldebug.obj: C_source_lua 3rd/lua/ldebug.c
+build $obj/source_lua/ldo.obj: C_source_lua 3rd/lua/ldo.c
+build $obj/source_lua/ldump.obj: C_source_lua 3rd/lua/ldump.c
+build $obj/source_lua/lfunc.obj: C_source_lua 3rd/lua/lfunc.c
+build $obj/source_lua/lgc.obj: C_source_lua 3rd/lua/lgc.c
+build $obj/source_lua/linit.obj: C_source_lua 3rd/lua/linit.c
+build $obj/source_lua/liolib.obj: C_source_lua 3rd/lua/liolib.c
+build $obj/source_lua/llex.obj: C_source_lua 3rd/lua/llex.c
+build $obj/source_lua/lmathlib.obj: C_source_lua 3rd/lua/lmathlib.c
+build $obj/source_lua/lmem.obj: C_source_lua 3rd/lua/lmem.c
+build $obj/source_lua/loadlib.obj: C_source_lua 3rd/lua/loadlib.c
+build $obj/source_lua/lobject.obj: C_source_lua 3rd/lua/lobject.c
+build $obj/source_lua/lopcodes.obj: C_source_lua 3rd/lua/lopcodes.c
+build $obj/source_lua/loslib.obj: C_source_lua 3rd/lua/loslib.c
+build $obj/source_lua/lparser.obj: C_source_lua 3rd/lua/lparser.c
+build $obj/source_lua/lstate.obj: C_source_lua 3rd/lua/lstate.c
+build $obj/source_lua/lstring.obj: C_source_lua 3rd/lua/lstring.c
+build $obj/source_lua/lstrlib.obj: C_source_lua 3rd/lua/lstrlib.c
+build $obj/source_lua/ltable.obj: C_source_lua 3rd/lua/ltable.c
+build $obj/source_lua/ltablib.obj: C_source_lua 3rd/lua/ltablib.c
+build $obj/source_lua/ltm.obj: C_source_lua 3rd/lua/ltm.c
+build $obj/source_lua/lundump.obj: C_source_lua 3rd/lua/lundump.c
+build $obj/source_lua/lutf8lib.obj: C_source_lua 3rd/lua/lutf8lib.c
+build $obj/source_lua/lvm.obj: C_source_lua 3rd/lua/lvm.c
+build $obj/source_lua/lzio.obj: C_source_lua 3rd/lua/lzio.c
 rule C_lua
   command = gcc -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall $
-      -fvisibility=hidden -DLUA_USE_MACOSX -DNDEBUG -I3rd/lua/src -o $out $
-      -c $in
+      -fvisibility=hidden -DLUA_USE_MACOSX -DNDEBUG -I3rd/lua -o $out -c $in
   description = Compile C   $out
   depfile = $out.d
   deps = gcc
-build $obj/lua/lua.obj: C_lua 3rd/lua/src/lua.c
+build $obj/lua/lua.obj: C_lua 3rd/lua/lua.c
 rule LINK_lua
   command = gcc $in -o $out  -lm -ldl && strip -u -r -x $out
   description = Link    Exe $out
@@ -69,7 +68,7 @@ build $bin/lua: LINK_lua $obj/lua/lua.obj $obj/source_lua/lapi.obj $
     $obj/source_lua/lzio.obj
 rule C_bee
   command = gcc -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall $
-      -fvisibility=hidden -I3rd/lua/src -I3rd/lua-seri -I. $
+      -fvisibility=hidden -I3rd/lua -I3rd/lua-seri -I. $
       -Dspan_FEATURE_BYTE_SPAN=1 -DNDEBUG -fPIC -mmacosx-version-min=10.13 $
       -o $out -c $in
   description = Compile C   $out
@@ -78,7 +77,7 @@ rule C_bee
 build $obj/bee/lua-seri.obj: C_bee 3rd/lua-seri/lua-seri.c
 rule CXX_bee
   command = g++ -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall $
-      -fvisibility=hidden -I3rd/lua/src -I3rd/lua-seri -I. $
+      -fvisibility=hidden -I3rd/lua -I3rd/lua-seri -I. $
       -Dspan_FEATURE_BYTE_SPAN=1 -DNDEBUG -fPIC -mmacosx-version-min=10.13 $
       -o $out -c $in
   description = Compile C++ $out
@@ -116,8 +115,8 @@ build $bin/bee.so: LINK_bee $obj/bee/lua-seri.obj $obj/bee/error.obj $
     $obj/bee/lua_subprocess.obj $obj/bee/lua_thread.obj
 rule CXX_bootstrap
   command = g++ -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall $
-      -fvisibility=hidden -I3rd/lua/src -DLUA_USE_MACOSX -DNDEBUG $
-      -I3rd/lua/src -o $out -c $in
+      -fvisibility=hidden -I3rd/lua/src -DLUA_USE_MACOSX -DNDEBUG -I3rd/lua $
+      -o $out -c $in
   description = Compile C++ $out
   depfile = $out.d
   deps = gcc

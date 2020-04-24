@@ -6,39 +6,40 @@ rule C_lua54
       /Zc:inline /W3 /permissive- /MD /DLUA_BUILD_AS_DLL /DNDEBUG 
   description = Compile C   $out
   deps = msvc
-build $obj/lua54/lapi.obj: C_lua54 3rd/lua/src/lapi.c
-build $obj/lua54/lauxlib.obj: C_lua54 3rd/lua/src/lauxlib.c
-build $obj/lua54/lbaselib.obj: C_lua54 3rd/lua/src/lbaselib.c
-build $obj/lua54/lcode.obj: C_lua54 3rd/lua/src/lcode.c
-build $obj/lua54/lcorolib.obj: C_lua54 3rd/lua/src/lcorolib.c
-build $obj/lua54/lctype.obj: C_lua54 3rd/lua/src/lctype.c
-build $obj/lua54/ldblib.obj: C_lua54 3rd/lua/src/ldblib.c
-build $obj/lua54/ldebug.obj: C_lua54 3rd/lua/src/ldebug.c
-build $obj/lua54/ldo.obj: C_lua54 3rd/lua/src/ldo.c
-build $obj/lua54/ldump.obj: C_lua54 3rd/lua/src/ldump.c
-build $obj/lua54/lfunc.obj: C_lua54 3rd/lua/src/lfunc.c
-build $obj/lua54/lgc.obj: C_lua54 3rd/lua/src/lgc.c
-build $obj/lua54/linit.obj: C_lua54 3rd/lua/src/linit.c
-build $obj/lua54/liolib.obj: C_lua54 3rd/lua/src/liolib.c
-build $obj/lua54/llex.obj: C_lua54 3rd/lua/src/llex.c
-build $obj/lua54/lmathlib.obj: C_lua54 3rd/lua/src/lmathlib.c
-build $obj/lua54/lmem.obj: C_lua54 3rd/lua/src/lmem.c
-build $obj/lua54/loadlib.obj: C_lua54 3rd/lua/src/loadlib.c
-build $obj/lua54/lobject.obj: C_lua54 3rd/lua/src/lobject.c
-build $obj/lua54/lopcodes.obj: C_lua54 3rd/lua/src/lopcodes.c
-build $obj/lua54/loslib.obj: C_lua54 3rd/lua/src/loslib.c
-build $obj/lua54/lparser.obj: C_lua54 3rd/lua/src/lparser.c
-build $obj/lua54/lstate.obj: C_lua54 3rd/lua/src/lstate.c
-build $obj/lua54/lstring.obj: C_lua54 3rd/lua/src/lstring.c
-build $obj/lua54/lstrlib.obj: C_lua54 3rd/lua/src/lstrlib.c
-build $obj/lua54/ltable.obj: C_lua54 3rd/lua/src/ltable.c
-build $obj/lua54/ltablib.obj: C_lua54 3rd/lua/src/ltablib.c
-build $obj/lua54/ltm.obj: C_lua54 3rd/lua/src/ltm.c
-build $obj/lua54/lundump.obj: C_lua54 3rd/lua/src/lundump.c
-build $obj/lua54/lutf8lib.obj: C_lua54 3rd/lua/src/lutf8lib.c
-build $obj/lua54/lvm.obj: C_lua54 3rd/lua/src/lvm.c
-build $obj/lua54/lzio.obj: C_lua54 3rd/lua/src/lzio.c
-build $obj/lua54/utf8_crt.obj: C_lua54 3rd/lua/utf8/utf8_crt.c
+build $obj/lua54/lapi.obj: C_lua54 3rd/lua/lapi.c
+build $obj/lua54/lauxlib.obj: C_lua54 3rd/lua/lauxlib.c
+build $obj/lua54/lbaselib.obj: C_lua54 3rd/lua/lbaselib.c
+build $obj/lua54/lcode.obj: C_lua54 3rd/lua/lcode.c
+build $obj/lua54/lcorolib.obj: C_lua54 3rd/lua/lcorolib.c
+build $obj/lua54/lctype.obj: C_lua54 3rd/lua/lctype.c
+build $obj/lua54/ldblib.obj: C_lua54 3rd/lua/ldblib.c
+build $obj/lua54/ldebug.obj: C_lua54 3rd/lua/ldebug.c
+build $obj/lua54/ldo.obj: C_lua54 3rd/lua/ldo.c
+build $obj/lua54/ldump.obj: C_lua54 3rd/lua/ldump.c
+build $obj/lua54/lfunc.obj: C_lua54 3rd/lua/lfunc.c
+build $obj/lua54/lgc.obj: C_lua54 3rd/lua/lgc.c
+build $obj/lua54/linit.obj: C_lua54 3rd/lua/linit.c
+build $obj/lua54/liolib.obj: C_lua54 3rd/lua/liolib.c
+build $obj/lua54/llex.obj: C_lua54 3rd/lua/llex.c
+build $obj/lua54/lmathlib.obj: C_lua54 3rd/lua/lmathlib.c
+build $obj/lua54/lmem.obj: C_lua54 3rd/lua/lmem.c
+build $obj/lua54/loadlib.obj: C_lua54 3rd/lua/loadlib.c
+build $obj/lua54/lobject.obj: C_lua54 3rd/lua/lobject.c
+build $obj/lua54/lopcodes.obj: C_lua54 3rd/lua/lopcodes.c
+build $obj/lua54/loslib.obj: C_lua54 3rd/lua/loslib.c
+build $obj/lua54/lparser.obj: C_lua54 3rd/lua/lparser.c
+build $obj/lua54/lstate.obj: C_lua54 3rd/lua/lstate.c
+build $obj/lua54/lstring.obj: C_lua54 3rd/lua/lstring.c
+build $obj/lua54/lstrlib.obj: C_lua54 3rd/lua/lstrlib.c
+build $obj/lua54/ltable.obj: C_lua54 3rd/lua/ltable.c
+build $obj/lua54/ltablib.obj: C_lua54 3rd/lua/ltablib.c
+build $obj/lua54/ltm.obj: C_lua54 3rd/lua/ltm.c
+build $obj/lua54/lundump.obj: C_lua54 3rd/lua/lundump.c
+build $obj/lua54/lutf8lib.obj: C_lua54 3rd/lua/lutf8lib.c
+build $obj/lua54/lvm.obj: C_lua54 3rd/lua/lvm.c
+build $obj/lua54/lzio.obj: C_lua54 3rd/lua/lzio.c
+build $obj/lua54/utf8_crt.obj: C_lua54 3rd/lua/utf8_crt.c
+build $obj/lua54/utf8_unicode.obj: C_lua54 3rd/lua/utf8_unicode.c
 rule LINK_lua54
   command = cl /nologo $in  /link /DEBUG:NONE /LTCG /out:$out /DLL $
       /IMPLIB:$bin/lua54.lib
@@ -54,30 +55,32 @@ build $bin/lua54.dll | $bin/lua54.lib: LINK_lua54 $obj/lua54/lapi.obj $
     $obj/lua54/lstate.obj $obj/lua54/lstring.obj $obj/lua54/lstrlib.obj $
     $obj/lua54/ltable.obj $obj/lua54/ltablib.obj $obj/lua54/ltm.obj $
     $obj/lua54/lundump.obj $obj/lua54/lutf8lib.obj $obj/lua54/lvm.obj $
-    $obj/lua54/lzio.obj $obj/lua54/utf8_crt.obj
+    $obj/lua54/lzio.obj $obj/lua54/utf8_crt.obj $obj/lua54/utf8_unicode.obj
 rule C_lua
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /O2 /GL $
-      /Zc:inline /W3 /permissive- /MD /DNDEBUG /I3rd/lua/src 
+      /Zc:inline /W3 /permissive- /MD /DNDEBUG /I3rd/lua 
   description = Compile C   $out
   deps = msvc
-build $obj/lua/utf8_lua.obj: C_lua 3rd/lua/utf8/utf8_lua.c
+build $obj/lua/utf8_lua.obj: C_lua 3rd/lua/utf8_lua.c
+build $obj/lua/utf8_unicode.obj: C_lua 3rd/lua/utf8_unicode.c
 rule LINK_lua
   command = cl /nologo $in  /link /DEBUG:NONE /LTCG /out:$out
   description = Link    Exe $out
-build $bin/lua.exe: LINK_lua $obj/lua/utf8_lua.obj $bin/lua54.lib
+build $bin/lua.exe: LINK_lua $obj/lua/utf8_lua.obj $
+    $obj/lua/utf8_unicode.obj $bin/lua54.lib
 rule C_bee
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /O2 /GL $
-      /Zc:inline /W3 /permissive- /MD /I3rd/lua/src /I3rd/lua-seri /I. $
+      /Zc:inline /W3 /permissive- /MD /I3rd/lua /I3rd/lua-seri /I. $
       /D_WIN32_WINNT=0x0601 /DBEE_EXPORTS /D_CRT_SECURE_NO_WARNINGS $
-      /Dspan_FEATURE_BYTE_SPAN=1 /DNDEBUG /I3rd/lua/src 
+      /Dspan_FEATURE_BYTE_SPAN=1 /DNDEBUG /I3rd/lua 
   description = Compile C   $out
   deps = msvc
 build $obj/bee/lua-seri.obj: C_bee 3rd/lua-seri/lua-seri.c
 rule CXX_bee
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /O2 /GL $
-      /Zc:inline /W3 /permissive- /MD /I3rd/lua/src /I3rd/lua-seri /I. $
+      /Zc:inline /W3 /permissive- /MD /I3rd/lua /I3rd/lua-seri /I. $
       /D_WIN32_WINNT=0x0601 /DBEE_EXPORTS /D_CRT_SECURE_NO_WARNINGS $
-      /Dspan_FEATURE_BYTE_SPAN=1 /DNDEBUG /I3rd/lua/src /std:c++17
+      /Dspan_FEATURE_BYTE_SPAN=1 /DNDEBUG /I3rd/lua /std:c++17
   description = Compile C++ $out
   deps = msvc
 build $obj/bee/error.obj: CXX_bee bee/error.cpp
@@ -121,8 +124,7 @@ build $bin/bee.dll | $bin/bee.lib: LINK_bee $obj/bee/lua-seri.obj $
     $obj/bee/lua_thread.obj $obj/bee/lua_unicode.obj $bin/lua54.lib
 rule CXX_bootstrap
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /O2 /GL $
-      /Zc:inline /W3 /permissive- /MD /I3rd/lua/src /DNDEBUG /I3rd/lua/src $
-      /std:c++17
+      /Zc:inline /W3 /permissive- /MD /I3rd/lua /DNDEBUG /I3rd/lua /std:c++17
   description = Compile C++ $out
   deps = msvc
 build $obj/bootstrap/main.obj: CXX_bootstrap bootstrap/main.cpp

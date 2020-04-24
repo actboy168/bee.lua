@@ -4,11 +4,12 @@ lm.gcc = 'clang'
 lm.gxx = 'clang++'
 
 lm:source_set 'source_lua' {
-    rootdir = '3rd/lua/src',
+    rootdir = '3rd/lua',
     sources = {
         "*.c",
         "!luac.c",
         "!lua.c",
+        "!utf8_*.c",
     },
     defines = {
         "LUA_USE_LINUX",
@@ -17,7 +18,7 @@ lm:source_set 'source_lua' {
 }
 
 lm:executable 'lua' {
-    rootdir = '3rd/lua/src',
+    rootdir = '3rd/lua',
     deps = "source_lua",
     sources = {
         "lua.c",
@@ -31,7 +32,7 @@ lm:executable 'lua' {
 
 lm:shared_library 'bee' {
     includes = {
-        "3rd/lua/src",
+        "3rd/lua",
         "3rd/lua-seri",
         "."
     },
@@ -57,7 +58,7 @@ lm:shared_library 'bee' {
 lm:executable 'bootstrap' {
     deps = "source_lua",
     includes = {
-        "3rd/lua/src"
+        "3rd/lua"
     },
     sources = {
         "bootstrap/*.cpp",
