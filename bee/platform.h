@@ -42,7 +42,11 @@
 // see https://docs.microsoft.com/en-us/cpp/preprocessor/predefined-macros
 #	define BEE_COMPILER_MSVC _MSC_VER
 #	define BEE_COMPILER_NAME "msvc"
-#	if _MSC_VER >= 1924
+#	if _MSC_VER >= 1926
+#		define BEE_COMPILER_VERSION "MSVC 16.6"
+#	elif _MSC_VER >= 1925
+#		define BEE_COMPILER_VERSION "MSVC 16.5"
+#	elif _MSC_VER >= 1924
 #		define BEE_COMPILER_VERSION "MSVC 16.4"
 #	elif _MSC_VER >= 1923
 #		define BEE_COMPILER_VERSION "MSVC 16.3"

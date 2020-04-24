@@ -152,9 +152,6 @@
     <ClInclude Include="..\..\bee\utility\hybrid_array.h">
       <Filter>bee\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\bee\nonstd\embed.h">
-      <Filter>bee\nonstd</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\bee\net\endpoint.h">
       <Filter>bee\net</Filter>
     </ClInclude>
