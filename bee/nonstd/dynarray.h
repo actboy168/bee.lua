@@ -21,84 +21,36 @@ namespace std {
         typedef size_t                                size_type;
         typedef ptrdiff_t                             difference_type;
 
+        static_assert(std::is_trivially_copyable<value_type>::value, "dynarray::value_type must be a pod type.");
+
         explicit dynarray(size_type c)
             : mybase(alloc(c), c)
-        { 
-            auto i = mybase::begin();
-            try {
-                for (; i != mybase::end(); ++i) {
-                    new (&*i) T;
-                }
-            }
-            catch (...) {
-                for (; i >= mybase::begin(); --i) {
-                    (*i).~T();
-                }
-                throw;
-            } 
-        }
+        {}
 
         dynarray(const dynarray& d)
-            : mybase(alloc(d.size()), d.size())
-        { 
-            try { 
-                uninitialized_copy(d.begin(), d.end(), mybase::begin());
-            }
-            catch (...) {
-                delete[] reinterpret_cast<char*>(mybase::data());
-                throw; 
-            } 
+            : mybase(alloc(d.size()), d.size()) {
+            uninitialized_copy(d.begin(), d.end(), mybase::begin()); 
         }
-
         dynarray(dynarray&& d)
-            : mybase(d.data(), d.size())
-        {
+            : mybase(d.data(), d.size()) {
             d = mybase();
         }
-
         dynarray(std::initializer_list<T> l)
-            : mybase(alloc(l.size()), l.size())
-        {
-            try {
-                uninitialized_copy(l.begin(), l.end(), mybase::begin());
-            }
-            catch (...) {
-                delete[] reinterpret_cast<char*>(mybase::store_);
-                throw;
-            }
+            : mybase(alloc(l.size()), l.size()) {
+            uninitialized_copy(l.begin(), l.end(), mybase::begin());
         }
-
         template <class Vec>
         dynarray(const Vec& v, typename std::enable_if<std::is_same<typename Vec::value_type, T>::value>::type* =0)
-            : mybase(alloc(v.size()), v.size())
-        {
-            try {
-                uninitialized_copy(v.begin(), v.end(), mybase::begin());
-            }
-            catch (...) {
-                delete[] reinterpret_cast<char*>(mybase::data());
-                throw;
-            }
+            : mybase(alloc(v.size()), v.size()) {
+            uninitialized_copy(v.begin(), v.end(), mybase::begin());
         }
-
-        ~dynarray()
-        {
-            for (auto& i : *this) {
-                i.~T();
-            }
+        ~dynarray() {
             delete[] reinterpret_cast<char*>(mybase::data());
         }
-
         dynarray& operator=(const dynarray& d) {
             if (this != &d) {
                 *(mybase*)this = mybase(alloc(d.size()), d.size());
-                try {
-                    uninitialized_copy(d.begin(), d.end(), mybase::begin());
-                }
-                catch (...) {
-                    delete[] reinterpret_cast<char*>(mybase::data());
-                    throw;
-                }
+                uninitialized_copy(d.begin(), d.end(), mybase::begin());
             }
             return *this;
         }
@@ -109,7 +61,6 @@ namespace std {
             }
             return *this;
         }
-
     private:
         class bad_array_length : public bad_alloc {
         public:
@@ -119,14 +70,14 @@ namespace std {
                 return "std::bad_array_length"; 
             }
         };
-
-        pointer alloc(size_type n)
-        { 
-            if (n > (std::numeric_limits<size_type>::max)()/sizeof(T))
-            {
+        pointer alloc(size_type n) { 
+            if (n > (std::numeric_limits<size_type>::max)()/sizeof(T)) {
                 throw bad_array_length();
             }
             return reinterpret_cast<pointer>(new char[n*sizeof(T)]); 
+        }
+        void uninitialized_copy(const_iterator f, const_iterator l, iterator v) {
+            memcpy(v, f, sizeof(value_type) * (l - f));
         }
     };
 }
