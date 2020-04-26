@@ -36,8 +36,6 @@ local initfd = fd_count()
 
 local lu = require 'luaunit'
 
-debug.setcstacklimit(200)
-
 require 'test_lua'
 require 'test_platform'
 require 'test_serialization'

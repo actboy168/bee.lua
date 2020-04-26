@@ -19,7 +19,8 @@ lm:executable 'lua' {
     sources = {
         "utf8_lua.c",
         "utf8_unicode.c",
-    }
+    },
+    ldflags = lm.plat == "msvc" and lm.mode == "debug" and "/STACK:10485760",
 }
 
 lm:shared_library 'bee' {
@@ -62,6 +63,7 @@ lm:executable 'bootstrap' {
     sources = {
         "bootstrap/*.cpp",
     },
+    ldflags = lm.plat == "msvc" and lm.mode == "debug" and "/STACK:10485760",
 }
 
 if lm.plat == 'msvc' then
