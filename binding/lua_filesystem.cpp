@@ -202,6 +202,7 @@ namespace bee::lua_filesystem {
             const fs::directory_iterator& first = fs::directory_iterator(self);
             const fs::directory_iterator& last  = fs::directory_iterator();
             void* storage = lua_newuserdatauv(L, sizeof(pairs_directory), 0);
+            new (storage) pairs_directory(first, last);
             if (newObject(L, "pairs_directory")) {
                 static luaL_Reg mt[] = {
                     {"__gc", pairs_directory::gc},
@@ -211,9 +212,12 @@ namespace bee::lua_filesystem {
                 luaL_setfuncs(L, mt, 0);
             }
             lua_setmetatable(L, -2);
+            lua_pushvalue(L, -1);
             lua_pushcclosure(L, pairs_directory::next, 1);
-            new (storage) pairs_directory(first, last);
-            return 1;
+            lua_pushnil(L);
+            lua_pushnil(L);
+            lua_rotate(L, -4, -1);
+            return 4;
             LUA_TRY_END;
         }
 
