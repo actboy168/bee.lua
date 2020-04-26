@@ -112,7 +112,7 @@
       <Inputs>$(projectDir)..\..\bootstrap\main.lua</Inputs>
     </CustomBuildStep>
     <Link>
-      <StackReserveSize>10485760</StackReserveSize>
+      <StackReserveSize>20971520</StackReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -136,7 +136,7 @@
       <Inputs>$(projectDir)..\..\bootstrap\main.lua</Inputs>
     </CustomBuildStep>
     <Link>
-      <StackReserveSize>10485760</StackReserveSize>
+      <StackReserveSize>20971520</StackReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -162,9 +162,6 @@
     <CustomBuildStep>
       <Inputs>$(projectDir)..\..\bootstrap\main.lua</Inputs>
     </CustomBuildStep>
-    <Link>
-      <StackReserveSize>10485760</StackReserveSize>
-    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -188,11 +185,7 @@
     </CustomBuildStep>
     <CustomBuildStep>
       <Inputs>$(projectDir)..\..\bootstrap\main.lua</Inputs>
-    </CustomBuildStep>
-    <Link>
-      <StackReserveSize>10485760</StackReserveSize>
-    </Link>
-  </ItemDefinitionGroup>
+    </CustomBuildStep>  </ItemDefinitionGroup>
   <ItemGroup>
     <ProjectReference Include="lua54.vcxproj">
       <Project>{316b33ed-1056-48b0-abf0-ce3ce55f7a17}</Project>
