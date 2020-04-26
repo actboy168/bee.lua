@@ -3,6 +3,7 @@
 #include <bee/span.h>
 #include <new>
 #include <limits>
+#include <memory.h>
 
 namespace std {
     template <class T>
