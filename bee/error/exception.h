@@ -1,7 +1,7 @@
 #pragma once
 
 #include  <bee/config.h>
-#include  <bee/nonstd/dynarray.h>
+#include  <bee/utility/dynarray.h>
 
 namespace bee {
 #if defined(_MSC_VER)
@@ -19,7 +19,7 @@ namespace bee {
         virtual ~exception();
         virtual const char* what() const noexcept;
     protected:
-        std::dynarray<char> what_;
+        dynarray<char> what_;
     };
 #if defined(_MSC_VER)
 #pragma warning(pop)

@@ -2,7 +2,7 @@
 
 #include <Windows.h>
 #include <assert.h>
-#include <bee/nonstd/dynarray.h>
+#include <bee/utility/dynarray.h>
 #include <deque>
 #include <list>
 #include <map>
@@ -393,7 +393,7 @@ namespace bee::registry {
         typedef typename traits_type::size_type   size_type;
         typedef typename traits_type::string_type string_type;
         typedef typename traits_type::hkey_type   hkey_type;
-        typedef std::dynarray<uint8_t>            blob_type;
+        typedef dynarray<uint8_t>                 blob_type;
         typedef typename traits_type::result_type result_type;
 
         basic_value(key_type& key, const string_type& name);
@@ -537,7 +537,7 @@ namespace bee::registry {
         check_and_throw_exception("could not determine the data size", res);
 
         if (data_size > 0) {
-            std::dynarray<char_type> buffer(1 + data_size / sizeof(char_type));
+            dynarray<char_type> buffer(1 + data_size / sizeof(char_type));
 
             data_size = buffer.size() * sizeof(char_type);
             res =
@@ -559,7 +559,7 @@ namespace bee::registry {
                         traits_type::expand_environment_strings(ret.c_str(), NULL, 0);
 
                     if (0 != size) {
-                        std::dynarray<char_type> buffer2(1 + size);
+                        dynarray<char_type> buffer2(1 + size);
 
                         if (0 == traits_type::expand_environment_strings(ret.c_str(),
                                                                          &buffer2[0],

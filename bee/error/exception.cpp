@@ -23,7 +23,7 @@ namespace bee {
         va_list va;
         va_start(va, fmt);
         size_t sz = VPRINTF(fmt, va);
-        std::dynarray<char> str(sz + 1);
+        dynarray<char> str(sz + 1);
         int n = VSPRINTF(str.data(), sz, fmt, va);
         if (n > 0) {
             what_ = std::move(str);
@@ -38,11 +38,11 @@ namespace bee {
         va_list va;
         va_start(va, fmt);
         size_t sz = ::_vscwprintf(fmt, va);
-        std::dynarray<wchar_t> str(sz + 1);
+        dynarray<wchar_t> str(sz + 1);
         int n = ::_vsnwprintf_s(str.data(), sz + 1, sz, fmt, va);
         if (n > 0) {
             std::string ustr = w2u(std::wstring_view(str.data(), n));
-            what_ = std::dynarray<char>(ustr.size() + 1);
+            what_ = dynarray<char>(ustr.size() + 1);
             memcpy(what_.data(), ustr.data(), ustr.size() + 1);
         }
         va_end(va);

@@ -47,7 +47,7 @@ namespace bee::lua_registry {
                 lua::push_string(L, value.get_string());
                 return 1;
             case REG_BINARY: {
-                std::dynarray<uint8_t> blob = value.get_binary();
+                dynarray<uint8_t> blob = value.get_binary();
                 lua_pushlstring(L, (const char*)blob.data(), blob.size());
                 return 1;
             }

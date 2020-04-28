@@ -5,7 +5,7 @@
 #include <limits>
 #include <memory.h>
 
-namespace std {
+namespace bee {
     template <class T>
     class dynarray : public std::span<T> {
     public:
@@ -63,12 +63,12 @@ namespace std {
             return *this;
         }
     private:
-        class bad_array_length : public bad_alloc {
+        class bad_array_length : public std::bad_alloc {
         public:
             bad_array_length() throw() { }
             virtual ~bad_array_length() throw() { }
             virtual const char* what() const throw() { 
-                return "std::bad_array_length"; 
+                return "bad_array_length"; 
             }
         };
         pointer alloc(size_type n) { 

@@ -1,5 +1,5 @@
 #include <bee/utility/unicode_win.h>
-#include <bee/nonstd/dynarray.h>
+#include <bee/utility/dynarray.h>
 #include <Windows.h>
 
 namespace bee {
@@ -11,7 +11,7 @@ namespace bee {
         if (wlen <= 0)  {
             return L"";
         }
-        std::dynarray<wchar_t> result(wlen);
+        dynarray<wchar_t> result(wlen);
         ::MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), result.data(), wlen);
         return std::wstring(result.data(), result.size());
     }
@@ -24,7 +24,7 @@ namespace bee {
         if (len <= 0) {
             return "";
         }
-        std::dynarray<char> result(len);
+        dynarray<char> result(len);
         ::WideCharToMultiByte(CP_UTF8, 0, wstr.data(), (int)wstr.size(), result.data(), len, 0, 0);
         return std::string(result.data(), result.size());
     }
@@ -37,7 +37,7 @@ namespace bee {
         if (wlen <= 0) {
             return L"";
         }
-        std::dynarray<wchar_t> result(wlen);
+        dynarray<wchar_t> result(wlen);
         ::MultiByteToWideChar(CP_ACP, 0, str.data(), (int)str.size(), result.data(), wlen);
         return std::wstring(result.data(), result.size());
     }
@@ -50,7 +50,7 @@ namespace bee {
         if (len <= 0) {
             return "";
         }
-        std::dynarray<char> result(len);
+        dynarray<char> result(len);
         ::WideCharToMultiByte(CP_ACP, 0, wstr.data(), (int)wstr.size(), result.data(), len, 0, 0);
         return std::string(result.data(), result.size());
     }

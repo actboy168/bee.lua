@@ -191,9 +191,6 @@
     <ClInclude Include="..\..\bee\utility\unicode_win.h">
       <Filter>bee\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\bee\nonstd\dynarray.h">
-      <Filter>bee\nonstd</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\bee\nonstd\filesystem.h">
       <Filter>bee\nonstd</Filter>
     </ClInclude>
@@ -205,6 +202,9 @@
     </ClInclude>
     <ClInclude Include="..\..\bee\span.h">
       <Filter>bee</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\utility\dynarray.h">
+      <Filter>bee\utility</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -195,7 +195,6 @@
     <ClInclude Include="..\..\bee\lua\binding.h" />
     <ClInclude Include="..\..\bee\net\endpoint.h" />
     <ClInclude Include="..\..\bee\net\socket.h" />
-    <ClInclude Include="..\..\bee\nonstd\dynarray.h" />
     <ClInclude Include="..\..\bee\nonstd\filesystem.h" />
     <ClInclude Include="..\..\bee\nonstd\span.h" />
     <ClInclude Include="..\..\bee\platform.h" />
@@ -212,6 +211,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\bee\subprocess\subprocess_win.h" />
+    <ClInclude Include="..\..\bee\utility\dynarray.h" />
     <ClInclude Include="..\..\bee\utility\file_helper.h" />
     <ClInclude Include="..\..\bee\utility\module_version_win.h" />
     <ClInclude Include="..\..\bee\utility\format.h" />
