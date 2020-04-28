@@ -140,9 +140,6 @@
     <ClInclude Include="..\..\bee\nonstd\span.h">
       <Filter>bee\nonstd</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\bee\nonstd\expected.h">
-      <Filter>bee\nonstd</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\bee\utility\lockqueue.h">
       <Filter>bee\utility</Filter>
     </ClInclude>

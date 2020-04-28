@@ -111,19 +111,19 @@ namespace bee::net::socket {
 			return status::failed;
 		}
 		auto newep = endpoint::from_hostname("127.0.0.1", tcpport);
-		if (!newep) {
+        if (!newep.valid()) {
 			::WSASetLastError(WSAECONNREFUSED);
 			return status::failed;
 		}
-		return socket::connect(s, *newep);
+		return socket::connect(s, newep);
 	}
 
     static status u_bind(fd_t s, const endpoint& ep) {
 		auto newep = endpoint::from_hostname("127.0.0.1", 0);
-		if (!newep) {
+        if (!newep.valid()) {
 			return status::failed;
 		}
-		status ok = socket::bind(s, *newep);
+		status ok = socket::bind(s, newep);
 		if (ok != status::success) {
 			return ok;
 		}
@@ -570,14 +570,14 @@ namespace bee::net::socket {
         fd_t cfd = retired_fd;
         auto cep = endpoint::from_empty();
         auto sep = endpoint::from_hostname("127.0.0.1", 0);
-        if (!sep) {
+        if (!sep.valid()) {
             goto failed;
         }
-        sfd = open(protocol::tcp, *sep);
+        sfd = open(protocol::tcp, sep);
         if (sfd == retired_fd) {
             goto failed;
         }
-        if (status::success != socket::bind(sfd, *sep)) {
+        if (status::success != socket::bind(sfd, sep)) {
             goto failed;
         }
         if (status::success != socket::listen(sfd, 5)) {

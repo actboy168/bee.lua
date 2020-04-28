@@ -82,18 +82,18 @@ namespace bee::net {
     }
 #endif
 
-    nonstd::expected<endpoint, std::string> endpoint::from_unixpath(const std::string_view& path) {
+    endpoint endpoint::from_unixpath(const std::string_view& path) {
         if (path.size() >= UNIX_PATH_MAX) {
-            return nonstd::make_unexpected("unix domain sockect: pathname too long");
+            return from_invalid();
         };
         endpoint ep(offsetof(struct sockaddr_un, sun_path) + path.size() + 1);
         struct sockaddr_un* su = (struct sockaddr_un*)ep.data();
         su->sun_family = AF_UNIX;
         memcpy(&su->sun_path[0], path.data(), path.size());
         su->sun_path[path.size()] = '\0';
-        return std::move(ep);
+        return ep;
     }
-    nonstd::expected<endpoint, std::string> endpoint::from_hostname(const std::string_view& ip, int port) {
+    endpoint endpoint::from_hostname(const std::string_view& ip, int port) {
 #if defined(__linux__) && defined(BEE_DISABLE_DLOPEN)
         struct sockaddr_in sa4;
         if (1 == inet_pton(AF_INET, ip.data(), &sa4.sin_addr)) {
@@ -102,7 +102,7 @@ namespace bee::net {
             sa4.sin_port = htons(port);
             endpoint ep(sizeof(struct sockaddr_in));
             memcpy(ep.data(), &sa4, ep.size());
-            return std::move(ep);
+            return ep;
         }
         struct sockaddr_in6 sa6;
         if (1 == inet_pton(AF_INET6, ip.data(), &sa6.sin6_addr)) {
@@ -110,9 +110,9 @@ namespace bee::net {
             sa6.sin6_port = htons(port);
             endpoint ep(sizeof(struct sockaddr_in6));
             memcpy(ep.data(), &sa6, ep.size());
-            return std::move(ep);
+            return ep;
         }
-        return nonstd::make_unexpected("unknown address family");
+        return from_invalid();
 #else
         addrinfo hint = { };
         hint.ai_family = AF_UNSPEC;
@@ -122,7 +122,7 @@ namespace bee::net {
 #if __has_include(<charconv>) and not defined(__APPLE__)
         std::array<char, 10> portstr;
         if (auto[p, ec] = std::to_chars(portstr.data(), portstr.data() + portstr.size() - 1, port); ec != std::errc()) {
-            return nonstd::make_unexpected(make_error_code(ec).message());
+            return from_invalid();
         }
         else {
             p[0] = '\0';
@@ -132,21 +132,23 @@ namespace bee::net {
         auto info = gethostaddr(hint, ip, bee::format("%d", port).c_str());
 #endif
         if (!info) {
-            return nonstd::make_unexpected(make_neterror("getaddrinfo").what());
+            return from_invalid();
         }
         else if (info->ai_family != AF_INET && info->ai_family != AF_INET6) {
-            return nonstd::make_unexpected("unknown address family");
+            return from_invalid();
         }
         const addrinfo& addrinfo = *info;
         endpoint ep(addrinfo.ai_addrlen);
         memcpy(ep.data(), addrinfo.ai_addr, ep.size());
-        return std::move(ep);
+        return ep;
 #endif
     }
     endpoint endpoint::from_empty() {
         return endpoint(endpoint::kMaxSize);
     }
-
+    endpoint endpoint::from_invalid() {
+        return endpoint(0);
+    }
     endpoint::endpoint(size_t n) : mybase(n)
     { }
     endpoint_info endpoint::info() const {
@@ -201,5 +203,8 @@ namespace bee::net {
     }
     int endpoint::family() const {
         return addr()->sa_family;
+    }
+    bool endpoint::valid() const{
+        return addrlen() != 0;
     }
 }

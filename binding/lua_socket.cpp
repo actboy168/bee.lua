@@ -12,6 +12,7 @@
 #include <chrono>
 #include <limits>
 #include <thread>
+#include <assert.h>
 
 namespace bee::lua_socket {
     using namespace bee::net;
@@ -51,13 +52,21 @@ namespace bee::lua_socket {
             return socket::protocol::none;
         }
     }
-    static auto read_endpoint(lua_State* L, socket::protocol protocol, int idx) {
+    static endpoint read_endpoint(lua_State* L, socket::protocol protocol, int idx) {
         std::string_view ip = lua::to_strview(L, idx);
         if (protocol != socket::protocol::unix) {
             int port = (int)luaL_checkinteger(L, idx + 1);
-            return endpoint::from_hostname(ip, port);
+            endpoint ep = endpoint::from_hostname(ip, port);
+            if (!ep.valid()) {
+                luaL_error(L, "invalid address: %s:%d", ip, port);
+            }
+            return ep;
         }
-        return endpoint::from_unixpath(ip);
+        endpoint ep = endpoint::from_unixpath(ip);
+        if (!ep.valid()) {
+            luaL_error(L, "invalid address: %s", ip);
+        }
+        return ep;
     }
     static int read_backlog(lua_State* L, socket::protocol protocol) {
         switch (protocol) {
@@ -178,12 +187,11 @@ namespace bee::lua_socket {
         std::string_view ip = lua::to_strview(L, 3);
         int              port = (int)luaL_checkinteger(L, 4);
         auto             ep = endpoint::from_hostname(ip, port);
-        if (!ep) {
-            lua_pushlstring(L, ep.error().data(), ep.error().size());
-            return lua_error(L);
+        if (!ep.valid()) {
+            return luaL_error(L, "invalid address: %s:%d", ip, port);
         }
         int rc;
-        switch (socket::sendto(self.fd, rc, buf, (int)len, ep.value())) {
+        switch (socket::sendto(self.fd, rc, buf, (int)len, ep)) {
         case socket::status::wait:
             lua_pushboolean(L, 0);
             return 1;
@@ -343,13 +351,9 @@ namespace bee::lua_socket {
     static int connect(lua_State* L) {
         socket::protocol protocol = read_protocol(L, 1);
         auto             ep = read_endpoint(L, protocol, 2);
-        if (!ep) {
-            lua_pushlstring(L, ep.error().data(), ep.error().size());
-            return lua_error(L);
-        }
 #if defined _WIN32
-        if (ep->family() == AF_UNIX) {
-            auto [path, type] = ep->info();
+        if (ep.family() == AF_UNIX) {
+            auto [path, type] = ep.info();
             if (type == 0 && !safe_exists(path)) {
                 auto error = make_error(WSAECONNREFUSED, "socket");
                 lua_pushnil(L);
@@ -358,12 +362,12 @@ namespace bee::lua_socket {
             }
         }
 #endif
-        socket::fd_t fd = socket::open(protocol, *ep);
+        socket::fd_t fd = socket::open(protocol, ep);
         if (fd == socket::retired_fd) {
             return push_neterror(L, "socket");
         }
         pushfd(L, fd, protocol, luafd::tag::connect);
-        switch (socket::connect(fd, *ep)) {
+        switch (socket::connect(fd, ep)) {
         case socket::status::success:
             lua_pushboolean(L, true);
             return 2;
@@ -380,13 +384,8 @@ namespace bee::lua_socket {
     static int bind(lua_State* L) {
         socket::protocol protocol = read_protocol(L, 1);
         auto             ep = read_endpoint(L, protocol, 2);
-        if (!ep) {
-            lua_pushnil(L);
-            lua_pushlstring(L, ep.error().data(), ep.error().size());
-            return 2;
-        }
         int          backlog = read_backlog(L, protocol);
-        socket::fd_t fd = socket::open(protocol, *ep);
+        socket::fd_t fd = socket::open(protocol, ep);
         if (fd == socket::retired_fd) {
             return push_neterror(L, "socket");
         }
@@ -394,18 +393,18 @@ namespace bee::lua_socket {
         luafd& self =
 #endif
             pushfd(L, fd, protocol, luafd::tag::listen);
-        if (ep->family() == AF_UNIX) {
-            socket::unlink(*ep);
+        if (ep.family() == AF_UNIX) {
+            socket::unlink(ep);
 #if defined _WIN32
             if (!socket::supportUnixDomainSocket()) {
-                auto [path, type] = ep->info();
+                auto [path, type] = ep.info();
                 if (type == 0) {
                     self.path = path;
                 }
             }
 #endif
         }
-        if (socket::status::success != socket::bind(fd, *ep)) {
+        if (socket::status::success != socket::bind(fd, ep)) {
             return push_neterror(L, "bind");
         }
         if (protocol != socket::protocol::udp) {

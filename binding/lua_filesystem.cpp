@@ -494,13 +494,13 @@ namespace bee::lua_filesystem {
 
     static int exe_path(lua_State* L) {
         LUA_TRY;
-        return path::constructor_(L, std::move(path_helper::exe_path()));
+        return path::constructor_(L, path_helper::exe_path());
         LUA_TRY_END;
     }
 
     static int dll_path(lua_State* L) {
         LUA_TRY;
-        return path::constructor_(L, std::move(path_helper::dll_path()));
+        return path::constructor_(L, path_helper::dll_path());
         LUA_TRY_END;
     }
 

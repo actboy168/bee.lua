@@ -196,7 +196,6 @@
     <ClInclude Include="..\..\bee\net\endpoint.h" />
     <ClInclude Include="..\..\bee\net\socket.h" />
     <ClInclude Include="..\..\bee\nonstd\dynarray.h" />
-    <ClInclude Include="..\..\bee\nonstd\expected.h" />
     <ClInclude Include="..\..\bee\nonstd\filesystem.h" />
     <ClInclude Include="..\..\bee\nonstd\span.h" />
     <ClInclude Include="..\..\bee\platform.h" />
