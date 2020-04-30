@@ -105,7 +105,7 @@ namespace bee::lua_thread {
 
     static int lchannel_push(lua_State* L) {
         boxchannel* bc = (boxchannel*)getObject(L, 1, "channel");
-        void*       buffer = seri_pack(L, 1);
+        void*       buffer = seri_pack(L, 1, NULL);
         bc->c->push(buffer);
         return 0;
     }
@@ -114,7 +114,7 @@ namespace bee::lua_thread {
         boxchannel* bc = (boxchannel*)getObject(L, 1, "channel");
         void*       data;
         bc->c->blocked_pop(data);
-        return seri_unpack(L, data);
+        return seri_unpackptr(L, data);
     }
 
     static int lchannel_pop(lua_State* L) {
@@ -135,7 +135,7 @@ namespace bee::lua_thread {
             }
         }
         lua_pushboolean(L, 1);
-        return 1 + seri_unpack(L, data);
+        return 1 + seri_unpackptr(L, data);
     }
 
     static int lchannel_gc(lua_State* L) {

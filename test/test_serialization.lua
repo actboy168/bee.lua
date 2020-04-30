@@ -45,8 +45,9 @@ function test_seri:test_err_3()
     TestErr("Unsupport type userdata to serialize", io.stdout)
 end
 
-function test_seri:test_err_4()
+function test_seri:test_ref()
     local t = {}
     t.a = t
-    TestErr("serialize can't pack too depth table", t)
+    local newt = seri.unpack(seri.pack(t))
+    lu.assertEquals(newt, newt.a)
 end
