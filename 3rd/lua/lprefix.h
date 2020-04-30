@@ -44,10 +44,10 @@
 #endif			/* } */
 
 #include "luai_userstate.h"
+#include <stdlib.h>
 
 #if !defined(NDEBUG)
 
-#include <stdlib.h>
 #include "lauxlib.h"
 
 #define lua_assert(e) (void)(               \
