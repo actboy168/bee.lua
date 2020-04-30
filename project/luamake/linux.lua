@@ -1,8 +1,5 @@
 local lm = require 'luamake'
 
-lm.gcc = 'clang'
-lm.gxx = 'clang++'
-
 lm:source_set 'source_lua' {
     rootdir = '3rd/lua',
     sources = {
