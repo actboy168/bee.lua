@@ -43,7 +43,7 @@ namespace bee {
         template <class Vec>
         dynarray(const Vec& v, typename std::enable_if<std::is_same<typename Vec::value_type, T>::value>::type* =0)
             : mybase(alloc(v.size()), v.size()) {
-            uninitialized_copy(v.begin(), v.end(), mybase::begin());
+            uninitialized_copy(&*v.begin(), &*v.end(), &*mybase::begin());
         }
         ~dynarray() {
             delete[] reinterpret_cast<char*>(mybase::data());
