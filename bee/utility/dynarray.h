@@ -22,7 +22,7 @@ namespace bee {
         typedef size_t                                size_type;
         typedef ptrdiff_t                             difference_type;
 
-        static_assert(std::is_trivially_copyable<value_type>::value, "dynarray::value_type must be a pod type.");
+        static_assert(std::is_trivially_copyable<value_type>::value, "dynarray::value_type must be trivially copyable.");
 
         explicit dynarray(size_type c)
             : mybase(alloc(c), c)
