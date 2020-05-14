@@ -2,8 +2,8 @@ builddir = build/linux
 bin = $builddir/bin
 obj = $builddir/obj
 rule C_source_lua
-  command = clang -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall $
-      -DLUA_USE_LINUX -DNDEBUG -o $out -c $in
+  command = gcc -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall -DLUA_USE_LINUX $
+      -DNDEBUG -o $out -c $in
   description = Compile C   $out
   depfile = $out.d
   deps = gcc
@@ -40,14 +40,14 @@ build $obj/source_lua/lutf8lib.obj: C_source_lua 3rd/lua/lutf8lib.c
 build $obj/source_lua/lvm.obj: C_source_lua 3rd/lua/lvm.c
 build $obj/source_lua/lzio.obj: C_source_lua 3rd/lua/lzio.c
 rule C_lua
-  command = clang -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall $
+  command = gcc -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall $
       -fvisibility=hidden -DLUA_USE_LINUX -DNDEBUG -I3rd/lua -o $out -c $in
   description = Compile C   $out
   depfile = $out.d
   deps = gcc
 build $obj/lua/lua.obj: C_lua 3rd/lua/lua.c
 rule LINK_lua
-  command = clang $in -o $out -s -Wl,-E -lm -ldl
+  command = gcc $in -o $out -s -Wl,-E -lm -ldl
   description = Link    Exe $out
 build $bin/lua: LINK_lua $obj/lua/lua.obj $obj/source_lua/lapi.obj $
     $obj/source_lua/lauxlib.obj $obj/source_lua/lbaselib.obj $
@@ -67,7 +67,7 @@ build $bin/lua: LINK_lua $obj/lua/lua.obj $obj/source_lua/lapi.obj $
     $obj/source_lua/lutf8lib.obj $obj/source_lua/lvm.obj $
     $obj/source_lua/lzio.obj
 rule C_bee
-  command = clang -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall $
+  command = gcc -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall $
       -fvisibility=hidden -I3rd/lua -I3rd/lua-seri -I. $
       -Dspan_FEATURE_BYTE_SPAN=1 -DNDEBUG -fPIC -o $out -c $in
   description = Compile C   $out
@@ -75,7 +75,7 @@ rule C_bee
   deps = gcc
 build $obj/bee/lua-seri.obj: C_bee 3rd/lua-seri/lua-seri.c
 rule CXX_bee
-  command = clang++ -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall $
+  command = g++ -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall $
       -fvisibility=hidden -I3rd/lua -I3rd/lua-seri -I. $
       -Dspan_FEATURE_BYTE_SPAN=1 -DNDEBUG -fPIC -o $out -c $in
   description = Compile C++ $out
@@ -99,7 +99,7 @@ build $obj/bee/lua_socket.obj: CXX_bee binding/lua_socket.cpp
 build $obj/bee/lua_subprocess.obj: CXX_bee binding/lua_subprocess.cpp
 build $obj/bee/lua_thread.obj: CXX_bee binding/lua_thread.cpp
 rule LINK_bee
-  command = clang --shared $in -o $out -s -lpthread -lstdc++fs -lstdc++
+  command = gcc --shared $in -o $out -s -lpthread -lstdc++fs -lstdc++
   description = Link    Dll $out
 build $bin/bee.so: LINK_bee $obj/bee/lua-seri.obj $obj/bee/error.obj $
     $obj/bee/exception.obj $obj/bee/fsevent_linux.obj $obj/bee/endpoint.obj $
@@ -110,7 +110,7 @@ build $bin/bee.so: LINK_bee $obj/bee/lua-seri.obj $obj/bee/error.obj $
     $obj/bee/lua_serialization.obj $obj/bee/lua_socket.obj $
     $obj/bee/lua_subprocess.obj $obj/bee/lua_thread.obj
 rule CXX_bootstrap
-  command = clang++ -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall $
+  command = g++ -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall $
       -fvisibility=hidden -I3rd/lua -DLUA_USE_LINUX -DNDEBUG -I3rd/lua -o $
       $out -c $in
   description = Compile C++ $out
@@ -119,7 +119,7 @@ rule CXX_bootstrap
 build $obj/bootstrap/main.obj: CXX_bootstrap bootstrap/main.cpp
 build $obj/bootstrap/progdir.obj: CXX_bootstrap bootstrap/progdir.cpp
 rule LINK_bootstrap
-  command = clang $in -o $out -s -Wl,-E -lm -ldl
+  command = gcc $in -o $out -s -Wl,-E -lm -ldl
   description = Link    Exe $out
 build $bin/bootstrap: LINK_bootstrap $obj/bootstrap/main.obj $
     $obj/bootstrap/progdir.obj $obj/source_lua/lapi.obj $
