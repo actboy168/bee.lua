@@ -5,7 +5,7 @@
 #   if __has_include(<span>) && _HAS_CXX20
 #       define BEE_ENABLE_SPAN 1
 #   endif
-#elif defined(__MINGW32__)
+#elif defined(__GUNC__)
 #   if __has_include(<span>) && __cplusplus > 201703L
 #       define BEE_ENABLE_SPAN 1
 #   endif
