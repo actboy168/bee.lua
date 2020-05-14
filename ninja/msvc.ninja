@@ -72,7 +72,7 @@ rule C_bee
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /O2 /GL $
       /Zc:inline /W3 /permissive- /MD /I3rd/lua /I3rd/lua-seri /I. $
       /D_WIN32_WINNT=0x0601 /DBEE_EXPORTS /D_CRT_SECURE_NO_WARNINGS $
-      /Dspan_FEATURE_BYTE_SPAN=1 /DNDEBUG /I3rd/lua 
+      /DNDEBUG /I3rd/lua 
   description = Compile C   $out
   deps = msvc
 build $obj/bee/lua-seri.obj: C_bee 3rd/lua-seri/lua-seri.c
@@ -80,7 +80,7 @@ rule CXX_bee
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /O2 /GL $
       /Zc:inline /W3 /permissive- /MD /I3rd/lua /I3rd/lua-seri /I. $
       /D_WIN32_WINNT=0x0601 /DBEE_EXPORTS /D_CRT_SECURE_NO_WARNINGS $
-      /Dspan_FEATURE_BYTE_SPAN=1 /DNDEBUG /I3rd/lua /std:c++17
+      /DNDEBUG /I3rd/lua /std:c++17
   description = Compile C++ $out
   deps = msvc
 build $obj/bee/error.obj: CXX_bee bee/error.cpp
