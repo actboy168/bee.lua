@@ -30,7 +30,7 @@ namespace bee {
 
         dynarray(const dynarray& d)
             : mybase(alloc(d.size()), d.size()) {
-            uninitialized_copy(d.begin(), d.end(), mybase::begin()); 
+            uninitialized_copy(&*d.begin(), &*d.end(), &*mybase::begin()); 
         }
         dynarray(dynarray&& d)
             : mybase(d.data(), d.size()) {
@@ -51,7 +51,7 @@ namespace bee {
         dynarray& operator=(const dynarray& d) {
             if (this != &d) {
                 *(mybase*)this = mybase(alloc(d.size()), d.size());
-                uninitialized_copy(d.begin(), d.end(), mybase::begin());
+                uninitialized_copy(&*d.begin(), &*d.end(), &*mybase::begin());
             }
             return *this;
         }
