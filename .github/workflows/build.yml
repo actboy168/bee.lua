@@ -36,16 +36,11 @@ jobs:
       with:
         ref: refs/heads/master
         submodules : recursive
+    - uses: numworks/setup-msys2@v1
     - name: Init
-      run: |
-        choco install -y msys2
-        refreshenv
-        c:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -Syu"
-        c:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -Syu mingw-w64-x86_64-gcc ninja"
-        c:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -Su"
+      run: msys2do pacman --noconfirm -U mingw-w64-x86_64-gcc ninja
     - name: Compile
-      run: |
-        c:\tools\msys64\usr\bin\bash.exe -lc "export PATH=/mingw64/bin:/usr/bin;cd '$PWD';ninja -f ninja/mingw.ninja"
+      run: msys2do ninja -f ninja/mingw.ninja
     - run: |
         mkdir -p publish
         cp -r build/mingw/bin publish/mingw
