@@ -1,17 +1,6 @@
 #pragma once
 
-#if defined(_MSC_VER)
-#   if __has_include(<span>) && __cplusplus > 201703L
-#       define BEE_ENABLE_SPAN 1
-#   endif
-#elif defined(__GUNC__)
-#   if __has_include(<span>) && __cplusplus > 201703L
-#       define BEE_ENABLE_SPAN 1
-#   endif
-#endif
-
-
-#if defined(BEE_ENABLE_SPAN)
+#if __cplusplus > 201703L && __has_include(<span>)
 #   include <span>
 #else
 #   include <stdexcept>
