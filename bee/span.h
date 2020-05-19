@@ -1,8 +1,7 @@
 #pragma once
 
 #if defined(_MSC_VER)
-#   include <yvals_core.h>
-#   if __has_include(<span>) && _HAS_CXX20
+#   if __has_include(<span>) && __cplusplus > 201703L
 #       define BEE_ENABLE_SPAN 1
 #   endif
 #elif defined(__GUNC__)
