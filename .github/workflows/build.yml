@@ -23,28 +23,6 @@ jobs:
         name: bee
         path: publish
 
-  mingw:
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v1
-      with:
-        ref: refs/heads/master
-        submodules : recursive
-    - uses: numworks/setup-msys2@v1
-      with:
-        path-type: inherit
-        msystem: MSYS
-    - run: msys2do pacman --noconfirm -U mingw-w64-x86_64-gcc ninja
-    - run: msys2do ninja -f ninja/mingw.ninja
-    - run: |
-        mkdir -p publish
-        cp -r build/mingw/bin publish/mingw
-    - name: Upload artifact
-      uses: actions/upload-artifact@v1.0.0
-      with:
-        name: bee
-        path: publish
-
   linux:
     runs-on: ubuntu-latest
     steps:
