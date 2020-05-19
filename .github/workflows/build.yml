@@ -1,7 +1,5 @@
 name: build
-
 on: [push, pull_request]
-
 jobs:
   msvc:
     runs-on: windows-latest
@@ -14,12 +12,8 @@ jobs:
       with:
         arch: x86
     - name: Init
-      run: |
-        choco install -y ninja
-        refreshenv
-    - name: Compile
-      run: |
-        ninja -f ninja\msvc.ninja
+      run: choco install -y ninja
+    - run: ninja -f ninja\msvc.ninja
     - run: |
         mkdir publish
         xcopy /I /E /Y /Q  /EXCLUDE:.github\workflows\msvc_exclude build\msvc\bin publish\msvc
@@ -37,10 +31,10 @@ jobs:
         ref: refs/heads/master
         submodules : recursive
     - uses: numworks/setup-msys2@v1
-    - name: Init
-      run: msys2do pacman --noconfirm -U mingw-w64-x86_64-gcc ninja
-    - name: Compile
-      run: msys2do ninja -f ninja/mingw.ninja
+      with:
+        path-type: inherit
+    - run: msys2do pacman --noconfirm -U mingw-w64-x86_64-gcc ninja
+    - run: msys2do ninja -f ninja/mingw.ninja
     - run: |
         mkdir -p publish
         cp -r build/mingw/bin publish/mingw
@@ -57,12 +51,8 @@ jobs:
       with:
         ref: refs/heads/master
         submodules : recursive
-    - name: Init
-      run: |
-        sudo apt-get install -y libreadline-dev ninja-build
-    - name: Compile
-      run: |
-        ninja -f ninja/linux.ninja
+    - run: sudo apt-get install -y libreadline-dev ninja-build
+    - run: ninja -f ninja/linux.ninja
     - run: |
         mkdir -p publish
         cp -r build/linux/bin publish/linux
@@ -79,12 +69,8 @@ jobs:
       with:
         ref: refs/heads/master
         submodules : recursive
-    - name: Init
-      run: |
-        brew install ninja
-    - name: Compile
-      run: |
-        ninja -f ninja/macos.ninja
+    - run: brew install ninja
+    - run: ninja -f ninja/macos.ninja
     - run: |
         mkdir -p publish
         cp -r build/macos/bin publish/macos
