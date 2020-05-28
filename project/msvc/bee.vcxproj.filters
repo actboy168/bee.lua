@@ -206,5 +206,8 @@
     <ClInclude Include="..\..\bee\utility\dynarray.h">
       <Filter>bee\utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\bee\lua\file.h">
+      <Filter>bee\lua</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

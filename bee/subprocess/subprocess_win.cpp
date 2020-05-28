@@ -24,7 +24,6 @@ const GUID IID_ITaskbarList3 = { 0xEA1AFB91, 0x9E28, 0x4B86, {0x90, 0xE9, 0x9E, 
 #endif
 
 namespace bee::win::subprocess {
-
     static wchar_t* make_array_args(const std::vector<std::wstring>& args, std::wstring_view prefix = std::wstring_view()) {
         strbuilder<wchar_t> res;
         if (!prefix.empty()) {

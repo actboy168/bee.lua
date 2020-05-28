@@ -1,7 +1,7 @@
 #include <bee/error.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/file.h>
-#include <bee/lua/path.h>
+#include <bee/filesystem.h>
 #include <bee/subprocess.h>
 #include <errno.h>
 #include <lua.hpp>
@@ -126,29 +126,44 @@ namespace bee::lua_subprocess {
     namespace spawn {
         static std::optional<lua::string_type> cast_cwd(lua_State* L) {
             lua_getfield(L, 1, "cwd");
-            auto ret = lua::get_path(L, -1);
-            lua_pop(L, 1);
-            return ret;
+            switch (lua_type(L, -1)) {
+            case LUA_TSTRING: {
+                auto ret = lua::to_string(L, -1);
+                lua_pop(L, 1);
+                return ret;
+            }
+            case LUA_TUSERDATA: {
+                const fs::path& path = *(fs::path*)getObject(L, -1, "filesystem");
+                auto ret = path.string<lua::string_type::value_type>();
+                lua_pop(L, 1);
+                return ret;
+            }
+            default:
+                lua_pop(L, 1);
+                return std::optional<lua::string_type>();
+            }
         }
 
         static void cast_args_array(lua_State* L, int idx, subprocess::args_t& args) {
             args.type = subprocess::args_t::type::array;
-            lua_Integer n = luaL_len(L, idx);
+            const lua_Integer n = luaL_len(L, idx);
             for (lua_Integer i = 1; i <= n; ++i) {
                 lua_geti(L, idx, i);
-                auto ret = lua::get_path(L, -1);
-                if (ret) {
-#if defined(_WIN32)
-                    args.push_back(*ret);
-#else
-                    args.push(*ret);
-#endif
+                switch (lua_type(L, -1)) {
+                case LUA_TSTRING:
+                    args.push(lua::to_string(L, -1));
+                    break;
+                case LUA_TUSERDATA: {
+                    const fs::path& path = *(fs::path*)getObject(L, -1, "filesystem");
+                    args.push(path.string<lua::string_type::value_type>());
+                    break;
                 }
-                else if (lua_type(L, -1) == LUA_TTABLE) {
+                case LUA_TTABLE:
                     cast_args_array(L, lua_absindex(L, -1), args);
-                }
-                else {
+                    break;
+                default:
                     luaL_error(L, "Unsupported type: %s.", lua_typename(L, lua_type(L, -1)));
+                    break;
                 }
                 lua_pop(L, 1);
             }
@@ -158,17 +173,19 @@ namespace bee::lua_subprocess {
             args.type = subprocess::args_t::type::string;
             for (lua_Integer i = 1; i <= 2; ++i) {
                 lua_geti(L, idx, i);
-                auto ret = lua::get_path(L, -1);
-                if (ret) {
-#if defined(_WIN32)
-                    args.push_back(*ret);
-#else
-                    args.push(*ret);
-#endif
+
+                switch (lua_type(L, -1)) {
+                case LUA_TSTRING:
+                    args.push(lua::to_string(L, -1));
+                    break;
+                case LUA_TUSERDATA: {
+                    const fs::path& path = *(fs::path*)getObject(L, -1, "filesystem");
+                    args.push(path.string<lua::string_type::value_type>());
+                    break;
                 }
-                else {
+                default:
                     luaL_error(L, "Unsupported type: %s.", lua_typename(L, lua_type(L, -1)));
-                    return;
+                    break;
                 }
                 lua_pop(L, 1);
             }
