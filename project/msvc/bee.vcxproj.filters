@@ -28,9 +28,6 @@
     <Filter Include="bee\fsevent">
       <UniqueIdentifier>{2fa452a8-1244-4642-834f-6e3c285da1d4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="bee\error">
-      <UniqueIdentifier>{9c0c8d8e-8087-4ce0-9bfb-809076f74cf3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="bee\platform">
       <UniqueIdentifier>{07e03cc1-f454-47c4-aade-02337f5229f2}</UniqueIdentifier>
     </Filter>
@@ -86,9 +83,6 @@
     </ClCompile>
     <ClCompile Include="..\..\binding\lua_embed.cpp">
       <Filter>binding</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\bee\error\exception.cpp">
-      <Filter>bee\error</Filter>
     </ClCompile>
     <ClCompile Include="..\..\binding\lua_serialization.cpp">
       <Filter>binding</Filter>
@@ -166,9 +160,6 @@
     </ClInclude>
     <ClInclude Include="..\..\bee\error.h">
       <Filter>bee</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\bee\error\exception.h">
-      <Filter>bee\error</Filter>
     </ClInclude>
     <ClInclude Include="..\..\bee\platform\version.h">
       <Filter>bee\platform</Filter>
