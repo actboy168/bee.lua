@@ -5,14 +5,12 @@ for _, config in ipairs {'debug', 'release'} do
         Arch = '32',
         Compiler = 'msvc',
         CRT = 'msvc',
-        DEBUG = (config == 'debug'),
     }
     support['msbuild_x64_' .. config] = {
         OS = 'Windows',
         Arch = '64',
         Compiler = 'msvc',
         CRT = 'msvc',
-        DEBUG = (config == 'Debug'),
     }
 end
 
@@ -21,28 +19,24 @@ support.msvc = {
     Arch = '32',
     Compiler = 'msvc',
     CRT = 'msvc',
-    DEBUG = false,
 }
 support.mingw = {
     OS = 'Windows',
     Arch = '64',
     Compiler = 'gcc',
     CRT = 'libstdc++',
-    DEBUG = false,
 }
 support.linux = {
     OS = 'Linux',
     Arch = '64',
     Compiler = 'clang',
     CRT = 'libstdc++',
-    DEBUG = false,
 }
 support.macos = {
     OS = 'macOS',
     Arch = '64',
     Compiler = 'clang',
     CRT = 'libc++',
-    DEBUG = false,
 }
 
 local lu = require 'luaunit'
@@ -68,5 +62,6 @@ function test_plat:test_1()
     end
     info.CompilerVersion = nil
     info.CRTVersion = nil
+    info.DEBUG = nil
     lu.assertEquals(support[plat], info)
 end
