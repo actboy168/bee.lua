@@ -135,8 +135,8 @@
 #	define BEE_ARCH 32
 #endif
 
-#ifdef _DEBUG
-#	define BEE_DEBUG 1
-#else
+#ifdef NDEBUG
 #	define BEE_DEBUG 0
+#else
+#	define BEE_DEBUG 1
 #endif
