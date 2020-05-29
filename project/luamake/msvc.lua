@@ -1,5 +1,14 @@
 local lm = require 'luamake'
 
+local stacksize
+if lm.mode == "debug" then
+    if lm.plat == "msvc" then
+        stacksize = "-STACK:10485760"
+    else
+        stacksize = "-Wl,--stack=10485760"
+    end
+end
+
 lm:shared_library 'lua54' {
     rootdir = '3rd/lua',
     sources = {
@@ -20,7 +29,7 @@ lm:executable 'lua' {
         "utf8_lua.c",
         "utf8_unicode.c",
     },
-    ldflags = lm.plat == "msvc" and lm.mode == "debug" and "/STACK:10485760",
+    ldflags = stacksize,
 }
 
 lm:shared_library 'bee' {
@@ -62,7 +71,7 @@ lm:executable 'bootstrap' {
     sources = {
         "bootstrap/*.cpp",
     },
-    ldflags = lm.plat == "msvc" and lm.mode == "debug" and "/STACK:10485760",
+    ldflags = stacksize,
 }
 
 if lm.plat == 'msvc' then
