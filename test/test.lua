@@ -14,9 +14,6 @@ package.path = getTestDir() .. '/?.lua'
 package.cpath = ('%s/?.%s'):format(__Target__, __EXT__)
 
 local platform = require 'bee.platform'
---if platform.Compiler == 'msvc' then
---    dofile './3rd/luaffi/src/test.lua'
---end
 
 print("OS:       ", platform.OS)
 print("Arch:     ", platform.Arch)
@@ -54,8 +51,6 @@ if platform.OS == "Windows" then
     end
     test_socket = nil
 end
-
---require 'test_registry'
 
 local code = lu.LuaUnit.run()
 
