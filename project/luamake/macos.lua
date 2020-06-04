@@ -1,5 +1,9 @@
 local lm = require 'luamake'
 
+lm.flags = {
+    "-mmacosx-version-min=10.13",
+}
+
 lm:source_set 'source_lua' {
     rootdir = '3rd/lua',
     sources = {
@@ -40,9 +44,6 @@ lm:shared_library 'bee' {
         "!bee/*_linux.cpp",
         "!binding/lua_unicode.cpp",
         "!binding/lua_registry.cpp",
-    },
-    flags = {
-        "-mmacosx-version-min=10.13",
     },
     ldflags = {
         "-framework CoreFoundation",

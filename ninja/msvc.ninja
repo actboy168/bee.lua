@@ -58,7 +58,8 @@ build $bin/lua54.dll | $bin/lua54.lib: LINK_lua54 $obj/lua54/lapi.obj $
     $obj/lua54/lzio.obj $obj/lua54/utf8_crt.obj $obj/lua54/utf8_unicode.obj
 rule C_lua
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /Zc:__cplusplus $
-      /O2 /GL /Zc:inline /W3 /permissive- /MD /DNDEBUG /I3rd/lua 
+      /O2 /GL /Zc:inline /W3 /permissive- /MD /D_WIN32_WINNT=0x0601 $
+      /DNDEBUG /I3rd/lua 
   description = Compile C   $out
   deps = msvc
 build $obj/lua/utf8_lua.obj: C_lua 3rd/lua/utf8_lua.c
@@ -71,16 +72,14 @@ build $bin/lua.exe: LINK_lua $obj/lua/utf8_lua.obj $
 rule C_bee
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /Zc:__cplusplus $
       /O2 /GL /Zc:inline /W3 /permissive- /MD /I3rd/lua /I3rd/lua-seri /I. $
-      /D_WIN32_WINNT=0x0601 /DBEE_EXPORTS /D_CRT_SECURE_NO_WARNINGS $
-      /DNDEBUG /I3rd/lua 
+      /DBEE_EXPORTS /D_CRT_SECURE_NO_WARNINGS /DNDEBUG /I3rd/lua 
   description = Compile C   $out
   deps = msvc
 build $obj/bee/lua-seri.obj: C_bee 3rd/lua-seri/lua-seri.c
 rule CXX_bee
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /Zc:__cplusplus $
       /O2 /GL /Zc:inline /W3 /permissive- /MD /I3rd/lua /I3rd/lua-seri /I. $
-      /D_WIN32_WINNT=0x0601 /DBEE_EXPORTS /D_CRT_SECURE_NO_WARNINGS $
-      /DNDEBUG /I3rd/lua /std:c++17
+      /DBEE_EXPORTS /D_CRT_SECURE_NO_WARNINGS /DNDEBUG /I3rd/lua /std:c++17
   description = Compile C++ $out
   deps = msvc
 build $obj/bee/error.obj: CXX_bee bee/error.cpp
@@ -123,8 +122,8 @@ build $bin/bee.dll | $bin/bee.lib: LINK_bee $obj/bee/lua-seri.obj $
     $obj/bee/lua_thread.obj $obj/bee/lua_unicode.obj $bin/lua54.lib
 rule CXX_bootstrap
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /Zc:__cplusplus $
-      /O2 /GL /Zc:inline /W3 /permissive- /MD /I3rd/lua /DNDEBUG /I3rd/lua $
-      /std:c++17
+      /O2 /GL /Zc:inline /W3 /permissive- /MD /I3rd/lua $
+      /D_WIN32_WINNT=0x0601 /DNDEBUG /I3rd/lua /std:c++17
   description = Compile C++ $out
   deps = msvc
 build $obj/bootstrap/main.obj: CXX_bootstrap bootstrap/main.cpp

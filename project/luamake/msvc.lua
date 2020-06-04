@@ -9,6 +9,10 @@ if lm.mode == "debug" then
     end
 end
 
+lm.defines = {
+    "_WIN32_WINNT=0x0601",
+}
+
 lm:shared_library 'lua54' {
     rootdir = '3rd/lua',
     sources = {
@@ -40,7 +44,6 @@ lm:shared_library 'bee' {
         "."
     },
     defines = {
-        "_WIN32_WINNT=0x0601",
         "BEE_EXPORTS",
         "_CRT_SECURE_NO_WARNINGS",
     },
