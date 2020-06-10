@@ -42,10 +42,10 @@ local function quote_arg(s)
     if #s == 0 then
         return '""'
     end
-    if not s:find(' \t\"', 1, true) then
+    if not s:find('[ \t\"]', 1) then
         return s
     end
-    if not s:find('\"\\', 1, true) then
+    if not s:find('[\"\\]', 1) then
         return '"'..s..'"'
     end
     local quote_hit = true
