@@ -43,13 +43,13 @@ require 'test_socket'
 require 'test_filewatch'
 
 if platform.OS == "Windows" then
-    test_socket_1 = {UDS = true}
-    test_socket_2 = {UDS = false}
-    for k, v in pairs(test_socket) do
-        test_socket_1[k] = v
+    local test_socket_1 = lu.test "socket"
+    local test_socket_2 = lu.test "socket-uds"
+    for k, v in pairs(test_socket_1) do
         test_socket_2[k] = v
     end
-    test_socket = nil
+    test_socket_1.UDS = true
+    test_socket_2.UDS = false
 end
 
 local code = lu.LuaUnit.run()

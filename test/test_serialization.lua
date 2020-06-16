@@ -18,7 +18,7 @@ local function TestErr(msg, ...)
     lu.assertErrorMsgEquals(msg, seri.packstring, ...)
 end
 
-test_seri = {}
+local test_seri = lu.test "serialization"
 
 function test_seri:test_ok_1()
     TestEq(1)

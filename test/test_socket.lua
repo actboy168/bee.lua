@@ -17,7 +17,7 @@ local function file_exists(filename)
     return errno ~= 2
 end
 
-test_socket = {}
+local test_socket = lu.test "socket"
 
 function test_socket:setup()
     if platform.OS == "Windows" then

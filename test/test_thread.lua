@@ -19,7 +19,7 @@ local function assertHasThreadError(m)
     lu.assertErrorMsgContains(m, error, msg)
 end
 
-test_thread = {}
+local test_thread = lu.test "thread"
 
 function test_thread:test_thread_1()
     local function file_exists(filename)

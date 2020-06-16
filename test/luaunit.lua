@@ -2319,19 +2319,11 @@ end
         return string.sub(s, 1, 4):lower() == 'test'
     end
 
-    function M.LuaUnit.isTestName( s )
-        -- return true is the name matches the name of a test
-        -- default rule is that is starts with 'Test' or with 'test'
-        return string.sub(s, 1, 4):lower() == 'test'
-    end
 
     function M.LuaUnit.collectTests()
-        -- return a list of all test names in the global namespace
-        -- that match LuaUnit.isTestName
-
         local testNames = {}
-        for k, _ in pairs(_G) do
-            if type(k) == "string" and M.LuaUnit.isTestName( k ) then
+        for _, k in ipairs(M.instanceSet) do
+            if type(k) == "string" then
                 table.insert( testNames , k )
             end
         end
@@ -2980,7 +2972,7 @@ end
             local className, methodName = M.LuaUnit.splitClassMethod( name )
             if className then
                 instanceName = className
-                instance = _G[instanceName]
+                instance = M.instanceSet[instanceName]
 
                 if instance == nil then
                     error( "No such name in global space: "..instanceName )
@@ -2998,7 +2990,7 @@ end
             else
                 -- for functions and classes
                 instanceName = name
-                instance = _G[instanceName]
+                instance = M.instanceSet[instanceName]
             end
 
             if instance == nil then
@@ -3068,6 +3060,18 @@ end
         return self.result.notPassedCount
     end
 -- class LuaUnit
+
+M.instanceSet = {}
+
+function M.test(className)
+    if M.instanceSet[className] then
+        return M.instanceSet[className]
+    end
+    local instance = {}
+    M.instanceSet[className] = instance
+    M.instanceSet[#M.instanceSet+1] = className
+    return instance
+end
 
 -- For compatbility with LuaUnit v2
 M.run = M.LuaUnit.run

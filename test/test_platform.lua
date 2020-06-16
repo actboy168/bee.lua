@@ -35,7 +35,7 @@ local lu = require 'luaunit'
 local fs = require 'bee.filesystem'
 local platform = require 'bee.platform'
 
-test_plat = {}
+local test_plat = lu.test "platform"
 
 function test_plat:test_1()
     lu.assertNotNil(__Target__)

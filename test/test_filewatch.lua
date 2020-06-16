@@ -3,7 +3,7 @@ local fw = require 'bee.filewatch'
 local fs = require 'bee.filesystem'
 local thread = require 'bee.thread'
 
-test_fw = {}
+local test_fw = lu.test "filewatch"
 
 local function create_dir(filename)
     fs.create_directories(fs.path 'temp' / filename)

@@ -1,6 +1,6 @@
 local lu = require 'luaunit'
 
-test_lua = {}
+local test_lua = lu.test "lua"
 
 function test_lua:test_stack_overflow_1()
     lu.assertError(function()

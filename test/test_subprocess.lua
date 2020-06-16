@@ -76,7 +76,7 @@ local function testStringArgs(args, ...)
     lu.assertEquals(process:wait(), 0)
 end
 
-test_subprocess = {}
+local test_subprocess = lu.test "subprocess"
 
 function test_subprocess:test_spawn()
     lu.assertUserdata(createLua ' ')

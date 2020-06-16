@@ -29,7 +29,7 @@ local function read_file(filename)
     return content
 end
 
-test_fs = {}
+local test_fs = lu.test "filesystem"
 
 local ALLOW_WRITE = 0x92
 local USER_WRITE = 0x80
