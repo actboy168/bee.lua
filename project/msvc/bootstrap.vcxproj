@@ -136,7 +136,7 @@
       <Inputs>$(projectDir)..\..\bootstrap\main.lua</Inputs>
     </CustomBuildStep>
     <Link>
-      <StackReserveSize>20971520</StackReserveSize>
+      <StackReserveSize>23068672</StackReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -185,7 +185,8 @@
     </CustomBuildStep>
     <CustomBuildStep>
       <Inputs>$(projectDir)..\..\bootstrap\main.lua</Inputs>
-    </CustomBuildStep>  </ItemDefinitionGroup>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ProjectReference Include="lua54.vcxproj">
       <Project>{316b33ed-1056-48b0-abf0-ce3ce55f7a17}</Project>

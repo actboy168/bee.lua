@@ -1,19 +1,11 @@
 local support = {}
-for _, config in ipairs {'debug', 'release'} do
-    support['msbuild_x86_' .. config] = {
-        OS = 'Windows',
-        Arch = '32',
-        Compiler = 'msvc',
-        CRT = 'msvc',
-    }
-    support['msbuild_x64_' .. config] = {
-        OS = 'Windows',
-        Arch = '64',
-        Compiler = 'msvc',
-        CRT = 'msvc',
-    }
-end
 
+support.msbuild = {
+    OS = 'Windows',
+    Arch = '32',
+    Compiler = 'msvc',
+    CRT = 'msvc',
+}
 support.msvc = {
     OS = 'Windows',
     Arch = '32',
@@ -47,12 +39,12 @@ test_plat = {}
 
 function test_plat:test_1()
     lu.assertNotNil(__Target__)
-    local plat = fs.path(__Target__):parent_path():filename():string():lower()
+    local plat = fs.path(__Target__):string():lower():match "build[/\\](%a+)[/\\]bin"
     if plat == 'linux' then
         lu.assertIsTrue(platform.Compiler == 'gcc' or platform.Compiler == 'clang')
         support.linux.Compiler = platform.Compiler
     end
-    if plat == 'msvc' then
+    if plat == 'msvc' or plat == 'msbuild' then
         lu.assertIsTrue(platform.Arch == '32' or platform.Arch == '64')
         support.msvc.Arch = platform.Arch
     end
