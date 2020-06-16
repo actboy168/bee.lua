@@ -40,7 +40,7 @@ local function test(f)
     pcall(fs.remove_all, root)
     fs.create_directories(root)
     local id = fw.add(root:string())
-    lu.assertNumber(id)
+    lu.assertIsNumber(id)
     assertSelect('confirm', ('add `%d` `%s`'):format(id, root:string()))
 
     f(root)
@@ -87,7 +87,7 @@ function test_fw:test_2()
                     return
                 end
             end
-            lu.assertNil(path)
+            lu.assertIsNil(path)
         end
         assertHas(root / 'test1')
         assertHas(root / 'test1.txt')

@@ -59,9 +59,6 @@ M.DEFAULT_DEEP_ANALYSIS = nil
 M.FORCE_DEEP_ANALYSIS   = true
 M.DISABLE_DEEP_ANALYSIS = false
 
--- set EXPORT_ASSERT_TO_GLOBALS to have all asserts visible as global values
--- EXPORT_ASSERT_TO_GLOBALS = true
-
 -- we need to keep a copy of the script args before it is overriden
 local cmdline_argv = rawget(_G, "arg")
 
@@ -81,7 +78,6 @@ Options:
   -s, --shuffle:          Shuffle tests before running them
   -o, --output OUTPUT:    Set output type to OUTPUT
                           Possible values: text, tap, junit, nil
-  -n, --name NAME:        For junit only, mandatory name of xml file
   -r, --repeat NUM:       Execute all tests NUM times, e.g. to trig the JIT
   -p, --pattern PATTERN:  Execute all test names matching the Lua PATTERN
                           May be repeated to include several patterns
@@ -313,31 +309,6 @@ local function patternFilter(patterns, expr)
     return default
 end
 M.private.patternFilter = patternFilter
-
-local function xmlEscape( s )
-    -- Return s escaped for XML attributes
-    -- escapes table:
-    -- "   &quot;
-    -- '   &apos;
-    -- <   &lt;
-    -- >   &gt;
-    -- &   &amp;
-
-    return string.gsub( s, '.', {
-        ['&'] = "&amp;",
-        ['"'] = "&quot;",
-        ["'"] = "&apos;",
-        ['<'] = "&lt;",
-        ['>'] = "&gt;",
-    } )
-end
-M.private.xmlEscape = xmlEscape
-
-local function xmlCDataEscape( s )
-    -- Return s escaped for CData section, escapes: "]]>"
-    return string.gsub( s, ']]>', ']]&gt;' )
-end
-M.private.xmlCDataEscape = xmlCDataEscape
 
 local function stripLuaunitTrace( stackTrace )
     --[[
@@ -1720,178 +1691,6 @@ function M.assertNotIsMinusZero(value, extra_msg_or_nil)
 end
 
 ----------------------------------------------------------------
---                     Compatibility layer
-----------------------------------------------------------------
-
--- for compatibility with LuaUnit v2.x
-function M.wrapFunctions()
-    -- In LuaUnit version <= 2.1 , this function was necessary to include
-    -- a test function inside the global test suite. Nowadays, the functions
-    -- are simply run directly as part of the test discovery process.
-    -- so just do nothing !
-    io.stderr:write[[Use of WrapFunctions() is no longer needed.
-Just prefix your test function names with "test" or "Test" and they
-will be picked up and run by LuaUnit.
-]]
-end
-
-local list_of_funcs = {
-    -- { official function name , alias }
-
-    -- general assertions
-    { 'assertEquals'            , 'assert_equals' },
-    { 'assertItemsEquals'       , 'assert_items_equals' },
-    { 'assertNotEquals'         , 'assert_not_equals' },
-    { 'assertAlmostEquals'      , 'assert_almost_equals' },
-    { 'assertNotAlmostEquals'   , 'assert_not_almost_equals' },
-    { 'assertEvalToTrue'        , 'assert_eval_to_true' },
-    { 'assertEvalToFalse'       , 'assert_eval_to_false' },
-    { 'assertStrContains'       , 'assert_str_contains' },
-    { 'assertStrIContains'      , 'assert_str_icontains' },
-    { 'assertNotStrContains'    , 'assert_not_str_contains' },
-    { 'assertNotStrIContains'   , 'assert_not_str_icontains' },
-    { 'assertStrMatches'        , 'assert_str_matches' },
-    { 'assertError'             , 'assert_error' },
-    { 'assertErrorMsgEquals'    , 'assert_error_msg_equals' },
-    { 'assertErrorMsgContains'  , 'assert_error_msg_contains' },
-    { 'assertErrorMsgMatches'   , 'assert_error_msg_matches' },
-    { 'assertErrorMsgContentEquals', 'assert_error_msg_content_equals' },
-    { 'assertIs'                , 'assert_is' },
-    { 'assertNotIs'             , 'assert_not_is' },
-    { 'wrapFunctions'           , 'WrapFunctions' },
-    { 'wrapFunctions'           , 'wrap_functions' },
-
-    -- type assertions: assertIsXXX -> assert_is_xxx
-    { 'assertIsNumber'          , 'assert_is_number' },
-    { 'assertIsString'          , 'assert_is_string' },
-    { 'assertIsTable'           , 'assert_is_table' },
-    { 'assertIsBoolean'         , 'assert_is_boolean' },
-    { 'assertIsNil'             , 'assert_is_nil' },
-    { 'assertIsTrue'            , 'assert_is_true' },
-    { 'assertIsFalse'           , 'assert_is_false' },
-    { 'assertIsNaN'             , 'assert_is_nan' },
-    { 'assertIsInf'             , 'assert_is_inf' },
-    { 'assertIsPlusInf'         , 'assert_is_plus_inf' },
-    { 'assertIsMinusInf'        , 'assert_is_minus_inf' },
-    { 'assertIsPlusZero'        , 'assert_is_plus_zero' },
-    { 'assertIsMinusZero'       , 'assert_is_minus_zero' },
-    { 'assertIsFunction'        , 'assert_is_function' },
-    { 'assertIsThread'          , 'assert_is_thread' },
-    { 'assertIsUserdata'        , 'assert_is_userdata' },
-
-    -- type assertions: assertIsXXX -> assertXxx
-    { 'assertIsNumber'          , 'assertNumber' },
-    { 'assertIsString'          , 'assertString' },
-    { 'assertIsTable'           , 'assertTable' },
-    { 'assertIsBoolean'         , 'assertBoolean' },
-    { 'assertIsNil'             , 'assertNil' },
-    { 'assertIsTrue'            , 'assertTrue' },
-    { 'assertIsFalse'           , 'assertFalse' },
-    { 'assertIsNaN'             , 'assertNaN' },
-    { 'assertIsInf'             , 'assertInf' },
-    { 'assertIsPlusInf'         , 'assertPlusInf' },
-    { 'assertIsMinusInf'        , 'assertMinusInf' },
-    { 'assertIsPlusZero'        , 'assertPlusZero' },
-    { 'assertIsMinusZero'       , 'assertMinusZero'},
-    { 'assertIsFunction'        , 'assertFunction' },
-    { 'assertIsThread'          , 'assertThread' },
-    { 'assertIsUserdata'        , 'assertUserdata' },
-
-    -- type assertions: assertIsXXX -> assert_xxx (luaunit v2 compat)
-    { 'assertIsNumber'          , 'assert_number' },
-    { 'assertIsString'          , 'assert_string' },
-    { 'assertIsTable'           , 'assert_table' },
-    { 'assertIsBoolean'         , 'assert_boolean' },
-    { 'assertIsNil'             , 'assert_nil' },
-    { 'assertIsTrue'            , 'assert_true' },
-    { 'assertIsFalse'           , 'assert_false' },
-    { 'assertIsNaN'             , 'assert_nan' },
-    { 'assertIsInf'             , 'assert_inf' },
-    { 'assertIsPlusInf'         , 'assert_plus_inf' },
-    { 'assertIsMinusInf'        , 'assert_minus_inf' },
-    { 'assertIsPlusZero'        , 'assert_plus_zero' },
-    { 'assertIsMinusZero'       , 'assert_minus_zero' },
-    { 'assertIsFunction'        , 'assert_function' },
-    { 'assertIsThread'          , 'assert_thread' },
-    { 'assertIsUserdata'        , 'assert_userdata' },
-
-    -- type assertions: assertNotIsXXX -> assert_not_is_xxx
-    { 'assertNotIsNumber'       , 'assert_not_is_number' },
-    { 'assertNotIsString'       , 'assert_not_is_string' },
-    { 'assertNotIsTable'        , 'assert_not_is_table' },
-    { 'assertNotIsBoolean'      , 'assert_not_is_boolean' },
-    { 'assertNotIsNil'          , 'assert_not_is_nil' },
-    { 'assertNotIsTrue'         , 'assert_not_is_true' },
-    { 'assertNotIsFalse'        , 'assert_not_is_false' },
-    { 'assertNotIsNaN'          , 'assert_not_is_nan' },
-    { 'assertNotIsInf'          , 'assert_not_is_inf' },
-    { 'assertNotIsPlusInf'      , 'assert_not_plus_inf' },
-    { 'assertNotIsMinusInf'     , 'assert_not_minus_inf' },
-    { 'assertNotIsPlusZero'     , 'assert_not_plus_zero' },
-    { 'assertNotIsMinusZero'    , 'assert_not_minus_zero' },
-    { 'assertNotIsFunction'     , 'assert_not_is_function' },
-    { 'assertNotIsThread'       , 'assert_not_is_thread' },
-    { 'assertNotIsUserdata'     , 'assert_not_is_userdata' },
-
-    -- type assertions: assertNotIsXXX -> assertNotXxx (luaunit v2 compat)
-    { 'assertNotIsNumber'       , 'assertNotNumber' },
-    { 'assertNotIsString'       , 'assertNotString' },
-    { 'assertNotIsTable'        , 'assertNotTable' },
-    { 'assertNotIsBoolean'      , 'assertNotBoolean' },
-    { 'assertNotIsNil'          , 'assertNotNil' },
-    { 'assertNotIsTrue'         , 'assertNotTrue' },
-    { 'assertNotIsFalse'        , 'assertNotFalse' },
-    { 'assertNotIsNaN'          , 'assertNotNaN' },
-    { 'assertNotIsInf'          , 'assertNotInf' },
-    { 'assertNotIsPlusInf'      , 'assertNotPlusInf' },
-    { 'assertNotIsMinusInf'     , 'assertNotMinusInf' },
-    { 'assertNotIsPlusZero'     , 'assertNotPlusZero' },
-    { 'assertNotIsMinusZero'    , 'assertNotMinusZero' },
-    { 'assertNotIsFunction'     , 'assertNotFunction' },
-    { 'assertNotIsThread'       , 'assertNotThread' },
-    { 'assertNotIsUserdata'     , 'assertNotUserdata' },
-
-    -- type assertions: assertNotIsXXX -> assert_not_xxx
-    { 'assertNotIsNumber'       , 'assert_not_number' },
-    { 'assertNotIsString'       , 'assert_not_string' },
-    { 'assertNotIsTable'        , 'assert_not_table' },
-    { 'assertNotIsBoolean'      , 'assert_not_boolean' },
-    { 'assertNotIsNil'          , 'assert_not_nil' },
-    { 'assertNotIsTrue'         , 'assert_not_true' },
-    { 'assertNotIsFalse'        , 'assert_not_false' },
-    { 'assertNotIsNaN'          , 'assert_not_nan' },
-    { 'assertNotIsInf'          , 'assert_not_inf' },
-    { 'assertNotIsPlusInf'      , 'assert_not_plus_inf' },
-    { 'assertNotIsMinusInf'     , 'assert_not_minus_inf' },
-    { 'assertNotIsPlusZero'     , 'assert_not_plus_zero' },
-    { 'assertNotIsMinusZero'    , 'assert_not_minus_zero' },
-    { 'assertNotIsFunction'     , 'assert_not_function' },
-    { 'assertNotIsThread'       , 'assert_not_thread' },
-    { 'assertNotIsUserdata'     , 'assert_not_userdata' },
-
-    -- all assertions with Coroutine duplicate Thread assertions
-    { 'assertIsThread'          , 'assertIsCoroutine' },
-    { 'assertIsThread'          , 'assertCoroutine' },
-    { 'assertIsThread'          , 'assert_is_coroutine' },
-    { 'assertIsThread'          , 'assert_coroutine' },
-    { 'assertNotIsThread'       , 'assertNotIsCoroutine' },
-    { 'assertNotIsThread'       , 'assertNotCoroutine' },
-    { 'assertNotIsThread'       , 'assert_not_is_coroutine' },
-    { 'assertNotIsThread'       , 'assert_not_coroutine' },
-}
-
--- Create all aliases in M
-for _,v in ipairs( list_of_funcs ) do
-    local funcname, alias = v[1], v[2]
-    M[alias] = M[funcname]
-
-    if EXPORT_ASSERT_TO_GLOBALS then
-        _G[funcname] = M[funcname]
-        _G[alias] = M[funcname]
-    end
-end
-
-----------------------------------------------------------------
 --
 --                     Outputters
 --
@@ -1910,7 +1709,6 @@ function genericOutput.new(runner, default_verbosity)
     if runner then
         t.result = runner.result
         t.verbosity = runner.verbosity or default_verbosity
-        t.fname = runner.fname
     else
         t.verbosity = default_verbosity
     end
@@ -1926,247 +1724,10 @@ function genericOutput:endTest(node) end
 function genericOutput:endClass() end
 function genericOutput:endSuite() end
 
-
-----------------------------------------------------------------
---                     class TapOutput
-----------------------------------------------------------------
-
-local TapOutput = genericOutput.new() -- derived class
-local TapOutput_MT = { __index = TapOutput } -- metatable
-TapOutput.__class__ = 'TapOutput'
-
-    -- For a good reference for TAP format, check: http://testanything.org/tap-specification.html
-
-    function TapOutput.new(runner)
-        local t = genericOutput.new(runner, M.VERBOSITY_LOW)
-        return setmetatable( t, TapOutput_MT)
-    end
-    function TapOutput:startSuite()
-        print("1.."..self.result.testCount)
-        print('# Started on '..self.result.startDate)
-    end
-    function TapOutput:startClass(className)
-        if className ~= '[TestFunctions]' then
-            print('# Starting class: '..className)
-        end
-    end
-
-    function TapOutput:addStatus( node )
-        io.stdout:write("not ok ", self.result.currentTestNumber, "\t", node.testName, "\n")
-        io.stdout:flush()
-        if self.verbosity > M.VERBOSITY_LOW then
-           print( prefixString( '#   ', node.msg ) )
-        end
-        if self.verbosity > M.VERBOSITY_DEFAULT then
-           print( prefixString( '#   ', node.stackTrace ) )
-        end
-    end
-
-    function TapOutput:endTest( node )
-        if node:isPassed() then
-            io.stdout:write("ok     ", self.result.currentTestNumber, "\t", node.testName, "\n")
-            io.stdout:flush()
-        end
-    end
-
-    function TapOutput:endSuite()
-        print( '# '..M.LuaUnit.statusLine( self.result ) )
-        return self.result.notPassedCount
-    end
-
-
--- class TapOutput end
-
-----------------------------------------------------------------
---                     class JUnitOutput
-----------------------------------------------------------------
-
--- See directory junitxml for more information about the junit format
-local JUnitOutput = genericOutput.new() -- derived class
-local JUnitOutput_MT = { __index = JUnitOutput } -- metatable
-JUnitOutput.__class__ = 'JUnitOutput'
-
-    function JUnitOutput.new(runner)
-        local t = genericOutput.new(runner, M.VERBOSITY_LOW)
-        t.testList = {}
-        return setmetatable( t, JUnitOutput_MT )
-    end
-
-    function JUnitOutput:startSuite()
-        -- open xml file early to deal with errors
-        if self.fname == nil then
-            error('With Junit, an output filename must be supplied with --name!')
-        end
-        if string.sub(self.fname,-4) ~= '.xml' then
-            self.fname = self.fname..'.xml'
-        end
-        self.fd = io.open(self.fname, "w")
-        if self.fd == nil then
-            error("Could not open file for writing: "..self.fname)
-        end
-
-        print('# XML output to '..self.fname)
-        print('# Started on '..self.result.startDate)
-    end
-    function JUnitOutput:startClass(className)
-        if className ~= '[TestFunctions]' then
-            print('# Starting class: '..className)
-        end
-    end
-    function JUnitOutput:startTest(testName)
-        print('# Starting test: '..testName)
-    end
-
-    function JUnitOutput:addStatus( node )
-        if node:isFailure() then
-            print( '#   Failure: ' .. prefixString( '#   ', node.msg ):sub(4, nil) )
-            -- print('# ' .. node.stackTrace)
-        elseif node:isError() then
-            print( '#   Error: ' .. prefixString( '#   '  , node.msg ):sub(4, nil) )
-            -- print('# ' .. node.stackTrace)
-        end
-    end
-
-    function JUnitOutput:endSuite()
-        print( '# '..M.LuaUnit.statusLine(self.result))
-
-        -- XML file writing
-        self.fd:write('<?xml version="1.0" encoding="UTF-8" ?>\n')
-        self.fd:write('<testsuites>\n')
-        self.fd:write(string.format(
-            '    <testsuite name="LuaUnit" id="00001" package="" hostname="localhost" tests="%d" timestamp="%s" time="%0.3f" errors="%d" failures="%d">\n',
-            self.result.runCount, self.result.startIsodate, self.result.duration, self.result.errorCount, self.result.failureCount ))
-        self.fd:write("        <properties>\n")
-        self.fd:write(string.format('            <property name="Lua Version" value="%s"/>\n', _VERSION ) )
-        self.fd:write(string.format('            <property name="LuaUnit Version" value="%s"/>\n', M.VERSION) )
-        -- XXX please include system name and version if possible
-        self.fd:write("        </properties>\n")
-
-        for i,node in ipairs(self.result.tests) do
-            self.fd:write(string.format('        <testcase classname="%s" name="%s" time="%0.3f">\n',
-                node.className, node.testName, node.duration ) )
-            if node:isNotPassed() then
-                self.fd:write(node:statusXML())
-            end
-            self.fd:write('        </testcase>\n')
-        end
-
-        -- Next two lines are needed to validate junit ANT xsd, but really not useful in general:
-        self.fd:write('    <system-out/>\n')
-        self.fd:write('    <system-err/>\n')
-
-        self.fd:write('    </testsuite>\n')
-        self.fd:write('</testsuites>\n')
-        self.fd:close()
-        return self.result.notPassedCount
-    end
-
-
--- class TapOutput end
-
 ----------------------------------------------------------------
 --                     class TextOutput
 ----------------------------------------------------------------
 
---[[
-
--- Python Non verbose:
-
-For each test: . or F or E
-
-If some failed tests:
-    ==============
-    ERROR / FAILURE: TestName (testfile.testclass)
-    ---------
-    Stack trace
-
-
-then --------------
-then "Ran x tests in 0.000s"
-then OK or FAILED (failures=1, error=1)
-
--- Python Verbose:
-testname (filename.classname) ... ok
-testname (filename.classname) ... FAIL
-testname (filename.classname) ... ERROR
-
-then --------------
-then "Ran x tests in 0.000s"
-then OK or FAILED (failures=1, error=1)
-
--- Ruby:
-Started
- .
- Finished in 0.002695 seconds.
-
- 1 tests, 2 assertions, 0 failures, 0 errors
-
--- Ruby:
->> ruby tc_simple_number2.rb
-Loaded suite tc_simple_number2
-Started
-F..
-Finished in 0.038617 seconds.
-
-  1) Failure:
-test_failure(TestSimpleNumber) [tc_simple_number2.rb:16]:
-Adding doesn't work.
-<3> expected but was
-<4>.
-
-3 tests, 4 assertions, 1 failures, 0 errors
-
--- Java Junit
-.......F.
-Time: 0,003
-There was 1 failure:
-1) testCapacity(junit.samples.VectorTest)junit.framework.AssertionFailedError
-    at junit.samples.VectorTest.testCapacity(VectorTest.java:87)
-    at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-    at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-    at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-
-FAILURES!!!
-Tests run: 8,  Failures: 1,  Errors: 0
-
-
--- Maven
-
-# mvn test
--------------------------------------------------------
- T E S T S
--------------------------------------------------------
-Running math.AdditionTest
-Tests run: 2, Failures: 1, Errors: 0, Skipped: 0, Time elapsed:
-0.03 sec <<< FAILURE!
-
-Results :
-
-Failed tests:
-  testLireSymbole(math.AdditionTest)
-
-Tests run: 2, Failures: 1, Errors: 0, Skipped: 0
-
-
--- LuaUnit
----- non verbose
-* display . or F or E when running tests
----- verbose
-* display test name + ok/fail
-----
-* blank line
-* number) ERROR or FAILURE: TestName
-   Stack trace
-* blank line
-* number) ERROR or FAILURE: TestName
-   Stack trace
-
-then --------------
-then "Ran x tests in 0.000s (%d not selected, %d skipped)"
-then OK or FAILED (failures=1, error=1)
-
-
-]]
 
 local TextOutput = genericOutput.new() -- derived class
 local TextOutput_MT = { __index = TextOutput } -- metatable
@@ -2251,21 +1812,6 @@ TextOutput.__class__ = 'TextOutput'
 -- class TextOutput end
 
 
-----------------------------------------------------------------
---                     class NilOutput
-----------------------------------------------------------------
-
-local function nopCallable()
-    --print(42)
-    return nopCallable
-end
-
-local NilOutput = { __class__ = 'NilOuptut' } -- class
-local NilOutput_MT = { __index = nopCallable } -- metatable
-
-function NilOutput.new(runner)
-    return setmetatable( { __class__ = 'NilOutput' }, NilOutput_MT )
-end
 
 ----------------------------------------------------------------
 --
@@ -2274,15 +1820,10 @@ end
 ----------------------------------------------------------------
 
 M.LuaUnit = {
-    outputType = TextOutput,
     verbosity = M.VERBOSITY_DEFAULT,
     __class__ = 'LuaUnit'
 }
 local LuaUnit_MT = { __index = M.LuaUnit }
-
-if EXPORT_ASSERT_TO_GLOBALS then
-    LuaUnit = M.LuaUnit
-end
 
     function M.LuaUnit.new()
         return setmetatable( {}, LuaUnit_MT )
@@ -2337,11 +1878,9 @@ end
         -- --verbose, -v: increase verbosity
         -- --quiet, -q: silence output
         -- --error, -e: treat errors as fatal (quit program)
-        -- --output, -o, + name: select output type
         -- --pattern, -p, + pattern: run test matching pattern, may be repeated
         -- --exclude, -x, + pattern: run test not matching pattern, may be repeated
         -- --shuffle, -s, : shuffle tests before reunning them
-        -- --name, -n, + fname: name of output file for junit, default to stdout
         -- --repeat, -r, + num: number of times to execute each test
         -- [testnames, ...]: run selected test names
         --
@@ -2354,10 +1893,8 @@ end
         -- exclude: nil or a list of patterns
 
         local result, state = {}, nil
-        local SET_OUTPUT = 1
         local SET_PATTERN = 2
         local SET_EXCLUDE = 3
-        local SET_FNAME = 4
         local SET_REPEAT = 5
 
         if cmdLine == nil then
@@ -2386,12 +1923,6 @@ end
             elseif option == '--shuffle' or option == '-s' then
                 result['shuffle'] = true
                 return
-            elseif option == '--output' or option == '-o' then
-                state = SET_OUTPUT
-                return state
-            elseif option == '--name' or option == '-n' then
-                state = SET_FNAME
-                return state
             elseif option == '--repeat' or option == '-r' then
                 state = SET_REPEAT
                 return state
@@ -2406,13 +1937,7 @@ end
         end
 
         local function setArg( cmdArg, state )
-            if state == SET_OUTPUT then
-                result['output'] = cmdArg
-                return
-            elseif state == SET_FNAME then
-                result['fname'] = cmdArg
-                return
-            elseif state == SET_REPEAT then
+            if state == SET_REPEAT then
                 result['exeRepeat'] = tonumber(cmdArg)
                                      or error('Malformed -r argument: '..cmdArg)
                 return
@@ -2438,7 +1963,7 @@ end
 
         for i, cmdArg in ipairs(cmdLine) do
             if state ~= nil then
-                setArg( cmdArg, state, result )
+                setArg( cmdArg, state )
                 state = nil
             else
                 if cmdArg:sub(1,1) == '-' then
@@ -2534,21 +2059,6 @@ end
         return self.status == NodeStatus.ERROR
     end
 
-    function NodeStatus:statusXML()
-        if self:isError() then
-            return table.concat(
-                {'            <error type="', xmlEscape(self.msg), '">\n',
-                 '                <![CDATA[', xmlCDataEscape(self.stackTrace),
-                 ']]></error>\n'})
-        elseif self:isFailure() then
-            return table.concat(
-                {'            <failure type="', xmlEscape(self.msg), '">\n',
-                 '                <![CDATA[', xmlCDataEscape(self.stackTrace),
-                 ']]></failure>\n'})
-        end
-        return '            <passed/>\n' -- (not XSD-compliant! normally shouldn't get here)
-    end
-
     --------------[[ Output methods ]]-------------------------
 
     local function conditional_plural(number, singular)
@@ -2603,8 +2113,7 @@ end
             notPassed = {},
         }
 
-        self.outputType = self.outputType or TextOutput
-        self.output = self.outputType.new(self)
+        self.output = TextOutput.new(self)
         self.output:startSuite()
     end
 
@@ -2713,28 +2222,6 @@ end
         self.result.errorCount = #self.result.errors
 
         self.output:endSuite()
-    end
-
-    function M.LuaUnit:setOutputType(outputType)
-        -- default to text
-        -- tap produces results according to TAP format
-        if outputType:upper() == "NIL" then
-            self.outputType = NilOutput
-            return
-        end
-        if outputType:upper() == "TAP" then
-            self.outputType = TapOutput
-            return
-        end
-        if outputType:upper() == "JUNIT" then
-            self.outputType = JUnitOutput
-            return
-        end
-        if outputType:upper() == "TEXT" then
-            self.outputType = TextOutput
-            return
-        end
-        error( 'No such format: '..outputType,2)
     end
 
     --------------[[ Runner ]]-----------------
@@ -3041,19 +2528,10 @@ end
         self.verbosity     = options.verbosity
         self.quitOnError   = options.quitOnError
         self.quitOnFailure = options.quitOnFailure
-        self.fname         = options.fname
 
         self.exeRepeat            = options.exeRepeat
         self.patternIncludeFilter = options.pattern
         self.shuffle              = options.shuffle
-
-        if options.output then
-            if options.output:lower() == 'junit' and options.fname == nil then
-                print('With junit output, a filename must be supplied with -n or --name')
-                os.exit(-1)
-            end
-            pcall_or_abort(self.setOutputType, self, options.output)
-        end
 
         self:runSuiteByNames( options.testNames or M.LuaUnit.collectTests() )
 
@@ -3072,16 +2550,5 @@ function M.test(className)
     M.instanceSet[#M.instanceSet+1] = className
     return instance
 end
-
--- For compatbility with LuaUnit v2
-M.run = M.LuaUnit.run
-M.Run = M.LuaUnit.run
-
-function M:setVerbosity( verbosity )
-    M.LuaUnit.verbosity = verbosity
-end
-M.set_verbosity = M.setVerbosity
-M.SetVerbosity = M.setVerbosity
-
 
 return M

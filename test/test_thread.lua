@@ -46,7 +46,7 @@ function test_thread:test_thread_2()
     assertNotThreadError()
     GLOBAL = true
     THREAD = nil
-    lu.assertNotNil(GLOBAL)
+    lu.assertNotIsNil(GLOBAL)
     lu.assertIsNil(THREAD)
     local thd = createThread [[
         THREAD = true
@@ -54,7 +54,7 @@ function test_thread:test_thread_2()
     ]]
     thread.wait(thd)
     assertNotThreadError()
-    lu.assertNotNil(GLOBAL)
+    lu.assertNotIsNil(GLOBAL)
     lu.assertIsNil(THREAD)
     GLOBAL = nil
     THREAD = nil
