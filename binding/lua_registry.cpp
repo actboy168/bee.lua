@@ -26,7 +26,7 @@ namespace bee::lua_registry {
 
         static key_w& getEx(lua_State* L, int idx) {
             if (lua_type(L, 1) == LUA_TSTRING) {
-                key_w& res = create(L, lua::to_string(L, idx));
+                key_w& res = create(L, lua::checkstring(L, idx));
                 lua_replace(L, idx);
                 return res;
             }
@@ -59,7 +59,7 @@ namespace bee::lua_registry {
         static int mt_index(lua_State* L) {
             LUA_TRY;
             key_w&             self = get(L, 1);
-            std::wstring       key = lua::to_string(L, 2);
+            std::wstring       key = lua::checkstring(L, 2);
             key_w::value_type& value = self.value(key);
             return push_value(L, value);
             LUA_TRY_END;
@@ -68,11 +68,11 @@ namespace bee::lua_registry {
         static int mt_newindex(lua_State* L) {
             LUA_TRY;
             key_w&             self = get(L, 1);
-            std::wstring       key = lua::to_string(L, 2);
+            std::wstring       key = lua::checkstring(L, 2);
             key_w::value_type& value = self.value(key);
             switch (lua_type(L, 3)) {
             case LUA_TSTRING:
-                value.set(lua::to_string(L, 3));
+                value.set(lua::checkstring(L, 3));
                 return 0;
             case LUA_TNUMBER:
                 value.set_uint32_t((uint32_t)luaL_checkinteger(L, 3));
@@ -91,14 +91,14 @@ namespace bee::lua_registry {
                 case REG_EXPAND_SZ:
                 case REG_SZ:
                     lua_geti(L, 3, 2);
-                    value.set(lua::to_string(L, -1));
+                    value.set(lua::checkstring(L, -1));
                     break;
                 case REG_MULTI_SZ: {
                     lua_Integer  len = luaL_len(L, 3);
                     std::wstring str = L"";
                     for (lua_Integer i = 2; i <= len; ++i) {
                         lua_geti(L, 3, i);
-                        str += lua::to_string(L, -1);
+                        str += lua::checkstring(L, -1);
                         str.push_back(L'\0');
                         lua_pop(L, 1);
                     }
@@ -127,7 +127,7 @@ namespace bee::lua_registry {
         static int mt_div(lua_State* L) {
             LUA_TRY;
             key_w&       self = get(L, 1);
-            std::wstring rht = lua::to_string(L, 2);
+            std::wstring rht = lua::checkstring(L, 2);
             create(L, self / rht);
             return 1;
             LUA_TRY_END;
@@ -158,7 +158,7 @@ namespace bee::lua_registry {
 
     static int open(lua_State* L) {
         LUA_TRY;
-        rkey::create(L, lua::to_string(L, 1));
+        rkey::create(L, lua::checkstring(L, 1));
         return 1;
         LUA_TRY_END;
     }

@@ -102,7 +102,8 @@
       <AdditionalDependencies>ws2_32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>cd $(projectDir)..\..\ &amp;&amp; build\msbuild\bin\$(PlatformTarget)_$(Configuration)\bootstrap.exe test\test.lua</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -118,7 +119,8 @@
       <AdditionalDependencies>ws2_32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>cd $(projectDir)..\..\ &amp;&amp; build\msbuild\bin\$(PlatformTarget)_$(Configuration)\bootstrap.exe test\test.lua</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -134,7 +136,8 @@
       <AdditionalDependencies>ws2_32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>cd $(projectDir)..\..\ &amp;&amp; build\msbuild\bin\$(PlatformTarget)_$(Configuration)\bootstrap.exe test\test.lua</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -153,9 +156,6 @@
     <Link>
       <AdditionalDependencies>ws2_32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>cd $(projectDir)..\..\ &amp;&amp; build\msbuild\bin\$(PlatformTarget)_$(Configuration)\bootstrap.exe test\test.lua</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\3rd\lua-seri\lua-seri.c" />
@@ -237,9 +237,6 @@
     <ClInclude Include="..\..\bee\utility\unicode_win.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="bootstrap.vcxproj">
-      <Project>{8136afbd-2925-40d5-81ba-7d0fac098f56}</Project>
-    </ProjectReference>
     <ProjectReference Include="lua54.vcxproj">
       <Project>{316b33ed-1056-48b0-abf0-ce3ce55f7a17}</Project>
     </ProjectReference>

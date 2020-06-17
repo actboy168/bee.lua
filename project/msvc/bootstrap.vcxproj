@@ -114,6 +114,9 @@
     <Link>
       <StackReserveSize>20971520</StackReserveSize>
     </Link>
+    <PostBuildEvent>
+      <Command>cd $(projectDir)..\..\ &amp;&amp; build\msbuild\bin\$(PlatformTarget)_$(Configuration)\bootstrap.exe test\test.lua</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -138,6 +141,9 @@
     <Link>
       <StackReserveSize>23068672</StackReserveSize>
     </Link>
+    <PostBuildEvent>
+      <Command>cd $(projectDir)..\..\ &amp;&amp; build\msbuild\bin\$(PlatformTarget)_$(Configuration)\bootstrap.exe test\test.lua</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -162,6 +168,9 @@
     <CustomBuildStep>
       <Inputs>$(projectDir)..\..\bootstrap\main.lua</Inputs>
     </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>cd $(projectDir)..\..\ &amp;&amp; build\msbuild\bin\$(PlatformTarget)_$(Configuration)\bootstrap.exe test\test.lua</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -186,6 +195,9 @@
     <CustomBuildStep>
       <Inputs>$(projectDir)..\..\bootstrap\main.lua</Inputs>
     </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>cd $(projectDir)..\..\ &amp;&amp; build\msbuild\bin\$(PlatformTarget)_$(Configuration)\bootstrap.exe test\test.lua</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ProjectReference Include="lua54.vcxproj">

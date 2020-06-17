@@ -8,7 +8,7 @@ namespace bee::lua_filewatch {
     }
     static int add(lua_State* L) {
         fsevent::watch& self = to(L);
-        auto            path = lua::to_string(L, 1);
+        auto            path = lua::checkstring(L, 1);
         fsevent::taskid id = self.add(path);
         if (id == fsevent::kInvalidTaskId) {
             lua_pushnil(L);

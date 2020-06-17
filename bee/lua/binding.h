@@ -30,7 +30,7 @@ namespace bee::lua {
         return std::string_view(buf, len);
     }
 
-    inline string_type to_string(lua_State* L, int idx)
+    inline string_type checkstring(lua_State* L, int idx)
     {
         size_t len = 0;
         const char* buf = luaL_checklstring(L, idx, &len);
@@ -41,24 +41,21 @@ namespace bee::lua {
 #endif
     }
 
-    template <class T>
-    inline T tostring(lua_State* L, int idx);
-
-    template <>
-    inline std::string tostring<std::string>(lua_State* L, int idx) {
-        size_t len = 0;
-        const char* buf = luaL_checklstring(L, idx, &len);
-        return std::string(buf, len);
+    inline string_type tostring(lua_State* L, int idx)
+    {
+        if (lua_isstring(L, idx)) {
+            return checkstring(L, idx);
+        }
+        if (!luaL_callmeta(L, idx, "__tostring")) {
+            luaL_error(L, "cannot be converted to string");
+        }
+        if (!lua_isstring(L, -1)) {
+            luaL_error(L, "'__tostring' must return a string");
+        }
+        string_type res = checkstring(L, -1);
+        lua_pop(L, 1);
+        return res;
     }
-
-#if defined(_WIN32)
-    template <>
-    inline std::wstring tostring<std::wstring>(lua_State* L, int idx) {
-        size_t len = 0;
-        const char* buf = luaL_checklstring(L, idx, &len);
-        return u2w(std::string_view(buf, len));
-    }
-#endif
 
     inline void push_string(lua_State* L, const string_type& str)
     {
