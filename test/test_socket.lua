@@ -287,3 +287,13 @@ end
 function test_socket:test_unix_echo_3()
     createUnixEchoTest('unix_echo_3', testEcho3)
 end
+
+if platform.OS == "Windows" then
+    local test_socket_1 = lu.test "socket"
+    local test_socket_2 = lu.test "socket-uds"
+    for _, k in ipairs(test_socket_1) do
+        test_socket_2[k] = test_socket_1[k]
+    end
+    test_socket_1.UDS = false
+    test_socket_2.UDS = true
+end

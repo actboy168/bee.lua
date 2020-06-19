@@ -21,15 +21,14 @@ print("Compiler: ", platform.CompilerVersion)
 print("CRT:      ", platform.CRTVersion)
 print("DEBUG:    ", platform.DEBUG)
 
-local function fd_count()
-    local ls = require "bee.socket"
-    local sock = assert(ls.bind("tcp", "127.0.0.1", 0))
-    local fd = tostring(sock):gsub("socket %((%d+)%)", "%1")
-    sock:close()
-    return tonumber(fd)
-end
-
-local initfd = fd_count()
+--local function fd_count()
+--    local ls = require "bee.socket"
+--    local sock = assert(ls.bind("tcp", "127.0.0.1", 0))
+--    local fd = tostring(sock):gsub("socket %((%d+)%)", "%1")
+--    sock:close()
+--    return tonumber(fd)
+--end
+--local initfd = fd_count()
 
 local lu = require 'luaunit'
 
@@ -41,16 +40,6 @@ require 'test_thread'
 require 'test_subprocess'
 require 'test_socket'
 require 'test_filewatch'
-
-if platform.OS == "Windows" then
-    local test_socket_1 = lu.test "socket"
-    local test_socket_2 = lu.test "socket-uds"
-    for _, k in ipairs(test_socket_1) do
-        test_socket_2[k] = test_socket_1[k]
-    end
-    test_socket_1.UDS = false
-    test_socket_2.UDS = true
-end
 
 local ok = lu.run()
 

@@ -195,7 +195,7 @@ function test_subprocess:test_stdio_2()
     lu.assertEquals(process:wait(), 0)
     lu.assertEquals(rd:read 'a', "ok")
     rd:close()
-    os.remove 'test.txt'
+    os.remove 'temp.txt'
 
     local process1 = createLua('io.write "ok"', { stdout = true })
     local process2 = createLua('io.write(io.read "a")', { stdin = process1.stdout, stdout = true })

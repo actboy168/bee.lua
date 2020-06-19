@@ -120,19 +120,15 @@ end
 
 local function parseCmdLine(cmdLine)
     local result = {}
-    local function parseOption(option)
-        if option == '--verbose' or option == '-v' then
-            result.verbosity = true
-            return
-        elseif option == '--shuffle' or option == '-s' then
-            result.shuffle = true
-            return
-        end
-        error('Unknown option: '..option)
-    end
     for _, cmdArg in ipairs(cmdLine) do
         if cmdArg:sub(1,1) == '-' then
-            parseOption(cmdArg)
+            if cmdArg == '--verbose' or cmdArg == '-v' then
+                result.verbosity = true
+            elseif cmdArg == '--shuffle' or cmdArg == '-s' then
+                result.shuffle = true
+            else
+                error('Unknown option: '..cmdArg)
+            end
         else
             result[#result+1] = cmdArg
         end
@@ -253,7 +249,7 @@ function m.run()
     end
     local selected = selectList(options, lst)
     if options.verbosity then
-        print('Started on '.. os.date(os.getenv('LUAUNIT_DATEFMT')))
+        print('Started on '.. os.date())
     end
     local failures = {}
     local startTime = os.clock()
