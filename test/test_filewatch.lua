@@ -22,7 +22,7 @@ local function assertSelect(what, value)
     while true do
         local w, v = fw.select()
         if w then
-            lu.assertEquals(w, what, v)
+            lu.assertEquals(w, what)
             if type(value) == 'userdata' or type(value) == 'table' then
                 lu.assertEquals(fs.path(v), value)
             else
