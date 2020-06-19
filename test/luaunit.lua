@@ -188,7 +188,7 @@ local function selectList(patterns, lst)
     end
     local includedPattern, excludedPattern = {}, {}
     for _, pattern in ipairs(patterns) do
-        if pattern:sub(1,1) == '!' then
+        if pattern:sub(1,1) == '~' then
             excludedPattern[#excludedPattern+1] = pattern:sub(2)
         else
             includedPattern[#includedPattern+1] = pattern
@@ -196,15 +196,17 @@ local function selectList(patterns, lst)
     end
     local res = {}
     if #includedPattern ~= 0 then
-        for _, expr in ipairs(lst) do
+        for _, v in ipairs(lst) do
+            local expr = v[1]
             if matchPattern(expr, includedPattern) and not matchPattern(expr, excludedPattern) then
-                res[#res+1] = expr
+                res[#res+1] = v
             end
         end
     else
-        for _, expr in ipairs(lst) do
+        for _, v in ipairs(lst) do
+            local expr = v[1]
             if not matchPattern(expr, excludedPattern) then
-                res[#res+1] = expr
+                res[#res+1] = v
             end
         end
     end
