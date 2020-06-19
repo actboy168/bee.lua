@@ -38,14 +38,14 @@ local platform = require 'bee.platform'
 local test_plat = lu.test "platform"
 
 function test_plat:test_1()
-    lu.assertNotIsNil(__Target__)
+    lu.assertNotEquals(__Target__, nil)
     local plat = fs.path(__Target__):string():lower():match "build[/\\](%a+)[/\\]bin"
     if plat == 'linux' then
-        lu.assertIsTrue(platform.Compiler == 'gcc' or platform.Compiler == 'clang')
+        lu.assertEquals(platform.Compiler == 'gcc' or platform.Compiler == 'clang', true)
         support.linux.Compiler = platform.Compiler
     end
     if plat == 'msvc' or plat == 'msbuild' then
-        lu.assertIsTrue(platform.Arch == '32' or platform.Arch == '64')
+        lu.assertEquals(platform.Arch == '32' or platform.Arch == '64', true)
         support.msvc.Arch = platform.Arch
     end
     local info = {}

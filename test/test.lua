@@ -45,14 +45,14 @@ require 'test_filewatch'
 if platform.OS == "Windows" then
     local test_socket_1 = lu.test "socket"
     local test_socket_2 = lu.test "socket-uds"
-    for k, v in pairs(test_socket_1) do
-        test_socket_2[k] = v
+    for _, k in ipairs(test_socket_1) do
+        test_socket_2[k] = test_socket_1[k]
     end
-    test_socket_1.UDS = true
-    test_socket_2.UDS = false
+    test_socket_1.UDS = false
+    test_socket_2.UDS = true
 end
 
-local code = lu.LuaUnit.run()
+local ok = lu.run()
 
 if platform.OS ~= "Windows" then
     collectgarbage "collect"
@@ -60,4 +60,4 @@ if platform.OS ~= "Windows" then
     assert(fd == initfd, "fd count = " .. fd)
 end
 
-os.exit(code, true)
+os.exit(ok and 0 or 1, true)

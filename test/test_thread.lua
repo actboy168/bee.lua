@@ -10,13 +10,13 @@ local function createThread(script)
 end
 
 local function assertNotThreadError()
-    lu.assertIsFalse(err:pop())
+    lu.assertEquals(err:pop(), false)
 end
 
 local function assertHasThreadError(m)
     local ok, msg = err:pop()
-    lu.assertIsTrue(ok)
-    lu.assertErrorMsgContains(m, error, msg)
+    lu.assertEquals(ok, true)
+    lu.assertEquals(not not string.find(msg, m, nil, true), true)
 end
 
 local test_thread = lu.test "thread"
@@ -32,12 +32,12 @@ function test_thread:test_thread_1()
     end
     assertNotThreadError()
     os.remove('temp.txt')
-    lu.assertIsFalse(file_exists('temp.txt'))
+    lu.assertEquals(file_exists('temp.txt'), false)
     local thd = createThread [[
         io.open('temp.txt', 'w'):close()
     ]]
     thread.wait(thd)
-    lu.assertIsTrue(file_exists('temp.txt'))
+    lu.assertEquals(file_exists('temp.txt'), true)
     os.remove('temp.txt')
     assertNotThreadError()
 end
@@ -46,16 +46,16 @@ function test_thread:test_thread_2()
     assertNotThreadError()
     GLOBAL = true
     THREAD = nil
-    lu.assertNotIsNil(GLOBAL)
-    lu.assertIsNil(THREAD)
+    lu.assertNotEquals(GLOBAL, nil)
+    lu.assertEquals(THREAD, nil)
     local thd = createThread [[
         THREAD = true
         assert(GLOBAL == nil)
     ]]
     thread.wait(thd)
     assertNotThreadError()
-    lu.assertNotIsNil(GLOBAL)
-    lu.assertIsNil(THREAD)
+    lu.assertNotEquals(GLOBAL, nil)
+    lu.assertEquals(THREAD, nil)
     GLOBAL = nil
     THREAD = nil
 end
@@ -151,7 +151,7 @@ function test_thread:test_pop_1()
     thread.newchannel 'test'
     local channel = thread.channel 'test'
     local function pack_pop(ok, ...)
-        lu.assertIsTrue(ok)
+        lu.assertEquals(ok, true)
         return table.pack(...)
     end
     local function test_ok(...)
@@ -171,13 +171,13 @@ function test_thread:test_pop_2()
 
     local function assertIs(expected)
         local ok, v = channel:pop()
-        lu.assertIsTrue(ok)
+        lu.assertEquals(ok, true)
         lu.assertEquals(v, expected)
     end
     local function assertEmpty()
         local ok, v = channel:pop()
-        lu.assertIsFalse(ok)
-        lu.assertIsNil(v)
+        lu.assertEquals(ok, false)
+        lu.assertEquals(v, nil)
     end
 
     assertEmpty()

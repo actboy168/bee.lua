@@ -5,7 +5,7 @@ local thread = require 'bee.thread'
 local errlog = thread.channel "errlog"
 
 local function assertNotThreadError()
-    lu.assertIsFalse(errlog:pop())
+    lu.assertEquals(errlog:pop(), false)
 end
 
 local function file_exists(filename)
@@ -36,9 +36,9 @@ function test_socket:test_bind()
 
     local fd, err = ls.bind('unix', 'test.unixsock')
     lu.assertIsUserdata(fd, err)
-    lu.assertIsTrue(file_exists('test.unixsock'))
+    lu.assertEquals(file_exists('test.unixsock'), true)
     fd:close()
-    lu.assertIsFalse(file_exists('test.unixsock'))
+    lu.assertEquals(file_exists('test.unixsock'), false)
 end
 
 function test_socket:test_tcp_connect()
@@ -57,19 +57,19 @@ end
 
 function test_socket:test_unix_connect()
     os.remove 'test.unixsock'
-    lu.assertIsNil(ls.connect('unix', 'test.unixsock'))
-    lu.assertIsFalse(file_exists('test.unixsock'))
+    lu.assertEquals(ls.connect('unix', 'test.unixsock'), nil)
+    lu.assertEquals(file_exists('test.unixsock'), false)
 
     local server = ls.bind('unix', 'test.unixsock')
     lu.assertIsUserdata(server)
-    lu.assertIsTrue(file_exists('test.unixsock'))
+    lu.assertEquals(file_exists('test.unixsock'), true)
     for _ = 1, 2 do
         local client = ls.connect('unix', 'test.unixsock')
         lu.assertIsUserdata(client)
         client:close()
     end
     server:close()
-    lu.assertIsFalse(file_exists('test.unixsock'))
+    lu.assertEquals(file_exists('test.unixsock'), false)
 end
 
 function test_socket:test_tcp_accept()
@@ -89,8 +89,8 @@ function test_socket:test_tcp_accept()
         lu.assertEquals(wr[1], client)
         local session = server:accept()
         lu.assertIsUserdata(session)
-        lu.assertIsTrue(client:status())
-        lu.assertIsTrue(session:status())
+        lu.assertEquals(client:status(), true)
+        lu.assertEquals(session:status(), true)
         session:close()
         client:close()
     end
@@ -100,7 +100,7 @@ end
 function test_socket:test_unix_accept()
     local server = ls.bind('unix', 'test.unixsock')
     lu.assertIsUserdata(server)
-    lu.assertIsTrue(file_exists('test.unixsock'))
+    lu.assertEquals(file_exists('test.unixsock'), true)
     for _ = 1, 2 do
         local client, err = ls.connect('unix', 'test.unixsock')
         lu.assertIsUserdata(client, err)
@@ -112,13 +112,13 @@ function test_socket:test_unix_accept()
         lu.assertEquals(wr[1], client)
         local session = server:accept()
         lu.assertIsUserdata(session)
-        lu.assertIsTrue(client:status())
-        lu.assertIsTrue(session:status())
+        lu.assertEquals(client:status(), true)
+        lu.assertEquals(session:status(), true)
         session:close()
         client:close()
     end
     server:close()
-    lu.assertIsFalse(file_exists('test.unixsock'))
+    lu.assertEquals(file_exists('test.unixsock'), false)
 end
 
 function test_socket:test_pair()
@@ -199,7 +199,7 @@ local function createUnixEchoTest(name, f)
     server:close()
     thread.wait(client)
     assertNotThreadError()
-    lu.assertIsFalse(file_exists('test.unixsock'))
+    lu.assertEquals(file_exists('test.unixsock'), false)
 end
 
 local function syncSend(fd, data)
@@ -239,14 +239,14 @@ local function testEcho1()
 end
 
 local function testEcho2(session)
-    lu.assertIsTrue(syncSend(session, "ok"))
+    lu.assertEquals(syncSend(session, "ok"), true)
     lu.assertEquals(syncRecv(session, 2), "ok")
 
-    lu.assertIsTrue(syncSend(session, "ok(1)"))
-    lu.assertIsTrue(syncSend(session, "ok(2)"))
+    lu.assertEquals(syncSend(session, "ok(1)"), true)
+    lu.assertEquals(syncSend(session, "ok(2)"), true)
     lu.assertEquals(syncRecv(session, 10), "ok(1)ok(2)")
 
-    lu.assertIsTrue(syncSend(session, "1234567890"))
+    lu.assertEquals(syncSend(session, "1234567890"), true)
     lu.assertEquals(syncRecv(session, 2), "12")
     lu.assertEquals(syncRecv(session, 2), "34")
     lu.assertEquals(syncRecv(session, 2), "56")
@@ -260,7 +260,7 @@ local function testEcho3(session)
         t[#t+1] = tostring(math.random(1, 100000))
     end
     local s = table.concat(t, ",")
-    lu.assertIsTrue(syncSend(session, s))
+    lu.assertEquals(syncSend(session, s), true)
     lu.assertEquals(syncRecv(session, #s), s)
 end
 

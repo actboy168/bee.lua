@@ -6,9 +6,11 @@
             "request": "launch",
             "name": "Test",
             "console": "integratedTerminal",
-            "luaexe": "${workspaceFolder}/build/msvc/bin/lua.exe",
+            "luaexe": "${workspaceFolder}/build/msbuild/bin/x86_Debug/lua.exe",
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/test/test.lua",
+            "arg": [
+            ],
             "stopOnEntry": false
         }
     ]

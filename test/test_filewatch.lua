@@ -87,7 +87,7 @@ function test_fw:test_2()
                     return
                 end
             end
-            lu.assertIsNil(path)
+            lu.assertEquals(path, nil)
         end
         assertHas(root / 'test1')
         assertHas(root / 'test1.txt')
