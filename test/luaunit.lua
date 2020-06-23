@@ -83,28 +83,32 @@ local function equals(actual, expected)
     return equals_value(actual, expected, recursions)
 end
 
+local function failure(...)
+    error(string.format(...), 3)
+end
+
 function m.assertEquals(actual, expected)
     if not equals(actual, expected) then
-        error(string.format("expected: %s, actual: %s", inspect(expected), inspect(actual)))
+        failure("expected: %s, actual: %s", inspect(expected), inspect(actual))
     end
 end
 
 function m.assertNotEquals(actual, expected)
     if equals(actual, expected) then
-        error('Received the not expected value: '..inspect(actual))
+        failure('Received the not expected value: %s', inspect(actual))
     end
 end
 
 function m.assertError(f, ...)
     if pcall(f, ...) then
-        error "Expected an error when calling function but no error generated"
+        failure("Expected an error when calling function but no error generated")
     end
 end
 
 function m.assertErrorMsgEquals(expectedMsg, func, ...)
     local success, actualMsg = pcall(func, ...)
     if success then
-        error('No error generated when calling function but expected error: '..inspect(expectedMsg))
+        failure('No error generated when calling function but expected error: %s', inspect(expectedMsg))
     end
     equals(actualMsg, expectedMsg)
 end
@@ -113,7 +117,7 @@ for _, name in ipairs {'Nil', 'Number', 'String', 'Table', 'Boolean', 'Function'
     local typeExpected = name:lower()
     m["assertIs"..name] = function(value)
         if type(value) ~= typeExpected then
-            error(string.format('expected: a %s value, actual: type %s, value %s', typeExpected, type(value), inspect(value)))
+            failure('expected: a %s value, actual: type %s, value %s', typeExpected, type(value), inspect(value))
         end
     end
 end
