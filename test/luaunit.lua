@@ -262,13 +262,12 @@ function m.run()
         execFunction(options, failures, name, instance, methodInstance)
     end
     local duration = os.clock() - startTime
-    local success = #failures == 0
     if options.verbosity then
         print("=========================================================")
     else
         print()
     end
-    if not success then
+    if #failures ~= 0 then
         print("Failed tests:")
         print("-------------")
         for i, err in ipairs(failures) do
@@ -286,10 +285,10 @@ function m.run()
         s[#s+1] = string.format("%d non-selected", nonSelectedCount)
     end
     print(table.concat(s, ', '))
-    if success then
+    if #failures == 0 then
         print('OK')
     end
-    return success
+    return #failures
 end
 
 return m
