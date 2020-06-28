@@ -41,7 +41,7 @@ require 'test_subprocess'
 require 'test_socket'
 require 'test_filewatch'
 
-local result = lu.run()
+local success = lu.run()
 
 --if platform.OS ~= "Windows" then
 --    collectgarbage "collect"
@@ -49,4 +49,4 @@ local result = lu.run()
 --    assert(fd == initfd, "init cout = "..initfd..", fd count = " .. fd)
 --end
 
-os.exit(result, true)
+os.exit(success, true)

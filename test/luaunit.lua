@@ -288,7 +288,7 @@ function m.run()
     if #failures == 0 then
         print('OK')
     end
-    return #failures
+    return #failures == 0
 end
 
 return m
