@@ -256,6 +256,7 @@ function m.run()
         print('Started on '.. os.date())
     end
     local failures = {}
+    collectgarbage "collect"
     local startTime = os.clock()
     for _, v in ipairs(selected) do
         local name, instance, methodInstance = v[1], v[2], v[3]
