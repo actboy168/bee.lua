@@ -30,7 +30,7 @@ jobs:
       with:
         ref: refs/heads/master
         submodules : recursive
-    - run: sudo apt-get install -y libreadline-dev ninja-build
+    - run: sudo apt-get install -y ninja-build
     - run: ninja -f ninja/linux.ninja
     - run: |
         mkdir -p publish
