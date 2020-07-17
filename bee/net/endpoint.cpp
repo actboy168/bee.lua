@@ -16,21 +16,17 @@
 #   include <charconv>
 #endif
 
-//
-// need Windows SDK >= 17063
 // see the https://blogs.msdn.microsoft.com/commandline/2017/12/19/af_unix-comes-to-windows/
-//
 #if defined(_WIN32)
-    // TODO: Windows SDK 16299 has a wrong `afunix.h`
-	#if __has_include(<afunix.h>)
-		#include <afunix.h>
-	#else
-		#define UNIX_PATH_MAX 108
-		struct sockaddr_un {
-			unsigned short sun_family;
-			char sun_path[UNIX_PATH_MAX];
-		};
-	#endif
+    //
+    // need Windows SDK >= 17063
+    // #include <afunix.h>
+    //
+    #define UNIX_PATH_MAX 108
+    struct sockaddr_un {
+        unsigned short sun_family;
+        char sun_path[UNIX_PATH_MAX];
+    };
 #endif
 
 namespace bee::net {
