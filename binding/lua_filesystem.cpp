@@ -1,20 +1,12 @@
+#include <bee/config.h>
 #include <bee/error.h>
 #include <bee/filesystem.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/file.h>
 #include <bee/utility/file_helper.h>
 #include <bee/utility/path_helper.h>
+#include <utility>
 #include <lua.hpp>
-
-#if defined(_WIN32)
-#include <bee/utility/unicode_win.h>
-#endif
-
-
-#include <bee/config.h>
-#include <utility> 
-#include <lua.hpp>
-#include <bee/lua/binding.h>
 
 namespace bee::lua_filesystem {
     namespace path {
@@ -58,9 +50,10 @@ namespace bee::lua_filesystem {
                 return constructor_(L, lua::checkstring(L, 1));
             case LUA_TUSERDATA:
                 return constructor_(L, to(L, 1));
+            default:
+                luaL_checktype(L, 1, LUA_TSTRING);
+                return 0;
             }
-            luaL_checktype(L, 1, LUA_TSTRING);
-            return 0;
             LUA_TRY_END;
         }
 
@@ -255,9 +248,10 @@ namespace bee::lua_filesystem {
                 return constructor_(L, self / lua::checkstring(L, 2));
             case LUA_TUSERDATA:
                 return constructor_(L, self / to(L, 2));
+            default:
+                luaL_checktype(L, 2, LUA_TSTRING);
+                return 0;
             }
-            luaL_checktype(L, 2, LUA_TSTRING);
-            return 0;
             LUA_TRY_END;
         }
 
@@ -269,9 +263,10 @@ namespace bee::lua_filesystem {
                 return constructor_(L, self.native() + lua::checkstring(L, 2));
             case LUA_TUSERDATA:
                 return constructor_(L, self.native() + to(L, 2).native());
+            default:
+                luaL_checktype(L, 2, LUA_TSTRING);
+                return 0;
             }
-            luaL_checktype(L, 2, LUA_TSTRING);
-            return 0;
             LUA_TRY_END;
         }
 
