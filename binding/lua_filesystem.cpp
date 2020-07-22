@@ -411,15 +411,31 @@ namespace bee::lua_filesystem {
         LUA_TRY_END;
     }
 
+    static int copy(lua_State* L) {
+        LUA_TRY;
+        const fs::path& from = path::to(L, 1);
+        const fs::path& to = path::to(L, 2);
+        auto options = fs::copy_options::recursive;
+        if (lua_toboolean(L, 3)) {
+            options |= fs::copy_options::overwrite_existing;
+        }
+        fs::copy(from, to, options);
+        return 0;
+        LUA_TRY_END;
+    }
+
     static int copy_file(lua_State* L) {
         LUA_TRY;
         const fs::path& from = path::to(L, 1);
         const fs::path& to = path::to(L, 2);
-        const bool      overwritten = !!lua_toboolean(L, 3);
-        if (overwritten && fs::exists(from)) {
-            fs::remove(to);
+        auto options = fs::copy_options::none;
+        if (lua_toboolean(L, 3)) {
+            options |= fs::copy_options::overwrite_existing;
+            if (fs::exists(from)) {
+                fs::remove(to);
+            }
         }
-        fs::copy_file(from, to, overwritten ? fs::copy_options::overwrite_existing : fs::copy_options::none);
+        fs::copy_file(from, to, options);
         return 0;
         LUA_TRY_END;
     }
@@ -531,6 +547,7 @@ namespace bee::lua_filesystem {
             {"remove", remove},
             {"remove_all", remove_all},
             {"current_path", current_path},
+            {"copy", copy},
             {"copy_file", copy_file},
             {"absolute", absolute},
             {"relative", relative},

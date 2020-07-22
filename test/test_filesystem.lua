@@ -504,8 +504,7 @@ function test_fs:test_current_path()
 end
 
 function test_fs:test_copy_file()
-    local function copy_file_ok(from, to, flag)
-        fs.copy_file(fs.path(from), fs.path(to), flag)
+    local function copy_file_ok(from, to)
         lu.assertEquals(fs.exists(fs.path(from)), true)
         lu.assertEquals(fs.exists(fs.path(to)), true)
         lu.assertEquals(read_file(from), read_file(to))
@@ -515,27 +514,32 @@ function test_fs:test_copy_file()
         lu.assertEquals(fs.exists(fs.path(to)), false)
     end
     local function copy_file_failed(from, to)
-        lu.assertError(fs.copy_file, fs.path(from), fs.path(to))
         fs.remove_all(fs.path(from))
         fs.remove_all(fs.path(to))
         lu.assertEquals(fs.exists(fs.path(from)), false)
         lu.assertEquals(fs.exists(fs.path(to)), false)
     end
-    create_file('temp1.txt', tostring(os.time()))
-    os.remove('temp2.txt')
-    copy_file_ok('temp1.txt', 'temp2.txt', false)
+    for _, copy in ipairs {fs.copy_file, fs.copy} do
+        create_file('temp1.txt', tostring(os.time()))
+        os.remove('temp2.txt')
+        copy(fs.path 'temp1.txt', fs.path 'temp2.txt', false)
+        copy_file_ok('temp1.txt', 'temp2.txt')
 
-    create_file('temp1.txt', tostring(os.time()))
-    os.remove('temp2.txt')
-    copy_file_ok('temp1.txt', 'temp2.txt', true)
+        create_file('temp1.txt', tostring(os.time()))
+        os.remove('temp2.txt')
+        copy(fs.path 'temp1.txt', fs.path 'temp2.txt', true)
+        copy_file_ok('temp1.txt', 'temp2.txt')
 
-    create_file('temp1.txt', tostring(os.time()))
-    create_file('temp2.txt', tostring(os.clock()))
-    copy_file_ok('temp1.txt', 'temp2.txt', true)
+        create_file('temp1.txt', tostring(os.time()))
+        create_file('temp2.txt', tostring(os.clock()))
+        copy(fs.path 'temp1.txt', fs.path 'temp2.txt', true)
+        copy_file_ok('temp1.txt', 'temp2.txt')
 
-    create_file('temp1.txt', tostring(os.time()))
-    create_file('temp2.txt', tostring(os.clock()))
-    copy_file_failed('temp1.txt', 'temp2.txt')
+        create_file('temp1.txt', tostring(os.time()))
+        create_file('temp2.txt', tostring(os.clock()))
+        lu.assertError(copy, fs.path 'temp1.txt', fs.path 'temp2.txt')
+        copy_file_failed('temp1.txt', 'temp2.txt')
+    end
 
     create_file('temp1.txt', tostring(os.time()))
     create_file('temp2.txt', tostring(os.clock()))
@@ -578,7 +582,6 @@ function test_fs:test_list_directory()
         ['temp/temp2.txt'] = true,
     })
 
-    fs.create_directories(fs.path('temp'))
     fs.create_directories(fs.path('temp/temp'))
     create_file('temp/temp1.txt')
     create_file('temp/temp2.txt')
@@ -598,6 +601,52 @@ function test_fs:test_list_directory()
     create_file('temp.txt')
     list_directory_failed('temp.txt')
     fs.remove_all(fs.path('temp.txt'))
+end
+
+function test_fs:test_copy_dir()
+    local function list_directory(dir, result)
+        result = result or {}
+        for path in fs.path(dir):list_directory() do
+            if fs.is_directory(path) then
+                list_directory(path, result)
+            end
+            result[path:string()] = true
+        end
+        return result
+    end
+    local function file_equals(a, b)
+        lu.assertEquals(read_file(a), read_file(b))
+    end
+
+    fs.create_directories(fs.path('temp/temp'))
+    create_file('temp/temp1.txt', tostring(math.random()))
+    create_file('temp/temp2.txt', tostring(math.random()))
+    create_file('temp/temp/temp1.txt', tostring(math.random()))
+    create_file('temp/temp/temp2.txt', tostring(math.random()))
+
+    fs.copy(fs.path('temp'), fs.path('temp1'), true)
+
+    lu.assertEquals(list_directory('temp'), {
+        ['temp/temp1.txt'] = true,
+        ['temp/temp2.txt'] = true,
+        ['temp/temp/temp1.txt'] = true,
+        ['temp/temp/temp2.txt'] = true,
+        ['temp/temp'] = true,
+    })
+    lu.assertEquals(list_directory('temp1'), {
+        ['temp1/temp1.txt'] = true,
+        ['temp1/temp2.txt'] = true,
+        ['temp1/temp/temp1.txt'] = true,
+        ['temp1/temp/temp2.txt'] = true,
+        ['temp1/temp'] = true,
+    })
+    file_equals('temp/temp1.txt', 'temp1/temp1.txt')
+    file_equals('temp/temp2.txt', 'temp1/temp2.txt')
+    file_equals('temp/temp/temp1.txt', 'temp1/temp/temp1.txt')
+    file_equals('temp/temp/temp2.txt', 'temp1/temp/temp2.txt')
+
+    fs.remove_all(fs.path('temp'))
+    fs.remove_all(fs.path('temp1'))
 end
 
 function test_fs:test_last_write_time()
