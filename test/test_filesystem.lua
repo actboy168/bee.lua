@@ -530,10 +530,12 @@ function test_fs:test_copy_file()
         copy(fs.path 'temp1.txt', fs.path 'temp2.txt', true)
         copy_file_ok('temp1.txt', 'temp2.txt')
 
-        create_file('temp1.txt', tostring(os.time()))
-        create_file('temp2.txt', tostring(os.clock()))
-        copy(fs.path 'temp1.txt', fs.path 'temp2.txt', true)
-        copy_file_ok('temp1.txt', 'temp2.txt')
+        if fs.copy ~= copy or platform.CRT == "msvc" then
+            create_file('temp1.txt', tostring(os.time()))
+            create_file('temp2.txt', tostring(os.clock()))
+            copy(fs.path 'temp1.txt', fs.path 'temp2.txt', true)
+            copy_file_ok('temp1.txt', 'temp2.txt')
+        end
 
         create_file('temp1.txt', tostring(os.time()))
         create_file('temp2.txt', tostring(os.clock()))
