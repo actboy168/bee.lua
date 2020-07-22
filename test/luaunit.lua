@@ -110,7 +110,7 @@ function m.assertErrorMsgEquals(expectedMsg, func, ...)
     if success then
         failure('No error generated when calling function but expected error: %s', inspect(expectedMsg))
     end
-    equals(actualMsg, expectedMsg)
+    m.assertEquals(actualMsg, expectedMsg)
 end
 
 for _, name in ipairs {'Nil', 'Number', 'String', 'Table', 'Boolean', 'Function', 'Userdata', 'Thread'} do
