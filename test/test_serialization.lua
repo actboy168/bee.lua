@@ -51,3 +51,16 @@ function test_seri:test_ref()
     local newt = seri.unpack(seri.pack(t))
     lu.assertEquals(newt, newt.a)
 end
+
+function test_seri:test_lightuserdata()
+    lu.assertError(seri.lightuserdata, "")
+    lu.assertError(seri.lightuserdata, 1.1)
+    lu.assertEquals(seri.lightuserdata(1), seri.lightuserdata(1))
+    lu.assertNotEquals(seri.lightuserdata(1), seri.lightuserdata(2))
+    lu.assertEquals(type(seri.lightuserdata(1)), "userdata")
+    lu.assertEquals(seri.lightuserdata((seri.lightuserdata(10086))), 10086)
+
+    local t = {[seri.lightuserdata(0)]=seri.lightuserdata(1)}
+    local newt = seri.unpack(seri.pack(t))
+    lu.assertEquals(t, newt)
+end
