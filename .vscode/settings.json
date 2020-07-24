@@ -1,14 +1,8 @@
 {
     "editor.formatOnType": true,
     "Lua.runtime.version": "Lua 5.4",
-    "Lua.diagnostics.globals": [
-        "MAKEDIR"
-    ],
     "Lua.workspace.ignoreDir": [
         "3rd/luaffi"
-    ],
-    "Lua.diagnostics.disable": [
-        "lowercase-global"
     ],
     "files.associations": {
         "algorithm": "cpp",
