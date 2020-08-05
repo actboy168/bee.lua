@@ -107,9 +107,10 @@ build $obj/bee/lua_socket.obj: CXX_bee binding/lua_socket.cpp
 build $obj/bee/lua_subprocess.obj: CXX_bee binding/lua_subprocess.cpp
 build $obj/bee/lua_thread.obj: CXX_bee binding/lua_thread.cpp
 build $obj/bee/lua_unicode.obj: CXX_bee binding/lua_unicode.cpp
+build $obj/bee/lua_wmi.obj: CXX_bee binding/lua_wmi.cpp
 rule LINK_bee
   command = gcc --shared $in -o $out -s -ladvapi32 -lws2_32 -lole32 $
-      -luser32 -lversion -lstdc++fs -lstdc++
+      -luser32 -lversion -lwbemuuid -lstdc++fs -lstdc++
   description = Link    Dll $out
 build $bin/bee.dll: LINK_bee $obj/bee/lua-seri.obj $obj/bee/error.obj $
     $obj/bee/fsevent_win.obj $obj/bee/endpoint.obj $obj/bee/socket.obj $
@@ -121,7 +122,7 @@ build $bin/bee.dll: LINK_bee $obj/bee/lua-seri.obj $obj/bee/error.obj $
     $obj/bee/lua_platform.obj $obj/bee/lua_registry.obj $
     $obj/bee/lua_serialization.obj $obj/bee/lua_socket.obj $
     $obj/bee/lua_subprocess.obj $obj/bee/lua_thread.obj $
-    $obj/bee/lua_unicode.obj $bin/lua54.dll
+    $obj/bee/lua_unicode.obj $obj/bee/lua_wmi.obj $bin/lua54.dll
 rule CXX_bootstrap
   command = g++ -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall -I3rd/lua $
       -D_WIN32_WINNT=0x0601 -DNDEBUG -I3rd/lua -o $out -c $in

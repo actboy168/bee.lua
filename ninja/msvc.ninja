@@ -108,9 +108,11 @@ build $obj/bee/lua_socket.obj: CXX_bee binding/lua_socket.cpp
 build $obj/bee/lua_subprocess.obj: CXX_bee binding/lua_subprocess.cpp
 build $obj/bee/lua_thread.obj: CXX_bee binding/lua_thread.cpp
 build $obj/bee/lua_unicode.obj: CXX_bee binding/lua_unicode.cpp
+build $obj/bee/lua_wmi.obj: CXX_bee binding/lua_wmi.cpp
 rule LINK_bee
   command = cl /nologo $in advapi32.lib ws2_32.lib ole32.lib user32.lib $
-      version.lib /link /DEBUG:NONE /LTCG /out:$out /DLL /IMPLIB:$bin/bee.lib
+      version.lib wbemuuid.lib /link /DEBUG:NONE /LTCG /out:$out /DLL $
+      /IMPLIB:$bin/bee.lib
   description = Link    Dll $out
 build $bin/bee.dll | $bin/bee.lib: LINK_bee $obj/bee/lua-seri.obj $
     $obj/bee/error.obj $obj/bee/fsevent_win.obj $obj/bee/endpoint.obj $
@@ -122,7 +124,8 @@ build $bin/bee.dll | $bin/bee.lib: LINK_bee $obj/bee/lua-seri.obj $
     $obj/bee/lua_filewatch.obj $obj/bee/lua_platform.obj $
     $obj/bee/lua_registry.obj $obj/bee/lua_serialization.obj $
     $obj/bee/lua_socket.obj $obj/bee/lua_subprocess.obj $
-    $obj/bee/lua_thread.obj $obj/bee/lua_unicode.obj $bin/lua54.lib
+    $obj/bee/lua_thread.obj $obj/bee/lua_unicode.obj $obj/bee/lua_wmi.obj $
+    $bin/lua54.lib
 rule CXX_bootstrap
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /Zc:__cplusplus $
       /O2 /GL /Zc:inline /W3 /permissive- /MD /I3rd/lua $
