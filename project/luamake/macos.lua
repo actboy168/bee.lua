@@ -44,6 +44,7 @@ lm:shared_library 'bee' {
         "!bee/*_linux.cpp",
         "!binding/lua_unicode.cpp",
         "!binding/lua_registry.cpp",
+        "!binding/lua_wmi.cpp",
     },
     ldflags = {
         "-framework CoreFoundation",

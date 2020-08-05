@@ -41,6 +41,7 @@ lm:shared_library 'bee' {
         "!bee/*_osx.cpp",
         "!binding/lua_unicode.cpp",
         "!binding/lua_registry.cpp",
+        "!binding/lua_wmi.cpp",
     },
     links = {
         "pthread",
