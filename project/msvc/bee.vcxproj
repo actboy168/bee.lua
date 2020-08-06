@@ -116,7 +116,7 @@
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;version.lib;wbemuuid.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -192,6 +192,7 @@
     <ClCompile Include="..\..\binding\lua_subprocess.cpp" />
     <ClCompile Include="..\..\binding\lua_thread.cpp" />
     <ClCompile Include="..\..\binding\lua_unicode.cpp" />
+    <ClCompile Include="..\..\binding\lua_wmi.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\3rd\lua-seri\lua-seri.h" />

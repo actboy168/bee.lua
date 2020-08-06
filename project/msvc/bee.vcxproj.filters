@@ -105,6 +105,9 @@
     <ClCompile Include="..\..\bee\utility\unicode_win.cpp">
       <Filter>bee\utility</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\binding\lua_wmi.cpp">
+      <Filter>binding</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\bee\subprocess\subprocess_posix.h">
