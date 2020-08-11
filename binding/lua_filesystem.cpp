@@ -209,7 +209,14 @@ namespace bee::lua_filesystem {
         static int list_directory(lua_State* L) {
             LUA_TRY;
             const fs::path& self = path::to(L, 1);
-            pairs_directory<fs::directory_iterator>::constructor(L, self);
+            const char* flags = luaL_optstring(L, 2, "");
+            luaL_argcheck(L, (flags[0] == '\0' || (flags[0] == 'r' && flags[1] == '\0')), 2, "invalid flags");
+            if (flags[0] == 'r') {
+                pairs_directory<fs::recursive_directory_iterator>::constructor(L, self);
+            }
+            else {
+                pairs_directory<fs::directory_iterator>::constructor(L, self);
+            }
             lua_pushnil(L);
             lua_pushnil(L);
             lua_rotate(L, -4, -1);
