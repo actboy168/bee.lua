@@ -142,7 +142,7 @@
       <StackReserveSize>23068672</StackReserveSize>
     </Link>
     <PostBuildEvent>
-      <Command>cd $(projectDir)..\..\ &amp;&amp; build\msbuild\bin\$(PlatformTarget)_$(Configuration)\bootstrap.exe test\test.lua</Command>
+      <Command>cd $(projectDir)..\..\ &amp;&amp; copy bootstrap\main.lua build\msbuild\bin\$(PlatformTarget)_$(Configuration)\ &amp;&amp; build\msbuild\bin\$(PlatformTarget)_$(Configuration)\bootstrap.exe test\test.lua</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
