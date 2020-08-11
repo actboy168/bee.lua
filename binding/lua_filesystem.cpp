@@ -157,6 +157,7 @@ namespace bee::lua_filesystem {
             LUA_TRY_END;
         }
 
+        template <typename T>
         struct pairs_directory {
             static pairs_directory& get(lua_State* L, int idx) {
                 return *static_cast<pairs_directory*>(lua_touserdata(L, idx));
@@ -182,31 +183,33 @@ namespace bee::lua_filesystem {
                 get(L, 1).~pairs_directory();
                 return 0;
             }
-            pairs_directory(const fs::directory_iterator& first, const fs::directory_iterator& last)
-                : cur(first)
-                , end(last) {}
-            fs::directory_iterator cur;
-            fs::directory_iterator end;
+            static int constructor(lua_State* L, const fs::path& path) {
+                void* storage = lua_newuserdatauv(L, sizeof(pairs_directory), 0);
+                new (storage) pairs_directory(path);
+                if (newObject(L, "pairs_directory")) {
+                    static luaL_Reg mt[] = {
+                        {"__gc", pairs_directory::gc},
+                        {"__close", pairs_directory::close},
+                        {NULL, NULL},
+                    };
+                    luaL_setfuncs(L, mt, 0);
+                }
+                lua_setmetatable(L, -2);
+                lua_pushvalue(L, -1);
+                lua_pushcclosure(L, pairs_directory::next, 1);
+                return 2;
+            }
+            pairs_directory(const fs::path& path)
+                : cur(T(path))
+                , end(T()) {}
+            T cur;
+            T end;
         };
 
         static int list_directory(lua_State* L) {
             LUA_TRY;
             const fs::path& self = path::to(L, 1);
-            const fs::directory_iterator& first = fs::directory_iterator(self);
-            const fs::directory_iterator& last  = fs::directory_iterator();
-            void* storage = lua_newuserdatauv(L, sizeof(pairs_directory), 0);
-            new (storage) pairs_directory(first, last);
-            if (newObject(L, "pairs_directory")) {
-                static luaL_Reg mt[] = {
-                    {"__gc", pairs_directory::gc},
-                    {"__close", pairs_directory::close},
-                    {NULL, NULL},
-                };
-                luaL_setfuncs(L, mt, 0);
-            }
-            lua_setmetatable(L, -2);
-            lua_pushvalue(L, -1);
-            lua_pushcclosure(L, pairs_directory::next, 1);
+            pairs_directory<fs::directory_iterator>::constructor(L, self);
             lua_pushnil(L);
             lua_pushnil(L);
             lua_rotate(L, -4, -1);
