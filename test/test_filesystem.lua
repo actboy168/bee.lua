@@ -563,16 +563,10 @@ function test_fs:test_copy_file()
 end
 
 function test_fs:test_list_directory()
-    local function list_directory_ok(dir, expected)
+    local function list_directory_ok(dir, flags, expected)
+        local fsdir = fs.path(dir)
         local result = {}
-        for path in fs.path(dir):list_directory() do
-            result[path:string()] = true
-        end
-        lu.assertEquals(result, expected)
-    end
-    local function recursive_list_directory_ok(dir, expected)
-        local result = {}
-        for path in fs.path(dir):list_directory "r" do
+        for path in fsdir:list_directory(flags) do
             result[path:string()] = true
         end
         lu.assertEquals(result, expected)
@@ -585,7 +579,7 @@ function test_fs:test_list_directory()
     fs.create_directories(fs.path('temp'))
     create_file('temp/temp1.txt')
     create_file('temp/temp2.txt')
-    list_directory_ok('temp', {
+    list_directory_ok('temp', nil, {
         ['temp/temp1.txt'] = true,
         ['temp/temp2.txt'] = true,
     })
@@ -596,18 +590,18 @@ function test_fs:test_list_directory()
     create_file('temp/temp2.txt')
     create_file('temp/temp/temp1.txt')
     create_file('temp/temp/temp2.txt')
-    list_directory_ok('temp', {
+    list_directory_ok('temp', nil, {
         ['temp/temp1.txt'] = true,
         ['temp/temp2.txt'] = true,
         ['temp/temp'] = true,
     })
-    recursive_list_directory_ok('temp', {
-        ['temp/temp1.txt'] = true,
-        ['temp/temp2.txt'] = true,
-        ['temp/temp'] = true,
-        ['temp/temp/temp1.txt'] = true,
-        ['temp/temp/temp2.txt'] = true,
-    })
+    --list_directory_ok('temp', "r", {
+    --    ['temp/temp1.txt'] = true,
+    --    ['temp/temp2.txt'] = true,
+    --    ['temp/temp'] = true,
+    --    ['temp/temp/temp1.txt'] = true,
+    --    ['temp/temp/temp2.txt'] = true,
+    --})
 
     fs.remove_all(fs.path('temp'))
     list_directory_failed('temp.txt')
