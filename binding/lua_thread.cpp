@@ -94,7 +94,7 @@ namespace bee::lua_thread {
     };
 
     static channelmgr       g_channel;
-    static std::atomic<int> g_thread_id = -1;
+    static std::atomic<int> g_thread_id = 0;
     static int       THREADID;
 
     static std::string checkstring(lua_State* L, int idx) {
@@ -185,10 +185,21 @@ namespace bee::lua_thread {
 
     struct thread_args {
         std::string   source;
+        int           id;
         lua_CFunction param;
-        thread_args(std::string&& src, lua_CFunction f)
-            : source(std::forward<std::string>(src)), param(f) {}
+        thread_args(std::string&& src, int id_, lua_CFunction f)
+            : source(std::forward<std::string>(src)), id(id_), param(f) {}
     };
+
+    static int gen_threadid() {
+        for (;;) {
+            int id = g_thread_id;
+            if (g_thread_id.compare_exchange_weak(id, id + 1)) {
+                id++;
+                return id;
+            }
+        }
+    }
 
     static int thread_luamain(lua_State* L) {
         lua_pushboolean(L, 1);
@@ -199,6 +210,8 @@ namespace bee::lua_thread {
 #endif
         void*        ud = lua_touserdata(L, 1);
         thread_args* args = (thread_args*)ud;
+        lua_pushinteger(L, args->id);
+        lua_rawsetp(L, LUA_REGISTRYINDEX, &THREADID);
         if (luaL_loadbuffer(L, args->source.data(), args->source.size(), args->source.c_str()) != LUA_OK) {
             delete args;
             return lua_error(L);
@@ -256,10 +269,12 @@ namespace bee::lua_thread {
             }
             f = lua_tocfunction(L, 2);
         }
-        thread_args* args = new thread_args(std::move(source), f);
+        int          id = gen_threadid();
+        thread_args* args = new thread_args(std::move(source), id, f);
         std::thread* thread = new std::thread(std::bind(thread_main, args));
         lua_pushlightuserdata(L, thread);
-        return 1;
+        lua_pushinteger(L, id);
+        return 2;
     }
 
     static int lreset(lua_State* L) {
@@ -289,21 +304,14 @@ namespace bee::lua_thread {
             return;
         }
         lua_pop(L, 1);
-        for (;;) {
-            int id = g_thread_id;
-            if (g_thread_id.compare_exchange_weak(id, id + 1)) {
-                id++;
-                if (id == 0) {
-                    lua_pushcfunction(L, lnewchannel);
-                    lua_pushstring(L, "errlog");
-                    lua_call(L, 1, 0);
-                }
-                lua_pushinteger(L, id);
-                lua_pushvalue(L, -1);
-                lua_rawsetp(L, LUA_REGISTRYINDEX, &THREADID);
-                break;
-            }
-        }
+
+        lua_pushcfunction(L, lnewchannel);
+        lua_pushstring(L, "errlog");
+        lua_call(L, 1, 0);
+
+        lua_pushinteger(L, 0);
+        lua_pushvalue(L, -1);
+        lua_rawsetp(L, LUA_REGISTRYINDEX, &THREADID);
     }
 
     static int luaopen(lua_State* L) {
