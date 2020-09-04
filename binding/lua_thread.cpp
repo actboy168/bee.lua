@@ -53,13 +53,16 @@ namespace bee::lua_thread {
 
     class channelmgr {
     public:
+        channelmgr() {
+            channels.emplace(std::make_pair("errlog", new channel));
+        }
         bool create(const std::string& name) {
             std::unique_lock<std::mutex> lk(mutex);
             auto                         it = channels.find(name);
             if (it != channels.end()) {
                 return false;
             }
-            channels.insert(std::make_pair(name, new channel));
+            channels.emplace(std::make_pair(name, new channel));
             return true;
         }
         void clear() {
@@ -304,10 +307,6 @@ namespace bee::lua_thread {
             return;
         }
         lua_pop(L, 1);
-
-        lua_pushcfunction(L, lnewchannel);
-        lua_pushstring(L, "errlog");
-        lua_call(L, 1, 0);
 
         lua_pushinteger(L, 0);
         lua_pushvalue(L, -1);
