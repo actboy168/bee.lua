@@ -96,6 +96,14 @@ namespace bee::lua_thread {
         boxchannel(std::shared_ptr<channel> c_) : c(c_) {}
     };
 
+    struct luathread : public std::thread {
+        template <typename Fn>
+        luathread(int id, Fn&& f)
+            : std::thread(std::forward<Fn>(f))
+            , _id(id) {}
+        int _id;
+    };
+
     static channelmgr       g_channel;
     static std::atomic<int> g_thread_id = 0;
     static int       THREADID;
@@ -272,12 +280,11 @@ namespace bee::lua_thread {
             }
             f = lua_tocfunction(L, 2);
         }
-        int          id = gen_threadid();
+        int id = gen_threadid();
         thread_args* args = new thread_args(std::move(source), id, f);
-        std::thread* thread = new std::thread(std::bind(thread_main, args));
+        luathread* thread = new luathread(id, std::bind(thread_main, args));
         lua_pushlightuserdata(L, thread);
-        lua_pushinteger(L, id);
-        return 2;
+        return 1;
     }
 
     static int lreset(lua_State* L) {
@@ -294,12 +301,19 @@ namespace bee::lua_thread {
 
     static int lwait(lua_State* L) {
         luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
-        std::thread* thread = (std::thread*)lua_touserdata(L, 1);
+        luathread* thread = (luathread*)lua_touserdata(L, 1);
         if (thread->joinable()) {
             thread->join();
         }
-        thread->~thread();
+        thread->~luathread();
         return 0;
+    }
+
+    static int lgetid(lua_State* L) {
+        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+        luathread* thread = (luathread*)lua_touserdata(L, 1);
+        lua_pushinteger(L, thread->_id);
+        return 1;
     }
 
     static void init_threadid(lua_State* L) {
@@ -321,6 +335,7 @@ namespace bee::lua_thread {
             {"channel", lchannel},
             {"reset", lreset},
             {"wait", lwait},
+            {"getid", lgetid},
             {NULL, NULL},
         };
         lua_newtable(L);

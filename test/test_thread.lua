@@ -114,13 +114,13 @@ function test_thread:test_id_3()
     thread.reset()
     assertNotThreadError()
     thread.newchannel 'test'
-    local thd, id = createThread [[
+    local thd = createThread [[
         local thread = require "bee.thread"
         local channel = thread.channel 'test'
         assert(thread.id == channel:bpop())
     ]]
     local channel = thread.channel 'test'
-    channel:push(id)
+    channel:push(thread.getid(thd))
     thread.wait(thd)
     assertNotThreadError()
 end
