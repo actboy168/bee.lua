@@ -1,5 +1,5 @@
 #include <bee/subprocess.h>
-#include <bee/utility/format.h>
+#include <fmt/format.h>
 #include <deque>
 #include <memory.h>
 #include <sys/types.h>
@@ -195,7 +195,7 @@ namespace bee::posix::subprocess {
         std::string fds;
         for (auto& fd : sockets_) {
             int newfd = net::socket::dup(fd);
-            fds.append(format("%d,", newfd));
+            fds.append(fmt::format("{},", newfd));
         }
         set_env_["bee-subprocess-dup-sockets"] = fds;
     }

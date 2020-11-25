@@ -31,6 +31,7 @@ lm:shared_library 'bee' {
     includes = {
         "3rd/lua",
         "3rd/lua-seri",
+        "bee/nonstd",
         "."
     },
     defines = {
@@ -40,6 +41,7 @@ lm:shared_library 'bee' {
     sources = {
         "3rd/lua-seri/*.c",
         "bee/*.cpp",
+        "bee/nonstd/fmt/*.cc",
         "binding/*.cpp",
         "!bee/*_osx.cpp",
         "!bee/*_linux.cpp",

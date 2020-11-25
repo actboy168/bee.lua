@@ -31,6 +31,9 @@
     <Filter Include="bee\platform">
       <UniqueIdentifier>{07e03cc1-f454-47c4-aade-02337f5229f2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="bee\nonstd\fmt">
+      <UniqueIdentifier>{8da9d151-4b33-4edd-a682-65e03e961a4d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\bee\subprocess\subprocess_posix.cpp">
@@ -108,6 +111,12 @@
     <ClCompile Include="..\..\binding\lua_wmi.cpp">
       <Filter>binding</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\bee\nonstd\fmt\format.cc">
+      <Filter>bee\nonstd\fmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\bee\nonstd\fmt\os.cc">
+      <Filter>bee\nonstd\fmt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\bee\subprocess\subprocess_posix.h">
@@ -138,12 +147,6 @@
       <Filter>bee\nonstd</Filter>
     </ClInclude>
     <ClInclude Include="..\..\bee\utility\lockqueue.h">
-      <Filter>bee\utility</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\bee\utility\format.h">
-      <Filter>bee\utility</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\bee\utility\hybrid_array.h">
       <Filter>bee\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\..\bee\net\endpoint.h">
@@ -202,6 +205,45 @@
     </ClInclude>
     <ClInclude Include="..\..\bee\lua\file.h">
       <Filter>bee\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\nonstd\fmt\args.h">
+      <Filter>bee\nonstd\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\nonstd\fmt\chrono.h">
+      <Filter>bee\nonstd\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\nonstd\fmt\color.h">
+      <Filter>bee\nonstd\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\nonstd\fmt\compile.h">
+      <Filter>bee\nonstd\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\nonstd\fmt\core.h">
+      <Filter>bee\nonstd\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\nonstd\fmt\format.h">
+      <Filter>bee\nonstd\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\nonstd\fmt\format-inl.h">
+      <Filter>bee\nonstd\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\nonstd\fmt\locale.h">
+      <Filter>bee\nonstd\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\nonstd\fmt\os.h">
+      <Filter>bee\nonstd\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\nonstd\fmt\ostream.h">
+      <Filter>bee\nonstd\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\nonstd\fmt\posix.h">
+      <Filter>bee\nonstd\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\nonstd\fmt\printf.h">
+      <Filter>bee\nonstd\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\bee\nonstd\fmt\ranges.h">
+      <Filter>bee\nonstd\fmt</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -93,7 +93,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(projectDir)..\..\;$(projectDir)..\..\3rd\lua\;$(projectDir)..\..\3rd\lua-seri\;$(projectDir)..\..\bee\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(projectDir)..\..\;$(projectDir)..\..\3rd\lua\;$(projectDir)..\..\3rd\lua-seri\;$(projectDir)..\..\bee\;$(projectDir)..\..\bee\nonstd\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BEE_EXPORTS;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
@@ -110,7 +110,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(projectDir)..\..\;$(projectDir)..\..\3rd\lua\;$(projectDir)..\..\3rd\lua-seri\;$(projectDir)..\..\bee\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(projectDir)..\..\;$(projectDir)..\..\3rd\lua\;$(projectDir)..\..\3rd\lua-seri\;$(projectDir)..\..\bee\;$(projectDir)..\..\bee\nonstd\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BEE_EXPORTS;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
@@ -126,7 +126,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>$(projectDir)..\..\;$(projectDir)..\..\3rd\lua\;$(projectDir)..\..\3rd\lua-seri\;$(projectDir)..\..\bee\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(projectDir)..\..\;$(projectDir)..\..\3rd\lua\;$(projectDir)..\..\3rd\lua-seri\;$(projectDir)..\..\bee\;$(projectDir)..\..\bee\nonstd\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BEE_EXPORTS;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <OmitFramePointers>true</OmitFramePointers>
@@ -148,7 +148,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(projectDir)..\..\;$(projectDir)..\..\3rd\lua\;$(projectDir)..\..\3rd\lua-seri\;$(projectDir)..\..\bee\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(projectDir)..\..\;$(projectDir)..\..\3rd\lua\;$(projectDir)..\..\3rd\lua-seri\;$(projectDir)..\..\bee\;$(projectDir)..\..\bee\nonstd\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>BEE_EXPORTS;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
@@ -169,6 +169,8 @@
     <ClCompile Include="..\..\bee\fsevent\fsevent_win.cpp" />
     <ClCompile Include="..\..\bee\net\endpoint.cpp" />
     <ClCompile Include="..\..\bee\net\socket.cpp" />
+    <ClCompile Include="..\..\bee\nonstd\fmt\format.cc" />
+    <ClCompile Include="..\..\bee\nonstd\fmt\os.cc" />
     <ClCompile Include="..\..\bee\platform\version_win.cpp" />
     <ClCompile Include="..\..\bee\subprocess\sharedmemory_win.cpp" />
     <ClCompile Include="..\..\bee\subprocess\subprocess_posix.cpp">
@@ -212,6 +214,19 @@
     <ClInclude Include="..\..\bee\net\endpoint.h" />
     <ClInclude Include="..\..\bee\net\socket.h" />
     <ClInclude Include="..\..\bee\nonstd\filesystem.h" />
+    <ClInclude Include="..\..\bee\nonstd\fmt\args.h" />
+    <ClInclude Include="..\..\bee\nonstd\fmt\chrono.h" />
+    <ClInclude Include="..\..\bee\nonstd\fmt\color.h" />
+    <ClInclude Include="..\..\bee\nonstd\fmt\compile.h" />
+    <ClInclude Include="..\..\bee\nonstd\fmt\core.h" />
+    <ClInclude Include="..\..\bee\nonstd\fmt\format-inl.h" />
+    <ClInclude Include="..\..\bee\nonstd\fmt\format.h" />
+    <ClInclude Include="..\..\bee\nonstd\fmt\locale.h" />
+    <ClInclude Include="..\..\bee\nonstd\fmt\os.h" />
+    <ClInclude Include="..\..\bee\nonstd\fmt\ostream.h" />
+    <ClInclude Include="..\..\bee\nonstd\fmt\posix.h" />
+    <ClInclude Include="..\..\bee\nonstd\fmt\printf.h" />
+    <ClInclude Include="..\..\bee\nonstd\fmt\ranges.h" />
     <ClInclude Include="..\..\bee\nonstd\span.h" />
     <ClInclude Include="..\..\bee\platform.h" />
     <ClInclude Include="..\..\bee\platform\version.h" />
@@ -230,8 +245,6 @@
     <ClInclude Include="..\..\bee\utility\dynarray.h" />
     <ClInclude Include="..\..\bee\utility\file_helper.h" />
     <ClInclude Include="..\..\bee\utility\module_version_win.h" />
-    <ClInclude Include="..\..\bee\utility\format.h" />
-    <ClInclude Include="..\..\bee\utility\hybrid_array.h" />
     <ClInclude Include="..\..\bee\utility\lockqueue.h" />
     <ClInclude Include="..\..\bee\utility\path_helper.h" />
     <ClInclude Include="..\..\bee\utility\semaphore.h" />

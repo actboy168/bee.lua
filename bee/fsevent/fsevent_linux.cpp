@@ -1,5 +1,5 @@
 #include <bee/fsevent/fsevent_linux.h>
-#include <bee/utility/format.h>
+#include <fmt/format.h>
 #include <bee/error.h>
 #include <assert.h>
 #include <functional>
@@ -189,14 +189,14 @@ namespace bee::linux::fsevent {
                 apc_add(arg.m_id, arg.m_path);
                 m_notify.push({
                     tasktype::Confirm,
-                    format("add `%d` `%s`", arg.m_id, arg.m_path)
+                    fmt::format("add `{}` `{}`", arg.m_id, arg.m_path)
                 });
                 break;
             case apc_arg::type::Remove:
                 apc_remove(arg.m_id);
                 m_notify.push({
                     tasktype::Confirm,
-                    format("remove `%d`", arg.m_id)
+                    fmt::format("remove `{}`", arg.m_id)
                 });
                 break;
             case apc_arg::type::Terminate:

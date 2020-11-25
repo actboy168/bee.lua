@@ -1,6 +1,7 @@
 #include <bee/utility/module_version_win.h>
-#include <bee/utility/format.h>
+#include <fmt/format.h>
 #include <vector>
+#include <assert.h>
 
 namespace bee {
 	module_version::module_version()
@@ -83,7 +84,7 @@ namespace bee {
 	bool module_version::get_value(WORD language, WORD code_page, const wchar_t* key, const wchar_t** value_ptr) const {
 		assert(value_ptr);
 		UINT size;
-		std::wstring query = bee::format(L"\\StringFileInfo\\%04x%04x\\%s", language, code_page, key);
+		std::wstring query = fmt::format(L"\\StringFileInfo\\{:04x}{:04x}\\{}", language, code_page, key);
 		return (!!::VerQueryValueW(version_info_.get(), (LPWSTR)(LPCWSTR)query.c_str(), (LPVOID*)value_ptr, &size));
 	}
 

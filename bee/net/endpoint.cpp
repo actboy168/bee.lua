@@ -9,7 +9,7 @@
 #       define UNIX_PATH_MAX (sizeof(sockaddr_un::sun_path) / sizeof(sockaddr_un::sun_path[0]))
 #   endif
 #endif
-#include <bee/utility/format.h>
+#include <fmt/format.h>
 #include <bee/error.h>
 #include <array>
 #if __has_include(<charconv>)
@@ -125,7 +125,7 @@ namespace bee::net {
         }
         auto info = gethostaddr(hint, ip, portstr.data());
 #else
-        auto info = gethostaddr(hint, ip, bee::format("%d", port).c_str());
+        auto info = gethostaddr(hint, ip, fmt::format("{}", port).c_str());
 #endif
         if (!info) {
             return from_invalid();

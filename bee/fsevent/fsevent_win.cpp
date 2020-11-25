@@ -1,6 +1,6 @@
 #include <bee/fsevent/fsevent_win.h>
 #include <bee/utility/unicode_win.h>
-#include <bee/utility/format.h>
+#include <fmt/format.h>
 #include <bee/error.h>
 #include <array>
 #include <functional>
@@ -65,7 +65,7 @@ namespace bee::win::fsevent {
         std::error_code ec;
         m_path = fs::absolute(path, ec);
         if (ec) {
-            push_notify(tasktype::Error, format(L"`std::filesystem::absolute` failed: %s", ec.message()));
+            push_notify(tasktype::Error, fmt::format(L"`std::filesystem::absolute` failed: {}", u2w(ec.message())));
             return false;
         }
 
@@ -268,14 +268,14 @@ namespace bee::win::fsevent {
                 apc_add(arg.m_id, arg.m_path);
                 m_notify.push({
                     tasktype::Confirm,
-                    format(L"add `%d` `%s`", arg.m_id, arg.m_path)
+                    fmt::format(L"add `{}` `{}`", arg.m_id, arg.m_path)
                 });
                 break;
             case apc_arg::type::Remove:
                 apc_remove(arg.m_id);
                 m_notify.push({
                     tasktype::Confirm,
-                    format(L"remove `%d`", arg.m_id)
+                    fmt::format(L"remove `{}`", arg.m_id)
                 });
                 break;
             case apc_arg::type::Terminate:
