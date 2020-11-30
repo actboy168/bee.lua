@@ -463,16 +463,14 @@ namespace bee::lua_socket {
                 return 2;
             }
         }
+        if (rmax > FD_SETSIZE || wmax > FD_SETSIZE) {
+            return luaL_error(L, "sockets too much");
+        }
         struct timeval timeout, *timeop = &timeout;
         if (timeo < 0) {
             timeop = NULL;
-            if (rmax > FD_SETSIZE || wmax > FD_SETSIZE) {
-                return luaL_error(L, "sockets too much");
-            }
         }
         else {
-            int ntime = 1 + (std::max)(rmax, wmax) / FD_SETSIZE;
-            timeo /= ntime;
             timeout.tv_sec = (long)timeo;
             timeout.tv_usec = (long)((timeo - timeout.tv_sec) * 1000000);
         }
