@@ -20,17 +20,6 @@ Lua runtime and toolset
 * Add error hook (for debugger)
 * Add resume/yield hook (for debugger)
 
-## Feature
-
-|            | Windows | Linux | macOS |
-| ---------- | ------- | ----- |------ |
-| filesystem |   Yes   |  Yes  |  Yes  |
-| thread     |   Yes   |  Yes  |  Yes  |
-| socket     |   Yes   |  Yes  |  Yes  |
-| subprocess |   Yes   |  Yes  |  Yes  |
-| filewatch  |   Yes   |  Yes  |  Yes  |
-| registry   |   Yes   |  N/A  |  N/A  |
-
 ## TODO
 
 * High-level network library
