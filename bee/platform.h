@@ -5,6 +5,7 @@
 
 // see http://sourceforge.net/apps/mediawiki/predef/index.php?title=Operating_Systems
 #if defined(_WIN32)
+#	include <Windows.h>
 #	ifndef _WIN32_WINNT
 #		error "_WIN32_WINNT* is not defined!"
 #	endif
