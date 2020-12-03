@@ -3,37 +3,7 @@
 static const char script[] = R"(
 local sp = require 'bee.subprocess'
 local fs = require 'bee.filesystem'
-local thd = require 'bee.thread'
 local platform = require 'bee.platform'
-
-local function fork(option)
-    if type(option[1]) == 'table' then
-        option[1][1] = assert(package.searchpath(option[1][1], package.path))
-    else
-        option[1] = assert(package.searchpath(option[1], package.path))
-    end
-    local args = {
-        fs.exe_path(),
-        '-E',
-        '-e', ('package.path=[[%s]];package.cpath=[[%s]]'):format(package.path, package.cpath)
-    }
-    for i, v in ipairs(args) do
-        table.insert(option, i, v)
-    end
-    option.argsStyle = nil
-    option.cwd = option.cwd or fs.current_path()
-    return sp.spawn(option)
-end
-
-local function thread(script, cfunction)
-    return thd.thread(([=[
---%s
-package.path=[[%s]]
-package.cpath=[[%s]]
-require %q]=]):format(
-        script, package.path, package.cpath, script
-    ), cfunction)
-end
 
 local function quote_arg(s)
     if type(s) ~= 'string' then
@@ -118,7 +88,6 @@ else
     sp.shell = shell_bash
 end
 
-sp.fork = fork
 )";
 
 BEE_LUA_API
