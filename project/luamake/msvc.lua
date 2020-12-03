@@ -54,6 +54,7 @@ lm:shared_library 'bee' {
         "user32",
         "version",
         "wbemuuid",
+        "oleAut32",
         lm.plat == "mingw" and "stdc++fs",
         lm.plat == "mingw" and "stdc++"
     }
