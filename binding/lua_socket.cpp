@@ -263,17 +263,25 @@ namespace bee::lua_socket {
         lua_pushfstring(L, "socket (%d)", self.fd);
         return 1;
     }
+    static void destroy(lua_State* L, luafd& self) {
+        socket::fd_t fd = self.fd;
+        if (fd != socket::retired_fd) {
+            self.fd = socket::retired_fd;
+            if (self.protocol == socket::protocol::unix) {
+                socket::unlink(fd);
+            }
+            socket::close(fd);
+        }
+    }
+    static int toclose(lua_State* L) {
+        luafd& self = checkfd(L, 1);
+        destroy(L, self);
+        return 0;
+    }
     static int gc(lua_State* L) {
         luafd& self = checkfd(L, 1);
-        if (self.fd == socket::retired_fd) {
-            return 0;
-        }
-        socket::fd_t fd = self.fd;
-        self.fd = socket::retired_fd;
-        if (self.protocol == socket::protocol::unix) {
-            socket::unlink(fd);
-        }
-        socket::close(fd);
+        destroy(L, self);
+        self.~luafd();
         return 0;
     }
     static int status(lua_State* L) {
@@ -328,6 +336,7 @@ namespace bee::lua_socket {
                 {"status", status},
                 {"info", info},
                 {"__tostring", tostring},
+                {"__close", toclose},
                 {"__gc", gc},
                 {NULL, NULL},
             };

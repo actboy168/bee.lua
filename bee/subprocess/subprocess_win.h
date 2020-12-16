@@ -59,6 +59,7 @@ namespace bee::win::subprocess {
         process(spawn& spawn);
         process(PROCESS_INFORMATION&& pi) { pi_ = std::move(pi); }
         ~process();
+        void      close();
         bool      is_running();
         bool      kill(int signum);
         uint32_t  wait();

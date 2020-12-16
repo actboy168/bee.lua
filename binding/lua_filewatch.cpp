@@ -52,6 +52,12 @@ namespace bee::lua_filewatch {
         return 2;
     }
 
+    static int toclose(lua_State* L) {
+        fsevent::watch& self = to(L);
+        self.stop();
+        return 0;
+    }
+
     static int gc(lua_State* L) {
         fsevent::watch& self = to(L);
         self.~watch();
@@ -66,6 +72,7 @@ namespace bee::lua_filewatch {
             {"add", add},
             {"remove", remove},
             {"select", select},
+            {"__close", toclose},
             {"__gc", gc},
             {NULL, NULL}};
         lua_newtable(L);

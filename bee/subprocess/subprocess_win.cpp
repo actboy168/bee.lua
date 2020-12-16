@@ -406,8 +406,18 @@ namespace bee::win::subprocess {
     }
 
     process::~process() {
-        ::CloseHandle(pi_.hThread);
-        ::CloseHandle(pi_.hProcess);
+        close();
+    }
+
+    void process::close() {
+        if (pi_.hThread != NULL) {
+            ::CloseHandle(pi_.hThread);
+            pi_.hThread = NULL;
+        }
+        if (pi_.hProcess != NULL) {
+            ::CloseHandle(pi_.hProcess);
+            pi_.hProcess = NULL;
+        }
     }
 
     uint32_t process::wait() {

@@ -23,7 +23,13 @@ namespace bee::lua_subprocess {
         static subprocess::process& to(lua_State* L, int idx) {
             return *(subprocess::process*)getObject(L, idx, "subprocess");
         }
-
+#if defined(_WIN32)
+        static int close(lua_State* L) {
+            subprocess::process& self = to(L, 1);
+            self.close();
+            return 0;
+        }
+#endif
         static int destructor(lua_State* L) {
             subprocess::process& self = to(L, 1);
             self.~process();
@@ -106,6 +112,9 @@ namespace bee::lua_subprocess {
                     {"is_running", process::is_running},
                     {"resume", process::resume},
                     {"native_handle", process::native_handle},
+#if defined(_WIN32)
+                    {"__close", process::close},
+#endif
                     {"__gc", process::destructor},
                     {NULL, NULL}};
                 luaL_setfuncs(L, mt, 0);
