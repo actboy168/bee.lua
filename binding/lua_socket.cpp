@@ -58,13 +58,13 @@ namespace bee::lua_socket {
             int port = (int)luaL_checkinteger(L, idx + 1);
             endpoint ep = endpoint::from_hostname(ip, port);
             if (!ep.valid()) {
-                luaL_error(L, "invalid address: %s:%d", ip, port);
+                luaL_error(L, "invalid address: %s:%d", ip.data(), port);
             }
             return ep;
         }
         endpoint ep = endpoint::from_unixpath(ip);
         if (!ep.valid()) {
-            luaL_error(L, "invalid address: %s", ip);
+            luaL_error(L, "invalid address: %s", ip.data());
         }
         return ep;
     }
