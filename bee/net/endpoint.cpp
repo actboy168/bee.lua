@@ -115,7 +115,7 @@ namespace bee::net {
         if (needsnolookup(ip)) {
             hint.ai_flags = AI_NUMERICHOST;
         }
-#if __has_include(<charconv>) and not defined(__APPLE__)
+#if __has_include(<charconv>) and !defined(__APPLE__)
         std::array<char, 10> portstr;
         if (auto[p, ec] = std::to_chars(portstr.data(), portstr.data() + portstr.size() - 1, port); ec != std::errc()) {
             return from_invalid();
