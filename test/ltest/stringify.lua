@@ -123,6 +123,48 @@ local function putTable(t)
     puts '}'
 end
 
+local function putTostring(v)
+    puts '<'
+    puts(tostring(v))
+    puts '>'
+end
+
+local function putUserdata(u)
+    local mt = debug.getmetatable(u)
+    if mt and mt.__tostring then
+        puts '<userdata:'
+        puts(tostring(u))
+        puts '>'
+    else
+        putTostring(u)
+    end
+end
+
+local function putThread(t)
+    putTostring(t)
+end
+
+local function putFunction(f)
+    local info = debug.getinfo(f, "S")
+    local type = info.source:sub(1,1)
+    if type == "@" then
+        puts '<function:'
+        puts(info.source:sub(2))
+        puts '>'
+    elseif type == "=" then
+        putTostring(f)
+    else
+        puts '<function:'
+        if #info.source > 64 then
+            puts(info.source:sub(1,64))
+            puts '...'
+        else
+            puts(info.source)
+        end
+        puts '>'
+    end
+end
+
 function putValue(v)
     local tv = type(v)
     if tv == 'string' then
@@ -131,10 +173,13 @@ function putValue(v)
         puts(tostring(v))
     elseif tv == 'table' then
         putTable(v)
+    elseif tv == 'userdata' then
+        putUserdata(v)
+    elseif tv == 'function' then
+        putFunction(v)
     else
-        puts '<'
-        puts(tv)
-        puts '>'
+        assert(tv == 'thread')
+        putThread(v)
     end
 end
 
