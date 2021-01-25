@@ -1,4 +1,4 @@
-local lu = require 'luaunit'
+local lu = require 'ltest'
 
 local thread = require "bee.thread"
 local err = thread.channel "errlog"

@@ -1,4 +1,4 @@
-local lu = require 'luaunit'
+local lu = require 'ltest'
 
 require 'bee'
 local subprocess = require 'bee.subprocess'

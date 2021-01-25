@@ -1,4 +1,4 @@
-local lu = require 'luaunit'
+local lu = require 'ltest'
 
 local test_lua = lu.test "lua"
 

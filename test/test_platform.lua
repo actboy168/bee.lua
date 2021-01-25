@@ -31,7 +31,7 @@ support.macos = {
     CRT = 'libc++',
 }
 
-local lu = require 'luaunit'
+local lu = require 'ltest'
 local fs = require 'bee.filesystem'
 local platform = require 'bee.platform'
 

@@ -1,4 +1,4 @@
-local lu = require 'luaunit'
+local lu = require 'ltest'
 local ls = require 'bee.socket'
 local platform = require 'bee.platform'
 local thread = require 'bee.thread'

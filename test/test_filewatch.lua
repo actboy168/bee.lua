@@ -1,4 +1,4 @@
-local lu = require 'luaunit'
+local lu = require 'ltest'
 local fw = require 'bee.filewatch'
 local fs = require 'bee.filesystem'
 local thread = require 'bee.thread'

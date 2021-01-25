@@ -1,7 +1,7 @@
 require 'bee'
 local platform = require 'bee.platform'
 local fs = require 'bee.filesystem'
-local lu = require 'luaunit'
+local lu = require 'ltest'
 local shell = require 'shell'
 
 local C
