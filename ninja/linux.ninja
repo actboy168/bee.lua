@@ -99,6 +99,7 @@ build $obj/bee/lua_serialization.obj: CXX_bee binding/lua_serialization.cpp
 build $obj/bee/lua_socket.obj: CXX_bee binding/lua_socket.cpp
 build $obj/bee/lua_subprocess.obj: CXX_bee binding/lua_subprocess.cpp
 build $obj/bee/lua_thread.obj: CXX_bee binding/lua_thread.cpp
+build $obj/bee/lua_time.obj: CXX_bee binding/lua_time.cpp
 rule LINK_bee
   command = gcc --shared $in -o $out -s -lpthread -lstdc++fs -lstdc++
   description = Link    Dll $out
@@ -109,7 +110,7 @@ build $bin/bee.so: LINK_bee $obj/bee/lua-seri.obj $obj/bee/error.obj $
     $obj/bee/lua_embed.obj $obj/bee/lua_filesystem.obj $
     $obj/bee/lua_filewatch.obj $obj/bee/lua_platform.obj $
     $obj/bee/lua_serialization.obj $obj/bee/lua_socket.obj $
-    $obj/bee/lua_subprocess.obj $obj/bee/lua_thread.obj
+    $obj/bee/lua_subprocess.obj $obj/bee/lua_thread.obj $obj/bee/lua_time.obj
 rule CXX_bootstrap
   command = g++ -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall $
       -fvisibility=hidden -I3rd/lua -DLUA_USE_LINUX -DNDEBUG -I3rd/lua -o $
