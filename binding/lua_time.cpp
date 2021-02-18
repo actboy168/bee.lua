@@ -33,8 +33,7 @@ namespace bee::lua_time {
     }
 
     static int lmonotonic(lua_State* L) {
-        uint64_t now = time_monotonic();
-        lua_pushinteger(L, now);
+        lua_pushinteger(L, time_monotonic());
         return 1;
     }
     static int ltime(lua_State* L) {
