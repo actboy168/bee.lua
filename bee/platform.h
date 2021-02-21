@@ -118,12 +118,28 @@
 #	define BEE_CRT_VERSION BEE_COMPILER_VERSION
 #elif defined(__GLIBCXX__)
 #	define BEE_CRT_NAME "libstdc++"
+#if defined(__GLIBC__)
+#	define BEE_CRT_VERSION "libstdc++ " \
+		BEE_STRINGIZE(__GLIBCXX__) \
+		" glibc " \
+		BEE_STRINGIZE(__GLIBC__) "." \
+		BEE_STRINGIZE(__GLIBC_MINOR__)
+#else
 #	define BEE_CRT_VERSION "libstdc++ " \
 		BEE_STRINGIZE(__GLIBCXX__)
+#endif
 #elif defined(__apple_build_version__) || defined(__ORBIS__) || defined(__EMSCRIPTEN__) || defined(__llvm__)
 #	define BEE_CRT_NAME "libc++"
+#if defined(__GLIBC__)
+#	define BEE_CRT_VERSION "libc++ " \
+		BEE_STRINGIZE(_LIBCPP_VERSION) \
+		" glibc " \
+		BEE_STRINGIZE(__GLIBC__) "." \
+		BEE_STRINGIZE(__GLIBC_MINOR__)
+#else
 #	define BEE_CRT_VERSION "libc++ " \
 		BEE_STRINGIZE(_LIBCPP_VERSION)
+#endif
 #else
 #	define BEE_CRT_NAME "none"
 #	define BEE_CRT_VERSION "none"
