@@ -45,10 +45,12 @@ lm:shared_library 'bee' {
         "!binding/lua_registry.cpp",
         "!binding/lua_wmi.cpp",
     },
+    ldflags = {
+        "-static-libgcc",
+        "-static-libstdc++",
+    },
     links = {
         "pthread",
-        "stdc++fs",
-        "stdc++"
     }
 }
 
