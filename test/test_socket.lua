@@ -60,8 +60,8 @@ function test_socket:test_unix_connect()
     lu.assertEquals(ls.connect('unix', 'test.unixsock'), nil)
     lu.assertEquals(file_exists('test.unixsock'), false)
 
-    local server = ls.bind('unix', 'test.unixsock')
-    lu.assertIsUserdata(server)
+    local server, err = ls.bind('unix', 'test.unixsock')
+    lu.assertIsUserdata(server, err)
     lu.assertEquals(file_exists('test.unixsock'), true)
     for _ = 1, 2 do
         local client = ls.connect('unix', 'test.unixsock')
@@ -98,8 +98,8 @@ function test_socket:test_tcp_accept()
 end
 
 function test_socket:test_unix_accept()
-    local server = ls.bind('unix', 'test.unixsock')
-    lu.assertIsUserdata(server)
+    local server, err = ls.bind('unix', 'test.unixsock')
+    lu.assertIsUserdata(server, err)
     lu.assertEquals(file_exists('test.unixsock'), true)
     for _ = 1, 2 do
         local client, err = ls.connect('unix', 'test.unixsock')
