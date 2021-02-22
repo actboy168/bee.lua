@@ -28,6 +28,7 @@ lm:executable 'lua' {
 }
 
 lm:shared_library 'bee' {
+    crt = "static",
     includes = {
         "3rd/lua",
         "3rd/lua-seri",
@@ -44,10 +45,6 @@ lm:shared_library 'bee' {
         "!binding/lua_unicode.cpp",
         "!binding/lua_registry.cpp",
         "!binding/lua_wmi.cpp",
-    },
-    ldflags = {
-        "-static-libgcc",
-        "-static-libstdc++",
     },
     links = {
         "pthread",

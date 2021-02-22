@@ -47,7 +47,7 @@ rule C_lua
   deps = gcc
 build $obj/lua/lua.obj: C_lua 3rd/lua/lua.c
 rule LINK_lua
-  command = g++ $in -o $out -s -Wl,-E -lm -ldl
+  command = g++ $in -o $out -lstdc++ -s -Wl,-E -lm -ldl
   description = Link    Exe $out
 build $bin/lua: LINK_lua $obj/lua/lua.obj $obj/source_lua/lapi.obj $
     $obj/source_lua/lauxlib.obj $obj/source_lua/lbaselib.obj $
@@ -101,7 +101,7 @@ build $obj/bee/lua_subprocess.obj: CXX_bee binding/lua_subprocess.cpp
 build $obj/bee/lua_thread.obj: CXX_bee binding/lua_thread.cpp
 build $obj/bee/lua_time.obj: CXX_bee binding/lua_time.cpp
 rule LINK_bee
-  command = g++ --shared $in -o $out -s -static-libgcc -static-libstdc++ $
+  command = g++ --shared $in -o $out -static-libgcc -static-libstdc++ -s $
       -lpthread
   description = Link    Dll $out
 build $bin/bee.so: LINK_bee $obj/bee/lua-seri.obj $obj/bee/error.obj $
@@ -122,7 +122,7 @@ rule CXX_bootstrap
 build $obj/bootstrap/main.obj: CXX_bootstrap bootstrap/main.cpp
 build $obj/bootstrap/progdir.obj: CXX_bootstrap bootstrap/progdir.cpp
 rule LINK_bootstrap
-  command = g++ $in -o $out -s -Wl,-E -lm -ldl
+  command = g++ $in -o $out -lstdc++ -s -Wl,-E -lm -ldl
   description = Link    Exe $out
 build $bin/bootstrap: LINK_bootstrap $obj/bootstrap/main.obj $
     $obj/bootstrap/progdir.obj $obj/source_lua/lapi.obj $
