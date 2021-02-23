@@ -502,12 +502,12 @@ namespace bee::win::subprocess {
         }
 
         static std::vector<net::socket::fd_t> init_sockets() {
-            std::vector<net::socket::fd_t> sockets;
+            std::vector<net::socket::fd_t> socks;
             sharedmemory sh(open_only
                 , fmt::format(L"bee-subprocess-dup-sockets-{}", ::GetCurrentProcessId()).c_str()
             );
             if (!sh.ok()) {
-                return sockets;
+                return socks;
             }
             std::byte* data = sh.data();
             HANDLE mapping = *(HANDLE*)data;
@@ -517,9 +517,9 @@ namespace bee::win::subprocess {
             data += sizeof(size_t);
             net::socket::fd_t* fds = (net::socket::fd_t*)data;
             for (size_t i = 0; i < n; ++i) {
-                sockets.push_back(*fds++);
+                socks.push_back(*fds++);
             }
-            return sockets;
+            return socks;
         }
         std::vector<net::socket::fd_t> sockets = init_sockets();
     }

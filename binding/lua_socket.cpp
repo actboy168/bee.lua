@@ -263,7 +263,7 @@ namespace bee::lua_socket {
         lua_pushfstring(L, "socket (%d)", self.fd);
         return 1;
     }
-    static void destroy(lua_State* L, luafd& self) {
+    static void destroy(lua_State* /*L*/, luafd& self) {
         socket::fd_t fd = self.fd;
         if (fd != socket::retired_fd) {
             self.fd = socket::retired_fd;

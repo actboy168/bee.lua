@@ -66,12 +66,12 @@ namespace bee::lua {
             int i = 0;
             l_lockfile(f);
             while (i < LUAL_BUFFERSIZE && (c = l_getc(f)) != EOF && c != '\n')
-            buff[i++] = c;
+            buff[i++] = (char)c;
             l_unlockfile(f);
             luaL_addsize(&b, i);
         } while (c != EOF && c != '\n');
         if (!chop && c == '\n')
-            luaL_addchar(&b, c);
+            luaL_addchar(&b, (char)c);
         luaL_pushresult(&b);
         return (c == '\n' || lua_rawlen(L, -1) > 0);
     }

@@ -21,7 +21,7 @@ namespace bee::path_helper {
         }
         for (DWORD buf_len = 0x200; buf_len <= 0x10000; buf_len <<= 1) {
             dynarray<wchar_t> buf(buf_len);
-            DWORD path_len = ::GetModuleFileNameW((HMODULE)module_handle, buf.data(), buf_len);
+            path_len = ::GetModuleFileNameW((HMODULE)module_handle, buf.data(), buf_len);
             if (path_len == 0) {
                 throw make_syserror("GetModuleFileNameW");
             }
