@@ -43,61 +43,7 @@
 // see https://docs.microsoft.com/en-us/cpp/preprocessor/predefined-macros
 #	define BEE_COMPILER_MSVC _MSC_VER
 #	define BEE_COMPILER_NAME "msvc"
-#	if _MSC_VER >= 1929
-#		define BEE_COMPILER_VERSION "MSVC 16.9"
-#	elif _MSC_VER >= 1928
-#		define BEE_COMPILER_VERSION "MSVC 16.8"
-#	elif _MSC_VER >= 1927
-#		define BEE_COMPILER_VERSION "MSVC 16.7"
-#	elif _MSC_VER >= 1926
-#		define BEE_COMPILER_VERSION "MSVC 16.6"
-#	elif _MSC_VER >= 1925
-#		define BEE_COMPILER_VERSION "MSVC 16.5"
-#	elif _MSC_VER >= 1924
-#		define BEE_COMPILER_VERSION "MSVC 16.4"
-#	elif _MSC_VER >= 1923
-#		define BEE_COMPILER_VERSION "MSVC 16.3"
-#	elif _MSC_VER >= 1922
-#		define BEE_COMPILER_VERSION "MSVC 16.2"
-#	elif _MSC_VER >= 1921
-#		define BEE_COMPILER_VERSION "MSVC 16.1"
-#	elif _MSC_VER >= 1920
-#		define BEE_COMPILER_VERSION "MSVC 16.0"
-#	elif _MSC_VER >= 1916
-#		define BEE_COMPILER_VERSION "MSVC 15.9"
-#	elif _MSC_VER >= 1915
-#		define BEE_COMPILER_VERSION "MSVC 15.8"
-#	elif _MSC_VER >= 1914
-#		define BEE_COMPILER_VERSION "MSVC 15.7"
-#	elif _MSC_VER >= 1913
-#		define BEE_COMPILER_VERSION "MSVC 15.6"
-#	elif _MSC_VER >= 1912
-#		define BEE_COMPILER_VERSION "MSVC 15.5"
-#	elif _MSC_VER >= 1911
-#		define BEE_COMPILER_VERSION "MSVC 15.3"
-#	elif _MSC_VER >= 1910
-#		define BEE_COMPILER_VERSION "MSVC 15.0"
-#	elif _MSC_VER >= 1900
-#		define BEE_COMPILER_VERSION "MSVC 14.0"
-#	elif _MSC_VER >= 1800
-#		define BEE_COMPILER_VERSION "MSVC 12.0"
-#	elif _MSC_VER >= 1700
-#		define BEE_COMPILER_VERSION "MSVC 11.0"
-#	elif _MSC_VER >= 1600
-#		define BEE_COMPILER_VERSION "MSVC 10.0"
-#	elif _MSC_VER >= 1500
-#		define BEE_COMPILER_VERSION "MSVC 9.0"
-#	elif _MSC_VER >= 1400
-#		define BEE_COMPILER_VERSION "MSVC 8.0"
-#	elif _MSC_VER >= 1310
-#		define BEE_COMPILER_VERSION "MSVC 7.1"
-#	elif _MSC_VER >= 1300
-#		define BEE_COMPILER_VERSION "MSVC 7.0"
-#	elif _MSC_VER >= 1200
-#		define BEE_COMPILER_VERSION "MSVC 6.0"
-#	else
-#		define BEE_COMPILER_VERSION "MSVC"
-#	endif //
+#	define BEE_COMPILER_VERSION "MSVC " BEE_STRINGIZE(_MSC_VER)
 #elif defined(__GNUC__)
 #	define BEE_COMPILER_GCC (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 #	define BEE_COMPILER_NAME "gcc"
