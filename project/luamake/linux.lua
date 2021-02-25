@@ -24,7 +24,11 @@ lm:executable 'lua' {
     defines = {
         "LUA_USE_LINUX",
     },
-    links = { "m", "dl" },
+    links = {
+        "m", "dl",
+        -- https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67791
+        "pthread",
+    }
 }
 
 lm:shared_library 'bee' {
@@ -63,7 +67,11 @@ lm:executable 'bootstrap' {
     defines = {
         "LUA_USE_LINUX",
     },
-    links = { "m", "dl" },
+    links = {
+        "m", "dl",
+        -- https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67791
+        "pthread",
+    }
 }
 
 local fs = require "bee.filesystem"

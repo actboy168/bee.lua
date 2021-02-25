@@ -280,11 +280,13 @@ namespace bee::lua_thread {
             }
             f = lua_tocfunction(L, 2);
         }
+        LUA_TRY;
         int id = gen_threadid();
         thread_args* args = new thread_args(std::move(source), id, f);
         luathread* thread = new luathread(id, std::bind(thread_main, args));
         lua_pushlightuserdata(L, thread);
         return 1;
+        LUA_TRY_END;
     }
 
     static int lreset(lua_State* L) {
