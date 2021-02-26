@@ -5,12 +5,11 @@ lm.defines = {
 }
 
 lm:shared_library 'lua54' {
-    rootdir = '3rd/lua',
     sources = {
-        "*.c",
-        "!lua.c",
-        "!luac.c",
-        "!utf8_lua.c",
+        "3rd/lua/*.c",
+        "!3rd/lua/lua.c",
+        "!3rd/lua/luac.c",
+        "!3rd/lua/utf8_lua.c",
     },
     defines = {
         "LUA_BUILD_AS_DLL",
@@ -18,12 +17,11 @@ lm:shared_library 'lua54' {
 }
 
 lm:executable 'lua' {
-    rootdir = '3rd/lua',
     deps = "lua54",
     sources = {
-        "utf8_lua.c",
-        "utf8_unicode.c",
-        EXE_ICON,
+        "3rd/lua/utf8_lua.c",
+        "3rd/lua/utf8_unicode.c",
+        EXE_RESOURCE,
     }
 }
 
@@ -68,7 +66,7 @@ lm:executable 'bootstrap' {
     },
     sources = {
         "bootstrap/*.cpp",
-        EXE_ICON,
+        EXE_RESOURCE,
     }
 }
 

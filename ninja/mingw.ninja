@@ -58,7 +58,7 @@ build $bin/lua54.dll: LINK_lua54 $obj/lua54/lapi.obj $obj/lua54/lauxlib.obj $
     $obj/lua54/utf8_crt.obj $obj/lua54/utf8_unicode.obj
 rule C_lua
   command = gcc -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall $
-      -D_WIN32_WINNT=0x0601 -DNDEBUG -I3rd/lua -o $out -c $in
+      -D_WIN32_WINNT=0x0601 -DNDEBUG -I. -o $out -c $in
   description = Compile C   $out
   depfile = $out.d
   deps = gcc
@@ -72,7 +72,7 @@ build $bin/lua.exe: LINK_lua $obj/lua/utf8_lua.obj $
 rule C_bee
   command = gcc -MMD -MT $out -MF $out.d -std=c11 -O2 -Wall -I3rd/lua $
       -I3rd/lua-seri -Ibee/nonstd -I. -D_WIN32_WINNT=0x0601 -DBEE_EXPORTS $
-      -D_CRT_SECURE_NO_WARNINGS -DNDEBUG -I3rd/lua -o $out -c $in
+      -D_CRT_SECURE_NO_WARNINGS -DNDEBUG -I. -o $out -c $in
   description = Compile C   $out
   depfile = $out.d
   deps = gcc
@@ -80,7 +80,7 @@ build $obj/bee/lua-seri.obj: C_bee 3rd/lua-seri/lua-seri.c
 rule CXX_bee
   command = g++ -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall -I3rd/lua $
       -I3rd/lua-seri -Ibee/nonstd -I. -D_WIN32_WINNT=0x0601 -DBEE_EXPORTS $
-      -D_CRT_SECURE_NO_WARNINGS -DNDEBUG -I3rd/lua -o $out -c $in
+      -D_CRT_SECURE_NO_WARNINGS -DNDEBUG -I. -o $out -c $in
   description = Compile C++ $out
   depfile = $out.d
   deps = gcc
@@ -129,7 +129,7 @@ build $bin/bee.dll: LINK_bee $obj/bee/lua-seri.obj $obj/bee/error.obj $
     $obj/bee/lua_wmi.obj $bin/lua54.dll
 rule CXX_bootstrap
   command = g++ -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall -I3rd/lua $
-      -D_WIN32_WINNT=0x0601 -DNDEBUG -I3rd/lua -o $out -c $in
+      -D_WIN32_WINNT=0x0601 -DNDEBUG -I. -o $out -c $in
   description = Compile C++ $out
   depfile = $out.d
   deps = gcc
