@@ -55,7 +55,7 @@ lm:shared_library 'bee' {
 lm:executable 'bootstrap' {
     deps = "source_lua",
     includes = {
-        "3rd/lua/src"
+        "3rd/lua"
     },
     sources = {
         "bootstrap/*.cpp",

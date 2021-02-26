@@ -116,7 +116,7 @@ build $bin/bee.so: LINK_bee $obj/bee/lua-seri.obj $obj/bee/error.obj $
     $obj/bee/lua_subprocess.obj $obj/bee/lua_thread.obj $obj/bee/lua_time.obj
 rule CXX_bootstrap
   command = g++ -MMD -MT $out -MF $out.d -std=c++17 -O2 -Wall $
-      -fvisibility=hidden -I3rd/lua/src -DLUA_USE_MACOSX -DNDEBUG -I. $
+      -fvisibility=hidden -I3rd/lua -DLUA_USE_MACOSX -DNDEBUG -I. $
       -mmacosx-version-min=10.13 -o $out -c $in
   description = Compile C++ $out
   depfile = $out.d
