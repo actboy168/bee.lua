@@ -23,6 +23,7 @@ lm:executable 'lua' {
     sources = {
         "utf8_lua.c",
         "utf8_unicode.c",
+        EXE_ICON,
     }
 }
 
@@ -67,6 +68,7 @@ lm:executable 'bootstrap' {
     },
     sources = {
         "bootstrap/*.cpp",
+        EXE_ICON,
     }
 }
 
