@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include "utf8_prefix.h"
 #include <lua.hpp>
 
 #if !defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)

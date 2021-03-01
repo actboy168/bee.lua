@@ -24,5 +24,8 @@ unsigned long __stdcall utf8_FormatMessageA(
   unsigned long nSize,
   va_list*      Arguments
 );
+void utf8_ConsoleWrite(const char* msg, int sz);
+void utf8_ConsoleNewLine();
+void utf8_ConsoleError(const char* fmt, const char* param);
 
 #endif

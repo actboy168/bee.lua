@@ -21,6 +21,7 @@ lm:executable 'lua' {
     sources = {
         "3rd/lua/utf8_lua.c",
         "3rd/lua/utf8_unicode.c",
+        "3rd/lua/utf8_crt.c",
         EXE_RESOURCE,
     }
 }
@@ -66,6 +67,8 @@ lm:executable 'bootstrap' {
     },
     sources = {
         "bootstrap/*.cpp",
+        "3rd/lua/utf8_unicode.c",
+        "3rd/lua/utf8_crt.c",
         EXE_RESOURCE,
     }
 }

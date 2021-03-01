@@ -141,3 +141,54 @@ unsigned long __stdcall utf8_FormatMessageA(
 	free(tmp);
 	return ret;
 }
+
+static void ConsoleWrite(FILE* stream, const char* s, int l) {
+	UINT cp = GetConsoleOutputCP();
+	if (cp == CP_UTF8) {
+		fwrite(s, sizeof(char), l, stream);
+		return;
+	}
+	wchar_t* wmsg = NULL;
+	int wsz = MultiByteToWideChar(CP_UTF8, 0, s, l, NULL, 0);
+	if (wsz) {
+		wmsg = (wchar_t*)calloc(wsz, sizeof(wchar_t));
+		if (!wmsg) {
+			return;
+		}
+		wsz = MultiByteToWideChar(CP_UTF8, 0, s, l, wmsg, wsz);
+		if (wsz < 0) {
+			free(wmsg);
+			return;
+		}
+	}
+	char* msg = NULL;
+	int sz = WideCharToMultiByte(cp, 0, wmsg, wsz, NULL, 0, NULL, NULL);
+	if (sz) {
+		msg = (char*)calloc(sz, sizeof(char));
+		if (!msg) {
+			free(wmsg);
+			return;
+		}
+		sz = WideCharToMultiByte(cp, 0, wmsg, wsz, msg, sz, NULL, NULL);
+	}
+	fwrite(msg, sizeof(char), sz, stream);
+	free(msg);
+	free(wmsg);
+}
+
+void utf8_ConsoleWrite(const char* s, int l) {
+	ConsoleWrite(stdout, s, l);
+}
+void utf8_ConsoleNewLine() {
+	fwrite("\n", sizeof(char), 1, stdout);
+	fflush(stdout);
+}
+void utf8_ConsoleError(const char* fmt, const char* param) {
+	int l = snprintf(NULL, 0, fmt, param);
+	char* s = (char*)calloc(l, sizeof(char));
+	if (!s) {
+		return;
+	}
+	snprintf(s, l, fmt, param);
+	ConsoleWrite(stderr, s, l);
+}
