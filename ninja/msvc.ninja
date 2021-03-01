@@ -63,12 +63,13 @@ rule C_lua
       /DNDEBUG /I. 
   description = Compile C   $out
   deps = msvc
+build $obj/lua/utf8_crt.obj: C_lua 3rd/lua/utf8_crt.c
 build $obj/lua/utf8_lua.obj: C_lua 3rd/lua/utf8_lua.c
 build $obj/lua/utf8_unicode.obj: C_lua 3rd/lua/utf8_unicode.c
 rule LINK_lua
   command = cl /nologo $in  /link /DEBUG:NONE /LTCG /out:$out
   description = Link    Exe $out
-build $bin/lua.exe: LINK_lua $obj/lua/utf8_lua.obj $
+build $bin/lua.exe: LINK_lua $obj/lua/utf8_crt.obj $obj/lua/utf8_lua.obj $
     $obj/lua/utf8_unicode.obj $bin/lua54.lib
 rule C_bee
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /Zc:__cplusplus $
@@ -130,6 +131,14 @@ build $bin/bee.dll | $bin/bee.lib: LINK_bee $obj/bee/lua-seri.obj $
     $obj/bee/lua_subprocess.obj $obj/bee/lua_thread.obj $
     $obj/bee/lua_time.obj $obj/bee/lua_unicode.obj $obj/bee/lua_wmi.obj $
     $bin/lua54.lib
+rule C_bootstrap
+  command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /Zc:__cplusplus $
+      /O2 /GL /Zc:inline /W3 /permissive- /MD /I3rd/lua $
+      /D_WIN32_WINNT=0x0601 /DNDEBUG /I. 
+  description = Compile C   $out
+  deps = msvc
+build $obj/bootstrap/utf8_crt.obj: C_bootstrap 3rd/lua/utf8_crt.c
+build $obj/bootstrap/utf8_unicode.obj: C_bootstrap 3rd/lua/utf8_unicode.c
 rule CXX_bootstrap
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /Zc:__cplusplus $
       /O2 /GL /Zc:inline /W3 /permissive- /MD /I3rd/lua $
@@ -141,7 +150,8 @@ build $obj/bootstrap/progdir.obj: CXX_bootstrap bootstrap/progdir.cpp
 rule LINK_bootstrap
   command = cl /nologo $in  /link /DEBUG:NONE /LTCG /out:$out
   description = Link    Exe $out
-build $bin/bootstrap.exe: LINK_bootstrap $obj/bootstrap/main.obj $
+build $bin/bootstrap.exe: LINK_bootstrap $obj/bootstrap/utf8_crt.obj $
+    $obj/bootstrap/utf8_unicode.obj $obj/bootstrap/main.obj $
     $obj/bootstrap/progdir.obj $bin/lua54.lib
 rule command
   command = $COMMAND
