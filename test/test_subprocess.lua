@@ -363,3 +363,11 @@ function test_subprocess:test_setenv()
     lu.assertEquals(process:wait(), 0)
     lu.assertEquals(process.stderr:read "a", "")
 end
+
+function test_subprocess:test_encoding()
+    local process = createLua([[
+        print "中文"
+    ]], { stdout = true })
+    lu.assertEquals(process:wait(), 0)
+    lu.assertEquals(process.stdout:read "a", "中文\r\n")
+end

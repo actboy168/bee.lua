@@ -4,6 +4,7 @@
 #include "utf8_crt.h"
 #include <malloc.h>
 #include <Windows.h>
+#include <io.h>
 
 wchar_t* u2w(const char *str) {
     int len = 0;
@@ -188,8 +189,26 @@ unsigned long __stdcall utf8_FormatMessageA(
 	return ret;
 }
 
+static UINT GetOutputCP(FILE* stream) {
+	HANDLE handle = (HANDLE)_get_osfhandle(_fileno(stream));
+	switch (GetFileType(handle)) {
+	case FILE_TYPE_DISK:
+		return CP_UTF8;
+	case FILE_TYPE_CHAR: {
+		DWORD mode;
+		if (GetConsoleMode(handle, &mode)) {
+			return GetConsoleOutputCP();
+		}
+		return CP_UTF8;
+	}
+	case FILE_TYPE_PIPE:
+	default:
+		return CP_UTF8;
+	}
+}
+
 static void ConsoleWrite(FILE* stream, const char* s, int l) {
-	UINT cp = GetConsoleOutputCP();
+	UINT cp = GetOutputCP(stream);
 	if (cp == CP_UTF8) {
 		fwrite(s, sizeof(char), l, stream);
 		return;
