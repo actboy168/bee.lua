@@ -191,4 +191,5 @@ void utf8_ConsoleError(const char* fmt, const char* param) {
 	}
 	snprintf(s, l, fmt, param);
 	ConsoleWrite(stderr, s, l);
+	fflush(stderr);
 }
