@@ -2,9 +2,55 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 #include "utf8_crt.h"
-#include "utf8_unicode.h"
 #include <malloc.h>
 #include <Windows.h>
+
+wchar_t* u2w(const char *str) {
+    int len = 0;
+    int out_len = 0;
+    wchar_t *buf = NULL;
+    if (!str) {
+        return NULL;
+    }
+    len = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);
+    if (!len) {
+        return NULL;
+    }
+    buf = (wchar_t*)calloc(len, sizeof(wchar_t));
+    if (!buf) {
+        return NULL;
+    }
+    out_len = MultiByteToWideChar(CP_UTF8, 0, str, -1, buf, len);
+    if (out_len < 0) {
+        free(buf);
+        return NULL;
+    }
+    return buf;
+}
+
+char* w2u(const wchar_t *str)
+{
+    int len = 0;
+    int out_len = 0;
+    char *buf = NULL;
+    if (!str) {
+        return NULL;
+    }
+    len = WideCharToMultiByte(CP_UTF8, 0, str, -1, NULL, 0, NULL, NULL);
+    if (!len) {
+            return NULL;
+    }
+    buf = (char*)calloc(len, sizeof(char));
+    if (!buf) {
+        return NULL;
+    }
+    out_len = WideCharToMultiByte(CP_UTF8, 0, str, -1, buf, len, NULL, NULL);
+    if (out_len < 0) {
+        free(buf);
+        return NULL;
+    }
+    return buf;
+}
 
 FILE* __cdecl utf8_fopen(const char * filename, const char * mode)
 {
@@ -118,13 +164,13 @@ unsigned long __stdcall utf8_GetModuleFileNameA(void* module, char* filename, un
 }
 
 unsigned long __stdcall utf8_FormatMessageA(
-  unsigned long dwFlags,
-  const void*   lpSource,
-  unsigned long dwMessageId,
-  unsigned long dwLanguageId,
-  char*         lpBuffer,
-  unsigned long nSize,
-  va_list*      Arguments
+	unsigned long dwFlags,
+	const void*   lpSource,
+	unsigned long dwMessageId,
+	unsigned long dwLanguageId,
+	char*         lpBuffer,
+	unsigned long nSize,
+	va_list*      Arguments
 )
 {
 	wchar_t* tmp = calloc(nSize, sizeof(wchar_t));
@@ -192,4 +238,5 @@ void utf8_ConsoleError(const char* fmt, const char* param) {
 	snprintf(s, l, fmt, param);
 	ConsoleWrite(stderr, s, l);
 	fflush(stderr);
+	free(s);
 }
