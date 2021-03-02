@@ -369,5 +369,5 @@ function test_subprocess:test_encoding()
         print "中文"
     ]], { stdout = true })
     lu.assertEquals(process:wait(), 0)
-    lu.assertEquals(process.stdout:read "a", "中文\r\n")
+    lu.assertEquals(process.stdout:read(6), "中文")
 end
