@@ -46,7 +46,7 @@ function test_plat:test_1()
     end
     if plat == 'msvc' or plat == 'msbuild' then
         lu.assertEquals(platform.Arch == '32' or platform.Arch == '64', true)
-        support.msvc.Arch = platform.Arch
+        support[plat].Arch = platform.Arch
     end
     local info = {}
     for k, v in pairs(platform) do
