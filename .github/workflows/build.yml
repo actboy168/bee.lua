@@ -1,60 +1,30 @@
 name: build
-on: [push, pull_request]
+on: push
 jobs:
-  msvc:
-    runs-on: windows-latest
+  compile:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-16.04, ubuntu-18.04, ubuntu-20.04, macos-latest]
+        arch: [x86, x64]
+        mode: [debug, release]
+        exclude:
+        - os: ubuntu-16.04
+          arch: x86
+        - os: ubuntu-18.04
+          arch: x86
+        - os: ubuntu-20.04
+          arch: x86
+        - os: macos-latest
+          arch: x86
     steps:
     - uses: actions/checkout@v1
       with:
         ref: refs/heads/master
         submodules : recursive
-    - uses: ilammy/msvc-dev-cmd@v1
+    - uses: actboy168/setup-luamake@master
+    
       with:
-        arch: x86
-    - name: Init
-      run: choco install -y ninja
-    - run: ninja -f ninja\msvc.ninja
-    - run: |
-        mkdir publish
-        xcopy /I /E /Y /Q  /EXCLUDE:.github\workflows\msvc_exclude build\msvc\bin publish\msvc
-    - name: Upload artifact
-      uses: actions/upload-artifact@v1.0.0
-      with:
-        name: bee
-        path: publish
-
-  linux:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v1
-      with:
-        ref: refs/heads/master
-        submodules : recursive
-    - run: sudo apt-get install -y ninja-build
-    - run: ninja -f ninja/linux.ninja
-    - run: |
-        mkdir -p publish
-        cp -r build/linux/bin publish/linux
-    - name: Upload artifact
-      uses: actions/upload-artifact@v1.0.0
-      with:
-        name: bee
-        path: publish
-
-  macos:
-    runs-on: macOS-latest
-    steps:
-    - uses: actions/checkout@v1
-      with:
-        ref: refs/heads/master
-        submodules : recursive
-    - run: brew install ninja
-    - run: ninja -f ninja/macos.ninja
-    - run: |
-        mkdir -p publish
-        cp -r build/macos/bin publish/macos
-    - name: Upload artifact
-      uses: actions/upload-artifact@v1.0.0
-      with:
-        name: bee
-        path: publish
+        arch: ${{ matrix.arch }}
+    - run: luamake
