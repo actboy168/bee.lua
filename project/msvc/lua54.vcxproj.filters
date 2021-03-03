@@ -118,7 +118,6 @@
     <ClCompile Include="..\..\3rd\lua\lundump.c">
       <Filter>core\source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\3rd\lua\utf8_unicode.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\3rd\lua\lua.h">
@@ -195,7 +194,6 @@
     </ClInclude>
     <ClInclude Include="..\..\3rd\lua\utf8_crt.h" />
     <ClInclude Include="..\..\3rd\lua\utf8_prefix.h" />
-    <ClInclude Include="..\..\3rd\lua\utf8_unicode.h" />
     <ClInclude Include="..\..\3rd\lua\lprefix.h">
       <Filter>core</Filter>
     </ClInclude>

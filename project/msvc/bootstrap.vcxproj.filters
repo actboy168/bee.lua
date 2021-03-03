@@ -3,5 +3,9 @@
   <ItemGroup>
     <ClCompile Include="..\..\bootstrap\main.cpp" />
     <ClCompile Include="..\..\bootstrap\progdir.cpp" />
+    <ClCompile Include="..\..\3rd\lua\utf8_crt.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\3rd\lua\utf8_crt.h" />
   </ItemGroup>
 </Project>

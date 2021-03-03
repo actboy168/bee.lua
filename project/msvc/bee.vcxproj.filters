@@ -117,6 +117,9 @@
     <ClCompile Include="..\..\bee\nonstd\fmt\os.cc">
       <Filter>bee\nonstd\fmt</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\binding\lua_time.cpp">
+      <Filter>binding</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\bee\subprocess\subprocess_posix.h">

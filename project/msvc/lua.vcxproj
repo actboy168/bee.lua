@@ -143,11 +143,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\3rd\lua\utf8_crt.c" />
     <ClCompile Include="..\..\3rd\lua\utf8_lua.c" />
-    <ClCompile Include="..\..\3rd\lua\utf8_unicode.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\3rd\lua\utf8_unicode.h" />
+    <ClInclude Include="..\..\3rd\lua\utf8_crt.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

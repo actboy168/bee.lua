@@ -52,7 +52,6 @@
     <ClCompile Include="..\..\3rd\lua\lvm.c" />
     <ClCompile Include="..\..\3rd\lua\lzio.c" />
     <ClCompile Include="..\..\3rd\lua\utf8_crt.c" />
-    <ClCompile Include="..\..\3rd\lua\utf8_unicode.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\3rd\lua\lapi.h" />
@@ -84,7 +83,6 @@
     <ClInclude Include="..\..\3rd\lua\lzio.h" />
     <ClInclude Include="..\..\3rd\lua\utf8_crt.h" />
     <ClInclude Include="..\..\3rd\lua\utf8_prefix.h" />
-    <ClInclude Include="..\..\3rd\lua\utf8_unicode.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{316B33ED-1056-48B0-ABF0-CE3CE55F7A17}</ProjectGuid>

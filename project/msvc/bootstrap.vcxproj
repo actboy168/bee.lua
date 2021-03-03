@@ -200,8 +200,12 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\3rd\lua\utf8_crt.c" />
     <ClCompile Include="..\..\bootstrap\main.cpp" />
     <ClCompile Include="..\..\bootstrap\progdir.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\3rd\lua\utf8_crt.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
