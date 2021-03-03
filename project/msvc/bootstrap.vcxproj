@@ -111,9 +111,7 @@
     <CustomBuildStep>
       <Inputs>$(projectDir)..\..\bootstrap\main.lua</Inputs>
     </CustomBuildStep>
-    <Link>
-      <StackReserveSize>20971520</StackReserveSize>
-    </Link>
+    <Link />
     <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
