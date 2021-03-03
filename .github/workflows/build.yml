@@ -24,7 +24,6 @@ jobs:
         ref: refs/heads/master
         submodules : recursive
     - uses: actboy168/setup-luamake@master
-    
       with:
         arch: ${{ matrix.arch }}
-    - run: luamake
+    - run: luamake -mode ${{ matrix.mode }}
