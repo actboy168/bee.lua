@@ -4,6 +4,8 @@ lm.defines = {
     "_WIN32_WINNT=0x0601",
 }
 
+local STACK_SIZE = lm.mode == "debug" and lm.arch == "x64" and lm.plat == "msvc"
+
 lm:shared_library 'lua54' {
     sources = {
         "3rd/lua/*.c",
@@ -22,6 +24,9 @@ lm:executable 'lua' {
         "3rd/lua/utf8_lua.c",
         "3rd/lua/utf8_crt.c",
         EXE_RESOURCE,
+    },
+    ldflags = {
+        STACK_SIZE and "/STACK:"..0x160000
     }
 }
 
@@ -68,6 +73,9 @@ lm:executable 'bootstrap' {
         "bootstrap/*.cpp",
         "3rd/lua/utf8_crt.c",
         EXE_RESOURCE,
+    },
+    ldflags = {
+        STACK_SIZE and "/STACK:"..0x160000
     }
 }
 
