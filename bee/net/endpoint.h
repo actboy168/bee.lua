@@ -2,7 +2,7 @@
 
 #include <string>
 #include <string_view>
-#include <bee/utility/dynarray.h>
+#include <memory>
 
 #if !defined(_WIN32)
 #include <sys/socket.h>
@@ -20,9 +20,7 @@ namespace bee::net {
         int port;
     };
 
-    struct endpoint : private dynarray<std::byte> {
-        static const size_t kMaxSize = 256;
-        typedef dynarray<std::byte> mybase;
+    struct endpoint {
         endpoint_info   info() const;
         const sockaddr* addr() const;
         socklen_t       addrlen() const;
@@ -38,5 +36,7 @@ namespace bee::net {
 
     private:
         endpoint(size_t n);
+        std::unique_ptr<std::byte> m_data;
+        size_t m_size = 0;
     };
 }

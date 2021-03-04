@@ -30,6 +30,8 @@
 #endif
 
 namespace bee::net {
+    static constexpr size_t kMaxEndpointSize = 256;
+
 #if defined(__linux__) && defined(BEE_DISABLE_DLOPEN)
 #else
     struct autorelease_addrinfo {
@@ -83,7 +85,7 @@ namespace bee::net {
             return from_invalid();
         };
         endpoint ep(offsetof(struct sockaddr_un, sun_path) + path.size() + 1);
-        struct sockaddr_un* su = (struct sockaddr_un*)ep.data();
+        struct sockaddr_un* su = (struct sockaddr_un*)ep.addr();
         su->sun_family = AF_UNIX;
         memcpy(&su->sun_path[0], path.data(), path.size());
         su->sun_path[path.size()] = '\0';
@@ -97,7 +99,7 @@ namespace bee::net {
             sa4.sin_port = htons(port);
             sa4.sin_port = htons(port);
             endpoint ep(sizeof(struct sockaddr_in));
-            memcpy(ep.data(), &sa4, ep.size());
+            memcpy(ep.addr(), &sa4, ep.addrlen());
             return ep;
         }
         struct sockaddr_in6 sa6;
@@ -105,7 +107,7 @@ namespace bee::net {
             sa4.sin_family = AF_INET6;
             sa6.sin6_port = htons(port);
             endpoint ep(sizeof(struct sockaddr_in6));
-            memcpy(ep.data(), &sa6, ep.size());
+            memcpy(ep.addr(), &sa6, ep.addrlen());
             return ep;
         }
         return from_invalid();
@@ -135,17 +137,20 @@ namespace bee::net {
         }
         const addrinfo& addrinfo = *info;
         endpoint ep(addrinfo.ai_addrlen);
-        memcpy(ep.data(), addrinfo.ai_addr, ep.size());
+        memcpy(ep.addr(), addrinfo.ai_addr, ep.addrlen());
         return ep;
 #endif
     }
     endpoint endpoint::from_empty() {
-        return endpoint(endpoint::kMaxSize);
+        return endpoint(kMaxEndpointSize);
     }
     endpoint endpoint::from_invalid() {
         return endpoint(0);
     }
-    endpoint::endpoint(size_t n) : mybase(n)
+
+    endpoint::endpoint(size_t n)
+        : m_data(new std::byte[n])
+        , m_size(n)
     { }
     endpoint_info endpoint::info() const {
         const sockaddr* sa = addr();
@@ -183,19 +188,19 @@ namespace bee::net {
         return { "", 0 };
     }
     sockaddr* endpoint::addr() {
-        return (sockaddr*)mybase::data();
+        return (sockaddr*)m_data.get();
     }
     const sockaddr* endpoint::addr() const {
-        return (const sockaddr*)mybase::data();
+        return (const sockaddr*)m_data.get();
     }
     socklen_t endpoint::addrlen() const {
-        return (socklen_t)mybase::size();
+        return (socklen_t)m_size;
     }
     void endpoint::resize(socklen_t len) {
         if (addrlen() <= len) {
             return;
         }
-        *(mybase*)this = std::move(mybase::subspan(0, len));
+        m_size = len;
     }
     int endpoint::family() const {
         return addr()->sa_family;
