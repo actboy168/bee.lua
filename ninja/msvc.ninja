@@ -72,7 +72,7 @@ build $bin/lua.exe: LINK_lua $obj/lua/utf8_crt.obj $obj/lua/utf8_lua.obj $
 rule C_bee
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /Zc:__cplusplus $
       /O2 /GL /Zc:inline /W3 /permissive- /MD /I3rd/lua /I3rd/lua-seri $
-      /Ibee/nonstd /I. /D_WIN32_WINNT=0x0601 /DBEE_EXPORTS $
+      /Ibee/nonstd /I. /D_WIN32_WINNT=0x0601 /DBEE_INLINE $
       /D_CRT_SECURE_NO_WARNINGS /DNDEBUG /I. 
   description = Compile C   $out
   deps = msvc
@@ -80,7 +80,7 @@ build $obj/bee/lua-seri.obj: C_bee 3rd/lua-seri/lua-seri.c
 rule CXX_bee
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /Zc:__cplusplus $
       /O2 /GL /Zc:inline /W3 /permissive- /MD /I3rd/lua /I3rd/lua-seri $
-      /Ibee/nonstd /I. /D_WIN32_WINNT=0x0601 /DBEE_EXPORTS $
+      /Ibee/nonstd /I. /D_WIN32_WINNT=0x0601 /DBEE_INLINE $
       /D_CRT_SECURE_NO_WARNINGS /DNDEBUG /I. /std:c++17
   description = Compile C++ $out
   deps = msvc
