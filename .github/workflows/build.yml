@@ -6,18 +6,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-16.04, ubuntu-18.04, ubuntu-20.04, macos-latest]
-        arch: [x86, x64]
+        os: [windows-latest, macos-latest, ubuntu-16.04, ubuntu-18.04, ubuntu-20.04]
+        arch: [x64]
         mode: [debug, release]
-        exclude:
-        - os: ubuntu-16.04
-          arch: x86
-        - os: ubuntu-18.04
-          arch: x86
-        - os: ubuntu-20.04
-          arch: x86
-        - os: macos-latest
-          arch: x86
+        include:
+          - os: windows-latest
+            arch: x86
+            mode: debug
+          - os: windows-latest
+            arch: x86
+            mode: release
     steps:
     - uses: actions/checkout@v1
       with:
