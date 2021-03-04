@@ -39,7 +39,7 @@ lm:shared_library 'bee' {
         "."
     },
     defines = {
-        "BEE_EXPORTS",
+        "BEE_INLINE",
         "_CRT_SECURE_NO_WARNINGS",
     },
     sources = {
