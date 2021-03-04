@@ -61,7 +61,8 @@
 #	define BEE_CRT_NAME "bionic"
 #elif defined(_MSC_VER)
 #	define BEE_CRT_NAME "msvc"
-#	define BEE_CRT_VERSION BEE_COMPILER_VERSION
+#	define BEE_CRT_VERSION "MSVC STL " \
+		BEE_STRINGIZE(_MSVC_STL_UPDATE)
 #elif defined(__GLIBCXX__)
 #	define BEE_CRT_NAME "libstdc++"
 #if defined(__GLIBC__)
