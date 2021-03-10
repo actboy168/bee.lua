@@ -3,10 +3,8 @@ local lu = require 'ltest'
 local thread = require "bee.thread"
 local err = thread.channel "errlog"
 
-local cpath_template = ("package.cpath = [[%s]]\n"):format(package.cpath)
-
 local function createThread(script)
-    return thread.thread(cpath_template .. script)
+    return thread.thread(script)
 end
 
 local function assertNotThreadError()

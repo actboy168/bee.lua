@@ -13,6 +13,38 @@ extern "C" {
 #include <lua-seri.h>
 }
 
+#if !defined(BEE_THREAD_MODULE)
+
+extern "C" int luaopen_bee(lua_State* L);
+extern "C" int luaopen_bee_filesystem(lua_State* L);
+extern "C" int luaopen_bee_filewatch(lua_State* L);
+extern "C" int luaopen_bee_platform(lua_State* L);
+extern "C" int luaopen_bee_serialization(lua_State* L);
+extern "C" int luaopen_bee_socket(lua_State* L);
+extern "C" int luaopen_bee_subprocess(lua_State* L);
+BEE_LUA_API int luaopen_bee_thread(lua_State* L);
+extern "C" int luaopen_bee_time(lua_State* L);
+//#if defined(_WIN32)
+//extern "C" int luaopen_bee_registry(lua_State* L);
+//extern "C" int luaopen_bee_unicode(lua_State* L);
+//extern "C" int luaopen_bee_wmi(lua_State* L);
+//#endif
+
+#define BEE_THREAD_MODULE { \
+    {"bee", luaopen_bee}, \
+    {"bee.filesystem", luaopen_bee_filesystem}, \
+    {"bee.filewatch", luaopen_bee_filewatch}, \
+    {"bee.platform", luaopen_bee_platform}, \
+    {"bee.serialization", luaopen_bee_serialization}, \
+    {"bee.socket", luaopen_bee_socket}, \
+    {"bee.subprocess", luaopen_bee_subprocess}, \
+    {"bee.thread", luaopen_bee_thread}, \
+    {"bee.time", luaopen_bee_time}, \
+    {NULL, NULL}, \
+}
+
+#endif
+
 namespace bee::lua_thread {
     class channel : public lockqueue<void*> {
     public:
@@ -212,17 +244,44 @@ namespace bee::lua_thread {
         }
     }
 
+    static int require_cmodule(lua_State *L) {
+        const char* name = (const char*)lua_touserdata(L, 1);
+        lua_CFunction f = (lua_CFunction)lua_touserdata(L, 2);
+        luaL_requiref(L, name, f, 0);
+        return 0;
+    }
+    static int require_function(lua_State* L, const char* name, lua_CFunction f) {
+        lua_pushcfunction(L, require_cmodule);
+        lua_pushlightuserdata(L, (void*)name);
+        lua_pushlightuserdata(L, (void*)f);
+        if (lua_pcall(L, 2, 0, 0) != LUA_OK) {
+            lua_pop(L, 1);
+            return 1;
+        }
+        return 0;
+    }
+    static int require_all(lua_State* L, const luaL_Reg* l) {
+        for (; l->name != NULL; l++) {
+            require_function(L, l->name, l->func);
+        }
+        return 0;
+    }
+
     static int thread_luamain(lua_State* L) {
         lua_pushboolean(L, 1);
         lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
         luaL_openlibs(L);
-#if LUA_VERSION_NUM >= 504
-        lua_gc(L, LUA_GCGEN, 0, 0);
-#endif
         void*        ud = lua_touserdata(L, 1);
         thread_args* args = (thread_args*)ud;
         lua_pushinteger(L, args->id);
         lua_rawsetp(L, LUA_REGISTRYINDEX, &THREADID);
+#if defined(BEE_THREAD_MODULE)
+        static luaL_Reg l[] = BEE_THREAD_MODULE;
+        require_all(L, l);
+#endif
+#if LUA_VERSION_NUM >= 504
+        lua_gc(L, LUA_GCGEN, 0, 0);
+#endif
         if (luaL_loadbuffer(L, args->source.data(), args->source.size(), args->source.c_str()) != LUA_OK) {
             delete args;
             return lua_error(L);

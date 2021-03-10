@@ -132,7 +132,6 @@ end
 local function createEchoThread(name, address)
 return thread.thread(([=[
     -- %s
-    package.cpath = [[%s]]
     local ls = require 'bee.socket'
     local client = assert(ls.connect(%s))
     local _, wr = ls.select(nil, {client})
@@ -161,7 +160,7 @@ return thread.thread(([=[
             end
         end
     end
-]=]):format(name, package.cpath, address))
+]=]):format(name, address))
 
 end
 
