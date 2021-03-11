@@ -13,6 +13,8 @@ extern "C" {
 #include <lua-seri.h>
 }
 
+namespace bee::lua_thread {
+    
 #if !defined(BEE_THREAD_MODULE)
 
 extern "C" int luaopen_bee(lua_State* L);
@@ -24,28 +26,34 @@ extern "C" int luaopen_bee_socket(lua_State* L);
 extern "C" int luaopen_bee_subprocess(lua_State* L);
 BEE_LUA_API int luaopen_bee_thread(lua_State* L);
 extern "C" int luaopen_bee_time(lua_State* L);
-//#if defined(_WIN32)
-//extern "C" int luaopen_bee_registry(lua_State* L);
-//extern "C" int luaopen_bee_unicode(lua_State* L);
-//extern "C" int luaopen_bee_wmi(lua_State* L);
-//#endif
+#if defined(_WIN32)
+extern "C" int luaopen_bee_registry(lua_State* L);
+extern "C" int luaopen_bee_unicode(lua_State* L);
+extern "C" int luaopen_bee_wmi(lua_State* L);
+#endif
 
-#define BEE_THREAD_MODULE { \
-    {"bee", luaopen_bee}, \
-    {"bee.filesystem", luaopen_bee_filesystem}, \
-    {"bee.filewatch", luaopen_bee_filewatch}, \
-    {"bee.platform", luaopen_bee_platform}, \
-    {"bee.serialization", luaopen_bee_serialization}, \
-    {"bee.socket", luaopen_bee_socket}, \
-    {"bee.subprocess", luaopen_bee_subprocess}, \
-    {"bee.thread", luaopen_bee_thread}, \
-    {"bee.time", luaopen_bee_time}, \
-    {NULL, NULL}, \
-}
+static luaL_Reg CMODULE[] = {
+    {"bee", luaopen_bee},
+    {"bee.filesystem", luaopen_bee_filesystem},
+    {"bee.filewatch", luaopen_bee_filewatch},
+    {"bee.platform", luaopen_bee_platform},
+    {"bee.serialization", luaopen_bee_serialization},
+    {"bee.socket", luaopen_bee_socket},
+    {"bee.subprocess", luaopen_bee_subprocess},
+    {"bee.thread", luaopen_bee_thread},
+    {"bee.time", luaopen_bee_time},
+#if defined(_WIN32)
+    {"bee.registry", luaopen_bee_registry},
+    {"bee.unicode", luaopen_bee_unicode},
+    {"bee.wmi", luaopen_bee_wmi},
+#endif
+    {NULL, NULL},
+};
+
+#define BEE_THREAD_MODULE CMODULE
 
 #endif
 
-namespace bee::lua_thread {
     class channel : public lockqueue<void*> {
     public:
         typedef lockqueue<void*> mybase;
@@ -276,8 +284,7 @@ namespace bee::lua_thread {
         lua_pushinteger(L, args->id);
         lua_rawsetp(L, LUA_REGISTRYINDEX, &THREADID);
 #if defined(BEE_THREAD_MODULE)
-        static luaL_Reg l[] = BEE_THREAD_MODULE;
-        require_all(L, l);
+        require_all(L, BEE_THREAD_MODULE);
 #endif
 #if LUA_VERSION_NUM >= 504
         lua_gc(L, LUA_GCGEN, 0, 0);
