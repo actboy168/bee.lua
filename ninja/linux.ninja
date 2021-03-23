@@ -142,11 +142,15 @@ build $bin/bootstrap: LINK_bootstrap $obj/bootstrap/main.obj $
     $obj/source_lua/ltm.obj $obj/source_lua/lundump.obj $
     $obj/source_lua/lutf8lib.obj $obj/source_lua/lvm.obj $
     $obj/source_lua/lzio.obj
+rule copy
+  command = cp -afv $FROM $TO
+  description = $DESC
+build $builddir/_/copy_script: copy
+  FROM = bootstrap/main.lua
+  TO = $bin/main.lua
 rule command
   command = $COMMAND
   description = $DESC
-build $builddir/_/copy_script: command
-  COMMAND = mkdir -p $bin && cp bootstrap/main.lua $bin/main.lua
 build $builddir/_/test: command | $bin/bootstrap $builddir/_/copy_script $
     $bin/bee.so
   COMMAND = $bin/bootstrap test/test.lua

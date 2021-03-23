@@ -1,6 +1,6 @@
-builddir = build/msvc
-bin = $builddir/bin
-obj = $builddir/obj
+builddir = build\msvc
+bin = $builddir\bin
+obj = $builddir\obj
 rule C_lua54
   command = cl /nologo /showIncludes -c $in /Fo$out /EHsc /Zc:__cplusplus $
       /O2 /GL /Zc:inline /W3 /permissive- /MD /D_WIN32_WINNT=0x0601 $
@@ -149,11 +149,15 @@ rule LINK_bootstrap
   description = Link    Exe $out
 build $bin/bootstrap.exe: LINK_bootstrap $obj/bootstrap/utf8_crt.obj $
     $obj/bootstrap/main.obj $obj/bootstrap/progdir.obj $bin/lua54.lib
+rule copy
+  command = cmd.exe /c copy 2>NUL /y $FROM $TO
+  description = $DESC
+build $builddir/_/copy_script: copy
+  FROM = bootstrap\main.lua
+  TO = $bin\main.lua
 rule command
   command = $COMMAND
   description = $DESC
-build $builddir/_/copy_script: command
-  COMMAND = cmd.exe /C project\copy.bat bootstrap\main.lua build\msvc\bin
 build $builddir/_/test: command | $bin/bootstrap.exe $
     $builddir/_/copy_script $bin/bee.dll
   pool = console

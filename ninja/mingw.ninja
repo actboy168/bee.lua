@@ -146,11 +146,15 @@ rule LINK_bootstrap
   description = Link    Exe $out
 build $bin/bootstrap.exe: LINK_bootstrap $obj/bootstrap/utf8_crt.obj $
     $obj/bootstrap/main.obj $obj/bootstrap/progdir.obj $bin/lua54.dll
+rule copy
+  command = cp -afv $FROM $TO
+  description = $DESC
+build $builddir/_/copy_script: copy
+  FROM = bootstrap/main.lua
+  TO = $bin/main.lua
 rule command
   command = $COMMAND
   description = $DESC
-build $builddir/_/copy_script: command
-  COMMAND = mkdir -p $bin && cp bootstrap/main.lua $bin/main.lua
 build $builddir/_/test: command | $bin/bootstrap.exe $
     $builddir/_/copy_script $bin/bee.dll
   pool = console

@@ -75,8 +75,7 @@ lm:executable 'bootstrap' {
 local fs = require "bee.filesystem"
 
 lm:build "copy_script" {
-    "mkdir", "-p", "$bin", "&&",
-    "cp", fs.path "bootstrap/main.lua", "$bin/main.lua"
+    "{COPY}", "@bootstrap/main.lua", "$bin/main.lua"
 }
 
 lm:build "test" {

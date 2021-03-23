@@ -79,16 +79,9 @@ lm:executable 'bootstrap' {
     }
 }
 
-if lm.plat == 'msvc' then
-    lm:build "copy_script" {
-        "cmd.exe", "/C", "@project/copy.bat", "@bootstrap/main.lua", "build\\msvc\\bin"
-    }
-else
-    lm:build "copy_script" {
-        "mkdir", "-p", "$bin", "&&",
-        "cp", "@bootstrap/main.lua", "$bin/main.lua"
-    }
-end
+lm:build "copy_script" {
+    "{COPY}", "@bootstrap/main.lua", "$bin/main.lua"
+}
 
 lm:build "test" {
     "$bin/bootstrap.exe", "@test/test.lua",
