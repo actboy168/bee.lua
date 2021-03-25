@@ -3,4 +3,4 @@
 *.user
 /.vscode/ipch/
 
-/test/temp.lua
+/test_temp.lua

@@ -25,13 +25,12 @@ local function createLua(script, option)
     return subprocess.spawn(option)
 end
 
-
 local function createTestArgsFile(tbl)
     local s = {}
     for _, v in ipairs(tbl) do
         s[#s+1] = ('%q'):format(v)
     end
-    local f = assert(io.open('test/temp.lua', 'wb'))
+    local f = assert(io.open('test_temp.lua', 'wb'))
     f:write(([=[
         package.cpath = [[%s]]
         local function eq(a, b)
@@ -53,13 +52,14 @@ local function testArrayArgs(...)
     option.stderr = true
     option.argsStyle = 'array'
     option[1] = getexe()
-    option[2] = 'test/temp.lua'
+    option[2] = 'test_temp.lua'
     table.move(args, 1, args.n, 3, option)
     local process = subprocess.spawn(option)
     lu.assertIsUserdata(process)
     lu.assertIsUserdata(process.stderr)
     lu.assertEquals(process.stderr:read 'a', '')
     lu.assertEquals(process:wait(), 0)
+    os.remove "test_temp.lua"
 end
 
 local function testStringArgs(args, ...)
@@ -68,12 +68,13 @@ local function testStringArgs(args, ...)
     option.stderr = true
     option.argsStyle = 'string'
     option[1] = getexe()
-    option[2] = 'test/temp.lua ' .. args
+    option[2] = 'test_temp.lua ' .. args
     local process = subprocess.spawn(option)
     lu.assertIsUserdata(process)
     lu.assertIsUserdata(process.stderr)
     lu.assertEquals(process.stderr:read 'a', '')
     lu.assertEquals(process:wait(), 0)
+    os.remove "test_temp.lua"
 end
 
 local test_subprocess = lu.test "subprocess"
