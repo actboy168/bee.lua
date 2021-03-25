@@ -392,7 +392,6 @@ function test_fs:test_is_directory()
         lu.assertEquals(fs.is_directory(fs.path(path)), b, path)
     end
     local filename = 'temp.txt'
-    is_directory('./test', true)
     is_directory('.', true)
     create_file(filename)
     is_directory(filename, false)
@@ -405,7 +404,6 @@ function test_fs:test_is_regular_file()
         lu.assertEquals(fs.is_regular_file(fs.path(path)), b, path)
     end
     local filename = 'temp.txt'
-    is_regular_file('./test', false)
     is_regular_file('.', false)
     create_file(filename)
     is_regular_file(filename, true)
