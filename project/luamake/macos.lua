@@ -65,14 +65,3 @@ lm:executable 'bootstrap' {
     },
     links = { "m", "dl" },
 }
-
-local fs = require "bee.filesystem"
-
-lm:build "copy_script" {
-    "{COPY}", "@bootstrap/main.lua", "$bin/main.lua"
-}
-
-lm:build "test" {
-    "$bin/bootstrap", fs.path "test/test.lua",
-    deps = { "bootstrap", "copy_script", "bee" },
-}

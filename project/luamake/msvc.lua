@@ -78,13 +78,3 @@ lm:executable 'bootstrap' {
         STACK_SIZE and "/STACK:"..0x160000
     }
 }
-
-lm:build "copy_script" {
-    "{COPY}", "@bootstrap/main.lua", "$bin/main.lua"
-}
-
-lm:build "test" {
-    "$bin/bootstrap.exe", "@test/test.lua",
-    deps = { "bootstrap", "copy_script", "bee" },
-    pool = "console"
-}
