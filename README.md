@@ -6,11 +6,8 @@ Lua runtime and toolset
 
 ## Build
 
-* install ninja
-* ninja -f ninja/msvc.ninja
-* ninja -f ninja/mingw.ninja
-* ninja -f ninja/linux.ninja
-* ninja -f ninja/macos.ninja
+* install [luamake](https://github.com/actboy168/luamake)
+* `> luamake`
 
 ## Lua patch
 
