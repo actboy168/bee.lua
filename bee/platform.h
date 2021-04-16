@@ -92,18 +92,16 @@
 #	define BEE_CRT_VERSION "none"
 #endif
 
-#if defined(__x86_64__)    \
- || defined(_M_X64)        \
- || defined(__aarch64__)   \
- || defined(__64BIT__)     \
- || defined(__mips64)      \
- || defined(__powerpc64__) \
- || defined(__ppc64__)     \
- || defined(__LP64__)
-#	define BEE_ARCH 64
+// http://sourceforge.net/apps/mediawiki/predef/index.php?title=Architectures
+#if defined(_M_ARM64) || defined(__aarch64__)
+#	define BEE_ARCH "arm64"
+#elif defined(_M_IX86) || defined(__i386__)
+#	define BEE_ARCH "x86"
+#elif defined(_M_X64) || defined(__x86_64__)
+#	define BEE_ARCH "x86_64"
 #else
-#	define BEE_ARCH 32
-#endif
+#	define BEE_ARCH "unknown"
+#endif 
 
 #ifdef NDEBUG
 #	define BEE_DEBUG 0

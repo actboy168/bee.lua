@@ -2,31 +2,31 @@ local support = {}
 
 support.msbuild = {
     OS = 'Windows',
-    Arch = '32',
+    Arch = 'x86',
     Compiler = 'msvc',
     CRT = 'msvc',
 }
 support.msvc = {
     OS = 'Windows',
-    Arch = '32',
+    Arch = 'x86',
     Compiler = 'msvc',
     CRT = 'msvc',
 }
 support.mingw = {
     OS = 'Windows',
-    Arch = '64',
+    Arch = 'x86_64',
     Compiler = 'gcc',
     CRT = 'libstdc++',
 }
 support.linux = {
     OS = 'Linux',
-    Arch = '64',
+    Arch = 'x86_64',
     Compiler = 'clang',
     CRT = 'libstdc++',
 }
 support.macos = {
     OS = 'macOS',
-    Arch = '64',
+    Arch = 'x86_64',
     Compiler = 'clang',
     CRT = 'libc++',
 }
@@ -45,7 +45,11 @@ function test_plat:test_1()
         support.linux.Compiler = platform.Compiler
     end
     if plat == 'msvc' or plat == 'msbuild' then
-        lu.assertEquals(platform.Arch == '32' or platform.Arch == '64', true)
+        lu.assertEquals(platform.Arch == 'x86' or platform.Arch == 'x86_64', true)
+        support[plat].Arch = platform.Arch
+    end
+    if plat == 'macos' then
+        lu.assertEquals(platform.Arch == 'x86_64' or platform.Arch == 'arm64', true)
         support[plat].Arch = platform.Arch
     end
     local info = {}

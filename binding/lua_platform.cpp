@@ -7,7 +7,7 @@ namespace bee::lua_platform {
         lua_newtable(L);
         lua_pushstring(L, BEE_OS_NAME);
         lua_setfield(L, -2, "OS");
-        lua_pushstring(L, BEE_STRINGIZE(BEE_ARCH));
+        lua_pushstring(L, BEE_ARCH);
         lua_setfield(L, -2, "Arch");
         lua_pushstring(L, BEE_CRT_NAME);
         lua_setfield(L, -2, "CRT");
