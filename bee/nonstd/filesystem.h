@@ -2116,7 +2116,7 @@ inline path path::parent_path() const
         }
         else {
             path pp;
-            for (const string_type& s : input_iterator_range<iterator>(begin(), --end())) {
+            for (auto s : input_iterator_range<iterator>(begin(), --end())) {
                 if (s == "/") {
                     // don't use append to join a path-
                     pp += s;
@@ -2226,7 +2226,7 @@ inline bool path::is_relative() const
 inline path path::lexically_normal() const
 {
     path dest;
-    for (const string_type& s : *this) {
+    for (auto s : *this) {
         if (s == ".") {
             continue;
         }
@@ -2953,7 +2953,7 @@ inline bool create_directories(const path& p, std::error_code& ec) noexcept
 {
     path current;
     ec.clear();
-    for (const std::string& part : p) {
+    for (auto part : p) {
         current /= part;
         if (current != p.root_name() && current != p.root_path()) {
             std::error_code tec;
