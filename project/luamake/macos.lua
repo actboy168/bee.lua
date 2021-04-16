@@ -1,7 +1,8 @@
 local lm = require 'luamake'
 
 lm.flags = {
-    "-mmacosx-version-min=10.13",
+    "-mmacosx-version-min=10.12",
+    "-Wunguarded-availability"
 }
 
 lm:source_set 'source_lua' {
