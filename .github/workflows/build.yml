@@ -9,9 +9,8 @@ jobs:
         os: [windows-latest, macos-latest, ubuntu-16.04, ubuntu-18.04, ubuntu-20.04]
         mode: [debug, release]
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
       with:
-        ref: refs/heads/master
         submodules : recursive
     - uses: actboy168/setup-luamake@master
     - run: luamake -mode ${{ matrix.mode }}
