@@ -10,7 +10,7 @@ local exe = isWindows and ".exe" or ""
 local dll = isWindows and ".dll" or ".so"
 
 lm:build "copy_script" {
-    "{COPY}", "@bootstrap/main.lua", "$bin/main.lua",
+    "{COPY}", "@bootstrap/main.lua", "@$bin/main.lua",
     deps = { "bootstrap" },
 }
 
