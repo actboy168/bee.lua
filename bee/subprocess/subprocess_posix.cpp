@@ -255,7 +255,11 @@ namespace bee::posix::subprocess {
 #else
         pid_t pid;
         posix_spawn_file_actions_t action;
+        posix_spawnattr_t attr;
         if (posix_spawn_file_actions_init(&action)) {
+            return false;
+        }
+        if (posix_spawnattr_init(&attr)) {
             return false;
         }
         for (int i = 0; i < 3; ++i) {
@@ -274,11 +278,23 @@ namespace bee::posix::subprocess {
             fds.append(fmt::format("{},", newfd));
         }
         set_env_["bee-subprocess-dup-sockets"] = fds;
-        if (posix_spawn(&pid, args[0], &action, NULL, args, make_env(set_env_, del_env_))) {
+#if defined(POSIX_SPAWN_SETSID)
+        // since glibc 2.26
+        if (detached_) {
+            posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETSID);
+        }
+#else
+        if (detached_) {
+            return false;
+        }
+#endif
+        if (posix_spawn(&pid, args[0], &action, &attr, args, make_env(set_env_, del_env_))) {
             return false;
         }
         pid_ = pid;
         do_duplicate_shutdown();
+        posix_spawn_file_actions_destroy(&action);
+        posix_spawnattr_destroy(&attr);
         return true;
 #endif
     }
