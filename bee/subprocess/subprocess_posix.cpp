@@ -11,6 +11,10 @@
 #include <errno.h>
 #include <assert.h>
 
+#if !defined(BEE_USE_FORK)
+#include <spawn.h>
+#endif
+
 #if defined(__APPLE__)
 # include <crt_externs.h>
 # define environ (*_NSGetEnviron())
@@ -184,6 +188,7 @@ namespace bee::posix::subprocess {
     }
 
     void spawn::do_duplicate() {
+#if defined(BEE_USE_FORK)
         for (int i = 0; i < 3; ++i) {
             if (fds_[i] > 0) {
                 if (dup2(fds_[i], i) == -1) {
@@ -198,6 +203,7 @@ namespace bee::posix::subprocess {
             fds.append(fmt::format("{},", newfd));
         }
         set_env_["bee-subprocess-dup-sockets"] = fds;
+#endif
     }
 
     void spawn::do_duplicate_shutdown() {
@@ -221,6 +227,7 @@ namespace bee::posix::subprocess {
     }
 
     bool spawn::raw_exec(char* const args[], const char* cwd) {
+#if defined(BEE_USE_FORK)
         pid_t pid = fork();
         if (pid == -1) {
             return false;
@@ -245,7 +252,35 @@ namespace bee::posix::subprocess {
         pid_ = pid;
         do_duplicate_shutdown();
         return true;
-
+#else
+        pid_t pid;
+        posix_spawn_file_actions_t action;
+        if (posix_spawn_file_actions_init(&action)) {
+            return false;
+        }
+        for (int i = 0; i < 3; ++i) {
+            if (fds_[i] > 0) {
+                if (posix_spawn_file_actions_adddup2(&action, fds_[i], i)) {
+                    return false;
+                }
+            }
+        }
+        int newfd = 3;
+        std::string fds;
+        for (auto& fd : sockets_) {
+            if (posix_spawn_file_actions_adddup2(&action, fd, ++newfd)) {
+                return false;
+            }
+            fds.append(fmt::format("{},", newfd));
+        }
+        set_env_["bee-subprocess-dup-sockets"] = fds;
+        if (posix_spawn(&pid, args[0], &action, NULL, args, make_env(set_env_, del_env_))) {
+            return false;
+        }
+        pid_ = pid;
+        do_duplicate_shutdown();
+        return true;
+#endif
     }
 
     static void split_accept(args_t& args, const char* str, size_t len) {
