@@ -288,7 +288,7 @@ namespace bee::posix::subprocess {
             return false;
         }
 #endif
-        if (posix_spawn(&pid, args[0], &action, &attr, args, make_env(set_env_, del_env_))) {
+        if (posix_spawnp(&pid, args[0], &action, &attr, args, make_env(set_env_, del_env_))) {
             return false;
         }
         pid_ = pid;
