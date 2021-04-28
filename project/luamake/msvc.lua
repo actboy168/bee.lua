@@ -4,7 +4,7 @@ lm.defines = {
     "_WIN32_WINNT=0x0601",
 }
 
-local STACK_SIZE = lm.mode == "debug" and lm.arch == "x64" and lm.plat == "msvc"
+local STACK_SIZE = lm.mode == "debug" and lm.target == "x64" and lm.plat == "msvc"
 
 lm:shared_library 'lua54' {
     sources = {
