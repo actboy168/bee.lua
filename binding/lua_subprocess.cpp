@@ -482,6 +482,52 @@ namespace bee::lua_subprocess {
         return 1;
     }
 
+static const char script_quotearg[] = R"(
+local s = ...
+if type(s) ~= 'string' then
+    s = tostring(s)
+end
+if #s == 0 then
+    return '""'
+end
+if not s:find('[ \t\"]', 1) then
+    return s
+end
+if not s:find('[\"\\]', 1) then
+    return '"'..s..'"'
+end
+local quote_hit = true
+local t = {}
+t[#t+1] = '"'
+for i = #s, 1, -1 do
+    local c = s:sub(i,i)
+    t[#t+1] = c
+    if quote_hit and c == '\\' then
+        t[#t+1] = '\\'
+    elseif c == '"' then
+        quote_hit = true
+        t[#t+1] = '\\'
+    else
+        quote_hit = false
+    end
+end
+t[#t+1] = '"'
+for i = 1, #t // 2 do
+    local tmp = t[i]
+    t[i] = t[#t-i+1]
+    t[#t-i+1] = tmp
+end
+return table.concat(t)
+)";
+
+    template <size_t N>
+    static int lua_pushscript(lua_State* L, const char (&script)[N]) {
+        if (luaL_loadbuffer(L, script, N-1, "=module 'bee.subprocess'") != LUA_OK) {
+            return lua_error(L);
+        }
+        return 1;
+    }
+
     static int luaopen(lua_State* L) {
         net::socket::initialize();
         static luaL_Reg lib[] = {
@@ -492,6 +538,9 @@ namespace bee::lua_subprocess {
             {"get_id", get_id},
             {NULL, NULL}};
         luaL_newlib(L, lib);
+
+        lua_pushscript(L, script_quotearg);
+        lua_setfield(L, -2, "quotearg");
 
         lua_newtable(L);
         lua_Integer n = 1;
