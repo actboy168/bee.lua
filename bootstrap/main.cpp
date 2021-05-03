@@ -205,39 +205,6 @@ int main(int argc, char **argv) {
 #include <Windows.h>
 #include <wchar.h>
 
-static char* w2u(const wchar_t *str) {
-    int len = 0;
-    int out_len = 0;
-    char *buf = NULL;
-    if (!str || !*str) {
-        return NULL;
-    }
-    len = WideCharToMultiByte(CP_UTF8, 0, str, -1, NULL, 0, NULL, NULL);
-    if (len) {
-        buf = (char*)calloc(len, sizeof(char));
-        if (!buf) {
-            return NULL;
-        }
-        out_len = WideCharToMultiByte(CP_UTF8, 0, str, -1, buf, len, NULL, NULL);
-    }
-    else {
-        len = WideCharToMultiByte(CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);
-        if (len) {
-            buf = (char*)calloc(len, sizeof(char));
-            if (!buf) {
-                return NULL;
-            }
-            out_len = WideCharToMultiByte(CP_ACP, 0, str, -1, buf, len, NULL, NULL);
-        }
-    }
-    if (out_len < 0) {
-        free(buf);
-        return NULL;
-    }
-    return buf;
-}
-
-
 void enable_vtmode_(HANDLE h) {
     if (h == INVALID_HANDLE_VALUE) {
         return;
