@@ -254,6 +254,7 @@ function test_fs:test_absolute()
         eq_absolute2('./b', 'b')
         eq_absolute2('a/../b', 'b')
         eq_absolute2('a/b/../', 'a\\')
+        eq_absolute2('a/b/c/../../d', 'a\\d')
     else
         eq_absolute1('a/')
         eq_absolute1('a/b')
@@ -262,6 +263,7 @@ function test_fs:test_absolute()
         eq_absolute2('./b', 'b')
         eq_absolute2('a/../b', 'b')
         eq_absolute2('a/b/../', 'a/')
+        eq_absolute2('a/b/c/../../d', 'a/d')
     end
 end
 
