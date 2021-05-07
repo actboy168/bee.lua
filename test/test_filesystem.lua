@@ -310,10 +310,14 @@ function test_fs:test_exists()
     local filename = 'temp.txt'
     os.remove(filename)
     is_exists(filename, false)
+
     create_file(filename)
     is_exists(filename, true)
+    is_exists(filename .. '/' .. filename, false)
+
     os.remove(filename)
     is_exists(filename, false)
+    is_exists(filename .. '/' .. filename, false)
 end
 
 function test_fs:test_remove()
