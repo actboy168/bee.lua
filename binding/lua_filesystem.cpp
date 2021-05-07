@@ -350,11 +350,21 @@ namespace bee::lua_filesystem {
     }
 
     static int exists(lua_State* L) {
+#if defined(__APPLE__)
+        try {
+            const fs::path& p = path::to(L, 1);
+            lua_pushboolean(L, fs::exists(p));
+        } catch (...) {
+            lua_pushboolean(L, 0);
+        }
+        return 1;
+#else
         LUA_TRY;
         const fs::path& p = path::to(L, 1);
         lua_pushboolean(L, fs::exists(p));
         return 1;
         LUA_TRY_END;
+#endif
     }
 
     static int is_directory(lua_State* L) {
