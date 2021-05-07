@@ -7,6 +7,10 @@
 #include <bee/utility/path_helper.h>
 #include <utility>
 #include <lua.hpp>
+#if defined(__APPLE__)
+#include <deque>
+#endif
+
 
 namespace bee::lua_filesystem {
     namespace path {
@@ -450,9 +454,30 @@ namespace bee::lua_filesystem {
         LUA_TRY_END;
     }
 
+#if defined(__APPLE__)
+    fs::path path_normalize(const fs::path& p) {
+        fs::path result = p.root_path();
+        std::deque<fs::path> stack;
+        for (auto e : p.relative_path()) {
+            if (e == ".." && !stack.empty() && stack.back() != "..") {
+                stack.pop_back();
+            }
+            else if (e != ".") {
+                stack.push_back(e);
+            }
+        }
+        for (auto e : stack) {
+            result /= e;
+        }
+        return result.string();
+    }
+#endif
+
     static int absolute(lua_State* L) {
 #if defined(_WIN32)
 #define FS_ABSOLUTE(path) fs::absolute(path)
+#elif defined(__APPLE__)
+#define FS_ABSOLUTE(path) path_normalize(fs::absolute(path))
 #else
 #define FS_ABSOLUTE(path) fs::absolute(path).lexically_normal()
 #endif
