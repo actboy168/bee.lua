@@ -99,6 +99,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <deque>
 
 //#define LWG_2935_BEHAVIOUR
 #define LWG_2937_BEHAVIOUR
@@ -2225,26 +2226,20 @@ inline bool path::is_relative() const
 // 30.10.8.4.11, generation
 inline path path::lexically_normal() const
 {
-    path dest;
-    for (auto s : *this) {
-        if (s == ".") {
-            continue;
+    path result = root_path();
+    std::deque<path> stack;
+    for (auto e : relative_path()) {
+        if (e == ".." && !stack.empty() && stack.back() != "..") {
+            stack.pop_back();
         }
-        else if (s == ".." && !dest.empty()) {
-            if (dest == root_path()) {
-                continue;
-            }
-            else if (*(--dest.end()) != "..") {
-                dest.remove_filename();
-                continue;
-            }
+        else if (e != ".") {
+            stack.push_back(e);
         }
-        dest /= s;
     }
-    if (dest.empty()) {
-        dest = ".";
+    for (auto e : stack) {
+        result /= e;
     }
-    return dest;
+    return result;
 }
 
 inline path path::lexically_relative(const path& base) const
@@ -3811,11 +3806,7 @@ inline space_info space(const path& p, std::error_code& ec) noexcept
 inline file_status status(const path& p)
 {
     std::error_code ec;
-    auto result = status(p, ec);
-    if (result.type() == file_type::none) {
-        throw filesystem_error(detail::systemErrorText(ec.value()), p, ec);
-    }
-    return result;
+    return status(p, ec);
 }
 
 inline file_status status(const path& p, std::error_code& ec) noexcept
