@@ -598,15 +598,13 @@ function test_fs:test_copy_file_2()
     lu.assertEquals(COPIED, false)
     lu.assertEquals(ToContext, read_file(to))
 
-    if platform.OS == 'Windows' then
-        --TODO: gcc实现的文件写时间精度太低
-        --TODO: macos暂时还需要兼容低版本
-        create_file(to,   ToContext)
-        create_file(from, FromContext)
-        COPIED = fs.copy_file(from, to, fs.copy_options.update_existing)
-        lu.assertEquals(COPIED, true)
-        lu.assertEquals(FromContext, read_file(to))
-    end
+    --TODO: gcc实现的文件写时间精度太低
+    --TODO: macos暂时还需要兼容低版本
+    --create_file(to,   ToContext)
+    --create_file(from, FromContext)
+    --COPIED = fs.copy_file(from, to, fs.copy_options.update_existing)
+    --lu.assertEquals(COPIED, true)
+    --lu.assertEquals(FromContext, read_file(to))
     --clean
     os.remove(from:string())
     os.remove(to:string())
