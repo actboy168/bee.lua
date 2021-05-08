@@ -425,6 +425,10 @@ namespace bee::lua_filesystem {
         LUA_TRY;
         const fs::path& from = path::to(L, 1);
         const fs::path& to = path::to(L, 2);
+        if (lua_type(L, 3) == LUA_TNUMBER) {
+            fs::copy(from, to, static_cast<fs::copy_options>(luaL_checkinteger(L, 3)));
+            return 0;
+        }
         auto options = fs::copy_options::recursive;
         if (lua_toboolean(L, 3)) {
             options |= fs::copy_options::overwrite_existing;
@@ -438,6 +442,11 @@ namespace bee::lua_filesystem {
         LUA_TRY;
         const fs::path& from = path::to(L, 1);
         const fs::path& to = path::to(L, 2);
+        if (lua_type(L, 3) == LUA_TNUMBER) {
+            bool ok = fs::copy_file(from, to, static_cast<fs::copy_options>(luaL_checkinteger(L, 3)));
+            lua_pushboolean(L, ok);
+            return 1;
+        }
         auto options = fs::copy_options::none;
         if (lua_toboolean(L, 3)) {
             options |= fs::copy_options::overwrite_existing;
@@ -569,6 +578,23 @@ namespace bee::lua_filesystem {
         };
         lua_newtable(L);
         luaL_setfuncs(L, lib, 0);
+
+#define DEF_ENUM(CLASS, MEMBER) \
+    lua_pushinteger(L, static_cast<lua_Integer>(fs::CLASS::MEMBER)); \
+    lua_setfield(L, -2, #MEMBER);
+
+        lua_newtable(L);
+        DEF_ENUM(copy_options, none);
+        DEF_ENUM(copy_options, skip_existing);
+        DEF_ENUM(copy_options, overwrite_existing);
+        DEF_ENUM(copy_options, update_existing);
+        DEF_ENUM(copy_options, recursive);
+        DEF_ENUM(copy_options, copy_symlinks);
+        DEF_ENUM(copy_options, skip_symlinks);
+        DEF_ENUM(copy_options, directories_only);
+        DEF_ENUM(copy_options, create_symlinks);
+        DEF_ENUM(copy_options, create_hard_links);
+        lua_setfield(L, -2, "copy_options");
         return 1;
     }
 }

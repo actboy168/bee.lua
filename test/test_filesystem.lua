@@ -15,6 +15,9 @@ else
 end
 
 local function create_file(filename, content)
+    if type(filename) == "userdata" then
+        filename = filename:string()
+    end
     os.remove(filename)
     local f = assert(io.open(filename, 'wb'))
     if content ~= nil then
@@ -23,6 +26,9 @@ local function create_file(filename, content)
     f:close()
 end
 local function read_file(filename)
+    if type(filename) == "userdata" then
+        filename = filename:string()
+    end
     local f = assert(io.open(filename, 'rb'))
     local content = f:read 'a'
     f:close()
@@ -564,6 +570,44 @@ function test_fs:test_copy_file()
     os.remove('temp2.txt')
     lu.assertEquals(fs.exists(fs.path('temp1.txt')), false)
     lu.assertEquals(fs.exists(fs.path('temp2.txt')), false)
+end
+
+function test_fs:test_copy_file_2()
+    local from = fs.path 'temp1.txt'
+    local to   = fs.path 'temp2.txt'
+    local FromContext = tostring(os.time())
+    local ToContext   = tostring(os.clock())
+    local COPIED
+    --copy_options::none
+    create_file(from, FromContext)
+    create_file(to,   ToContext)
+    lu.assertError(fs.copy_file, from, to, fs.copy_options.none)
+    lu.assertEquals(ToContext, read_file(to))
+    --copy_options::skip_existing
+    COPIED = fs.copy_file(from, to, fs.copy_options.skip_existing)
+    lu.assertEquals(COPIED, false)
+    lu.assertEquals(ToContext, read_file(to))
+    --copy_options::overwrite_existing
+    COPIED = fs.copy_file(from, to, fs.copy_options.overwrite_existing)
+    lu.assertEquals(COPIED, true)
+    lu.assertEquals(FromContext, read_file(to))
+    --copy_options::update_existing
+    create_file(from, FromContext)
+    create_file(to,   ToContext)
+    COPIED = fs.copy_file(from, to, fs.copy_options.update_existing)
+    lu.assertEquals(COPIED, false)
+    lu.assertEquals(ToContext, read_file(to))
+
+    create_file(to,   ToContext)
+    create_file(from, FromContext)
+    COPIED = fs.copy_file(from, to, fs.copy_options.update_existing)
+    lu.assertEquals(COPIED, true)
+    lu.assertEquals(FromContext, read_file(to))
+    --clean
+    os.remove(from:string())
+    os.remove(to:string())
+    lu.assertEquals(fs.exists(from), false)
+    lu.assertEquals(fs.exists(to), false)
 end
 
 function test_fs:test_list_directory()
