@@ -2853,6 +2853,9 @@ inline bool copy_file(const path& from, const path& to, copy_options options, st
         return false;
     }
     if (exists(st)) {
+        if ((options & copy_options::skip_existing) == copy_options::skip_existing) {
+            return false;
+        }
         if ((options & copy_options::update_existing) == copy_options::update_existing) {
             auto from_time = last_write_time(from, ec);
             if (ec) {
