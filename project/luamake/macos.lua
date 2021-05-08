@@ -1,9 +1,7 @@
 local lm = require 'luamake'
 
-lm.flags = {
-    "-Wunguarded-availability",
-    not lm.target and "-mmacosx-version-min=10.12",
-}
+lm.flags = "-Wunguarded-availability"
+lm.sys = "macos10.12"
 
 lm:source_set 'source_lua' {
     sources = {
