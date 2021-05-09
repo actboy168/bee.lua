@@ -4,7 +4,7 @@ lm.defines = {
     "_WIN32_WINNT=0x0601",
 }
 
-local STACK_SIZE = lm.mode == "debug" and lm.target == "x64" and lm.plat == "msvc"
+local STACK_SIZE = lm.mode == "debug" and lm.target == "x64" and lm.compiler == "msvc"
 
 lm:shared_library 'lua54' {
     sources = {
@@ -59,8 +59,8 @@ lm:shared_library 'bee' {
         "version",
         "wbemuuid",
         "oleAut32",
-        lm.plat == "mingw" and "stdc++fs",
-        lm.plat == "mingw" and "stdc++"
+        lm.compiler == "gcc" and "stdc++fs",
+        lm.compiler == "gcc" and "stdc++"
     }
 }
 
