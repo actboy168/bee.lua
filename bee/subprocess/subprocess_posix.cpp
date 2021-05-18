@@ -1,5 +1,5 @@
 #include <bee/subprocess.h>
-#include <fmt/format.h>
+#include <bee/format.h>
 #include <deque>
 #include <memory.h>
 #include <sys/types.h>
@@ -200,7 +200,7 @@ namespace bee::posix::subprocess {
         std::string fds;
         for (auto& fd : sockets_) {
             int newfd = net::socket::dup(fd);
-            fds.append(fmt::format("{},", newfd));
+            fds.append(std::format("{},", newfd));
         }
         set_env_["bee-subprocess-dup-sockets"] = fds;
 #endif
@@ -275,7 +275,7 @@ namespace bee::posix::subprocess {
             if (posix_spawn_file_actions_adddup2(&action, fd, ++newfd)) {
                 return false;
             }
-            fds.append(fmt::format("{},", newfd));
+            fds.append(std::format("{},", newfd));
         }
         set_env_["bee-subprocess-dup-sockets"] = fds;
 #if defined(POSIX_SPAWN_SETSID)

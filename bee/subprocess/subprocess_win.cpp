@@ -1,6 +1,6 @@
 #include <bee/subprocess.h>
 #include <bee/subprocess/sharedmemory_win.h>
-#include <fmt/format.h>
+#include <bee/format.h>
 #include <bee/subprocess/args_helper.h>
 #include <Windows.h>
 #include <Shobjidl.h>
@@ -318,7 +318,7 @@ namespace bee::win::subprocess {
             return;
         }
         sharedmemory sh(create_only
-            , fmt::format(L"bee-subprocess-dup-sockets-{}", pi_.dwProcessId).c_str()
+            , std::format(L"bee-subprocess-dup-sockets-{}", pi_.dwProcessId).c_str()
             , sizeof(HANDLE) + sizeof(size_t) + sockets_.size() * sizeof(net::socket::fd_t)
         );
         if (!sh.ok()) {
@@ -504,7 +504,7 @@ namespace bee::win::subprocess {
         static std::vector<net::socket::fd_t> init_sockets() {
             std::vector<net::socket::fd_t> socks;
             sharedmemory sh(open_only
-                , fmt::format(L"bee-subprocess-dup-sockets-{}", ::GetCurrentProcessId()).c_str()
+                , std::format(L"bee-subprocess-dup-sockets-{}", ::GetCurrentProcessId()).c_str()
             );
             if (!sh.ok()) {
                 return socks;
