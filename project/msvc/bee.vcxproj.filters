@@ -248,5 +248,8 @@
     <ClInclude Include="..\..\bee\nonstd\fmt\ranges.h">
       <Filter>bee\nonstd\fmt</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\bee\format.h">
+      <Filter>bee</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

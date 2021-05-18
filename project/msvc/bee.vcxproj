@@ -202,6 +202,7 @@
     <ClInclude Include="..\..\bee\config.h" />
     <ClInclude Include="..\..\bee\error.h" />
     <ClInclude Include="..\..\bee\filesystem.h" />
+    <ClInclude Include="..\..\bee\format.h" />
     <ClInclude Include="..\..\bee\fsevent.h" />
     <ClInclude Include="..\..\bee\fsevent\fsevent_osx.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
