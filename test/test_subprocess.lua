@@ -205,6 +205,18 @@ function test_subprocess:test_stdio_2()
     lu.assertEquals(process2.stdout:read 'a', "ok")
 end
 
+function test_subprocess:test_stdio_3()
+    local process = createLua([[
+        io.stdout:write "[stdout]"; io.stdout:flush()
+        io.stderr:write "[stderr]"; io.stderr:flush()
+    ]], { stdout = true, stderr = "stdout" })
+    lu.assertEquals(process:wait(), 0)
+    lu.assertIsUserdata(process.stdout)
+    lu.assertIsUserdata(process.stderr)
+    lu.assertEquals(process.stdout, process.stderr)
+    lu.assertEquals(process.stdout:read "a", "[stdout][stderr]")
+end
+
 function test_subprocess:test_peek()
     local process = createLua('io.write "ok"', { stdout = true })
     lu.assertEquals(process:wait(), 0)
