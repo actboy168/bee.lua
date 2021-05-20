@@ -22,11 +22,25 @@ local function shell_bash(option)
     return sp.spawn(option)
 end
 
-local function shell_win(option)
-    if os.getenv 'MSYSTEM' ~= nil then
-        --TODO
-        --return shell_bash(option)
+local function shell_mingw(option)
+    if option.argsStyle == 'string' then
+        option[3] = ('%s %s'):format(sp.quotearg(option[1]), option[2])
+    else
+        local s = {}
+        for _, opt in ipairs(option) do
+            s[#s+1] = sp.quotearg(opt)
+        end
+        option[3] = table.concat(s, " ")
     end
+    option[1] = 'sh'
+    option[2] = '-c'
+    option[4] = nil
+    option.argsStyle = nil
+    option.searchPath = true
+    return sp.spawn(option)
+end
+
+local function shell_win32(option)
     local file = fs.path(os.getenv 'COMSPEC' or 'cmd.exe')
     local iscmd = file:filename() == fs.path('cmd.exe')
     if not file:is_absolute() then
@@ -46,7 +60,11 @@ local function shell_win(option)
 end
 
 if platform.OS == 'Windows' then
-    sp.shell = shell_win
+    if os.getenv 'MSYSTEM' == nil then
+        sp.shell = shell_win32
+    else
+        sp.shell = shell_mingw
+    end
 else
     sp.shell = shell_bash
 end
