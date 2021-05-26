@@ -102,7 +102,9 @@ namespace bee::win::fsevent {
     }
 
     bool task::start() {
-        assert(m_directory != INVALID_HANDLE_VALUE);
+        if (m_directory == INVALID_HANDLE_VALUE)) {
+            return false;
+        }
         if (!::ReadDirectoryChangesW(
             m_directory,
             &m_buffer[0],
