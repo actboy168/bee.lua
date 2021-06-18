@@ -1,6 +1,5 @@
 /build/
-.vs/
+/.vs/*
+!/.vs/launch.vs.json
 *.user
 /.vscode/ipch/
-
-/test_temp.lua
