@@ -250,8 +250,7 @@ namespace bee::net::socket {
 #if defined _WIN32
     static bool forceSimulationUDS = false;
     static bool supportUnixDomainSocket_() {
-        auto[ver, build] = bee::platform::get_version();
-        return ver == bee::platform::WinVer::Win10 && build >= 17763;
+        return !(bee::platform::get_version() < bee::platform::version {10, 0, 17763, 0});
     }
     bool supportUnixDomainSocket() {
         if (forceSimulationUDS) {

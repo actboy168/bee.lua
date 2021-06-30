@@ -4,33 +4,6 @@
 
 namespace bee::platform {
 
-	static WinVer getWinVersion(uint32_t major, uint32_t minor) {
-		if ((major == 5) && (minor > 0)) {
-			return (minor == 1) ? WinVer::XP : WinVer::Server2003;
-		}
-		else if (major == 6) {
-			switch (minor) {
-			case 0:
-				return WinVer::Vista;
-			case 1:
-				return WinVer::Win7;
-			case 2:
-				return WinVer::Win8;
-				break;
-			case 3:
-			default:
-				return WinVer::Win8_1;
-			}
-		}
-		else if (major == 10) {
-			return WinVer::Win10;
-		}
-		else if (major > 6) {
-			return WinVer::Win10Later;
-		}
-		return WinVer::PreXP;
-	}
-
 	version get_version() {
 		OSVERSIONINFOW osvi = {  };
         osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
@@ -41,19 +14,23 @@ namespace bee::platform {
         ::GetVersionExW(&osvi);
 #endif
 
-		uint32_t major = osvi.dwMajorVersion;
-		uint32_t minor = osvi.dwMinorVersion;
-		uint32_t build = osvi.dwBuildNumber;
+        version v {
+            osvi.dwMajorVersion,
+            osvi.dwMinorVersion,
+            osvi.dwBuildNumber,
+            0
+		};
 
-		if ((major > 6) || (major == 6 && minor >= 2)) {
+        if ((v.major > 6) || (v.major == 6 && v.minor >= 2)) {
 			// see
 			//   http://msdn.microsoft.com/en-us/library/windows/desktop/ms724451(v=vs.85).aspx
 			//   http://msdn.microsoft.com/en-us/library/windows/desktop/ms724429(v=vs.85).aspx
 			simple_module_version sfv(L"kernel32.dll", L"ProductVersion", L'.');
-			major = sfv.major;
-			minor = sfv.minor;
-			build = sfv.revision;
+			v.major = sfv.major;
+			v.minor = sfv.minor;
+			v.revision = sfv.revision;
+			v.build = sfv.build;
 		}
-		return { getWinVersion(major, minor), build };
+        return v;
 	}
 }

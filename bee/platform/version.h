@@ -6,22 +6,22 @@
 #include <stdint.h>
 
 namespace bee::platform {
-    enum class WinVer : uint8_t {
-        PreXP,
-        XP,
-        Server2003,
-        Vista,
-        Win7,
-        Win8,
-        Win8_1,
-        Win10,
-        Win10Later
-    };
 	struct version {
-		WinVer   ver;
+		uint32_t major;
+		uint32_t minor;
+		uint32_t revision;
 		uint32_t build;
+        bool operator<(const version& r) const {
+            const version& l = *this;
+            if (l.major < r.major) { return true; }
+            if (l.minor < r.minor) { return true; }
+            if (l.revision < r.revision) { return true; }
+            if (l.build < r.build) { return true; }
+            return false;
+        }
 	};
-	_BEE_API version get_version();
+
+    _BEE_API version get_version();
 }
 
 #endif
