@@ -3,6 +3,7 @@
 #endif
 #include "utf8_crt.h"
 #include <malloc.h>
+#include <assert.h>
 #include <Windows.h>
 #include <io.h>
 
@@ -117,7 +118,7 @@ char* __cdecl utf8_getenv(const char* varname)
 	if (!wret) {
 		return NULL;
 	}
-	static char* ret = NULL;
+	static __declspec(thread) char* ret = NULL;
 	if (ret) {
 		free(ret);
 	}
@@ -127,15 +128,12 @@ char* __cdecl utf8_getenv(const char* varname)
 
 char* __cdecl utf8_tmpnam(char* buffer)
 {
+    assert(buffer);
 	wchar_t tmp[L_tmpnam];
-	static char tmpbuf[L_tmpnam];
 	if (!_wtmpnam(tmp)) {
 		return NULL;
 	}
-	if (!buffer) {
-		buffer = tmpbuf;
-	}
-	unsigned long ret = WideCharToMultiByte(CP_UTF8, 0, tmp, -1, buffer, L_tmpnam, NULL, NULL);
+    unsigned long ret = WideCharToMultiByte(CP_UTF8, 0, tmp, -1, buffer, L_tmpnam, NULL, NULL);
 	if (ret == 0) {
 		return NULL;
 	}
