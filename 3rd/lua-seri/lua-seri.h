@@ -1,5 +1,5 @@
-#ifndef LUA_SERI_H
-#define LUA_SERI_H
+#ifndef LUA_SERIALIZE_H
+#define LUA_SERIALIZE_H
 
 #include <lua.h>
 

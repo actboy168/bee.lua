@@ -1,5 +1,5 @@
 /*
-	modify from https://github.com/cloudwu/skynet  lualib-src/lua-seri.c
+	modify from https://github.com/cloudwu/lua-serialize
  */
 
 #include <lua.h>
