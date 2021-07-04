@@ -129,11 +129,11 @@ function test_socket:test_pair()
     server:close()
 end
 
-local function createEchoThread(name, address)
-return thread.thread(([=[
+local function createEchoThread(name, ...)
+return thread.thread(([[
     -- %s
     local ls = require 'bee.socket'
-    local client = assert(ls.connect(%s))
+    local client = assert(ls.connect(...))
     local _, wr = ls.select(nil, {client})
     assert(wr[1] == client)
     assert(client:status())
@@ -160,7 +160,7 @@ return thread.thread(([=[
             end
         end
     end
-]=]):format(name, address))
+]]):format(name), ...)
 
 end
 
@@ -169,7 +169,7 @@ local function createTcpEchoTest(name, f)
     lu.assertIsUserdata(server, errmsg)
     local _, port = server:info('socket')
     lu.assertIsNumber(port)
-    local client = createEchoThread(name, ([['tcp', '127.0.0.1', %d]]):format(port))
+    local client = createEchoThread(name, 'tcp', '127.0.0.1', port)
     local rd, _ = ls.select({server}, nil)
     assert(rd[1], server)
     local session = server:accept()
@@ -186,7 +186,7 @@ end
 local function createUnixEchoTest(name, f)
     local server, errmsg = ls.bind('unix', 'test.unixsock')
     lu.assertIsUserdata(server, errmsg)
-    local client = createEchoThread(name, [['unix', 'test.unixsock']])
+    local client = createEchoThread(name, 'unix', 'test.unixsock')
     local rd, _ = ls.select({server}, nil)
     assert(rd[1], server)
     local session = server:accept()

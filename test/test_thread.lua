@@ -3,8 +3,8 @@ local lu = require 'ltest'
 local thread = require "bee.thread"
 local err = thread.channel "errlog"
 
-local function createThread(script)
-    return thread.thread(script)
+local function createThread(script, ...)
+    return thread.thread(script, ...)
 end
 
 local function assertNotThreadError()
@@ -65,6 +65,16 @@ function test_thread:test_thread_3()
     ]]
     thread.wait(thd)
     assertHasThreadError('Test thread error.')
+    assertNotThreadError()
+end
+
+function test_thread:test_thread_initargs()
+    assertNotThreadError()
+    local thd = createThread([[
+        local args = ...
+        assert(args == "hello")
+    ]], "hello")
+    thread.wait(thd)
     assertNotThreadError()
 end
 

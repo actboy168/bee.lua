@@ -235,11 +235,9 @@ static luaL_Reg CMODULE[] = {
     }
 
     struct thread_args {
-        std::string   source;
-        int           id;
-        lua_CFunction param;
-        thread_args(std::string&& src, int id_, lua_CFunction f)
-            : source(std::forward<std::string>(src)), id(id_), param(f) {}
+        std::string source;
+        int         id;
+        void*       params;
     };
 
     static int gen_threadid() {
@@ -293,15 +291,10 @@ static luaL_Reg CMODULE[] = {
             delete args;
             return lua_error(L);
         }
-        lua_CFunction f = args->param;
+        void* params = args->params;
         delete args;
-        if (f == NULL) {
-            lua_call(L, 0, 0);
-        }
-        else {
-            lua_pushcfunction(L, f);
-            lua_call(L, 1, 0);
-        }
+        int n = seri_unpackptr(L, params);
+        lua_call(L, n, 0);
         return 0;
     }
 
@@ -338,17 +331,11 @@ static luaL_Reg CMODULE[] = {
     }
 
     static int lthread(lua_State* L) {
-        std::string   source = checkstring(L, 1);
-        lua_CFunction f = NULL;
-        if (!lua_isnoneornil(L, 2)) {
-            if (!lua_iscfunction(L, 2) || lua_getupvalue(L, 2, 1) != NULL) {
-                return luaL_error(L, "2nd param should be a C function without upvalue");
-            }
-            f = lua_tocfunction(L, 2);
-        }
+        std::string source = checkstring(L, 1);
+        void*       params = seri_pack(L, 1, NULL);
         LUA_TRY;
         int id = gen_threadid();
-        thread_args* args = new thread_args(std::move(source), id, f);
+        thread_args* args = new thread_args { std::move(source), id, params };
         luathread* thread = new luathread(id, std::bind(thread_main, args));
         lua_pushlightuserdata(L, thread);
         return 1;
