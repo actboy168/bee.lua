@@ -145,7 +145,7 @@ static luaL_Reg CMODULE[] = {
     };
 
     static channelmgr       g_channel;
-    static std::atomic<int> g_thread_id = 0;
+    static std::atomic<int> g_thread_id = -1;
     static int       THREADID;
 
     static std::string checkstring(lua_State* L, int idx) {
@@ -377,7 +377,7 @@ static luaL_Reg CMODULE[] = {
         }
         lua_pop(L, 1);
 
-        lua_pushinteger(L, 0);
+        lua_pushinteger(L, gen_threadid());
         lua_pushvalue(L, -1);
         lua_rawsetp(L, LUA_REGISTRYINDEX, &THREADID);
     }
