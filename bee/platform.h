@@ -58,7 +58,7 @@
 // see https://sourceforge.net/p/predef/wiki/Libraries/
 #if defined(__BIONIC__)
 #	define BEE_CRT_NAME "bionic"
-#	define BEE_CRT_NAME "bionic"
+#	define BEE_CRT_VERSION "bionic"
 #elif defined(_MSC_VER)
 #	define BEE_CRT_NAME "msvc"
 #	define BEE_CRT_VERSION "MSVC STL " \
