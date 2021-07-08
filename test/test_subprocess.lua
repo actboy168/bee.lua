@@ -291,7 +291,12 @@ function test_subprocess:test_env()
 
     lu.assertNotEquals(os.getenv 'PATH', nil)
     test_env('os.getenv "PATH" ~= nil', {})
-    test_env('os.getenv "PATH" == nil', {PATH=false})
+    if not shell.isMingw then
+        -- TODO: mingw会crash
+        test_env('os.getenv "PATH" == nil', {PATH=false})
+    else
+        test_env('os.getenv "MSYSTEM" == nil', {MSYSTEM=false})
+    end
 end
 
 function test_subprocess:test_sockets()

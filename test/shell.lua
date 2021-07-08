@@ -1,6 +1,8 @@
 local platform = require 'bee.platform'
 
-local isWindowsShell = (platform.OS == 'Windows') and (os.getenv 'MSYSTEM' == nil)
+local isWindows = platform.OS == 'Windows'
+local isMingw = os.getenv 'MSYSTEM' ~= nil
+local isWindowsShell = (isWindows) and (not isMingw)
 
 local shell = {}
 
@@ -20,7 +22,7 @@ function shell:del_readonly(filename)
 end
 
 function shell:pwd()
-    local command = isWindowsShell and 'echo %cd%' or 'pwd -P'
+    local command = isWindows and 'echo %cd%' or 'pwd -P'
     return (io.popen(command):read 'a'):gsub('[\n\r]*$', '')
 end
 
@@ -32,6 +34,7 @@ function shell:path()
     end
 end
 
+shell.isMingw = isMingw
 shell.isWindowsShell = isWindowsShell
 
 return shell
