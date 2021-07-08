@@ -1,19 +1,18 @@
 local platform = require 'bee.platform'
 
-local function isWindowsShell()
-    return (platform.OS == 'Windows') and (os.getenv 'MSYSTEM' == nil)
-end
+local isWindowsShell = (platform.OS == 'Windows') and (os.getenv 'MSYSTEM' == nil)
 
 local shell = {}
+
 function shell:add_readonly(filename)
-    if isWindowsShell() then
+    if isWindowsShell then
         os.execute(('attrib +r %q'):format(filename))
     else
         os.execute(('chmod a-w %q'):format(filename))
     end
 end
 function shell:del_readonly(filename)
-    if isWindowsShell() then
+    if isWindowsShell then
         os.execute(('attrib -r %q'):format(filename))
     else
         os.execute(('chmod a+w %q'):format(filename))
@@ -26,11 +25,13 @@ function shell:pwd()
 end
 
 function shell:path()
-    if isWindowsShell() then
+    if isWindowsShell then
         return 'cmd', '/c'
     else
         return '/bin/sh', '-c'
     end
 end
+
+shell.isWindowsShell = isWindowsShell
 
 return shell

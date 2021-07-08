@@ -5,6 +5,7 @@ local subprocess = require 'bee.subprocess'
 local socket = require 'bee.socket'
 local thread = require 'bee.thread'
 local platform = require 'bee.platform'
+local shell = require 'shell'
 
 local function getexe()
     local i = 0
@@ -350,7 +351,7 @@ function test_subprocess:test_shell()
     lu.assertIsUserdata(process, err)
     lu.assertIsUserdata(process.stdout)
     lu.assertIsUserdata(process.stderr)
-    if platform.OS == 'Windows' and os.getenv 'MSYSTEM' == nil then
+    if shell.isWindowsShell then
         lu.assertEquals(process.stdout:read 'a', 'ok\r\n')
     else
         lu.assertEquals(process.stdout:read 'a', 'ok\n')
