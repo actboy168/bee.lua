@@ -530,26 +530,32 @@ function test_fs:test_copy_file()
         lu.assertEquals(fs.exists(fs.path(to)), false)
     end
     for _, copy in ipairs {fs.copy_file, fs.copy} do
+        local NONE = fs.copy_options.none
+        local OVERWRITE = fs.copy_options.overwrite_existing
+        if copy == fs.copy then
+            NONE = NONE & fs.copy_options.recursive
+            OVERWRITE = OVERWRITE & fs.copy_options.recursive
+        end
         create_file('temp1.txt', tostring(os.time()))
         os.remove('temp2.txt')
-        copy(fs.path 'temp1.txt', fs.path 'temp2.txt', false)
+        copy(fs.path 'temp1.txt', fs.path 'temp2.txt', NONE)
         copy_file_ok('temp1.txt', 'temp2.txt')
 
         create_file('temp1.txt', tostring(os.time()))
         os.remove('temp2.txt')
-        copy(fs.path 'temp1.txt', fs.path 'temp2.txt', true)
+        copy(fs.path 'temp1.txt', fs.path 'temp2.txt', OVERWRITE)
         copy_file_ok('temp1.txt', 'temp2.txt')
 
         if fs.copy ~= copy or platform.CRT == "msvc" then
             create_file('temp1.txt', tostring(os.time()))
             create_file('temp2.txt', tostring(os.clock()))
-            copy(fs.path 'temp1.txt', fs.path 'temp2.txt', true)
+            copy(fs.path 'temp1.txt', fs.path 'temp2.txt', OVERWRITE)
             copy_file_ok('temp1.txt', 'temp2.txt')
         end
 
         create_file('temp1.txt', tostring(os.time()))
         create_file('temp2.txt', tostring(os.clock()))
-        lu.assertError(copy, fs.path 'temp1.txt', fs.path 'temp2.txt')
+        lu.assertError(copy, fs.path 'temp1.txt', fs.path 'temp2.txt', NONE)
         copy_file_failed('temp1.txt', 'temp2.txt')
     end
 
@@ -559,7 +565,7 @@ function test_fs:test_copy_file()
     fs.path('temp1.txt'):remove_permissions(ALLOW_WRITE)
     lu.assertEquals(fs.path('temp1.txt'):permissions() & USER_WRITE, 0)
     lu.assertEquals(fs.path('temp2.txt'):permissions() & USER_WRITE, USER_WRITE)
-    fs.copy_file(fs.path('temp1.txt'), fs.path('temp2.txt'), true)
+    fs.copy_file(fs.path('temp1.txt'), fs.path('temp2.txt'), fs.copy_options.overwrite_existing)
     lu.assertEquals(fs.exists(fs.path('temp1.txt')), true)
     lu.assertEquals(fs.exists(fs.path('temp2.txt')), true)
     lu.assertEquals(fs.path('temp2.txt'):permissions() & USER_WRITE, 0)
