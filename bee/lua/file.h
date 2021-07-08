@@ -123,7 +123,6 @@ namespace bee::lua {
         return luaL_fileresult(L, status, NULL);
     }
     static int g_read(lua_State* L, FILE* f, int first) {
-        int nargs = lua_gettop(L) - 1;
         int success;
         clearerr(f);
         success = read_line(L, f, 1);
