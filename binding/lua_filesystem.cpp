@@ -440,16 +440,20 @@ namespace bee::lua_filesystem {
 
     static bool patch_copy_file(const fs::path& from, const fs::path& to, fs::copy_options options) {
 #if defined(__MINGW32__)
-        if ((options & fs::copy_options::overwrite_existing) != fs::copy_options::none) {
-            if (fs::exists(from)) {
+        if (fs::exists(from) && fs::exists(to)) {
+            if ((options & fs::copy_options::overwrite_existing) != fs::copy_options::none) {
                 fs::remove(to);
             }
-        }
-        else if ((options & fs::copy_options::update_existing) != fs::copy_options::none) {
-            if (fs::exists(from) && fs::exists(to)) {
+            else if ((options & fs::copy_options::update_existing) != fs::copy_options::none) {
                 if (fs::last_write_time(from) > fs::last_write_time(to)) {
                     fs::remove(to);
                 }
+                else {
+                    return false;
+                }
+            }
+            else if ((options & fs::copy_options::skip_existing) != fs::copy_options::none) {
+                return false;
             }
         }
 #endif
