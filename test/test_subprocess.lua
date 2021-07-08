@@ -350,7 +350,7 @@ function test_subprocess:test_shell()
     lu.assertIsUserdata(process, err)
     lu.assertIsUserdata(process.stdout)
     lu.assertIsUserdata(process.stderr)
-    if platform.OS == 'Windows' then
+    if platform.OS == 'Windows' and os.getenv 'MSYSTEM' == nil then
         lu.assertEquals(process.stdout:read 'a', 'ok\r\n')
     else
         lu.assertEquals(process.stdout:read 'a', 'ok\n')
