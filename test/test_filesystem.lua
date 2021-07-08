@@ -533,8 +533,8 @@ function test_fs:test_copy_file()
         local NONE = fs.copy_options.none
         local OVERWRITE = fs.copy_options.overwrite_existing
         if copy == fs.copy then
-            NONE = NONE & fs.copy_options.recursive
-            OVERWRITE = OVERWRITE & fs.copy_options.recursive
+            NONE = NONE | fs.copy_options.recursive
+            OVERWRITE = OVERWRITE | fs.copy_options.recursive
         end
         create_file('temp1.txt', tostring(os.time()))
         os.remove('temp2.txt')
