@@ -438,23 +438,38 @@ namespace bee::lua_filesystem {
         LUA_TRY_END;
     }
 
+    static bool patch_copy_file(const fs::path& from, const fs::path& to, fs::copy_options options) {
+#if defined(__MINGW32__)
+        if ((options & fs::copy_options::overwrite_existing) != fs::copy_options::none) {
+            if (fs::exists(from)) {
+                fs::remove(to);
+            }
+        }
+        else if ((options & fs::copy_options::update_existing) != fs::copy_options::none) {
+            if (fs::exists(from) && fs::exists(to)) {
+                if (fs::last_write_time(from) > fs::last_write_time(to)) {
+                    fs::remove(to);
+                }
+            }
+        }
+#endif
+        return fs::copy_file(from, to, options);
+    }
+
     static int copy_file(lua_State* L) {
         LUA_TRY;
         const fs::path& from = path::to(L, 1);
         const fs::path& to = path::to(L, 2);
         if (lua_type(L, 3) == LUA_TNUMBER) {
-            bool ok = fs::copy_file(from, to, static_cast<fs::copy_options>(luaL_checkinteger(L, 3)));
+            bool ok = patch_copy_file(from, to, static_cast<fs::copy_options>(luaL_checkinteger(L, 3)));
             lua_pushboolean(L, ok);
             return 1;
         }
         auto options = fs::copy_options::none;
         if (lua_toboolean(L, 3)) {
             options |= fs::copy_options::overwrite_existing;
-            if (fs::exists(from)) {
-                fs::remove(to);
-            }
         }
-        fs::copy_file(from, to, options);
+        patch_copy_file(from, to, options);
         return 0;
         LUA_TRY_END;
     }
