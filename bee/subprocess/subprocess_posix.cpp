@@ -79,7 +79,7 @@ namespace bee::posix::subprocess {
             }
         }
         ~allocarray() {
-            delete[] data;
+            free(data);
         }
         T* release() {
             append(0);
