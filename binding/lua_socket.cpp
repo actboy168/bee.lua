@@ -321,6 +321,11 @@ namespace bee::lua_socket {
         }
         return 0;
     }
+    static int handle(lua_State* L) {
+        luafd& self = checkfd(L, 1);
+        lua_pushlightuserdata(L, (void*)(intptr_t)self.fd);
+        return 1;
+    }
     static luafd& pushfd(lua_State* L, socket::fd_t fd, socket::protocol protocol, luafd::tag type) {
         luafd* self = (luafd*)lua_newuserdatauv(L, sizeof(luafd), 0);
         new (self) luafd(fd, protocol, type);
@@ -335,6 +340,7 @@ namespace bee::lua_socket {
                 {"shutdown", shutdown},
                 {"status", status},
                 {"info", info},
+                {"handle", handle},
                 {"__tostring", tostring},
                 {"__close", toclose},
                 {"__gc", gc},
