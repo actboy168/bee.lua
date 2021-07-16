@@ -43,6 +43,8 @@ function test_plat:test_1()
     if plat == 'linux' then
         lu.assertEquals(platform.Compiler == 'gcc' or platform.Compiler == 'clang', true)
         support.linux.Compiler = platform.Compiler
+        -- There are too many platforms Linux run on
+        support[plat].Arch = platform.Arch
     end
     if plat == 'msvc' or plat == 'msbuild' then
         lu.assertEquals(platform.Arch == 'x86' or platform.Arch == 'x86_64', true)
