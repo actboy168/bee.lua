@@ -16,7 +16,3 @@ Lua runtime and toolset
 * Remove randomness when traversing the table
 * Add error hook (for debugger)
 * Add resume/yield hook (for debugger)
-
-## TODO
-
-* High-level network library
