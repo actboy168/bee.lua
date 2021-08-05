@@ -4,9 +4,9 @@
 #include <condition_variable>
 
 namespace bee {
-    class semaphore {
+    class binary_semaphore {
     public:
-        void signal() {
+        void release() {
             std::unique_lock<std::mutex> lk(mutex);
             if (ok) {
                 return;
@@ -15,13 +15,13 @@ namespace bee {
             lk.unlock();
             condition.notify_one();
         }
-        void wait() {
+        void acquire() {
             std::unique_lock<std::mutex> lk(mutex);
             condition.wait(lk, [this] { return ok; });
             ok = false;
         }
 		template<class Rep, class Period>
-		bool wait_for(const std::chrono::duration<Rep, Period>& timeout) {
+		bool try_acquire_for(const std::chrono::duration<Rep, Period>& timeout) {
 			std::unique_lock<std::mutex> lk(mutex);
 			if (condition.wait_for(lk, timeout, [this] { return ok; })) {
 				ok = false;
@@ -30,7 +30,7 @@ namespace bee {
 			return false;
 		}
 		template <class Clock, class Duration>
-		bool wait_until(const std::chrono::time_point<Clock, Duration>& timeout) {
+		bool try_acquire_until(const std::chrono::time_point<Clock, Duration>& timeout) {
 			std::unique_lock<std::mutex> lk(mutex);
 			if (condition.wait_until(lk, timeout, [this] { return ok; })) {
 				ok = false;

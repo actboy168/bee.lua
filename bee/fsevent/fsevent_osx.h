@@ -63,6 +63,6 @@ namespace bee::osx::fsevent {
         lockqueue<notify>             m_notify;
         std::map<taskid, std::string> m_tasks; 
         taskid                        m_gentask;
-        semaphore                     m_sem;
+        binary_semaphore              m_sem;
     };
 }

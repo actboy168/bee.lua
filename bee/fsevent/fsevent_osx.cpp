@@ -61,7 +61,7 @@ namespace bee::osx::fsevent {
             return false;
         }
         m_thread.reset(new std::thread(std::bind(&watch::thread_cb, this)));
-        m_sem.wait();
+        m_sem.acquire();
         return true;
     }
 
@@ -138,7 +138,7 @@ namespace bee::osx::fsevent {
     }
     void watch::thread_cb() {
         m_loop = CFRunLoopGetCurrent();
-        m_sem.signal();
+        m_sem.release();
         CFRunLoopAddSource(m_loop, m_source, kCFRunLoopDefaultMode);
         CFRunLoopRun();
         CFRunLoopRemoveSource(m_loop, m_source, kCFRunLoopDefaultMode);

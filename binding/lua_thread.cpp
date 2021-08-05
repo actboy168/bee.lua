@@ -60,14 +60,14 @@ static luaL_Reg CMODULE[] = {
 
         void push(void* data) {
             mybase::push(data);
-            sem.signal();
+            sem.release();
         }
         void blocked_pop(void*& data) {
             for (;;) {
                 if (mybase::pop(data)) {
                     return;
                 }
-                sem.wait();
+                sem.acquire();
             }
         }
         template <class Rep, class Period>
@@ -76,11 +76,11 @@ static luaL_Reg CMODULE[] = {
             if (mybase::pop(data)) {
                 return true;
             }
-            if (!sem.wait_for(timeout)) {
+            if (!sem.try_acquire_for(timeout)) {
                 return false;
             }
             while (!mybase::pop(data)) {
-                if (!sem.wait_until(now + timeout)) {
+                if (!sem.try_acquire_until(now + timeout)) {
                     return false;
                 }
             }
@@ -88,7 +88,7 @@ static luaL_Reg CMODULE[] = {
         }
 
     private:
-        semaphore sem;
+        binary_semaphore sem;
     };
 
     class channelmgr {
