@@ -131,10 +131,9 @@ namespace bee::lua_socket {
     }
     static int send(lua_State* L) {
         luafd&      self = checkfd(L, 1);
-        size_t      len;
-        const char* buf = luaL_checklstring(L, 2, &len);
+        std::string_view buf = lua::to_strview(L, 2);
         int         rc;
-        switch (socket::send(self.fd, rc, buf, (int)len)) {
+        switch (socket::send(self.fd, rc, (const char*)buf.data(), (int)buf.size())) {
         case socket::status::wait:
             lua_pushboolean(L, 0);
             return 1;
@@ -182,8 +181,7 @@ namespace bee::lua_socket {
     }
     static int sendto(lua_State* L) {
         luafd&           self = checkfd(L, 1);
-        size_t           len;
-        const char*      buf = luaL_checklstring(L, 2, &len);
+        std::string_view buf = lua::to_strview(L, 2);
         std::string_view ip = lua::to_strview(L, 3);
         int              port = (int)luaL_checkinteger(L, 4);
         auto             ep = endpoint::from_hostname(ip, port);
@@ -191,7 +189,7 @@ namespace bee::lua_socket {
             return luaL_error(L, "invalid address: %s:%d", ip, port);
         }
         int rc;
-        switch (socket::sendto(self.fd, rc, buf, (int)len, ep)) {
+        switch (socket::sendto(self.fd, rc, buf.data(), (int)buf.size(), ep)) {
         case socket::status::wait:
             lua_pushboolean(L, 0);
             return 1;
