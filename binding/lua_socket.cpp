@@ -233,7 +233,7 @@ namespace bee::lua_socket {
         if (!socket::shutdown(self.fd, flag)) {
             return push_neterror(L, "shutdown");
         }
-        lua_pushboolean(L, true);
+        lua_pushboolean(L, 1);
         return 1;
     }
     static int shutdown(lua_State* L) {
@@ -286,7 +286,7 @@ namespace bee::lua_socket {
         luafd& self = checkfd(L, 1);
         int    err = socket::errcode(self.fd);
         if (err == 0) {
-            lua_pushboolean(L, true);
+            lua_pushboolean(L, 1);
             return 1;
         }
         auto error = make_error(err);
@@ -382,10 +382,10 @@ namespace bee::lua_socket {
         pushfd(L, fd, protocol, luafd::tag::connect);
         switch (socket::connect(fd, ep)) {
         case socket::status::success:
-            lua_pushboolean(L, true);
+            lua_pushboolean(L, 1);
             return 2;
         case socket::status::wait:
-            lua_pushboolean(L, false);
+            lua_pushboolean(L, 0);
             return 2;
         default:
             assert(false);
