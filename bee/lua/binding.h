@@ -41,22 +41,6 @@ namespace bee::lua {
 #endif
     }
 
-    inline string_type tostring(lua_State* L, int idx)
-    {
-        if (lua_isstring(L, idx)) {
-            return checkstring(L, idx);
-        }
-        if (!luaL_callmeta(L, idx, "__tostring")) {
-            luaL_error(L, "cannot be converted to string");
-        }
-        if (!lua_isstring(L, -1)) {
-            luaL_error(L, "'__tostring' must return a string");
-        }
-        string_type res = checkstring(L, -1);
-        lua_pop(L, 1);
-        return res;
-    }
-
     inline void push_string(lua_State* L, const string_type& str)
     {
 #if defined(_WIN32) 
