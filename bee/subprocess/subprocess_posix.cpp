@@ -10,7 +10,6 @@
 #include <signal.h>
 #include <errno.h>
 #include <assert.h>
-#include <spawn.h>
 
 #if defined(__APPLE__)
 # include <crt_externs.h>
@@ -150,17 +149,26 @@ namespace bee::posix::subprocess {
         fds_[0] = -1;
         fds_[1] = -1;
         fds_[2] = -1;
+        int r = posix_spawnattr_init(&spawnattr_);
+        assert(r == 0);
     }
 
-    spawn::~spawn()
-    { }
+    spawn::~spawn() {
+        posix_spawnattr_destroy(&spawnattr_);
+    }
 
     void spawn::suspended() {
-        suspended_ = true;
+#if defined(POSIX_SPAWN_START_SUSPENDED)
+        // apple extension
+        posix_spawnattr_setflags(&spawnattr_, POSIX_SPAWN_START_SUSPENDED);
+#endif
     }
 
     void spawn::detached() {
-        detached_ = true;
+#if defined(POSIX_SPAWN_SETSID)
+        // since glibc 2.26
+        posix_spawnattr_setflags(&spawnattr_, POSIX_SPAWN_SETSID);
+#endif
     }
 
     void spawn::redirect(stdio type, file::handle h) { 
@@ -209,11 +217,7 @@ namespace bee::posix::subprocess {
     bool spawn::raw_exec(char* const args[], const char* cwd) {
         pid_t pid;
         posix_spawn_file_actions_t action;
-        posix_spawnattr_t attr;
         if (posix_spawn_file_actions_init(&action)) {
-            return false;
-        }
-        if (posix_spawnattr_init(&attr)) {
             return false;
         }
         for (int i = 0; i < 3; ++i) {
@@ -232,23 +236,12 @@ namespace bee::posix::subprocess {
             fds.append(std::format("{},", newfd));
         }
         set_env_["bee-subprocess-dup-sockets"] = fds;
-#if defined(POSIX_SPAWN_SETSID)
-        // since glibc 2.26
-        if (detached_) {
-            posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETSID);
-        }
-#else
-        if (detached_) {
-            return false;
-        }
-#endif
-        if (posix_spawnp(&pid, args[0], &action, &attr, args, make_env(set_env_, del_env_))) {
+        if (posix_spawnp(&pid, args[0], &action, &spawnattr_, args, make_env(set_env_, del_env_))) {
             return false;
         }
         pid_ = pid;
         do_duplicate_shutdown();
         posix_spawn_file_actions_destroy(&action);
-        posix_spawnattr_destroy(&attr);
         return true;
     }
 

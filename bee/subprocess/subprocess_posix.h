@@ -8,6 +8,7 @@
 #include <vector>
 #include <bee/net/socket.h>
 #include <bee/utility/file_helper.h>
+#include <spawn.h>
 
 namespace bee::posix::subprocess {
     enum class stdio {
@@ -72,7 +73,6 @@ namespace bee::posix::subprocess {
         std::vector<net::socket::fd_t>     sockets_;
         int                                fds_[3];
         int                                pid_ = -1;
-        bool                               suspended_ = false;
-        bool                               detached_ = false;
+        posix_spawnattr_t                  spawnattr_;
     };
 }
