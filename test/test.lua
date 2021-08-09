@@ -36,7 +36,6 @@ print("DEBUG:    ", platform.DEBUG)
 local lu = require 'ltest'
 
 require 'test_lua'
-require 'test_platform'
 require 'test_serialization'
 require 'test_filesystem'
 require 'test_thread'
