@@ -58,7 +58,16 @@
 // see https://sourceforge.net/p/predef/wiki/Libraries/
 #if defined(__BIONIC__)
 #	define BEE_CRT_NAME "bionic"
-#	define BEE_CRT_VERSION "bionic"
+#	if __has_include(<android/ndk-version.h>)
+#		include <android/ndk-version.h>
+#	endif
+#	if defined(__NDK_MAJOR__) && defined(__NDK_MINOR__)
+#		define BEE_CRT_VERSION "NDK r" \
+			BEE_STRINGIZE(__NDK_MAJOR__) "." \
+			BEE_STRINGIZE(__NDK_MINOR__)
+#	else
+#		define BEE_CRT_VERSION "NDK <unknown>"
+#	endif
 #elif defined(_MSC_VER)
 #	define BEE_CRT_NAME "msvc"
 #	define BEE_CRT_VERSION "MSVC STL " \
