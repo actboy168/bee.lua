@@ -10,10 +10,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <assert.h>
-
-#if !defined(BEE_USE_FORK)
 #include <spawn.h>
-#endif
 
 #if defined(__APPLE__)
 # include <crt_externs.h>
@@ -149,8 +146,7 @@ namespace bee::posix::subprocess {
         return nullptr;
     }
 
-    spawn::spawn()
-    {
+    spawn::spawn() {
         fds_[0] = -1;
         fds_[1] = -1;
         fds_[2] = -1;
@@ -188,22 +184,6 @@ namespace bee::posix::subprocess {
     }
 
     void spawn::do_duplicate() {
-#if defined(BEE_USE_FORK)
-        for (int i = 0; i < 3; ++i) {
-            if (fds_[i] > 0) {
-                if (dup2(fds_[i], i) == -1) {
-                    _exit(127);
-                }
-            }
-        }
-        
-        std::string fds;
-        for (auto& fd : sockets_) {
-            int newfd = net::socket::dup(fd);
-            fds.append(std::format("{},", newfd));
-        }
-        set_env_["bee-subprocess-dup-sockets"] = fds;
-#endif
     }
 
     void spawn::do_duplicate_shutdown() {
@@ -227,32 +207,6 @@ namespace bee::posix::subprocess {
     }
 
     bool spawn::raw_exec(char* const args[], const char* cwd) {
-#if defined(BEE_USE_FORK)
-        pid_t pid = fork();
-        if (pid == -1) {
-            return false;
-        }
-        if (pid == 0) {
-            if (detached_) {
-                setsid();
-            }
-            do_duplicate();
-            if (!set_env_.empty() || !del_env_.empty()) {
-                environ = make_env(set_env_, del_env_);
-            }
-            if (cwd && chdir(cwd)) {
-                _exit(127);
-            }
-            if (suspended_) {
-                ::kill(getpid(), SIGSTOP);
-            }
-            execvp(args[0], args);
-            _exit(127);
-        }
-        pid_ = pid;
-        do_duplicate_shutdown();
-        return true;
-#else
         pid_t pid;
         posix_spawn_file_actions_t action;
         posix_spawnattr_t attr;
@@ -296,7 +250,6 @@ namespace bee::posix::subprocess {
         posix_spawn_file_actions_destroy(&action);
         posix_spawnattr_destroy(&attr);
         return true;
-#endif
     }
 
     bool spawn::exec(args_t& args, const char* cwd) {
