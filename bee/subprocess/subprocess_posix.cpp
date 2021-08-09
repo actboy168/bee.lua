@@ -150,6 +150,7 @@ namespace bee::posix::subprocess {
         fds_[1] = -1;
         fds_[2] = -1;
         int r = posix_spawnattr_init(&spawnattr_);
+        (void)r;
         assert(r == 0);
     }
 
