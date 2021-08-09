@@ -160,14 +160,18 @@ namespace bee::posix::subprocess {
     void spawn::suspended() {
 #if defined(POSIX_SPAWN_START_SUSPENDED)
         // apple extension
-        posix_spawnattr_setflags(&spawnattr_, posix_spawnattr_getflags(&spawnattr_) | POSIX_SPAWN_START_SUSPENDED);
+        short flags = 0;
+        posix_spawnattr_getflags(&spawnattr_, &flags);
+        posix_spawnattr_setflags(&spawnattr_, flags | POSIX_SPAWN_START_SUSPENDED);
 #endif
     }
 
     void spawn::detached() {
 #if defined(POSIX_SPAWN_SETSID)
         // since glibc 2.26
-        posix_spawnattr_setflags(&spawnattr_, posix_spawnattr_getflags(&spawnattr_) | POSIX_SPAWN_SETSID);
+        short flags = 0;
+        posix_spawnattr_getflags(&spawnattr_, &flags);
+        posix_spawnattr_setflags(&spawnattr_, flags | POSIX_SPAWN_SETSID);
 #endif
     }
 
