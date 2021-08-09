@@ -4406,7 +4406,7 @@ public:
     impl(const impl& other) = delete;
     int i_readdir_r(DIR* dir, struct dirent* entry, struct dirent** result)
     {
-#if defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 24))
+#if defined(__ANDROID__) || (defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 24)))
         errno = 0;
         auto de = readdir(dir);
         if (de) {
