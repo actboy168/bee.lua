@@ -46,30 +46,14 @@ local function createTestArgsFile(tbl)
     f:close()
 end
 
-local function testArrayArgs(...)
+local function testArgs(...)
     local args = table.pack(...)
     createTestArgsFile(args)
     local option = {}
     option.stderr = true
-    option.argsStyle = 'array'
     option[1] = getexe()
     option[2] = 'test_temp.lua'
     table.move(args, 1, args.n, 3, option)
-    local process = subprocess.spawn(option)
-    lu.assertIsUserdata(process)
-    lu.assertIsUserdata(process.stderr)
-    lu.assertEquals(process.stderr:read 'a', '')
-    lu.assertEquals(process:wait(), 0)
-    os.remove "test_temp.lua"
-end
-
-local function testStringArgs(args, ...)
-    createTestArgsFile(table.pack(...))
-    local option = {}
-    option.stderr = true
-    option.argsStyle = 'string'
-    option[1] = getexe()
-    option[2] = 'test_temp.lua ' .. args
     local process = subprocess.spawn(option)
     lu.assertIsUserdata(process)
     lu.assertIsUserdata(process.stderr)
@@ -331,24 +315,15 @@ function test_subprocess:test_sockets()
 end
 
 function test_subprocess:test_args()
-    testArrayArgs('A')
-    testArrayArgs('A', 'B')
-    testArrayArgs('A B')
-    testArrayArgs('A', 'B C')
-    testArrayArgs([["A"]])
-    testArrayArgs([["A]])
-    testArrayArgs([["A\]])
-    testArrayArgs([["A\"]])
-    testArrayArgs([[A" B]])
-    testStringArgs([[A]], 'A')
-    testStringArgs([[A B]], 'A', 'B')
-    testStringArgs([["A B"]], 'A B')
-    testStringArgs([[A "B C"]], 'A', 'B C')
-    testStringArgs([[\"A\"]], [["A"]])
-    testStringArgs([[\"A]], [["A]])
-    testStringArgs([[\"A\]], [["A\]])
-    testStringArgs([[\"A\\\"]], [["A\"]])
-    testStringArgs([["A\" B"]], [[A" B]])
+    testArgs('A')
+    testArgs('A', 'B')
+    testArgs('A B')
+    testArgs('A', 'B C')
+    testArgs([["A"]])
+    testArgs([["A]])
+    testArgs([["A\]])
+    testArgs([["A\"]])
+    testArgs([[A" B]])
 end
 
 function test_subprocess:test_shell()

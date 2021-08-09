@@ -45,11 +45,6 @@ namespace bee::posix::subprocess {
     };
 
     struct args_t : public std::vector<char*> {
-        enum class type {
-            string,
-            array,
-        };
-        type type = type::array;
         ~args_t();
         void push(char* str);
         void push(const std::string& str);

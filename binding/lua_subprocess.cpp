@@ -154,7 +154,6 @@ namespace bee::lua_subprocess {
         }
 
         static void cast_args_array(lua_State* L, int idx, subprocess::args_t& args) {
-            args.type = subprocess::args_t::type::array;
             const lua_Integer n = luaL_len(L, idx);
             for (lua_Integer i = 1; i <= n; ++i) {
                 lua_geti(L, idx, i);
@@ -178,41 +177,9 @@ namespace bee::lua_subprocess {
             }
         }
 
-        static void cast_args_string(lua_State* L, int idx, subprocess::args_t& args) {
-            args.type = subprocess::args_t::type::string;
-            for (lua_Integer i = 1; i <= 2; ++i) {
-                lua_geti(L, idx, i);
-
-                switch (lua_type(L, -1)) {
-                case LUA_TSTRING:
-                    args.push(lua::checkstring(L, -1));
-                    break;
-                case LUA_TUSERDATA: {
-                    const fs::path& path = *(fs::path*)getObject(L, -1, "filesystem");
-                    args.push(path.string<lua::string_type::value_type>());
-                    break;
-                }
-                default:
-                    luaL_error(L, "Unsupported type: %s.", lua_typename(L, lua_type(L, -1)));
-                    break;
-                }
-                lua_pop(L, 1);
-            }
-        }
-
         static subprocess::args_t cast_args(lua_State* L) {
-            bool as_string = false;
-            if (LUA_TSTRING == lua_getfield(L, 1, "argsStyle")) {
-                as_string = (strcmp(lua_tostring(L, -1), "string") == 0);
-            }
-            lua_pop(L, 1);
             subprocess::args_t args;
-            if (as_string) {
-                cast_args_string(L, 1, args);
-            }
-            else {
-                cast_args_array(L, 1, args);
-            }
+            cast_args_array(L, 1, args);
             return args;
         }
 

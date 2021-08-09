@@ -24,7 +24,7 @@ const GUID IID_ITaskbarList3 = { 0xEA1AFB91, 0x9E28, 0x4B86, {0x90, 0xE9, 0x9E, 
 #endif
 
 namespace bee::win::subprocess {
-    static wchar_t* make_array_args(const std::vector<std::wstring>& args, std::wstring_view prefix = std::wstring_view()) {
+    static wchar_t* make_args(const args_t& args, std::wstring_view prefix = std::wstring_view()) {
         strbuilder<wchar_t> res;
         if (!prefix.empty()) {
             res += prefix;
@@ -38,30 +38,7 @@ namespace bee::win::subprocess {
         return res.string();
     }
 
-    static wchar_t* make_string_args(const std::wstring& app, const std::wstring& cmd, std::wstring_view prefix = std::wstring_view()) {
-        strbuilder<wchar_t> res;
-        if (!prefix.empty()) {
-            res += prefix;
-        }
-        res += quote_arg(app);
-        res += L" ";
-        res += cmd;
-        return res.string();
-    }
-
-    static wchar_t* make_args(const args_t& args, std::wstring_view prefix = std::wstring_view()) {
-        switch (args.type) {
-        case args_t::type::array:
-            return make_array_args(args, prefix);
-        case args_t::type::string:
-            return make_string_args(args[0], args[1], prefix);
-        default:
-            return 0;
-        }
-    }
-
-    static wchar_t* make_env(std::map<std::wstring, std::wstring, ignore_case::less<std::wstring>>& set, std::set<std::wstring, ignore_case::less<std::wstring>>& del)
-    {
+    static wchar_t* make_env(std::map<std::wstring, std::wstring, ignore_case::less<std::wstring>>& set, std::set<std::wstring, ignore_case::less<std::wstring>>& del) {
         wchar_t* es = GetEnvironmentStringsW();
         if (es == 0) {
             return nullptr;

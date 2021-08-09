@@ -299,116 +299,16 @@ namespace bee::posix::subprocess {
 #endif
     }
 
-    static void split_accept(args_t& args, const char* str, size_t len) {
-        char* data = new char[len + 1];
-        size_t j = 0;
-        for (size_t i = 0; i < len; ++i, ++j) {
-            if (str[i] == '\\' && i + 1 < len) {
-                i++;
-            }
-            data[j] = str[i];
-        }
-        data[j] = 0;
-        args.push(data);
-    }
-    static void split_str(args_t& args, const char*& z) {
-        const char* start = z;
-        for (;;) {
-            switch (*z) {
-            case '\0':
-                split_accept(args, start, z - start);
-                return;
-            case '"':
-                split_accept(args, start, z - start);
-                z++;
-                return;
-            case '\\':
-                z++;
-                if (*z != '\0') {
-                    z++;
-                }
-                break;
-            default:
-                z++;
-                break;
-            }
-        }
-    }
-    static void split_arg(args_t& args, const char*& z) {
-        const char* start = z;
-        for (;;) {
-            switch (*z) {
-            case '\0':
-            case ' ':
-            case '\t':
-                split_accept(args, start, z - start);
-                return;
-            case '"':
-                z++;
-                split_str(args, z);
-                return;
-            case '\\':
-                z++;
-                switch (*z) {
-                case '\0':
-                case ' ':
-                case '\t':
-                    break;
-                default:
-                    z++;
-                    break;
-                }
-                break;
-            default:
-                z++;
-                break;
-            }
-        }
-    }
-    static void split_next(args_t& args, const char* z) {
-        for (;;) {
-            switch (*z) {
-            case '\0':
-                return;
-            case ' ':
-            case '\t':
-                z++;
-                break;
-            default:
-                split_arg(args, z);
-                break;
-            }
-        }
-    }
-    static void split(args_t& args) {
-        if (args.size() < 2) {
-            return;
-        }
-        else if (args.size() > 2) {
-            args.resize(2);
-        }
-        args.push(std::string(args[0]));
-        split_next(args, args[1]);
-    }
     bool spawn::exec(args_t& args, const char* cwd) {
         if (args.size() == 0) {
             return false;
         }
-        switch (args.type) {
-        case args_t::type::array:
-            args.push(nullptr);
-            return raw_exec(args.data(), cwd);
-        case args_t::type::string:
-            split(args);
-            args.push(nullptr);
-            return raw_exec(args.data() + 2, cwd);
-        default:
-            return false;
-        }
+        args.push(nullptr);
+        return raw_exec(args.data(), cwd);
     }
 
     process::process(spawn& spawn)
-    : pid(spawn.pid_)
+        : pid(spawn.pid_)
     { }
 
     bool     process::is_running() {
