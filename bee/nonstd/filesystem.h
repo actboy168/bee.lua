@@ -2910,6 +2910,7 @@ inline bool copy_file(const path& from, const path& to, copy_options options, st
             }
         } while (br);
     }
+    permissions(to, sf.permissions(), ec);
     return true;
 #endif
 }
