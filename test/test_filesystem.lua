@@ -568,10 +568,7 @@ function test_fs:test_copy_file()
     fs.copy_file(fs.path('temp1.txt'), fs.path('temp2.txt'), fs.copy_options.overwrite_existing)
     lu.assertEquals(fs.exists(fs.path('temp1.txt')), true)
     lu.assertEquals(fs.exists(fs.path('temp2.txt')), true)
-    if platform.OS ~= "macOS" then
-        --TODO
-        lu.assertEquals(fs.path('temp2.txt'):permissions() & USER_WRITE, 0)
-    end
+    lu.assertEquals(fs.path('temp2.txt'):permissions() & USER_WRITE, 0)
     lu.assertEquals(read_file('temp1.txt'), read_file('temp2.txt'))
     fs.path('temp1.txt'):add_permissions(ALLOW_WRITE)
     fs.path('temp2.txt'):add_permissions(ALLOW_WRITE)
