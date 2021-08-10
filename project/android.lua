@@ -24,8 +24,6 @@ lm:executable 'lua' {
     },
     links = {
         "m", "dl",
-        -- https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67791
-        "pthread",
     }
 }
 
@@ -46,9 +44,6 @@ lm:shared_library 'bee' {
         "!binding/lua_unicode.cpp",
         "!binding/lua_registry.cpp",
         "!binding/lua_wmi.cpp",
-    },
-    links = {
-        "pthread",
     }
 }
 
@@ -66,7 +61,5 @@ lm:executable 'bootstrap' {
     },
     links = {
         "m", "dl",
-        -- https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67791
-        "pthread",
     }
 }
