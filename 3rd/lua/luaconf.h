@@ -75,9 +75,6 @@
     #if TARGET_OS_IOS || TARGET_OS_WATCH || TARGET_OS_TV
         #define system(s) ((s)==NULL ? 0 : -1)
     #endif
-#elif defined(__ANDROID__)
-	#include <stdlib.h>
-    #define system(s) ((s)==NULL ? 0 : -1)
 #endif
 
 /*
