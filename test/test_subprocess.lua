@@ -283,59 +283,6 @@ function test_subprocess:test_env()
     end
 end
 
-function test_subprocess:test_sockets()
-    local sfd, cfd = assert(socket.pair())
-    local seri = require 'bee.serialization'
-    local option = {
-        dup = {cfd:handle()},
-        stderr = true,
-    }
-    if platform.OS == 'Windows' then
-        option.suspended = true
-    else
-        --TODO 对于posix，fd总是从4开始递增
-        subprocess.setenv("DUP-SOCKET", "4")
-    end
-    local process = createLua([[
-        local subprocess = require 'bee.subprocess'
-        local socket = require 'bee.socket'
-        local thread = require 'bee.thread'
-        local seri = require 'bee.serialization'
-        local function unpack(h)
-            return seri.lightuserdata(tonumber(h))
-        end
-        local fd = unpack(os.getenv "DUP-SOCKET")
-        assert(type(fd) == 'userdata')
-        local cfd = socket.fromhandle(fd)
-        socket.select({cfd})
-        assert(cfd:recv(1) == 'A')
-        socket.select({cfd})
-        assert(cfd:recv(1) == 'B')
-        socket.select({cfd})
-        assert(cfd:recv(1) == 'C')
-        socket.select({cfd})
-        assert(cfd:recv() == nil)
-        cfd:close()
-    ]], option)
-    if platform.OS == 'Windows' then
-        local function pack(h)
-            return tostring(seri.lightuserdata(h))
-        end
-        subprocess.setenv("DUP-SOCKET", pack(process.dup[1]))
-        process:resume()
-    end
-    cfd:close()
-    socket.select(nil, {sfd})
-    sfd:send 'A'
-    socket.select(nil, {sfd})
-    sfd:send 'B'
-    socket.select(nil, {sfd})
-    sfd:send 'C'
-    sfd:close()
-    lu.assertEquals(process.stderr:read 'a', '')
-    lu.assertEquals(process:wait(), 0)
-end
-
 function test_subprocess:test_args()
     testArgs('A')
     testArgs('A', 'B')

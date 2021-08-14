@@ -53,24 +53,20 @@ namespace bee::posix::subprocess {
     class spawn {
         friend class process;
     public:
-        typedef int fd_t;
         spawn();
         ~spawn();
         void suspended();
         void detached();
         void redirect(stdio type, file::handle f);
-        fd_t duplicate(fd_t fd);
         void env_set(const std::string& key, const std::string& value);
         void env_del(const std::string& key);
         bool exec(args_t& args, const char* cwd);
     private:
         bool raw_exec(char* const args[], const char* cwd);
-        void do_duplicate();
         void do_duplicate_shutdown();
     private:
         std::map<std::string, std::string> set_env_;
         std::set<std::string>              del_env_;
-        int                                newfd_ = 4;
         int                                fds_[3];
         int                                pid_ = -1;
         posix_spawnattr_t                  spawnattr_;

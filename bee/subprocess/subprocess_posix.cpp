@@ -194,17 +194,6 @@ namespace bee::posix::subprocess {
         }
     }
 
-    spawn::fd_t spawn::duplicate(fd_t fd) {
-        if (posix_spawn_file_actions_adddup2(&spawnfile_, fd, newfd_)) {
-            return fd_t(-1);
-        }
-        newfd_++;
-        return newfd_ - 1;
-    }
-
-    void spawn::do_duplicate() {
-    }
-
     void spawn::do_duplicate_shutdown() {
         for (int i = 0; i < 3; ++i) {
             if (fds_[i] > 0) {

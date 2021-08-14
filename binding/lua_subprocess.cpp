@@ -335,24 +335,6 @@ namespace bee::lua_subprocess {
         static void cast_option(lua_State*, subprocess::spawn&) {}
 #endif
 
-        static void cast_dup(lua_State* L, subprocess::spawn& self) {
-            if (LUA_TTABLE != lua_getfield(L, 1, "dup")) {
-                lua_pop(L, 1);
-                return;
-            }
-            lua_Integer n = luaL_len(L, -1);
-            for (lua_Integer i = 1; i <= n; ++i) {
-                if (LUA_TLIGHTUSERDATA == lua_rawgeti(L, -1, i)) {
-                    auto fd = (subprocess::spawn::fd_t)(intptr_t)lua_touserdata(L, -1);
-                    fd = self.duplicate(fd);
-                    lua_pushlightuserdata(L, (void*)(intptr_t)fd);
-                    lua_rawseti(L, -3, i);
-                }
-                lua_pop(L, 1);
-            }
-            lua_pop(L, 1);
-        }
-
         static int spawn(lua_State* L) {
             luaL_checktype(L, 1, LUA_TTABLE);
             subprocess::spawn  spawn;
@@ -365,7 +347,6 @@ namespace bee::lua_subprocess {
             cast_env(L, spawn);
             cast_suspended(L, spawn);
             cast_option(L, spawn);
-            cast_dup(L, spawn);
             cast_detached(L, spawn);
 
             file::handle f_stdin = cast_stdio(L, spawn, "stdin", subprocess::stdio::eInput);
