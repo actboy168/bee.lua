@@ -258,23 +258,22 @@ namespace bee::win::subprocess {
         }
     }
 
-    void spawn::duplicate(net::socket::fd_t fd) {
+    spawn::fd_t spawn::duplicate(fd_t fd) {
         inherit_handle_ = true;
-        sockets_.push_back(fd);
+        fd = net::socket::dup(fd);
+        dups_.push_back(fd);
+        return fd;
     }
 
     void spawn::do_duplicate_start(bool& resume) {
         ::SetHandleInformation(si_.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
         ::SetHandleInformation(si_.hStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
         ::SetHandleInformation(si_.hStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
-        if (sockets_.empty()) {
+        if (dups_.empty()) {
             return;
         }
         resume = !(flags_ & CREATE_SUSPENDED);
         flags_ |= CREATE_SUSPENDED;
-        for (auto& fd : sockets_) {
-            fd = net::socket::dup(fd);
-        }
     }
 
     void spawn::do_duplicate_shutdown() {
@@ -283,15 +282,12 @@ namespace bee::win::subprocess {
         if (si_.hStdError != INVALID_HANDLE_VALUE && si_.hStdOutput != si_.hStdError) {
             ::CloseHandle(si_.hStdError);
         }
-        for (auto& fd : sockets_) {
+        for (auto& fd : dups_) {
             if (fd != net::socket::retired_fd) {
                 net::socket::close(fd);
                 fd = net::socket::retired_fd;
             }
         }
-    }
-
-    void spawn::do_duplicate_finish() {
     }
 
     bool spawn::raw_exec(const wchar_t* application, wchar_t* commandline, const wchar_t* cwd) {
@@ -317,7 +313,6 @@ namespace bee::win::subprocess {
             do_duplicate_shutdown();
             return false;
         }
-        do_duplicate_finish();
         do_duplicate_shutdown();
         if (!detached_) {
             join_job(pi_.hProcess);

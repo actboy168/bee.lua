@@ -83,6 +83,7 @@ namespace bee::win::subprocess {
     class _BEE_API spawn {
         friend class process;
     public:
+        typedef HANDLE fd_t;
         spawn();
         ~spawn();
         void search_path();
@@ -91,7 +92,7 @@ namespace bee::win::subprocess {
         void suspended();
         void detached();
         void redirect(stdio type, file::handle h);
-        void duplicate(net::socket::fd_t fd);
+        fd_t duplicate(fd_t fd);
         void env_set(const std::wstring& key, const std::wstring& value);
         void env_del(const std::wstring& key);
         bool exec(const args_t& args, const wchar_t* cwd);
@@ -100,12 +101,11 @@ namespace bee::win::subprocess {
         bool raw_exec(const wchar_t* application, wchar_t* commandline, const wchar_t* cwd);
         void do_duplicate_start(bool& resume);
         void do_duplicate_shutdown();
-        void do_duplicate_finish();
 
     private:
         std::map<std::wstring, std::wstring, ignore_case::less<std::wstring>> set_env_;
         std::set<std::wstring, ignore_case::less<std::wstring>>               del_env_;
-        std::vector<net::socket::fd_t>                                        sockets_;
+        std::vector<fd_t>                                                     dups_;
         STARTUPINFOW            si_;
         PROCESS_INFORMATION     pi_;
         DWORD                   flags_ = 0;

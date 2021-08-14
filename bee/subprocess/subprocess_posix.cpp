@@ -150,12 +150,14 @@ namespace bee::posix::subprocess {
         fds_[1] = -1;
         fds_[2] = -1;
         int r = posix_spawnattr_init(&spawnattr_);
-        (void)r;
-        assert(r == 0);
+        (void)r; assert(r == 0);
+        r = posix_spawn_file_actions_init(&spawnfile_);
+        (void)r; assert(r == 0);
     }
 
     spawn::~spawn() {
         posix_spawnattr_destroy(&spawnattr_);
+        posix_spawn_file_actions_destroy(&spawnfile_);
     }
 
     void spawn::suspended() {
@@ -192,8 +194,12 @@ namespace bee::posix::subprocess {
         }
     }
 
-    void spawn::duplicate(net::socket::fd_t fd) {
-        sockets_.push_back(fd);
+    spawn::fd_t spawn::duplicate(fd_t fd) {
+        if (posix_spawn_file_actions_adddup2(&spawnfile_, fd, newfd_)) {
+            return fd_t(-1);
+        }
+        newfd_++;
+        return newfd_ - 1;
     }
 
     void spawn::do_duplicate() {
@@ -204,10 +210,6 @@ namespace bee::posix::subprocess {
             if (fds_[i] > 0) {
                 close(fds_[i]);
             }
-        }
-        for (auto& fd : sockets_) {
-            net::socket::close(fd);
-            fd = net::socket::retired_fd;
         }
     }
 
@@ -221,29 +223,18 @@ namespace bee::posix::subprocess {
 
     bool spawn::raw_exec(char* const args[], const char* cwd) {
         pid_t pid;
-        posix_spawn_file_actions_t action;
-        if (posix_spawn_file_actions_init(&action)) {
-            return false;
-        }
         for (int i = 0; i < 3; ++i) {
             if (fds_[i] > 0) {
-                if (posix_spawn_file_actions_adddup2(&action, fds_[i], i)) {
+                if (posix_spawn_file_actions_adddup2(&spawnfile_, fds_[i], i)) {
                     return false;
                 }
             }
         }
-        int newfd = 3;
-        for (auto& fd : sockets_) {
-            if (posix_spawn_file_actions_adddup2(&action, fd, ++newfd)) {
-                return false;
-            }
-        }
-        if (posix_spawnp(&pid, args[0], &action, &spawnattr_, args, make_env(set_env_, del_env_))) {
+        if (posix_spawnp(&pid, args[0], &spawnfile_, &spawnattr_, args, make_env(set_env_, del_env_))) {
             return false;
         }
         pid_ = pid;
         do_duplicate_shutdown();
-        posix_spawn_file_actions_destroy(&action);
         return true;
     }
 

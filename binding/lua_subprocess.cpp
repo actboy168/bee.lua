@@ -343,8 +343,10 @@ namespace bee::lua_subprocess {
             lua_Integer n = luaL_len(L, -1);
             for (lua_Integer i = 1; i <= n; ++i) {
                 if (LUA_TLIGHTUSERDATA == lua_rawgeti(L, -1, i)) {
-                    auto fd = (net::socket::fd_t)(intptr_t)lua_touserdata(L, -1);
-                    self.duplicate(fd);
+                    auto fd = (subprocess::spawn::fd_t)(intptr_t)lua_touserdata(L, -1);
+                    fd = self.duplicate(fd);
+                    lua_pushlightuserdata(L, (void*)(intptr_t)fd);
+                    lua_rawseti(L, -3, i);
                 }
                 lua_pop(L, 1);
             }
