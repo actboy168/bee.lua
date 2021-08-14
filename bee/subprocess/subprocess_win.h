@@ -97,7 +97,7 @@ namespace bee::win::subprocess {
 
     private:
         bool raw_exec(const wchar_t* application, wchar_t* commandline, const wchar_t* cwd);
-        void do_duplicate_start(bool& resume);
+        void do_duplicate_start();
         void do_duplicate_shutdown();
 
     private:

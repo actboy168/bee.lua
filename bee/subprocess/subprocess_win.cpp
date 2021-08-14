@@ -258,7 +258,7 @@ namespace bee::win::subprocess {
         }
     }
 
-    void spawn::do_duplicate_start(bool& resume) {
+    void spawn::do_duplicate_start() {
         ::SetHandleInformation(si_.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
         ::SetHandleInformation(si_.hStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
         ::SetHandleInformation(si_.hStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
@@ -279,8 +279,7 @@ namespace bee::win::subprocess {
             environment.reset(make_env(set_env_, del_env_));
             flags_ |= CREATE_UNICODE_ENVIRONMENT;
         }
-        bool resume = false;
-        do_duplicate_start(resume);
+        do_duplicate_start();
         if (!::CreateProcessW(
             application,
             command_line.get(),
@@ -301,9 +300,6 @@ namespace bee::win::subprocess {
         }
         if (console_ == console::eHide) {
             hide_console(pi_);
-        }
-        if (resume) {
-            ::ResumeThread(pi_.hThread);
         }
         return true;
     }
