@@ -260,7 +260,7 @@ namespace bee::win::subprocess {
 
     spawn::fd_t spawn::duplicate(fd_t fd) {
         inherit_handle_ = true;
-        fd = net::socket::dup(fd);
+        fd = (fd_t)net::socket::dup((net::socket::fd_t)fd);
         dups_.push_back(fd);
         return fd;
     }
