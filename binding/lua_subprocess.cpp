@@ -13,11 +13,6 @@
 #include <unistd.h>
 #endif
 
-namespace bee::lua_socket {
-    net::socket::fd_t checksocket(lua_State* L, int idx);
-    void              pushsocket(lua_State* L, net::socket::fd_t fd);
-}
-
 namespace bee::lua_subprocess {
     namespace process {
         static subprocess::process& to(lua_State* L, int idx) {
@@ -340,15 +335,16 @@ namespace bee::lua_subprocess {
         static void cast_option(lua_State*, subprocess::spawn&) {}
 #endif
 
-        static void cast_sockets(lua_State* L, subprocess::spawn& self) {
-            if (LUA_TTABLE != lua_getfield(L, 1, "sockets")) {
+        static void cast_dup(lua_State* L, subprocess::spawn& self) {
+            if (LUA_TTABLE != lua_getfield(L, 1, "dup")) {
                 lua_pop(L, 1);
                 return;
             }
             lua_Integer n = luaL_len(L, -1);
             for (lua_Integer i = 1; i <= n; ++i) {
-                if (LUA_TUSERDATA == lua_rawgeti(L, -1, i)) {
-                    self.duplicate(lua_socket::checksocket(L, -1));
+                if (LUA_TLIGHTUSERDATA == lua_rawgeti(L, -1, i)) {
+                    auto fd = (net::socket::fd_t)(intptr_t)lua_touserdata(L, -1);
+                    self.duplicate(fd);
                 }
                 lua_pop(L, 1);
             }
@@ -367,7 +363,7 @@ namespace bee::lua_subprocess {
             cast_env(L, spawn);
             cast_suspended(L, spawn);
             cast_option(L, spawn);
-            cast_sockets(L, spawn);
+            cast_dup(L, spawn);
             cast_detached(L, spawn);
 
             file::handle f_stdin = cast_stdio(L, spawn, "stdin", subprocess::stdio::eInput);
@@ -503,7 +499,6 @@ return table.concat(t)
     }
 
     static int luaopen(lua_State* L) {
-        net::socket::initialize();
         static luaL_Reg lib[] = {
             {"spawn", spawn::spawn},
             {"peek", peek},
@@ -515,14 +510,6 @@ return table.concat(t)
 
         lua_pushscript(L, script_quotearg);
         lua_setfield(L, -2, "quotearg");
-
-        lua_newtable(L);
-        lua_Integer n = 1;
-        for (auto& fd : subprocess::pipe::sockets) {
-            lua_socket::pushsocket(L, fd);
-            lua_rawseti(L, -2, n++);
-        }
-        lua_setfield(L, -2, "sockets");
         return 1;
     }
 }

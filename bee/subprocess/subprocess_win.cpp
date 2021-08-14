@@ -1,5 +1,4 @@
 #include <bee/subprocess.h>
-#include <bee/subprocess/sharedmemory_win.h>
 #include <bee/format.h>
 #include <bee/subprocess/args_helper.h>
 #include <Windows.h>
@@ -293,33 +292,6 @@ namespace bee::win::subprocess {
     }
 
     void spawn::do_duplicate_finish() {
-        if (sockets_.empty()) {
-            return;
-        }
-        sharedmemory sh(create_only
-            , std::format(L"bee-subprocess-dup-sockets-{}", pi_.dwProcessId).c_str()
-            , sizeof(HANDLE) + sizeof(size_t) + sockets_.size() * sizeof(net::socket::fd_t)
-        );
-        if (!sh.ok()) {
-            return;
-        }
-        std::byte* data = sh.data();
-        if (!::DuplicateHandle(
-            ::GetCurrentProcess(),
-            sh.handle(),
-            pi_.hProcess,
-            (HANDLE*)data,
-            0, FALSE, DUPLICATE_SAME_ACCESS)
-            ) {
-            return;
-        }
-        data += sizeof(HANDLE);
-        *(size_t*)data = sockets_.size();
-        data += sizeof(size_t);
-        net::socket::fd_t* fds = (net::socket::fd_t*)data;
-        for (auto& fd : sockets_) {
-            *fds++ = fd;
-        }
     }
 
     bool spawn::raw_exec(const wchar_t* application, wchar_t* commandline, const wchar_t* cwd) {
@@ -479,27 +451,5 @@ namespace bee::win::subprocess {
             }
             return -1;
         }
-
-        static std::vector<net::socket::fd_t> init_sockets() {
-            std::vector<net::socket::fd_t> socks;
-            sharedmemory sh(open_only
-                , std::format(L"bee-subprocess-dup-sockets-{}", ::GetCurrentProcessId()).c_str()
-            );
-            if (!sh.ok()) {
-                return socks;
-            }
-            std::byte* data = sh.data();
-            HANDLE mapping = *(HANDLE*)data;
-            ::CloseHandle(mapping);
-            data += sizeof(HANDLE);
-            size_t n = *(size_t*)data;
-            data += sizeof(size_t);
-            net::socket::fd_t* fds = (net::socket::fd_t*)data;
-            for (size_t i = 0; i < n; ++i) {
-                socks.push_back(*fds++);
-            }
-            return socks;
-        }
-        std::vector<net::socket::fd_t> sockets = init_sockets();
     }
 }

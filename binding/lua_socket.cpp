@@ -86,13 +86,6 @@ namespace bee::lua_socket {
         return *(luafd*)getObject(L, idx, "socket");
     }
     static luafd& pushfd(lua_State* L, socket::fd_t fd, socket::protocol protocol, luafd::tag type);
-    socket::fd_t  checksocket(lua_State* L, int idx) {
-        return checkfd(L, idx).fd;
-    }
-    void pushsocket(lua_State* L, socket::fd_t fd) {
-        // 鉴于protocol目前的作用，硬编码为tcp也没问题？
-        pushfd(L, fd, socket::protocol::tcp, luafd::tag::unknown);
-    }
     static int accept(lua_State* L) {
         luafd&       self = checkfd(L, 1);
         socket::fd_t newfd;
@@ -556,6 +549,13 @@ namespace bee::lua_socket {
         return 0;
     }
 #endif
+    static int fromhandle(lua_State* L) {
+        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+        socket::fd_t fd = (socket::fd_t)(intptr_t)lua_touserdata(L, 1);
+        // 鉴于protocol目前的作用，硬编码为tcp也没问题？
+        pushfd(L, fd, socket::protocol::tcp, luafd::tag::unknown);
+        return 1;
+    }
     static int luaopen(lua_State* L) {
         socket::initialize();
         luaL_Reg lib[] = {
@@ -563,10 +563,12 @@ namespace bee::lua_socket {
             {"bind", bind},
             {"pair", pair},
             {"select", select},
+            {"fromhandle", fromhandle},
 #if defined _WIN32
             {"simulationUDS", simulationUDS},
 #endif
-            {NULL, NULL}};
+            {NULL, NULL}
+        };
         lua_newtable(L);
         luaL_setfuncs(L, lib, 0);
         return 1;

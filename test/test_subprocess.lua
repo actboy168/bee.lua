@@ -285,13 +285,26 @@ end
 
 function test_subprocess:test_sockets()
     local sfd, cfd = assert(socket.pair())
+    local seri = require 'bee.serialization'
+    local function pack(h)
+        --TODO 对于posix，fd总是从4开始递增
+        if platform.OS ~= 'Windows' then
+            return "4"
+        end
+        return tostring(seri.lightuserdata(h))
+    end
+    subprocess.setenv("DUP-SOCKET", pack(cfd:handle()))
     local process = createLua([[
         local subprocess = require 'bee.subprocess'
         local socket = require 'bee.socket'
         local thread = require 'bee.thread'
-        assert(type(subprocess.sockets) == 'table')
-        assert(type(subprocess.sockets[1]) == 'userdata')
-        local cfd = subprocess.sockets[1]
+        local seri = require 'bee.serialization'
+        local function unpack(h)
+            return seri.lightuserdata(tonumber(h))
+        end
+        local fd = unpack(os.getenv "DUP-SOCKET")
+        assert(type(fd) == 'userdata')
+        local cfd = socket.fromhandle(fd)
         socket.select({cfd})
         assert(cfd:recv(1) == 'A')
         socket.select({cfd})
@@ -301,7 +314,7 @@ function test_subprocess:test_sockets()
         socket.select({cfd})
         assert(cfd:recv() == nil)
         cfd:close()
-    ]], { sockets = {cfd}, stderr = true })
+    ]], { dup = {cfd:handle()}, stderr = true })
     cfd:close()
     socket.select(nil, {sfd})
     sfd:send 'A'

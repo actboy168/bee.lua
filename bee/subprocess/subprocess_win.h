@@ -47,12 +47,10 @@ namespace bee::win::subprocess {
             FILE*        open_write();
             operator bool() { return rd && wr; }
         };
-        extern std::vector<net::socket::fd_t> sockets;
         _BEE_API open_result open();
         _BEE_API int         peek(FILE* f);
     }
 
-    class sharedmemory;
     class spawn;
     class _BEE_API process {
     public:

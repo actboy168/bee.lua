@@ -25,7 +25,6 @@ namespace bee::posix::subprocess {
             FILE*        open_write();
             operator bool() { return rd && wr; }
         };
-        extern std::vector<net::socket::fd_t> sockets;
         open_result open();
         int         peek(FILE* f);
     }

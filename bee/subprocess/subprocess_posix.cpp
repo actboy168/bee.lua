@@ -233,14 +233,11 @@ namespace bee::posix::subprocess {
             }
         }
         int newfd = 3;
-        std::string fds;
         for (auto& fd : sockets_) {
             if (posix_spawn_file_actions_adddup2(&action, fd, ++newfd)) {
                 return false;
             }
-            fds.append(std::format("{},", newfd));
         }
-        set_env_["bee-subprocess-dup-sockets"] = fds;
         if (posix_spawnp(&pid, args[0], &action, &spawnattr_, args, make_env(set_env_, del_env_))) {
             return false;
         }
@@ -325,28 +322,5 @@ namespace bee::posix::subprocess {
             }
             return rc;
         }
-        std::vector<net::socket::fd_t> init_sockets() {
-            std::vector<net::socket::fd_t> sockets;
-            const char* fds = getenv("bee-subprocess-dup-sockets");
-            if (!fds) {
-                return sockets;
-            }
-            const char* last = fds;
-            const char* cur = strchr(last, ',');
-            while (cur) {
-                try {
-                    int fd = std::stoi(std::string(last, cur - last));
-                    sockets.push_back(fd);
-                }
-                catch (...) {
-                    sockets.push_back(-1);
-                }
-                last = cur + 1;
-                cur = strchr(last, ',');
-            }
-            unsetenv("bee-subprocess-dup-sockets");
-            return sockets;
-        }
-        std::vector<net::socket::fd_t> sockets = init_sockets();
     }
 }
