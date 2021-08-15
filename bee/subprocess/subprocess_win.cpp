@@ -4,7 +4,6 @@
 #include <Windows.h>
 #include <Shobjidl.h>
 #include <memory>
-#include <deque>
 #include <thread>
 #include <assert.h>
 #include <fcntl.h>

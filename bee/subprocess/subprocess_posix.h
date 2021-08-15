@@ -6,7 +6,6 @@
 #include <map>
 #include <set>
 #include <vector>
-#include <bee/net/socket.h>
 #include <bee/utility/file_helper.h>
 #include <spawn.h>
 

@@ -3,12 +3,7 @@
 #include <string>
 #include <deque>
 
-#if defined(_WIN32)
 namespace bee::win::subprocess {
-#else
-namespace bee::posix::subprocess {
-#endif
-
     template <class char_t>
     struct strbuilder {
         struct node {

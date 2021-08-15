@@ -6,7 +6,6 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include <bee/net/socket.h>
 #include <bee/utility/file_helper.h>
 
 namespace bee::win::subprocess {

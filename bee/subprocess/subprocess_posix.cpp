@@ -1,6 +1,6 @@
 #include <bee/subprocess.h>
 #include <bee/format.h>
-#include <deque>
+#include <bee/net/socket.h>
 #include <memory.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>

@@ -549,13 +549,6 @@ namespace bee::lua_socket {
         return 0;
     }
 #endif
-    static int fromhandle(lua_State* L) {
-        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
-        socket::fd_t fd = (socket::fd_t)(intptr_t)lua_touserdata(L, 1);
-        // 鉴于protocol目前的作用，硬编码为tcp也没问题？
-        pushfd(L, fd, socket::protocol::tcp, luafd::tag::unknown);
-        return 1;
-    }
     static int luaopen(lua_State* L) {
         socket::initialize();
         luaL_Reg lib[] = {
@@ -563,7 +556,6 @@ namespace bee::lua_socket {
             {"bind", bind},
             {"pair", pair},
             {"select", select},
-            {"fromhandle", fromhandle},
 #if defined _WIN32
             {"simulationUDS", simulationUDS},
 #endif
