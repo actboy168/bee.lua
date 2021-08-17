@@ -17,12 +17,15 @@ package.path = table.concat({
 package.cpath = ('%s/?.%s'):format(__Target__, __EXT__)
 
 local platform = require 'bee.platform'
+local lt = require 'ltest'
 
-print("OS:       ", platform.OS)
-print("Arch:     ", platform.Arch)
-print("Compiler: ", platform.CompilerVersion)
-print("CRT:      ", platform.CRTVersion)
-print("DEBUG:    ", platform.DEBUG)
+if not lt.options.list then
+    print("OS:       ", platform.OS)
+    print("Arch:     ", platform.Arch)
+    print("Compiler: ", platform.CompilerVersion)
+    print("CRT:      ", platform.CRTVersion)
+    print("DEBUG:    ", platform.DEBUG)
+end
 
 --local function fd_count()
 --    local ls = require "bee.socket"
@@ -32,8 +35,6 @@ print("DEBUG:    ", platform.DEBUG)
 --    return tonumber(fd)
 --end
 --local initfd = fd_count()
-
-local lu = require 'ltest'
 
 require 'test_lua'
 require 'test_serialization'
@@ -47,7 +48,7 @@ if platform.OS == "Windows" then
     require 'test_wmi'
 end
 
-local success = lu.run()
+local success = lt.run()
 
 --if platform.OS ~= "Windows" then
 --    collectgarbage "collect"

@@ -133,7 +133,9 @@ end
 
 local function parseCmdLine(cmdLine)
     local result = {}
-    for _, cmdArg in ipairs(cmdLine) do
+    local i = 1
+    while i <= #cmdLine do
+        local cmdArg = cmdLine[i]
         if cmdArg:sub(1,1) == '-' then
             if cmdArg == '--verbose' or cmdArg == '-v' then
                 result.verbosity = true
@@ -141,12 +143,15 @@ local function parseCmdLine(cmdLine)
                 result.shuffle = true
             elseif cmdArg == '--coverage' or cmdArg == '-c' then
                 result.coverage = true
+            elseif cmdArg == '--list' or cmdArg == '-l' then
+                result.list = true
             else
                 error('Unknown option: '..cmdArg)
             end
         else
             result[#result+1] = cmdArg
         end
+        i = i + 1
     end
     return result
 end
@@ -235,6 +240,14 @@ local function randomizeTable(t)
     end
 end
 
+local function showList(selected)
+    for _, v in ipairs(selected) do
+        local name = v[1]
+        print(name)
+    end
+    return true
+end
+
 local instanceSet = {}
 
 function m.test(name)
@@ -264,6 +277,9 @@ function m.run()
         randomizeTable(lst)
     end
     local selected = selectList(lst)
+    if options.list then
+        return showList(selected)
+    end
     if options.verbosity then
         print('Started on '.. os.date())
     end
@@ -318,5 +334,7 @@ end
 if options.coverage then
     coverage.start()
 end
+
+m.options = options
 
 return m
