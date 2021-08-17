@@ -88,6 +88,14 @@ local function failure(...)
     error(string.format(...), 3)
 end
 
+function m.equals(actual, expected)
+    return equals(actual, expected)
+end
+
+function m.failure(...)
+    failure(...)
+end
+
 function m.assertEquals(actual, expected)
     if not equals(actual, expected) then
         failure("expected: %s, actual: %s", stringify(expected), stringify(actual))
