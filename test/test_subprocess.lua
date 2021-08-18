@@ -273,14 +273,10 @@ function test_subprocess:test_env()
     test_env('os.getenv "BEE_TEST" == nil', {})
     test_env('os.getenv "BEE_TEST" == "ok"', { BEE_TEST = 'ok' })
 
-    lu.assertNotEquals(os.getenv 'PATH', nil)
-    test_env('os.getenv "PATH" ~= nil', {})
-    if not shell.isMingw then
-        -- TODO: mingw会crash
-        test_env('os.getenv "PATH" == nil', {PATH=false})
-    else
-        test_env('os.getenv "MSYSTEM" == nil', {MSYSTEM=false})
-    end
+    subprocess.setenv("BEE_TEST_ENV_1", "OK")
+    lu.assertEquals(os.getenv 'BEE_TEST_ENV_1', "OK")
+    test_env('os.getenv "BEE_TEST_ENV_1" == "OK"', {})
+    test_env('os.getenv "BEE_TEST_ENV_1" == nil', {BEE_TEST_ENV_1=false})
 end
 
 function test_subprocess:test_args()
