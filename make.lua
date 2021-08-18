@@ -17,6 +17,7 @@ lm.builddir = ("build/%s"):format((function ()
 end)())
 
 require(('project.%s'):format(lm.os))
+require 'project.common'
 
 lm:copy "copy_script" {
     input = "bootstrap/main.lua",
