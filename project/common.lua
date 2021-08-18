@@ -36,6 +36,7 @@ lm:source_set "bee-core" {
         }
     },
     linux = {
+        flags = "-fPIC",
         sources = {
             "!bee/*_win.cpp",
             "!bee/*_osx.cpp",
