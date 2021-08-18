@@ -7,6 +7,9 @@ lm:source_set "lua-seri" {
     },
     sources = {
         "3rd/lua-seri/*.c",
+    },
+    linux = {
+        flags = "-fPIC"
     }
 }
 
