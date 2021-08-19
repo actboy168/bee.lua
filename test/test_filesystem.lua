@@ -155,6 +155,20 @@ function test_fs:test_remove_filename()
     end
 end
 
+function test_fs:test_replace_filename()
+    local function replace_filename(path, ext)
+        return fs.path(path):replace_filename(ext):string()
+    end
+    lu.assertEquals(replace_filename('a/b/c.lua', 'd.lua'), 'a/b/d.lua')
+    lu.assertEquals(replace_filename('a/b/c', 'd.lua'), 'a/b/d.lua')
+    lu.assertEquals(replace_filename('a/b/', 'd.lua'), 'a/b/d.lua')
+    if platform.OS == 'Windows' then
+        lu.assertEquals(replace_filename('a\\b\\c.lua', 'd.lua'), 'a/b/d.lua')
+        lu.assertEquals(replace_filename('a\\b\\c', 'd.lua'), 'a/b/d.lua')
+        lu.assertEquals(replace_filename('a\\b\\', 'd.lua'), 'a/b/d.lua')
+    end
+end
+
 function test_fs:test_replace_extension()
     local function replace_extension(path, ext)
         return fs.path(path):replace_extension(ext):string()

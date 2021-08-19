@@ -109,6 +109,25 @@ namespace bee::lua_filesystem {
             LUA_TRY_END;
         }
 
+        static int replace_filename(lua_State* L) {
+            LUA_TRY;
+            fs::path& self = path::to(L, 1);
+            switch (lua_type(L, 2)) {
+            case LUA_TSTRING:
+                self.replace_filename(lua::checkstring(L, 2));
+                lua_settop(L, 1);
+                return 1;
+            case LUA_TUSERDATA:
+                self.replace_filename(to(L, 2));
+                lua_settop(L, 1);
+                return 1;
+            default:
+                luaL_checktype(L, 2, LUA_TSTRING);
+                return 0;
+            }
+            LUA_TRY_END;
+        }
+
         static int replace_extension(lua_State* L) {
             LUA_TRY;
             fs::path& self = path::to(L, 1);
@@ -322,6 +341,7 @@ namespace bee::lua_filesystem {
                     {"is_absolute", path::is_absolute},
                     {"is_relative", path::is_relative},
                     {"remove_filename", path::remove_filename},
+                    {"replace_filename", path::replace_filename},
                     {"replace_extension", path::replace_extension},
                     {"equal_extension", path::equal_extension},
                     {"list_directory", path::list_directory},
