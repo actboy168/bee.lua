@@ -6,7 +6,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-16.04, ubuntu-18.04, ubuntu-20.04]
+        os: [windows-latest, macos-latest, ubuntu-18.04, ubuntu-20.04]
         mode: [debug, release]
     steps:
     - uses: actions/checkout@v2
