@@ -15,6 +15,4 @@ jobs:
     - uses: actboy168/setup-luamake@master
     - run: luamake -mode ${{ matrix.mode }}
     - if: runner.os == 'Linux'
-      run: |
-        objdump -T ./build/linux/bin/lua    | grep GLIBC
-        objdump -T ./build/linux/bin/bee.so | grep GLIBC
+      run: luamake lua test/glibc-version.lua
