@@ -16,5 +16,5 @@ jobs:
     - run: luamake -mode ${{ matrix.mode }}
     - if: runner.os == 'Linux'
       run: |
-        objdump -T ./build/linux/bin/lua    | greap GLIBC
-        objdump -T ./build/linux/bin/bee.so | greap GLIBC
+        objdump -T ./build/linux/bin/lua    | grep GLIBC
+        objdump -T ./build/linux/bin/bee.so | grep GLIBC
