@@ -21,7 +21,7 @@ lm:executable 'lua' {
     sources = {
         "3rd/lua/utf8_lua.c",
         "3rd/lua/utf8_crt.c",
-        EXE_RESOURCE,
+        lm.EXE_RESOURCE,
     },
     ldflags = STACK_SIZE and "/STACK:"..0x160000
 }
@@ -32,7 +32,7 @@ lm:executable 'bootstrap' {
     sources = {
         "bootstrap/*.cpp",
         "3rd/lua/utf8_crt.c",
-        EXE_RESOURCE,
+        lm.EXE_RESOURCE,
     },
     ldflags = STACK_SIZE and "/STACK:"..0x160000
 }
