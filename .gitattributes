@@ -1,2 +1,2 @@
-3rd/* linguist-vendored
-test/* linguist-vendored
+3rd/** linguist-vendored=true
+test/** linguist-vendored=true
