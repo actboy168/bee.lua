@@ -508,12 +508,11 @@ namespace bee::lua_filesystem {
 
     static int absolute(lua_State* L) {
         LUA_TRY;
-        const fs::path& p = path::to(L, 1);
-        if (lua_gettop(L) == 1) {
-            return path::constructor_(L, fs::absolute(p));
+        if (lua_gettop(L) != 1) {
+            return luaL_error(L, "fs.absolute only one parameter.");
         }
-        const fs::path& base = path::to(L, 2);
-        return path::constructor_(L, fs::absolute(base / p));
+        const fs::path& p = path::to(L, 1);
+        return path::constructor_(L, fs::absolute(p));
         LUA_TRY_END;
     }
 
