@@ -35,6 +35,10 @@ local function read_file(filename)
     return content
 end
 
+local function assertPathEquals(p1, p2)
+    lu.assertEquals(fs.path(p1):lexically_normal():string(), fs.path(p2):lexically_normal():string())
+end
+
 local test_fs = lu.test "filesystem"
 
 local ALLOW_WRITE = 0x92
@@ -259,32 +263,39 @@ function test_fs:test_concat()
     concat('a/b', 'c', 'a/bc')
 end
 
-function test_fs:test_absolute()
-    local function eq_absolute1(path)
-        return lu.assertEquals(fs.absolute(fs.path(path)):string(), (fs.current_path() / path):string())
+function test_fs:test_lexically_normal()
+    local function test(path1, path2)
+        return lu.assertEquals(fs.path(path1):lexically_normal():string(), path2)
     end
-    local function eq_absolute2(path1, path2)
-        return lu.assertEquals(fs.absolute(fs.path(path1)):string(), (fs.current_path() / path2):string())
-    end
+    test("a/", "a/")
+    test("a/b", "a/b")
+    test("./b", "b")
+    test("a/b/../", "a/")
+    test('a/b/c/../../d', 'a/d')
     if platform.OS == 'Windows' then
-        eq_absolute1('a\\')
-        eq_absolute1('a\\b')
-        eq_absolute1('a\\b\\')
-        eq_absolute2('a/b', 'a\\b')
-        eq_absolute2('./b', 'b')
-        eq_absolute2('a/../b', 'b')
-        eq_absolute2('a/b/../', 'a\\')
-        eq_absolute2('a/b/c/../../d', 'a\\d')
-    else
-        eq_absolute1('a/')
-        eq_absolute1('a/b')
-        eq_absolute1('a/b/')
-        eq_absolute2('a/b', 'a/b')
-        eq_absolute2('./b', 'b')
-        eq_absolute2('a/../b', 'b')
-        eq_absolute2('a/b/../', 'a/')
-        eq_absolute2('a/b/c/../../d', 'a/d')
+        test("a\\", "a/")
+        test("a\\b", "a/b")
+        test(".\\b", "b")
+        test("a\\b\\..\\", "a/")
+        test('a\\b\\c\\..\\..\\d', 'a/d')
     end
+end
+
+function test_fs:test_absolute()
+    local function eq_absolute2(path1, path2)
+        return lu.assertEquals(fs.absolute(fs.path(path1)), fs.current_path() / path2)
+    end
+    local function eq_absolute1(path)
+        return eq_absolute2(path, path)
+    end
+    eq_absolute1('a/')
+    eq_absolute1('a/b')
+    eq_absolute1('a/b/')
+    eq_absolute2('a/b', 'a/b')
+    eq_absolute2('./b', 'b')
+    eq_absolute2('a/../b', 'b')
+    eq_absolute2('a/b/../', 'a/')
+    eq_absolute2('a/b/c/../../d', 'a/d')
 end
 
 function test_fs:test_relative()
@@ -748,9 +759,9 @@ function test_fs:test_exe_path()
         while arg[i] ~= nil do
             i = i - 1
         end
-        return fs.absolute(fs.path(arg[i + 1])):string()
+        return fs.path(arg[i + 1])
     end
-    lu.assertEquals(fs.exe_path():string(), getexe())
+    assertPathEquals(fs.exe_path(), fs.absolute(getexe()))
 end
 
 function test_fs:test_dll_path()
@@ -759,9 +770,9 @@ function test_fs:test_dll_path()
         while arg[i] ~= nil do
             i = i - 1
         end
-        return fs.absolute(fs.path(arg[i + 1]):parent_path() / ('bee.' .. __EXT__))
+        return fs.path(arg[i + 1]):parent_path() / ('bee.' .. __EXT__)
     end
-    lu.assertEquals(fs.dll_path(), getdll())
+    assertPathEquals(fs.dll_path(), fs.absolute(getdll()))
 end
 
 function test_fs:test_filelock_1()

@@ -36,7 +36,7 @@ local function assertSelect(what, value)
 end
 
 local function test(f)
-    local root = fs.absolute(fs.path './temp')
+    local root = fs.absolute(fs.path './temp'):lexically_normal()
     pcall(fs.remove_all, root)
     fs.create_directories(root)
     local id = fw.add(root:string())

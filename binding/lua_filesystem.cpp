@@ -269,6 +269,13 @@ namespace bee::lua_filesystem {
             LUA_TRY_END;
         }
 
+        static int lexically_normal(lua_State* L) {
+            LUA_TRY;
+            fs::path& self = path::to(L, 1);
+            return constructor_(L, self.lexically_normal());
+            LUA_TRY_END;
+        }
+
         static int mt_div(lua_State* L) {
             LUA_TRY;
             const fs::path& self = path::to(L, 1);
@@ -348,6 +355,7 @@ namespace bee::lua_filesystem {
                     {"permissions", path::permissions},
                     {"add_permissions", path::add_permissions},
                     {"remove_permissions", path::remove_permissions},
+                    {"lexically_normal", path::lexically_normal},
                     {"__div", path::mt_div},
                     {"__concat", path::mt_concat},
                     {"__eq", path::mt_eq},
@@ -499,18 +507,13 @@ namespace bee::lua_filesystem {
     }
 
     static int absolute(lua_State* L) {
-#if defined(_WIN32)
-#define FS_ABSOLUTE(path) fs::absolute(path)
-#else
-#define FS_ABSOLUTE(path) fs::absolute(path).lexically_normal()
-#endif
         LUA_TRY;
         const fs::path& p = path::to(L, 1);
         if (lua_gettop(L) == 1) {
-            return path::constructor_(L, FS_ABSOLUTE(p));
+            return path::constructor_(L, fs::absolute(p));
         }
         const fs::path& base = path::to(L, 2);
-        return path::constructor_(L, FS_ABSOLUTE(base / p));
+        return path::constructor_(L, fs::absolute(base / p));
         LUA_TRY_END;
     }
 
