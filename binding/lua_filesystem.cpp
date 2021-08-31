@@ -516,29 +516,12 @@ namespace bee::lua_filesystem {
         LUA_TRY_END;
     }
 
-#if defined(__linux__)
-    #define FS_NATIVE(p) (p)
-#else
-    static fs::path FS_NATIVE(const fs::path& p) {
-        auto s = p.native();
-        std::transform(s.begin(), s.end(), s.begin(),
-#if defined(_WIN32)
-            ::towlower
-#else
-            ::tolower
-#endif
-        );
-        return fs::path(s);
-    }
-#endif
-
     static int relative(lua_State* L) {
         LUA_TRY;
-        return path::constructor_(L, fs::relative(FS_NATIVE(path::to(L, 1)), 
-                lua_gettop(L) == 1
-                ? FS_NATIVE(fs::current_path())
-                : FS_NATIVE(path::to(L, 2))
-            ));
+        if (lua_gettop(L) == 1) {
+            return path::constructor_(L, fs::relative(path::to(L, 1)));
+        }
+        return path::constructor_(L, fs::relative(path::to(L, 1), path::to(L, 2)));
         LUA_TRY_END;
     }
 

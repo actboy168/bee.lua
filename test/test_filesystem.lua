@@ -311,7 +311,6 @@ function test_fs:test_relative()
         relative('a', C..'a/b/c',  '')
         relative(C..'a/b', 'a/b/c',  '')
         relative(C..'a\\b\\c', C..'a',  'b/c')
-        relative('c:\\a\\b\\c', 'C:\\a',  'b/c')
     else
         -- TODO
         --relative(D..'a/b/c', C..'a',  '')
