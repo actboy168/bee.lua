@@ -351,10 +351,10 @@ namespace bee::lua_filesystem {
                     {"replace_filename", path::replace_filename},
                     {"replace_extension", path::replace_extension},
                     {"equal_extension", path::equal_extension},
-                    {"list_directory", path::list_directory},
-                    {"permissions", path::permissions},
-                    {"add_permissions", path::add_permissions},
-                    {"remove_permissions", path::remove_permissions},
+                    {"list_directory", path::list_directory},         //deprecated
+                    {"permissions", path::permissions},               //deprecated
+                    {"add_permissions", path::add_permissions},       //deprecated
+                    {"remove_permissions", path::remove_permissions}, //deprecated
                     {"lexically_normal", path::lexically_normal},
                     {"__div", path::mt_div},
                     {"__concat", path::mt_concat},
@@ -558,6 +558,10 @@ namespace bee::lua_filesystem {
         LUA_TRY_END;
     }
 
+    static int pairs(lua_State* L) {
+        return path::list_directory(L);
+    }
+
     static int exe_path(lua_State* L) {
         LUA_TRY;
         return path::constructor_(L, path_helper::exe_path());
@@ -608,6 +612,7 @@ namespace bee::lua_filesystem {
             {"relative", relative},
             {"last_write_time", last_write_time},
             {"permissions", permissions},
+            {"pairs", pairs},
             {"exe_path", exe_path},
             {"dll_path", dll_path},
             {"filelock", filelock},

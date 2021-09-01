@@ -646,24 +646,24 @@ function test_fs:test_copy_file_2()
     lu.assertEquals(fs.exists(to), false)
 end
 
-function test_fs:test_list_directory()
-    local function list_directory_ok(dir, flags, expected)
+function test_fs:test_pairs()
+    local function pairs_ok(dir, flags, expected)
         local fsdir = fs.path(dir)
         local result = {}
-        for path in fsdir:list_directory(flags) do
+        for path in fs.pairs(fsdir, flags) do
             result[path:string()] = true
         end
         lu.assertEquals(result, expected)
     end
-    local function list_directory_failed(dir)
+    local function pairs_failed(dir)
         local fsdir = fs.path(dir)
-        lu.assertError(fsdir.list_directory, fsdir)
+        lu.assertError(fsdir.pairs, fsdir)
     end
 
     fs.create_directories(fs.path('temp'))
     create_file('temp/temp1.txt')
     create_file('temp/temp2.txt')
-    list_directory_ok('temp', nil, {
+    pairs_ok('temp', nil, {
         ['temp/temp1.txt'] = true,
         ['temp/temp2.txt'] = true,
     })
@@ -674,12 +674,12 @@ function test_fs:test_list_directory()
     create_file('temp/temp2.txt')
     create_file('temp/temp/temp1.txt')
     create_file('temp/temp/temp2.txt')
-    list_directory_ok('temp', nil, {
+    pairs_ok('temp', nil, {
         ['temp/temp1.txt'] = true,
         ['temp/temp2.txt'] = true,
         ['temp/temp'] = true,
     })
-    --list_directory_ok('temp', "r", {
+    --pairs_ok('temp', "r", {
     --    ['temp/temp1.txt'] = true,
     --    ['temp/temp2.txt'] = true,
     --    ['temp/temp'] = true,
@@ -688,20 +688,20 @@ function test_fs:test_list_directory()
     --})
 
     fs.remove_all(fs.path('temp'))
-    list_directory_failed('temp.txt')
-    list_directory_failed('temp')
-    list_directory_failed('temp.txt')
+    pairs_failed('temp.txt')
+    pairs_failed('temp')
+    pairs_failed('temp.txt')
     create_file('temp.txt')
-    list_directory_failed('temp.txt')
+    pairs_failed('temp.txt')
     fs.remove_all(fs.path('temp.txt'))
 end
 
 function test_fs:test_copy_dir()
-    local function list_directory(dir, result)
+    local function each_directory(dir, result)
         result = result or {}
-        for path in fs.path(dir):list_directory() do
+        for path in fs.pairs(fs.path(dir)) do
             if fs.is_directory(path) then
-                list_directory(path, result)
+                each_directory(path, result)
             end
             result[path:string()] = true
         end
@@ -719,14 +719,14 @@ function test_fs:test_copy_dir()
 
     fs.copy(fs.path('temp'), fs.path('temp1'), fs.copy_options.overwrite_existing | fs.copy_options.recursive)
 
-    lu.assertEquals(list_directory('temp'), {
+    lu.assertEquals(each_directory('temp'), {
         ['temp/temp1.txt'] = true,
         ['temp/temp2.txt'] = true,
         ['temp/temp/temp1.txt'] = true,
         ['temp/temp/temp2.txt'] = true,
         ['temp/temp'] = true,
     })
-    lu.assertEquals(list_directory('temp1'), {
+    lu.assertEquals(each_directory('temp1'), {
         ['temp1/temp1.txt'] = true,
         ['temp1/temp2.txt'] = true,
         ['temp1/temp/temp1.txt'] = true,
