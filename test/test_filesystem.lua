@@ -713,7 +713,7 @@ function test_fs:test_copy_dir()
     create_file('temp/temp/temp1.txt', tostring(math.random()))
     create_file('temp/temp/temp2.txt', tostring(math.random()))
 
-    fs.copy(fs.path('temp'), fs.path('temp1'), true)
+    fs.copy(fs.path('temp'), fs.path('temp1'), fs.copy_options.overwrite_existing | fs.copy_options.recursive)
 
     lu.assertEquals(list_directory('temp'), {
         ['temp/temp1.txt'] = true,

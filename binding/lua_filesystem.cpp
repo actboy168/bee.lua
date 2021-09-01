@@ -453,13 +453,9 @@ namespace bee::lua_filesystem {
         LUA_TRY;
         const fs::path& from = path::to(L, 1);
         const fs::path& to = path::to(L, 2);
-        if (lua_type(L, 3) == LUA_TNUMBER) {
-            fs::copy(from, to, static_cast<fs::copy_options>(luaL_checkinteger(L, 3)));
-            return 0;
-        }
-        auto options = fs::copy_options::recursive;
-        if (lua_toboolean(L, 3)) {
-            options |= fs::copy_options::overwrite_existing;
+        fs::copy_options options = fs::copy_options::none;
+        if (lua_gettop(L) > 2) {
+            options = static_cast<fs::copy_options>(luaL_checkinteger(L, 3));
         }
         fs::copy(from, to, options);
         return 0;
@@ -492,17 +488,13 @@ namespace bee::lua_filesystem {
         LUA_TRY;
         const fs::path& from = path::to(L, 1);
         const fs::path& to = path::to(L, 2);
-        if (lua_type(L, 3) == LUA_TNUMBER) {
-            bool ok = patch_copy_file(from, to, static_cast<fs::copy_options>(luaL_checkinteger(L, 3)));
-            lua_pushboolean(L, ok);
-            return 1;
+        fs::copy_options options = fs::copy_options::none;
+        if (lua_gettop(L) > 2) {
+            options = static_cast<fs::copy_options>(luaL_checkinteger(L, 3));
         }
-        auto options = fs::copy_options::none;
-        if (lua_toboolean(L, 3)) {
-            options |= fs::copy_options::overwrite_existing;
-        }
-        patch_copy_file(from, to, options);
-        return 0;
+        bool ok = patch_copy_file(from, to, options);
+        lua_pushboolean(L, ok);
+        return 1;
         LUA_TRY_END;
     }
 
