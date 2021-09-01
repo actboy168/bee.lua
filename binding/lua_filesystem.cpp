@@ -538,6 +538,25 @@ namespace bee::lua_filesystem {
         return 0;
         LUA_TRY_END;
     }
+    
+    static int permissions(lua_State* L) {
+        LUA_TRY;
+        const fs::path& p = path::to(L, 1);
+        int             n = lua_gettop(L);
+        if (n == 1) {
+            lua_pushinteger(L, lua_Integer(fs::status(p).permissions()));
+            return 1;
+        }
+        const fs::perms perms = fs::perms::mask & fs::perms(luaL_checkinteger(L, 2));
+        if (n == 2) {
+            fs::permissions(p, perms, fs::perm_options::replace);
+            return 0;
+        }
+        const fs::perm_options options = fs::perm_options(luaL_checkinteger(L, 3));
+        fs::permissions(p, perms, options);
+        return 0;
+        LUA_TRY_END;
+    }
 
     static int exe_path(lua_State* L) {
         LUA_TRY;
@@ -588,6 +607,7 @@ namespace bee::lua_filesystem {
             {"absolute", absolute},
             {"relative", relative},
             {"last_write_time", last_write_time},
+            {"permissions", permissions},
             {"exe_path", exe_path},
             {"dll_path", dll_path},
             {"filelock", filelock},
@@ -612,6 +632,13 @@ namespace bee::lua_filesystem {
         DEF_ENUM(copy_options, create_symlinks);
         DEF_ENUM(copy_options, create_hard_links);
         lua_setfield(L, -2, "copy_options");
+
+        lua_newtable(L);
+        DEF_ENUM(perm_options, replace);
+        DEF_ENUM(perm_options, add);
+        DEF_ENUM(perm_options, remove);
+        DEF_ENUM(perm_options, nofollow);
+        lua_setfield(L, -2, "perm_options");
         return 1;
     }
 }

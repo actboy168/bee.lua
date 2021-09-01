@@ -46,11 +46,11 @@ local USER_WRITE = 0x80
 
 function test_fs:test_setup()
     if fs.exists(fs.path('temp1.txt')) then
-        fs.path('temp1.txt'):add_permissions(ALLOW_WRITE)
+        fs.permissions(fs.path('temp1.txt'), ALLOW_WRITE)
         os.remove('temp1.txt')
     end
     if fs.exists(fs.path('temp2.txt')) then
-        fs.path('temp2.txt'):add_permissions(ALLOW_WRITE)
+        fs.permissions(fs.path('temp2.txt'), ALLOW_WRITE)
         os.remove('temp2.txt')
     end
 end
@@ -205,29 +205,33 @@ function test_fs:test_equal_extension()
     equal_extension('a/b/c..lua', 'lua')
 end
 
-function test_fs:test_permissions()
+function test_fs:test_get_permissions()
     local filename = 'temp.txt'
     create_file(filename)
 
-    lu.assertEquals(fs.path(filename):permissions() & USER_WRITE, USER_WRITE)
+    lu.assertEquals(fs.permissions(fs.path(filename)) & USER_WRITE, USER_WRITE)
     shell:add_readonly(filename)
-    lu.assertEquals(fs.path(filename):permissions() & USER_WRITE, 0)
+    lu.assertEquals(fs.permissions(fs.path(filename)) & USER_WRITE, 0)
     shell:del_readonly(filename)
 
     os.remove(filename)
 end
 
-function test_fs:test_add_remove_permissions()
-    local filename = 'temp.txt'
+function test_fs:test_set_permissions()
+    local filename = fs.path 'temp.txt'
     create_file(filename)
 
-    lu.assertEquals(fs.path(filename):permissions() & USER_WRITE, USER_WRITE)
-    fs.path(filename):remove_permissions(ALLOW_WRITE)
-    lu.assertEquals(fs.path(filename):permissions() & USER_WRITE, 0)
-    fs.path(filename):add_permissions(ALLOW_WRITE)
-    lu.assertEquals(fs.path(filename):permissions() & USER_WRITE, USER_WRITE)
+    lu.assertEquals(fs.permissions(filename) & USER_WRITE, USER_WRITE)
+    fs.permissions(filename, ALLOW_WRITE, fs.perm_options.remove)
+    lu.assertEquals(fs.permissions(filename) & USER_WRITE, 0)
+    fs.permissions(filename, ALLOW_WRITE, fs.perm_options.add)
+    lu.assertEquals(fs.permissions(filename) & USER_WRITE, USER_WRITE)
+    fs.permissions(filename, 0)
+    lu.assertEquals(fs.permissions(filename) & USER_WRITE, 0)
+    fs.permissions(filename, ALLOW_WRITE)
+    lu.assertEquals(fs.permissions(filename) & USER_WRITE, USER_WRITE)
 
-    os.remove(filename)
+    os.remove(filename:string())
 end
 
 function test_fs:test_div()
