@@ -45,7 +45,7 @@ namespace bee::lua_socket {
             return socket::protocol::udp;
         }
         else if (type == "unix") {
-            return socket::protocol::unix;
+            return socket::protocol::uds;
         }
         else {
             luaL_error(L, "invalid protocol `%s`.", type.data());
@@ -54,7 +54,7 @@ namespace bee::lua_socket {
     }
     static endpoint read_endpoint(lua_State* L, socket::protocol protocol, int idx) {
         std::string_view ip = lua::to_strview(L, idx);
-        if (protocol != socket::protocol::unix) {
+        if (protocol != socket::protocol::uds) {
             int port = (int)luaL_checkinteger(L, idx + 1);
             endpoint ep = endpoint::from_hostname(ip, port);
             if (!ep.valid()) {
@@ -72,7 +72,7 @@ namespace bee::lua_socket {
         switch (protocol) {
         case socket::protocol::tcp:
             return (int)luaL_optinteger(L, 4, kDefaultBackLog);
-        case socket::protocol::unix:
+        case socket::protocol::uds:
             return (int)luaL_optinteger(L, 3, kDefaultBackLog);
         default:
         case socket::protocol::udp:
@@ -204,7 +204,7 @@ namespace bee::lua_socket {
         }
         socket::fd_t fd = self.fd;
         self.fd = socket::retired_fd;
-        if (self.protocol == socket::protocol::unix && self.type == luafd::tag::listen) {
+        if (self.protocol == socket::protocol::uds && self.type == luafd::tag::listen) {
 #if defined _WIN32
             if (!socket::supportUnixDomainSocket()) {
                 ::DeleteFileW(u2w(self.path).c_str());
@@ -258,7 +258,7 @@ namespace bee::lua_socket {
         socket::fd_t fd = self.fd;
         if (fd != socket::retired_fd) {
             self.fd = socket::retired_fd;
-            if (self.protocol == socket::protocol::unix) {
+            if (self.protocol == socket::protocol::uds) {
                 socket::unlink(fd);
             }
             socket::close(fd);
@@ -425,8 +425,8 @@ namespace bee::lua_socket {
         if (!socket::pair(sv)) {
             return push_neterror(L, "socketpair");
         }
-        pushfd(L, sv[0], socket::protocol::unix, luafd::tag::accept);
-        pushfd(L, sv[1], socket::protocol::unix, luafd::tag::connect);
+        pushfd(L, sv[0], socket::protocol::uds, luafd::tag::accept);
+        pushfd(L, sv[1], socket::protocol::uds, luafd::tag::connect);
         return 2;
     }
 #if defined(_WIN32)

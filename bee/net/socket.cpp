@@ -225,7 +225,7 @@ namespace bee::net::socket {
             return createSocket(ep.family(), SOCK_STREAM, IPPROTO_TCP);
         case protocol::udp:
             return createSocket(ep.family(), SOCK_DGRAM, IPPROTO_UDP);
-        case protocol::unix:
+        case protocol::uds:
 #if defined _WIN32
             if (!supportUnixDomainSocket()) {
                 return createSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);

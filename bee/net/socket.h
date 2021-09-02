@@ -22,7 +22,7 @@ namespace bee::net::socket {
         none,
         tcp,
         udp,
-        unix,
+        uds,
     };
 
     enum class shutdown_flag {
