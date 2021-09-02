@@ -55,7 +55,7 @@ void pushprogdir(lua_State *L) {
     free(linkname);
 }
 
-#else
+#elif defined(__linux__)
 
 #include <unistd.h>
 #include <memory.h>
@@ -76,5 +76,8 @@ void pushprogdir(lua_State *L) {
         lua_pushstring(L, linkname);
     }
 }
-
+#else
+void pushprogdir(lua_State *L) {
+    luaL_error(L, "unable to get progdir");
+}
 #endif

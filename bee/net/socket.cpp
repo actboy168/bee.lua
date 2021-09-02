@@ -292,7 +292,7 @@ namespace bee::net::socket {
         if (keepalive == -1) {
             return;
         }
-#if defined _WIN32
+#if defined(_WIN32)
         (void)keepalive_cnt;
         tcp_keepalive keepaliveopts;
         keepaliveopts.onoff = keepalive;
@@ -301,7 +301,7 @@ namespace bee::net::socket {
         DWORD num_bytes_returned;
         int rc = WSAIoctl(s, SIO_KEEPALIVE_VALS, &keepaliveopts, sizeof(keepaliveopts), NULL, 0, &num_bytes_returned, NULL, NULL);
         net_assert_success(rc);
-#elif defined __linux__
+#elif defined(__linux__)
         int rc = setsockopt(s, SOL_SOCKET, SO_KEEPALIVE, (char*) &keepalive, sizeof (int));
         net_assert_success(rc);
         if (keepalive_cnt != -1) {
@@ -316,7 +316,7 @@ namespace bee::net::socket {
             int rc = setsockopt(s, IPPROTO_TCP, TCP_KEEPINTVL, &keepalive_intvl, sizeof (int));
             net_assert_success(rc);
         }
-#else
+#elif defined(__apple__)
         (void)keepalive_cnt;
         (void)keepalive_intvl;
         int rc = setsockopt(s, SOL_SOCKET, SO_KEEPALIVE, (char*) &keepalive, sizeof (int));
