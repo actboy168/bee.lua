@@ -6,7 +6,7 @@ local dll = isWindows and ".dll" or ".so"
 
 lm.c = lm.compiler == 'msvc' and 'c89' or 'c11'
 lm.cxx = 'c++17'
-lm.builddir = ("build/%s"):format((function ()
+local plat = (function ()
     if isWindows then
         if lm.compiler == "gcc" then
             return "mingw"
@@ -14,9 +14,10 @@ lm.builddir = ("build/%s"):format((function ()
         return "msvc"
     end
     return lm.os
-end)())
+end)()
+lm.builddir = ("build/%s"):format(plat)
 
-require(('project.%s'):format(lm.os))
+require(('project.%s'):format(plat))
 require 'project.common'
 
 lm:copy "copy_script" {
