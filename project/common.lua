@@ -22,33 +22,33 @@ lm:source_set "bee-core" {
         "BEE_INLINE",
     },
     sources = {
-        "bee/*.cpp",
+        "bee/**.cpp",
         "bee/nonstd/fmt/*.cc",
     },
     windows = {
         sources = {
-            "!bee/*_osx.cpp",
-            "!bee/*_linux.cpp",
-            "!bee/*_posix.cpp",
+            "!bee/**_osx.cpp",
+            "!bee/**_linux.cpp",
+            "!bee/**_posix.cpp",
         }
     },
     macos = {
         sources = {
-            "!bee/*_win.cpp",
-            "!bee/*_linux.cpp",
+            "!bee/**_win.cpp",
+            "!bee/**_linux.cpp",
         }
     },
     linux = {
         flags = "-fPIC",
         sources = {
-            "!bee/*_win.cpp",
-            "!bee/*_osx.cpp",
+            "!bee/**_win.cpp",
+            "!bee/**_osx.cpp",
         }
     },
     android = {
         sources = {
-            "!bee/*_win.cpp",
-            "!bee/*_osx.cpp",
+            "!bee/**_win.cpp",
+            "!bee/**_osx.cpp",
         }
     }
 }
