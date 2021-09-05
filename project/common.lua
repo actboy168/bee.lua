@@ -1,6 +1,6 @@
 local lm = require 'luamake'
 
-lm:source_set "lua-seri" {
+lm:source_set "bee" {
     includes = {
         "3rd/lua",
         "3rd/lua-seri",
@@ -13,7 +13,7 @@ lm:source_set "lua-seri" {
     }
 }
 
-lm:source_set "bee-core" {
+lm:source_set "bee" {
     includes = {
         "bee/nonstd",
         "."
@@ -54,10 +54,6 @@ lm:source_set "bee-core" {
 }
 
 lm:shared_library 'bee' {
-    deps = {
-        "lua-seri",
-        "bee-core"
-    },
     includes = {
         "3rd/lua",
         "3rd/lua-seri",
