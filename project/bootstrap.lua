@@ -51,6 +51,10 @@ if lm.os == "windows" then
         },
         output = "bootstrap/forward_lua.h",
     }
+    lm:phony {
+        input = "bootstrap/forward_lua.h",
+        output = "bootstrap/forward_lua.c",
+    }
     lm:shared_library "lua54" {
         includes = "bootstrap",
         sources = "bootstrap/forward_lua.c",
