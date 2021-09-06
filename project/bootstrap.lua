@@ -80,7 +80,4 @@ lm:build "test" {
     "$bin/"..BOOTSTRAP..exe, "@test/test.lua",
     deps = { BOOTSTRAP, "copy_script" },
     pool = "console",
-    windows = {
-        deps = "lua54"
-    }
 }
