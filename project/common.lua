@@ -63,7 +63,6 @@ lm:source_set "source_bee" {
     defines = "BEE_INLINE",
     sources = "binding/*.cpp",
     windows = {
-        deps = "lua54",
         defines = "_CRT_SECURE_NO_WARNINGS",
         links = {
             "advapi32",
@@ -79,7 +78,6 @@ lm:source_set "source_bee" {
         links = "stdc++fs"
     },
     linux = {
-        crt = "static",
         sources = {
             "!binding/lua_unicode.cpp",
             "!binding/lua_registry.cpp",
@@ -109,40 +107,27 @@ lm:source_set "source_bee" {
     }
 }
 
-lm:shared_library "bee" {
-    deps = "source_bee"
-}
-
-lm:executable 'bootstrap' {
-    deps = "source_bee",
-    includes = "3rd/lua",
-    sources = "bootstrap/*.cpp",
+lm:source_set 'source_lua' {
+    sources = {
+        "3rd/lua/*.c",
+        "!3rd/lua/lua.c",
+        "!3rd/lua/luac.c",
+        "!3rd/lua/utf8_*.c",
+    },
     windows = {
-        deps = "lua54",
-        sources = {
-            "3rd/lua/utf8_crt.c",
-            lm.EXE_RESOURCE,
-        },
+        defines = "LUA_BUILD_AS_DLL",
     },
     macos = {
-        deps = "source_lua",
         defines = "LUA_USE_MACOSX",
-        links = { "m", "dl" },
+        visibility = "default",
     },
     linux = {
-        deps = "source_lua",
         defines = "LUA_USE_LINUX",
-        ldflags = "-Wl,-E",
-        links = {
-            "m", "dl",
-            -- https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67791
-            "pthread",
-        }
+        visibility = "default",
     },
     android = {
-        deps = "source_lua",
         defines = "LUA_USE_LINUX",
-        ldflags = "-Wl,-E",
-        links = { "m", "dl" }
+        visibility = "default",
     }
 }
+
