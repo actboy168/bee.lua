@@ -30,10 +30,8 @@ end
 local input, output, dllname = ...
 local version, export = parse(input)
 local s = {}
-s[#s+1] = ([[LIBRARY "lua%s"]]):format(version)
-s[#s+1] = [[EXPORTS]]
 for _, api in ipairs(export) do
-    s[#s+1] = ([[    %s=%s.%s]]):format(api, dllname, api)
+    s[#s+1] = ([[#pragma comment(linker, "/export:%s=%s.%s")]]):format(api, dllname, api)
 end
 local f <close> = assert(io.open(output, "w"))
 f:write(table.concat(s, "\n"))

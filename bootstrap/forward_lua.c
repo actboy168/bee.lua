@@ -1,1 +1,1 @@
-// nothing
+#include "forward_lua.h"

@@ -3,3 +3,4 @@
 !/.vs/launch.vs.json
 *.user
 /.vscode/ipch/
+/bootstrap/forward_lua.h

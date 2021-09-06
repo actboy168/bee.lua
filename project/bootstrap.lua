@@ -38,13 +38,12 @@ lm:executable (BOOTSTRAP) {
 
 if lm.os == "windows" then
     lm:build "forward_lua" {
-        "$luamake", "lua", "@bootstrap/forward_lua.lua","@3rd/lua/", "@bootstrap/forward_lua.def", BOOTSTRAP..".exe"
+        "$luamake", "lua", "@bootstrap/forward_lua.lua","@3rd/lua/", "@bootstrap/forward_lua.h", BOOTSTRAP..".exe"
     }
     lm:shared_library "lua54" {
         includes = "3rd/lua",
         sources = {
             "bootstrap/forward_lua.c",
-            "bootstrap/forward_lua.def",
         },
         ldflags = "$obj/"..BOOTSTRAP.."/"..BOOTSTRAP..".lib",
         links = "user32",
