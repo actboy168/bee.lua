@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-local BOOTSTRAP = lm.EXE_NAME or "bootstrap"
+BOOTSTRAP = lm.EXE_NAME or "bootstrap"
 
 lm:executable (BOOTSTRAP) {
     deps = { "source_bee", "source_lua" },

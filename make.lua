@@ -39,12 +39,12 @@ require 'project.lua'
 lm:copy "copy_script" {
     input = "bootstrap/main.lua",
     output = "$bin/main.lua",
-    deps = "bootstrap",
+    deps = BOOTSTRAP,
 }
 
 lm:build "test" {
-    "$bin/bootstrap"..exe, "@test/test.lua",
-    deps = { "bootstrap", "copy_script" },
+    "$bin/"..BOOTSTRAP..exe, "@test/test.lua",
+    deps = { BOOTSTRAP, "copy_script" },
     pool = "console",
     windows = {
         deps = "lua54"
