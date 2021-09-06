@@ -1,6 +1,8 @@
 local lm = require "luamake"
 
-lm:executable 'bootstrap' {
+local BOOTSTRAP = lm.EXE_NAME or "bootstrap"
+
+lm:executable (BOOTSTRAP) {
     deps = { "source_bee", "source_lua" },
     includes = "3rd/lua",
     sources = "bootstrap/*.cpp",
@@ -36,7 +38,7 @@ lm:executable 'bootstrap' {
 
 if lm.os == "windows" then
     lm:build "forward_lua" {
-        "$luamake", "lua", "@bootstrap/forward_lua.lua","@3rd/lua/", "@bootstrap/forward_lua.def", "bootstrap.exe"
+        "$luamake", "lua", "@bootstrap/forward_lua.lua","@3rd/lua/", "@bootstrap/forward_lua.def", BOOTSTRAP..".exe"
     }
     lm:shared_library "lua54" {
         includes = "3rd/lua",
@@ -45,7 +47,7 @@ if lm.os == "windows" then
         },
         ldflags = {
             "/def:bootstrap/forward_lua.def",
-            "$obj/bootstrap/bootstrap.lib",
+            "$obj/"..BOOTSTRAP.."/"..BOOTSTRAP..".lib",
         },
         links= "user32",
         deps = {
