@@ -40,35 +40,7 @@ lm:executable (BOOTSTRAP) {
     }
 }
 
-if lm.os == "windows" then
-    lm:build "forward_lua" {
-        "$luamake", "lua", "@bootstrap/forward_lua.lua", "@3rd/lua/", "$out", BOOTSTRAP..".exe",
-        input = {
-            "bootstrap/forward_lua.lua",
-            "3rd/lua/lua.h",
-            "3rd/lua/lauxlib.h",
-            "3rd/lua/lualib.h",
-        },
-        output = "bootstrap/forward_lua.h",
-    }
-    lm:phony {
-        input = "bootstrap/forward_lua.h",
-        output = "bootstrap/forward_lua.c",
-    }
-    lm:shared_library "lua54" {
-        includes = "bootstrap",
-        sources = "bootstrap/forward_lua.c",
-        ldflags = "$obj/"..BOOTSTRAP.."/"..BOOTSTRAP..".lib",
-        links = "user32",
-        deps = {
-            "forward_lua",
-            BOOTSTRAP,
-        }
-    }
-end
-
-local isWindows = lm.os == 'windows'
-local exe = isWindows and ".exe" or ""
+local exe = lm.os == 'windows' and ".exe" or ""
 
 lm:copy "copy_script" {
     input = "bootstrap/main.lua",
@@ -81,3 +53,33 @@ lm:build "test" {
     deps = { BOOTSTRAP, "copy_script" },
     pool = "console",
 }
+
+if lm.os == "windows" then
+    lm:build "forward_lua" {
+        "$luamake", "lua", "@bootstrap/forward_lua.lua", "@3rd/lua/", "$out", BOOTSTRAP..".exe",
+        input = {
+            "bootstrap/forward_lua.lua",
+            "3rd/lua/lua.h",
+            "3rd/lua/lauxlib.h",
+            "3rd/lua/lualib.h",
+        },
+        output = "bootstrap/forward_lua.h",
+        deps = {
+            "copy_script",
+            BOOTSTRAP,
+        }
+    }
+    lm:phony {
+        input = "bootstrap/forward_lua.h",
+        output = "bootstrap/forward_lua.c",
+    }
+    lm:shared_library "lua54" {
+        includes = "bootstrap",
+        sources = "bootstrap/forward_lua.c",
+        ldflags = "$obj/"..BOOTSTRAP.."/"..BOOTSTRAP..".lib",
+        deps = {
+            "forward_lua",
+            BOOTSTRAP,
+        }
+    }
+end
