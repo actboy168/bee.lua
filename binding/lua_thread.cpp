@@ -56,7 +56,7 @@ static luaL_Reg CMODULE[] = {
 void preload(lua_State* L) {
     const luaL_Reg *lib;
     const luaL_Reg* modules = BEE_THREAD_MODULE;
-    luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
+    luaL_getsubtable(L, LUA_REGISTRYINDEX, "_PRELOAD");
     for (lib = modules; lib->func; lib++) {
         lua_pushcfunction(L, lib->func);
         lua_setfield(L, -2, lib->name);
