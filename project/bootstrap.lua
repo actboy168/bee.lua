@@ -42,7 +42,10 @@ if lm.os == "windows" then
     }
     lm:shared_library "lua54" {
         includes = "3rd/lua",
-        sources = "bootstrap/forward_lua.def",
+        sources = {
+            "bootstrap/forward_lua.c",
+            "bootstrap/forward_lua.def",
+        },
         ldflags = "$obj/"..BOOTSTRAP.."/"..BOOTSTRAP..".lib",
         links = "user32",
         deps = {
