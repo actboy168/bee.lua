@@ -1,16 +1,16 @@
 local lm = require "luamake"
 
-if lm.os == "windows" then
-    --TODO
-    return
-end
-
-lm:shared_library "bee" {
+lm:lua_dll "bee" {
     deps = "source_bee",
     linux = {
         crt = "static",
     }
 }
+
+if lm.os == "windows" then
+    --TODO
+    return
+end
 
 lm:executable 'lua' {
     deps = "source_lua",

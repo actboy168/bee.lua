@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-BOOTSTRAP = lm.EXE_NAME or "bootstrap"
+local BOOTSTRAP = lm.EXE_NAME or "bootstrap"
 
 lm:executable (BOOTSTRAP) {
     deps = { "source_bee", "source_lua" },
@@ -58,3 +58,21 @@ if lm.os == "windows" then
         }
     }
 end
+
+local isWindows = lm.os == 'windows'
+local exe = isWindows and ".exe" or ""
+
+lm:copy "copy_script" {
+    input = "bootstrap/main.lua",
+    output = "$bin/main.lua",
+    deps = BOOTSTRAP,
+}
+
+lm:build "test" {
+    "$bin/"..BOOTSTRAP..exe, "@test/test.lua",
+    deps = { BOOTSTRAP, "copy_script" },
+    pool = "console",
+    windows = {
+        deps = "lua54"
+    }
+}

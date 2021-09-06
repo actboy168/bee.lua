@@ -1,7 +1,6 @@
 local lm = require 'luamake'
 
 local isWindows = lm.os == 'windows'
-local exe = isWindows and ".exe" or ""
 
 lm.c = lm.compiler == 'msvc' and 'c89' or 'c11'
 lm.cxx = 'c++17'
@@ -35,18 +34,3 @@ lm.linux = {
 require 'project.common'
 require 'project.bootstrap'
 require 'project.lua'
-
-lm:copy "copy_script" {
-    input = "bootstrap/main.lua",
-    output = "$bin/main.lua",
-    deps = BOOTSTRAP,
-}
-
-lm:build "test" {
-    "$bin/"..BOOTSTRAP..exe, "@test/test.lua",
-    deps = { BOOTSTRAP, "copy_script" },
-    pool = "console",
-    windows = {
-        deps = "lua54"
-    }
-}
