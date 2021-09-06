@@ -41,10 +41,8 @@ if lm.os == "windows" then
         "$luamake", "lua", "@bootstrap/forward_lua.lua","@3rd/lua/", "@bootstrap/forward_lua.h", BOOTSTRAP..".exe"
     }
     lm:shared_library "lua54" {
-        includes = "3rd/lua",
-        sources = {
-            "bootstrap/forward_lua.c",
-        },
+        includes = "bootstrap",
+        sources = "bootstrap/forward_lua.c",
         ldflags = "$obj/"..BOOTSTRAP.."/"..BOOTSTRAP..".lib",
         links = "user32",
         deps = {
