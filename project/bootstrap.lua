@@ -38,7 +38,14 @@ lm:executable (BOOTSTRAP) {
 
 if lm.os == "windows" then
     lm:build "forward_lua" {
-        "$luamake", "lua", "@bootstrap/forward_lua.lua","@3rd/lua/", "@bootstrap/forward_lua.h", BOOTSTRAP..".exe"
+        "$luamake", "lua", "@bootstrap/forward_lua.lua", "@3rd/lua/", "$out", BOOTSTRAP..".exe",
+        input = {
+            "bootstrap/forward_lua.lua",
+            "3rd/lua/lua.h",
+            "3rd/lua/lauxlib.h",
+            "3rd/lua/lualib.h",
+        },
+        output = "bootstrap/forward_lua.h",
     }
     lm:shared_library "lua54" {
         includes = "bootstrap",

@@ -50,5 +50,3 @@ lm:build "test" {
         deps = "lua54"
     }
 }
-
-lm:default "test"
