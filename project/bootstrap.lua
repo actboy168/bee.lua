@@ -1,4 +1,8 @@
 local lm = require "luamake"
+lm.rootdir = ".."
+
+require 'config'
+lm:import 'common.lua'
 
 local BOOTSTRAP = lm.EXE_NAME or "bootstrap"
 

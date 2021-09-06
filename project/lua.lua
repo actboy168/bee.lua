@@ -1,4 +1,8 @@
 local lm = require "luamake"
+lm.rootdir = ".."
+
+require 'config'
+lm:import 'common.lua'
 
 lm:lua_dll "bee" {
     deps = "source_bee",
@@ -8,7 +12,25 @@ lm:lua_dll "bee" {
 }
 
 if lm.os == "windows" then
-    --TODO
+    lm:shared_library 'lua54' {
+        sources = {
+            "3rd/lua/*.c",
+            "!3rd/lua/lua.c",
+            "!3rd/lua/luac.c",
+            "!3rd/lua/utf8_lua.c",
+        },
+        defines = {
+            "LUA_BUILD_AS_DLL",
+        }
+    }
+    lm:executable 'lua' {
+        deps = "lua54",
+        sources = {
+            "3rd/lua/utf8_lua.c",
+            "3rd/lua/utf8_crt.c",
+            lm.EXE_RESOURCE,
+        }
+    }
     return
 end
 
