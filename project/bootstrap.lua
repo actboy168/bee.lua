@@ -52,7 +52,7 @@ if lm.os == "windows" then
         links= "user32",
         deps = {
             "forward_lua",
-            "bootstrap",
+            BOOTSTRAP,
         }
     }
 end
