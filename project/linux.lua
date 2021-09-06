@@ -22,16 +22,3 @@ lm:executable 'lua' {
         "pthread",
     }
 }
-
-lm:executable 'bootstrap' {
-    deps = "source_lua",
-    includes = "3rd/lua",
-    sources = "bootstrap/*.cpp",
-    ldflags = "-Wl,-E",
-    defines = "LUA_USE_LINUX",
-    links = {
-        "m", "dl",
-        -- https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67791
-        "pthread",
-    }
-}

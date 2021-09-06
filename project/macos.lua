@@ -20,11 +20,3 @@ lm:executable 'lua' {
     defines = "LUA_USE_MACOSX",
     links = { "m", "dl" },
 }
-
-lm:executable 'bootstrap' {
-    deps = "source_lua",
-    includes = "3rd/lua",
-    sources = "bootstrap/*.cpp",
-    defines = "LUA_USE_MACOSX",
-    links = { "m", "dl" },
-}

@@ -28,6 +28,8 @@ lm:copy "copy_script" {
 
 lm:build "test" {
     "$bin/bootstrap"..exe, "@test/test.lua",
-    deps = { "bootstrap", "copy_script", "bee" },
+    deps = { "bootstrap", "copy_script" },
     pool = "console"
 }
+
+lm:default "test"

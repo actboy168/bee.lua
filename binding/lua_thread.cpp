@@ -13,8 +13,7 @@ extern "C" {
 #include <lua-seri.h>
 }
 
-namespace bee::lua_thread {
-    
+namespace bee {
 #if !defined(BEE_THREAD_MODULE)
 
 extern "C" int luaopen_bee(lua_State* L);
@@ -54,6 +53,19 @@ static luaL_Reg CMODULE[] = {
 
 #endif
 
+void preload(lua_State* L) {
+    const luaL_Reg *lib;
+    const luaL_Reg* modules = BEE_THREAD_MODULE;
+    luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
+    for (lib = modules; lib->func; lib++) {
+        lua_pushcfunction(L, lib->func);
+        lua_setfield(L, -2, lib->name);
+    }
+    lua_pop(L, 1);
+}
+}
+
+namespace bee::lua_thread {
     class channel : public lockqueue<void*> {
     public:
         typedef lockqueue<void*> mybase;
@@ -250,29 +262,6 @@ static luaL_Reg CMODULE[] = {
         }
     }
 
-    static int require_cmodule(lua_State *L) {
-        const char* name = (const char*)lua_touserdata(L, 1);
-        lua_CFunction f = (lua_CFunction)lua_touserdata(L, 2);
-        luaL_requiref(L, name, f, 0);
-        return 0;
-    }
-    static int require_function(lua_State* L, const char* name, lua_CFunction f) {
-        lua_pushcfunction(L, require_cmodule);
-        lua_pushlightuserdata(L, (void*)name);
-        lua_pushlightuserdata(L, (void*)f);
-        if (lua_pcall(L, 2, 0, 0) != LUA_OK) {
-            lua_pop(L, 1);
-            return 1;
-        }
-        return 0;
-    }
-    static int require_all(lua_State* L, const luaL_Reg* l) {
-        for (; l->name != NULL; l++) {
-            require_function(L, l->name, l->func);
-        }
-        return 0;
-    }
-
     static int thread_luamain(lua_State* L) {
         lua_pushboolean(L, 1);
         lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
@@ -281,9 +270,8 @@ static luaL_Reg CMODULE[] = {
         thread_args* args = (thread_args*)ud;
         lua_pushinteger(L, args->id);
         lua_rawsetp(L, LUA_REGISTRYINDEX, &THREADID);
-#if defined(BEE_THREAD_MODULE)
-        require_all(L, BEE_THREAD_MODULE);
-#endif
+        ::bee::preload(L);
+
 #if LUA_VERSION_NUM >= 504
         lua_gc(L, LUA_GCGEN, 0, 0);
 #endif

@@ -19,6 +19,8 @@ static lua_State *globalL = NULL;
 
 static const char *progname = LUA_PROGNAME;
 
+namespace bee { void preload(lua_State* L); }
+
 /*
 ** Hook set by signal function to stop the interpreter.
 */
@@ -170,6 +172,7 @@ static int pmain (lua_State *L) {
   lua_pushboolean(L, 1);  /* signal for libraries to ignore env. vars. */
   lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
   luaL_openlibs(L);  /* open standard libraries */
+  ::bee::preload(L);
   init_cpath(L);
   createargtable(L, argv, argc);  /* create table 'arg' */
   lua_gc(L, LUA_GCGEN, 0, 0);  /* GC in generational mode */

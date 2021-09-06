@@ -1,6 +1,6 @@
 local lm = require 'luamake'
 
-lm:source_set "bee" {
+lm:source_set "source_bee" {
     includes = {
         "3rd/lua",
         "3rd/lua-seri",
@@ -13,7 +13,7 @@ lm:source_set "bee" {
     }
 }
 
-lm:source_set "bee" {
+lm:source_set "source_bee" {
     includes = {
         "bee/nonstd",
         "."
@@ -53,7 +53,7 @@ lm:source_set "bee" {
     }
 }
 
-lm:shared_library 'bee' {
+lm:source_set "source_bee" {
     includes = {
         "3rd/lua",
         "3rd/lua-seri",
@@ -106,5 +106,43 @@ lm:shared_library 'bee' {
             "!binding/lua_registry.cpp",
             "!binding/lua_wmi.cpp",
         }
+    }
+}
+
+lm:shared_library "bee" {
+    deps = "source_bee"
+}
+
+lm:executable 'bootstrap' {
+    deps = "source_bee",
+    includes = "3rd/lua",
+    sources = "bootstrap/*.cpp",
+    windows = {
+        deps = "lua54",
+        sources = {
+            "3rd/lua/utf8_crt.c",
+            lm.EXE_RESOURCE,
+        },
+    },
+    macos = {
+        deps = "source_lua",
+        defines = "LUA_USE_MACOSX",
+        links = { "m", "dl" },
+    },
+    linux = {
+        deps = "source_lua",
+        defines = "LUA_USE_LINUX",
+        ldflags = "-Wl,-E",
+        links = {
+            "m", "dl",
+            -- https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67791
+            "pthread",
+        }
+    },
+    android = {
+        deps = "source_lua",
+        defines = "LUA_USE_LINUX",
+        ldflags = "-Wl,-E",
+        links = { "m", "dl" }
     }
 }

@@ -18,12 +18,3 @@ lm:executable 'lua' {
     defines = "LUA_USE_LINUX",
     links = { "m", "dl" }
 }
-
-lm:executable 'bootstrap' {
-    deps = "source_lua",
-    includes = "3rd/lua",
-    sources = "bootstrap/*.cpp",
-    ldflags = "-Wl,-E",
-    defines = "LUA_USE_LINUX",
-    links = { "m", "dl" }
-}

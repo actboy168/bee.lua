@@ -767,16 +767,16 @@ function test_fs:test_exe_path()
     assertPathEquals(fs.exe_path(), fs.absolute(getexe()))
 end
 
-function test_fs:test_dll_path()
-    local function getdll()
-        local i = 0
-        while arg[i] ~= nil do
-            i = i - 1
-        end
-        return fs.path(arg[i + 1]):parent_path() / ('bee.' .. __EXT__)
-    end
-    assertPathEquals(fs.dll_path(), fs.absolute(getdll()))
-end
+--function test_fs:test_dll_path()
+--    local function getdll()
+--        local i = 0
+--        while arg[i] ~= nil do
+--            i = i - 1
+--        end
+--        return fs.path(arg[i + 1]):parent_path() / ('bee.' .. __EXT__)
+--    end
+--    assertPathEquals(fs.dll_path(), fs.absolute(getdll()))
+--end
 
 function test_fs:test_filelock_1()
     local lock = fs.path("temp.lock")
