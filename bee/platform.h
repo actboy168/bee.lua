@@ -43,7 +43,10 @@
 // see https://docs.microsoft.com/en-us/cpp/preprocessor/predefined-macros
 #	define BEE_COMPILER_MSVC _MSC_VER
 #	define BEE_COMPILER_NAME "msvc"
-#	define BEE_COMPILER_VERSION "MSVC " BEE_STRINGIZE(_MSC_VER)
+#	define BEE_COMPILER_VERSION "MSVC " \
+		BEE_STRINGIZE(_MSC_FULL_VER) "." \
+		BEE_STRINGIZE(_MSC_BUILD)
+
 #elif defined(__GNUC__)
 #	define BEE_COMPILER_GCC (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 #	define BEE_COMPILER_NAME "gcc"
