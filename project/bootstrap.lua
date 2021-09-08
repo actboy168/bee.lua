@@ -70,8 +70,7 @@ if lm.os == "windows" then
         },
         output = "bootstrap/forward_lua.h",
         deps = {
-            "copy_script",
-            BOOTSTRAP,
+            lm.LUAMAKE,
         }
     }
     lm:phony {
