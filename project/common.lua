@@ -85,8 +85,6 @@ lm:source_set "source_bee" {
     linux = {
         sources = {
             "!binding/lua_unicode.cpp",
-            "!binding/lua_registry.cpp",
-            "!binding/lua_wmi.cpp",
         },
         links = {
             "pthread",
@@ -95,8 +93,6 @@ lm:source_set "source_bee" {
     macos = {
         sources = {
             "!binding/lua_unicode.cpp",
-            "!binding/lua_registry.cpp",
-            "!binding/lua_wmi.cpp",
         },
         frameworks = {
             "Foundation",
@@ -107,8 +103,6 @@ lm:source_set "source_bee" {
     android = {
         sources = {
             "!binding/lua_unicode.cpp",
-            "!binding/lua_registry.cpp",
-            "!binding/lua_wmi.cpp",
         }
     }
 }

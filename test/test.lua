@@ -44,9 +44,6 @@ require 'test_subprocess'
 require 'test_socket'
 require 'test_filewatch'
 require 'test_time'
-if platform.OS == "Windows" then
-    require 'test_wmi'
-end
 
 local success = lt.run()
 
