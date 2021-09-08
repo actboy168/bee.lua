@@ -58,7 +58,10 @@ lm:build "test" {
 
 if lm.os == "windows" then
     lm:build "forward_lua" {
-        "$luamake", "lua", "@bootstrap/forward_lua.lua", "@3rd/lua/", "$out", BOOTSTRAP..".exe",
+        "$luamake", "lua",
+        "@bootstrap/forward_lua.lua",
+        "@3rd/lua/", "$out",
+        BOOTSTRAP..".exe", lm.compiler,
         input = {
             "bootstrap/forward_lua.lua",
             "3rd/lua/lua.h",

@@ -27,11 +27,22 @@ local function parse(folder)
     return version, export
 end
 
-local input, output, dllname = ...
+local input, output, dllname, compiler = ...
 local version, export = parse(input)
 local s = {}
-for _, api in ipairs(export) do
-    s[#s+1] = ([[#pragma comment(linker, "/export:%s=%s.%s")]]):format(api, dllname, api)
+
+if compiler == "msvc" then
+    for _, api in ipairs(export) do
+        s[#s+1] = ([[#pragma comment(linker, "/export:%s=%s.%s")]]):format(api, dllname, api)
+    end
+else
+    s[#s+1] = [[__asm__(]]
+    s[#s+1] = [[    ".section .drectve\n\t"]]
+    for _, api in ipairs(export) do
+        s[#s+1] = ([[        ".ascii \" -export:%s=%s.%s \"\n\t"]]):format(api, dllname, api)
+    end
+    s[#s+1] = [[);]]
 end
+
 local f <close> = assert(io.open(output, "w"))
 f:write(table.concat(s, "\n"))
