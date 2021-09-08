@@ -574,6 +574,12 @@ namespace bee::lua_filesystem {
         LUA_TRY_END;
     }
 
+    static int appdata_path(lua_State* L) {
+        LUA_TRY;
+        return path::constructor_(L, path_helper::appdata_path());
+        LUA_TRY_END;
+    }
+
     static int filelock(lua_State* L) {
         LUA_TRY;
         const fs::path& self = path::to(L, 1);
@@ -615,6 +621,7 @@ namespace bee::lua_filesystem {
             {"pairs", pairs},
             {"exe_path", exe_path},
             {"dll_path", dll_path},
+            {"appdata_path", appdata_path},
             {"filelock", filelock},
             {NULL, NULL},
         };

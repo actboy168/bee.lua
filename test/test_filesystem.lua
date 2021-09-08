@@ -778,6 +778,14 @@ end
 --    assertPathEquals(fs.dll_path(), fs.absolute(getdll()))
 --end
 
+
+function test_fs:test_appdata_path()
+    if platform.OS == 'Windows' then
+        assertPathEquals(fs.appdata_path(), os.getenv "LOCALAPPDATA")
+    end
+end
+
+
 function test_fs:test_filelock_1()
     local lock = fs.path("temp.lock")
     local f1, err1 = fs.filelock(lock)

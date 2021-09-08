@@ -72,6 +72,7 @@ lm:source_set "source_bee" {
             "version",
             "wbemuuid",
             "oleAut32",
+            "shell32",
         },
     },
     mingw = {

@@ -5,6 +5,7 @@
 #if defined(_WIN32)
 
 #include <Windows.h>
+#include <shlobj_core.h>
 
 // http://blogs.msdn.com/oldnewthing/archive/2004/10/25/247180.aspx
 extern "C" IMAGE_DOS_HEADER __ImageBase;
@@ -39,6 +40,16 @@ namespace bee::path_helper {
     fs::path dll_path() {
         return dll_path(reinterpret_cast<void*>(&__ImageBase));
     }
+
+    fs::path appdata_path() {
+        wchar_t* path;
+        if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &path))) {
+            fs::path res(path);
+            CoTaskMemFree(path);
+            return res;
+        }
+        throw std::runtime_error("::SHGetKnownFolderPath failed.");
+    }
 }
 
 #else
@@ -60,6 +71,10 @@ namespace bee::path_helper {
             throw std::runtime_error("_NSGetExecutablePath failed.");
         }
         return fs::path(buf.data(), buf.data() + path_len - 1);
+    }
+
+    fs::path appdata_path() {
+        throw std::runtime_error("unimplemented");
     }
 }
 
@@ -88,6 +103,10 @@ namespace bee::path_helper {
             }
         }
         throw std::runtime_error("readlink return too long.");
+    }
+
+    fs::path appdata_path() {
+        throw std::runtime_error("unimplemented");
     }
 }
 
