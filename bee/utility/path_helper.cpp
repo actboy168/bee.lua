@@ -102,7 +102,7 @@ namespace bee::path_helper {
     }
 
     fs::path appdata_path() {
-        if (const char* env; = getenv("XDG_DATA_HOME")) {
+        if (const char* env = getenv("XDG_DATA_HOME")) {
             return fs::path(env);
         }
         if (const char* env = getenv("HOME")) {
