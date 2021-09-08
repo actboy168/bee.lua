@@ -17,9 +17,10 @@ lm:executable (BOOTSTRAP) {
         }
     },
     msvc = {
-        ldflags = {
-            "/IMPLIB:$obj/$name/$name.lib"
-        }
+        ldflags = "/IMPLIB:$obj/$name/$name.lib"
+    },
+    mingw = {
+        ldflags = "-Wl,--out-implib,$obj/$name/$name.lib"
     },
     macos = {
         defines = "LUA_USE_MACOSX",
