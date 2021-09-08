@@ -1,8 +1,6 @@
 local lu = require 'ltest'
 
-require 'bee'
 local subprocess = require 'bee.subprocess'
-local socket = require 'bee.socket'
 local thread = require 'bee.thread'
 local platform = require 'bee.platform'
 local shell = require 'shell'
@@ -289,20 +287,6 @@ function test_subprocess:test_args()
     testArgs([["A\]])
     testArgs([["A\"]])
     testArgs([[A" B]])
-end
-
-function test_subprocess:test_shell()
-    local process, err = subprocess.shell {'echo', 'ok', stdout = true, stderr = true}
-    lu.assertIsUserdata(process, err)
-    lu.assertIsUserdata(process.stdout)
-    lu.assertIsUserdata(process.stderr)
-    if shell.isWindowsShell then
-        lu.assertEquals(process.stdout:read 'a', 'ok\r\n')
-    else
-        lu.assertEquals(process.stdout:read 'a', 'ok\n')
-    end
-    lu.assertEquals(process.stderr:read 'a', '')
-    lu.assertEquals(process:wait(), 0)
 end
 
 function test_subprocess:test_setenv()

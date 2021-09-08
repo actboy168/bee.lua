@@ -26,13 +26,10 @@ extern "C" int luaopen_bee_subprocess(lua_State* L);
 BEE_LUA_API int luaopen_bee_thread(lua_State* L);
 extern "C" int luaopen_bee_time(lua_State* L);
 #if defined(_WIN32)
-extern "C" int luaopen_bee_registry(lua_State* L);
 extern "C" int luaopen_bee_unicode(lua_State* L);
-extern "C" int luaopen_bee_wmi(lua_State* L);
 #endif
 
 static luaL_Reg CMODULE[] = {
-    {"bee", luaopen_bee},
     {"bee.filesystem", luaopen_bee_filesystem},
     {"bee.filewatch", luaopen_bee_filewatch},
     {"bee.platform", luaopen_bee_platform},
@@ -42,9 +39,7 @@ static luaL_Reg CMODULE[] = {
     {"bee.thread", luaopen_bee_thread},
     {"bee.time", luaopen_bee_time},
 #if defined(_WIN32)
-    {"bee.registry", luaopen_bee_registry},
     {"bee.unicode", luaopen_bee_unicode},
-    {"bee.wmi", luaopen_bee_wmi},
 #endif
     {NULL, NULL},
 };

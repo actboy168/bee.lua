@@ -1,4 +1,3 @@
-require 'bee'
 local platform = require 'bee.platform'
 local fs = require 'bee.filesystem'
 local lu = require 'ltest'
