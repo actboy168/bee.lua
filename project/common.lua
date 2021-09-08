@@ -76,7 +76,10 @@ lm:source_set "source_bee" {
         },
     },
     mingw = {
-        links = "stdc++fs"
+        links = {
+            "uuid",
+            "stdc++fs"
+        }
     },
     linux = {
         sources = {

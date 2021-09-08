@@ -5,7 +5,7 @@
 #if defined(_WIN32)
 
 #include <Windows.h>
-#include <shlobj_core.h>
+#include <shlobj.h>
 
 // http://blogs.msdn.com/oldnewthing/archive/2004/10/25/247180.aspx
 extern "C" IMAGE_DOS_HEADER __ImageBase;
