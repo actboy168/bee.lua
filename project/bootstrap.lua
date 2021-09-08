@@ -14,7 +14,9 @@ lm:executable (BOOTSTRAP) {
         sources = {
             "3rd/lua/utf8_crt.c",
             lm.EXE_RESOURCE,
-        },
+        }
+    },
+    msvc = {
         ldflags = {
             "/IMPLIB:$obj/$name/$name.lib"
         }
