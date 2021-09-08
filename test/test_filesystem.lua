@@ -778,12 +778,13 @@ end
 --    assertPathEquals(fs.dll_path(), fs.absolute(getdll()))
 --end
 
-
 function test_fs:test_appdata_path()
     if platform.OS == 'Windows' then
         assertPathEquals(fs.appdata_path(), os.getenv "LOCALAPPDATA")
-    else if platform.OS == 'Linux' then
+    elseif platform.OS == 'Linux' then
         assertPathEquals(fs.appdata_path(), os.getenv "XDG_DATA_HOME" or (os.getenv "HOME" .. "/.local/share"))
+    elseif platform.OS == 'macOS' then
+        assertPathEquals(fs.appdata_path(), os.getenv "HOME" .. "/Library/Caches")
     end
 end
 

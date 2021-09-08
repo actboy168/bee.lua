@@ -72,10 +72,6 @@ namespace bee::path_helper {
         }
         return fs::path(buf.data(), buf.data() + path_len - 1);
     }
-
-    fs::path appdata_path() {
-        throw std::runtime_error("unimplemented");
-    }
 }
 
 #else

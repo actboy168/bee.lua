@@ -34,6 +34,7 @@ lm:source_set "source_bee" {
     },
     macos = {
         sources = {
+            "bee/**.mm",
             "!bee/**_win.cpp",
             "!bee/**_linux.cpp",
         }
@@ -98,6 +99,7 @@ lm:source_set "source_bee" {
             "!binding/lua_wmi.cpp",
         },
         frameworks = {
+            "Foundation",
             "CoreFoundation",
             "CoreServices",
         }
