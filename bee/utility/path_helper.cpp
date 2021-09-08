@@ -106,7 +106,13 @@ namespace bee::path_helper {
     }
 
     fs::path appdata_path() {
-        throw std::runtime_error("unimplemented");
+        if (const char* env; = getenv("XDG_DATA_HOME")) {
+            return fs::path(env);
+        }
+        if (const char* env = getenv("HOME")) {
+            return fs::path(env) / ".local" / "share";
+        }
+        throw std::runtime_error("neither XDG_DATA_HOME nor HOME environment is set");
     }
 }
 
