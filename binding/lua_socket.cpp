@@ -343,10 +343,8 @@ namespace bee::lua_socket {
         if (ep.family() == AF_UNIX) {
             auto [path, type] = ep.info();
             if (type == 0 && !safe_exists(path)) {
-                auto error = make_error(WSAECONNREFUSED, "socket");
-                lua_pushnil(L);
-                lua_pushfstring(L, "(%d) %s", error.code().value(), error.what());
-                return 2;
+                ::WSASetLastError(WSAECONNREFUSED);
+                return push_neterror(L, "socket");
             }
         }
 #endif
