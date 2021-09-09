@@ -533,7 +533,7 @@ namespace bee::net::socket {
             return false;
         }
 #if defined _WIN32
-        return !!::DeleteFileW(u2w(path).c_str());
+        return 0 == _wunlink(u2w(path).c_str());
 #else
         return 0 == ::unlink(path.c_str());
 #endif

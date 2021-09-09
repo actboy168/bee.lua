@@ -207,7 +207,7 @@ namespace bee::lua_socket {
         if (self.protocol == socket::protocol::uds && self.type == luafd::tag::listen) {
 #if defined _WIN32
             if (!socket::supportUnixDomainSocket()) {
-                ::DeleteFileW(u2w(self.path).c_str());
+                _wunlink(u2w(self.path).c_str());
             }
             else {
                 socket::unlink(fd);
