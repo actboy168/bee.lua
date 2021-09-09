@@ -8,6 +8,10 @@
 #   include <charconv>
 #   include <limits>
 #   include <array>
+#   include <map>
+#   include <optional>
+#   include <mutex>
+#   include <any>
 #else
 #   include <fcntl.h>
 #   include <netinet/tcp.h>
@@ -104,6 +108,43 @@ namespace bee::net::socket {
 		return file_write(path, portstr.data());
 	}
 
+    namespace state {
+        typedef std::map<std::string_view, std::any> u_table_t;
+        std::map<fd_t, u_table_t> _state;
+        std::mutex                _mutex;
+
+        static void remove(fd_t s) {
+            std::unique_lock<std::mutex> _(_mutex);
+            _state.erase(s);
+        }
+
+        template <typename T>
+        static void store(fd_t s, std::string_view key, T const& value) {
+            std::unique_lock<std::mutex> _(_mutex);
+            _state[s].emplace(key, value);
+        }
+
+        template <typename T>
+        static std::optional<T> load(fd_t s, std::string_view key) {
+            std::unique_lock<std::mutex> _(_mutex);
+            auto i1 = _state.find(s);
+            if (i1 == _state.end()) {
+                return {};
+            }
+            u_table_t& table = i1->second;
+            auto i2 = table.find(key);
+            if (i2 == table.end()) {
+                return {};
+            }
+            std::any& value = i2->second;
+            T* r = std::any_cast<T>(&value);
+            if (!r) {
+                return {};
+            }
+            return *r;
+        }
+    }
+
     static status u_connect(fd_t s, const endpoint& ep) {
 		int tcpport = 0;
 		if (!read_tcp_port(ep, tcpport)) {
@@ -131,8 +172,10 @@ namespace bee::net::socket {
 			::WSASetLastError(WSAENETDOWN);
             return status::failed;
 		}
-		return status::success;
-	}
+        auto[path, type] = ep.info();
+        state::store<std::string>(s, "path", path);
+        return status::success;
+    }
 #endif
 
     void initialize()
@@ -517,6 +560,16 @@ namespace bee::net::socket {
     }
 
     bool unlink(fd_t s) {
+#if defined(_WIN32)
+        if (!socket::supportUnixDomainSocket()) {
+            auto path = state::load<std::string>(s, "path");
+            if (!path) {
+                return false;
+            }
+            state::remove(s);
+            return 0 == _wunlink(u2w(path.value()).c_str());
+        }
+#endif
         endpoint ep = endpoint::from_empty();
         if (!socket::getsockname(s, ep)) {
             return false;

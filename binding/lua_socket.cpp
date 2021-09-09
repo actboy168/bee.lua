@@ -27,7 +27,6 @@ namespace bee::lua_socket {
         socket::fd_t     fd;
         socket::protocol protocol;
         tag              type;
-        std::string      path;
         luafd(socket::fd_t s, socket::protocol p, tag t) : fd(s), protocol(p), type(t) {}
     };
     static int push_neterror(lua_State* L, const char* msg) {
@@ -196,27 +195,20 @@ namespace bee::lua_socket {
             return push_neterror(L, "sendto");
         }
     }
-    static int close(lua_State* L) {
-        luafd& self = checkfd(L, 1);
-        if (self.fd == socket::retired_fd) {
-            lua_pushboolean(L, 1);
-            return 1;
-        }
+    static bool socket_destroy(luafd& self) {
         socket::fd_t fd = self.fd;
+        if (fd == socket::retired_fd) {
+            return true;
+        }
         self.fd = socket::retired_fd;
         if (self.protocol == socket::protocol::uds && self.type == luafd::tag::listen) {
-#if defined _WIN32
-            if (!socket::supportUnixDomainSocket()) {
-                _wunlink(u2w(self.path).c_str());
-            }
-            else {
-                socket::unlink(fd);
-            }
-#else
             socket::unlink(fd);
-#endif
         }
-        if (!socket::close(fd)) {
+        return socket::close(fd);
+    }
+    static int close(lua_State* L) {
+        luafd& self = checkfd(L, 1);
+        if (!socket_destroy(self)) {
             return push_neterror(L, "close");
         }
         lua_pushboolean(L, 1);
@@ -254,24 +246,14 @@ namespace bee::lua_socket {
         lua_pushfstring(L, "socket (%d)", self.fd);
         return 1;
     }
-    static void destroy(lua_State* /*L*/, luafd& self) {
-        socket::fd_t fd = self.fd;
-        if (fd != socket::retired_fd) {
-            self.fd = socket::retired_fd;
-            if (self.protocol == socket::protocol::uds) {
-                socket::unlink(fd);
-            }
-            socket::close(fd);
-        }
-    }
     static int toclose(lua_State* L) {
         luafd& self = checkfd(L, 1);
-        destroy(L, self);
+        socket_destroy(self);
         return 0;
     }
     static int gc(lua_State* L) {
         luafd& self = checkfd(L, 1);
-        destroy(L, self);
+        socket_destroy(self);
         self.~luafd();
         return 0;
     }
@@ -395,21 +377,7 @@ namespace bee::lua_socket {
         if (fd == socket::retired_fd) {
             return push_neterror(L, "socket");
         }
-#if defined _WIN32
-        luafd& self =
-#endif
-            pushfd(L, fd, protocol, luafd::tag::listen);
-        if (ep.family() == AF_UNIX) {
-            socket::unlink(ep);
-#if defined _WIN32
-            if (!socket::supportUnixDomainSocket()) {
-                auto [path, type] = ep.info();
-                if (type == 0) {
-                    self.path = path;
-                }
-            }
-#endif
-        }
+        pushfd(L, fd, protocol, luafd::tag::listen);
         if (socket::status::success != socket::bind(fd, ep)) {
             return push_neterror(L, "bind");
         }
