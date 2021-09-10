@@ -51,11 +51,13 @@ lm:copy "copy_script" {
     deps = BOOTSTRAP,
 }
 
-lm:build "test" {
-    "$bin/"..BOOTSTRAP..exe, "@test/test.lua",
-    deps = { BOOTSTRAP, "copy_script" },
-    pool = "console",
-}
+if not lm.notest then
+    lm:build "test" {
+        "$bin/"..BOOTSTRAP..exe, "@test/test.lua",
+        deps = { BOOTSTRAP, "copy_script" },
+        pool = "console",
+    }
+end
 
 if lm.os == "windows" then
     lm:build "forward_lua" {
