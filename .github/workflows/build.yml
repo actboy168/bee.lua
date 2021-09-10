@@ -6,7 +6,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-18.04, ubuntu-20.04]
+        os: [windows-latest, macos-10.15, macos-11, ubuntu-18.04, ubuntu-20.04]
         mode: [debug, release]
     steps:
     - uses: actions/checkout@v2
@@ -14,5 +14,7 @@ jobs:
         submodules : recursive
     - uses: actboy168/setup-luamake@master
     - run: luamake -mode ${{ matrix.mode }}
+    - if: runner.os == 'macos-11'
+      run: luamake -universal -mode ${{ matrix.mode }}
     - if: runner.os == 'Linux'
       run: luamake lua test/glibc-version.lua
