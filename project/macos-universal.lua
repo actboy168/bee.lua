@@ -5,18 +5,20 @@ local BOOTSTRAP = lm.EXE_NAME or "bootstrap"
 lm:build(BOOTSTRAP.."-arm64") {
     "$luamake",
     "-notest",
-    "-builddir", "build/arm64",
+    "-builddir", "$builddir/arm64",
     "-target", "arm64-apple-macos11",
     "-EXE_NAME", BOOTSTRAP,
+    "-f", "@../make.lua",
     pool = "console",
 }
 
 lm:build(BOOTSTRAP.."-x86_64") {
     "$luamake",
     "-notest",
-    "-builddir", "build/x86_64",
+    "-builddir", "$builddir/x86_64",
     "-target", "x86_64-apple-macos10.12",
     "-EXE_NAME", BOOTSTRAP,
+    "-f", "@../make.lua",
     pool = "console",
 }
 
@@ -31,8 +33,8 @@ lm:build(BOOTSTRAP.."-universal") {
         "mkdir"
     },
     "lipo", "-create", "-output", "$bin/"..BOOTSTRAP,
-    "build/arm64/bin/"..BOOTSTRAP,
-    "build/x86_64/bin/"..BOOTSTRAP,
+    "$builddir/arm64/bin/"..BOOTSTRAP,
+    "$builddir/x86_64/bin/"..BOOTSTRAP,
 }
 
 lm:copy "copy_script" {
