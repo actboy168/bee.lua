@@ -1,6 +1,7 @@
 local lm = require "luamake"
 
 local BOOTSTRAP = lm.EXE_NAME or "bootstrap"
+local EXE_DIR = lm.EXE_DIR or "$bin"
 
 lm:build(BOOTSTRAP.."-arm64") {
     "$luamake",
@@ -23,7 +24,7 @@ lm:build(BOOTSTRAP.."-x86_64") {
 }
 
 lm:build "mkdir" {
-    "mkdir", "-p", "$bin"
+    "mkdir", "-p", EXE_DIR
 }
 
 lm:build(BOOTSTRAP.."-universal") {
@@ -32,20 +33,20 @@ lm:build(BOOTSTRAP.."-universal") {
         BOOTSTRAP.."-x86_64",
         "mkdir"
     },
-    "lipo", "-create", "-output", "$bin/"..BOOTSTRAP,
+    "lipo", "-create", "-output", EXE_DIR.."/"..BOOTSTRAP,
     "$builddir/arm64/bin/"..BOOTSTRAP,
     "$builddir/x86_64/bin/"..BOOTSTRAP,
 }
 
 lm:copy "copy_script" {
     input = "@../bootstrap/main.lua",
-    output = "$bin/main.lua",
+    output = EXE_DIR.."/main.lua",
     deps = BOOTSTRAP.."-universal",
 }
 
 if not lm.notest then
     lm:build "test" {
-        "$bin/"..BOOTSTRAP, "@../test/test.lua",
+        EXE_DIR.."/"..BOOTSTRAP, "@../test/test.lua",
         deps = "copy_script",
         pool = "console",
     }

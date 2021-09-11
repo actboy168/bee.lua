@@ -5,8 +5,10 @@ require 'config'
 lm:import 'common.lua'
 
 local BOOTSTRAP = lm.EXE_NAME or "bootstrap"
+local EXE_DIR = lm.EXE_DIR or "$bin"
 
 lm:executable (BOOTSTRAP) {
+    bindir = lm.EXE_DIR,
     deps = { "source_bee", "source_lua" },
     includes = "3rd/lua",
     sources = "bootstrap/*.cpp",
@@ -47,13 +49,13 @@ local exe = lm.os == 'windows' and ".exe" or ""
 
 lm:copy "copy_script" {
     input = "bootstrap/main.lua",
-    output = "$bin/main.lua",
+    output = EXE_DIR.."/main.lua",
     deps = BOOTSTRAP,
 }
 
 if not lm.notest then
     lm:build "test" {
-        "$bin/"..BOOTSTRAP..exe, "@test/test.lua",
+        EXE_DIR.."/"..BOOTSTRAP..exe, "@test/test.lua",
         deps = { BOOTSTRAP, "copy_script" },
         pool = "console",
     }
