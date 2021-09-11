@@ -83,6 +83,7 @@ if lm.os == "windows" then
         output = "bootstrap/forward_lua.c",
     }
     lm:shared_library "lua54" {
+        bindir = lm.EXE_DIR,
         includes = "bootstrap",
         sources = "bootstrap/forward_lua.c",
         ldflags = "$obj/"..BOOTSTRAP.."/"..BOOTSTRAP..".lib",
