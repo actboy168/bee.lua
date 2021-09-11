@@ -11,6 +11,7 @@ lm:build(BOOTSTRAP.."-arm64") {
     "-EXE_NAME", BOOTSTRAP,
     "-f", "@../make.lua",
     pool = "console",
+    output = "$builddir/arm64/bin/"..BOOTSTRAP,
 }
 
 lm:build(BOOTSTRAP.."-x86_64") {
@@ -21,6 +22,7 @@ lm:build(BOOTSTRAP.."-x86_64") {
     "-EXE_NAME", BOOTSTRAP,
     "-f", "@../make.lua",
     pool = "console",
+    output = "$builddir/x86_64/bin/"..BOOTSTRAP,
 }
 
 lm:build "mkdir" {
@@ -28,14 +30,12 @@ lm:build "mkdir" {
 }
 
 lm:build(BOOTSTRAP.."-universal") {
-    deps = {
-        BOOTSTRAP.."-arm64",
-        BOOTSTRAP.."-x86_64",
-        "mkdir"
-    },
-    "lipo", "-create", "-output", EXE_DIR.."/"..BOOTSTRAP,
-    "$builddir/arm64/bin/"..BOOTSTRAP,
-    "$builddir/x86_64/bin/"..BOOTSTRAP,
+    "lipo", "-create", "-output", EXE_DIR.."/"..BOOTSTRAP, "$in",
+    deps = "mkdir",
+    input = {
+        "$builddir/arm64/bin/"..BOOTSTRAP,
+        "$builddir/x86_64/bin/"..BOOTSTRAP,
+    }
 }
 
 lm:copy "copy_script" {
