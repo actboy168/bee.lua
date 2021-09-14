@@ -6,6 +6,9 @@ lm:import 'common.lua'
 
 lm:lua_dll "bee" {
     deps = "source_bee",
+    windows = {
+        export_luaopen = "off"
+    },
     linux = {
         crt = "static",
     }
