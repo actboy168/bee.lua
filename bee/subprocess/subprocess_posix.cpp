@@ -194,14 +194,6 @@ namespace bee::posix::subprocess {
         }
     }
 
-    void spawn::do_duplicate_shutdown() {
-        for (int i = 0; i < 3; ++i) {
-            if (fds_[i] > 0) {
-                close(fds_[i]);
-            }
-        }
-    }
-
     void spawn::env_set(const std::string& key, const std::string& value) {
         set_env_[key] = value;
     }
@@ -223,7 +215,11 @@ namespace bee::posix::subprocess {
             return false;
         }
         pid_ = pid;
-        do_duplicate_shutdown();
+        for (int i = 0; i < 3; ++i) {
+            if (fds_[i] > 0) {
+                close(fds_[i]);
+            }
+        }
         return true;
     }
 
