@@ -15,6 +15,7 @@ local plat = (function ()
 end)()
 lm.builddir = ("build/%s"):format(plat)
 
+lm.warnings = "error"
 
 lm.windows = {
     defines = "_WIN32_WINNT=0x0601",

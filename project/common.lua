@@ -128,6 +128,13 @@ lm:source_set 'source_lua' {
     android = {
         defines = "LUA_USE_LINUX",
         visibility = "default",
+    },
+    msvc = {
+        warnings = {
+            disable = {
+                "4267"
+            }
+        }
     }
 }
 
