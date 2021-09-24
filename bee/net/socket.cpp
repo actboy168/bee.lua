@@ -329,6 +329,26 @@ namespace bee::net::socket {
         return false;
     }
 
+    template <typename T>
+    static void setoption(fd_t s, int level, int optname, T& v) {
+        const int rc = setsockopt(s, level, optname, (char*)&v, sizeof(T));
+        net_assert_success(rc);
+    }
+
+    void setoption(fd_t s, option opt, int value) {
+        switch (opt) {
+        case option::reuseaddr:
+            setoption(s, SOL_SOCKET, SO_REUSEADDR, value);
+            break;
+        case option::sndbuf:
+            setoption(s, SOL_SOCKET, SO_SNDBUF, value);
+            break;
+        case option::rcvbuf:
+            setoption(s, SOL_SOCKET, SO_RCVBUF, value);
+            break;
+        }
+    }
+
     void keepalive(fd_t s, int keepalive, int keepalive_cnt, int keepalive_idle, int keepalive_intvl)
     {
         // TODO
@@ -380,25 +400,6 @@ namespace bee::net::socket {
 #else
         (void)s;
 #endif
-    }
-
-    void send_buffer(fd_t s, int bufsize)
-    {
-        const int rc = setsockopt(s, SOL_SOCKET, SO_SNDBUF, (char*) &bufsize, sizeof bufsize);
-        net_assert_success(rc);
-    }
-
-    void recv_buffer(fd_t s, int bufsize)
-    {
-        const int rc = setsockopt(s, SOL_SOCKET, SO_RCVBUF, (char*) &bufsize, sizeof bufsize);
-        net_assert_success(rc);
-    }
-
-    void reuse(fd_t s)
-    {
-        int flag = 1;
-        const int rc = setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char*)&flag, sizeof flag);
-        net_assert_success(rc);
     }
 
     status connect(fd_t s, const endpoint& ep)

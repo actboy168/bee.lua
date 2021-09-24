@@ -37,7 +37,13 @@ namespace bee::net::socket {
         close,
         failed,
     };
- 
+
+    enum class option {
+        reuseaddr = 0,
+        sndbuf,
+        rcvbuf,
+    };
+
     void initialize();
     fd_t open(protocol protocol, const endpoint& ep);
     bool pair(fd_t sv[2]);
@@ -46,11 +52,9 @@ namespace bee::net::socket {
 #endif
     bool close(fd_t s);
     bool shutdown(fd_t s, shutdown_flag flag);
+    void setoption(fd_t s, option opt, int value);
     void keepalive(fd_t s, int keepalive, int keepalive_cnt, int keepalive_idle, int keepalive_intvl);
     void udp_connect_reset(fd_t s);
-    void send_buffer(fd_t s, int bufsize);
-    void recv_buffer(fd_t s, int bufsize);
-    void reuse(fd_t s);
     status connect(fd_t s, const endpoint& ep);
     status bind(fd_t s, const endpoint& ep);
     status listen(fd_t s, int backlog);

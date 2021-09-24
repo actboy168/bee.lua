@@ -299,6 +299,13 @@ namespace bee::lua_socket {
         lua_pushlightuserdata(L, (void*)(intptr_t)self.fd);
         return 1;
     }
+    static int option(lua_State* L) {
+        luafd& self = checkfd(L, 1);
+        static const char *const opts[] = {"reuseaddr", "sndbuf", "rcvbuf", NULL};
+        socket::option opt = (socket::option)luaL_checkoption(L, 2, NULL, opts);
+        socket::setoption(self.fd, opt, (int)luaL_checkinteger(L, 3));
+        return 0;
+    }
     static luafd& pushfd(lua_State* L, socket::fd_t fd, socket::protocol protocol, luafd::tag type) {
         luafd* self = (luafd*)lua_newuserdatauv(L, sizeof(luafd), 0);
         new (self) luafd(fd, protocol, type);
@@ -314,6 +321,7 @@ namespace bee::lua_socket {
                 {"status", status},
                 {"info", info},
                 {"handle", handle},
+                {"option", option},
                 {"__tostring", tostring},
                 {"__close", toclose},
                 {"__gc", gc},
