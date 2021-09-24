@@ -51,7 +51,7 @@ extern "C" {
 
 #endif
 
-#define lua_writestring(s,l)      utf8_ConsoleWrite(s,l)
+#define lua_writestring(s,l)      utf8_ConsoleWrite(s,(int)l)
 #define lua_writeline()           utf8_ConsoleNewLine()
 #define lua_writestringerror(s,p) utf8_ConsoleError(s,p)
 
