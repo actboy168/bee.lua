@@ -19,10 +19,11 @@ namespace bee::net::socket {
     inline static const fd_t retired_fd = (fd_t)-1;
 
     enum class protocol {
-        none,
-        tcp,
+        tcp = 0,
         udp,
         uds,
+        tcp_ipv6,
+        udp_ipv6,
     };
 
     enum class shutdown_flag {

@@ -35,22 +35,6 @@ namespace bee::lua_socket {
         lua_pushfstring(L, "(%d) %s", error.code().value(), error.what());
         return 2;
     }
-    static socket::protocol read_protocol(lua_State* L, int idx) {
-        std::string_view type = lua::to_strview(L, idx);
-        if (type == "tcp") {
-            return socket::protocol::tcp;
-        }
-        else if (type == "udp") {
-            return socket::protocol::udp;
-        }
-        else if (type == "unix") {
-            return socket::protocol::uds;
-        }
-        else {
-            luaL_error(L, "invalid protocol `%s`.", type.data());
-            return socket::protocol::none;
-        }
-    }
     static endpoint read_endpoint(lua_State* L, socket::protocol protocol, int idx) {
         std::string_view ip = lua::to_strview(L, idx);
         if (protocol != socket::protocol::uds) {
@@ -70,11 +54,13 @@ namespace bee::lua_socket {
     static int read_backlog(lua_State* L, int idx, socket::protocol protocol) {
         switch (protocol) {
         case socket::protocol::tcp:
+        case socket::protocol::tcp_ipv6:
             return (int)luaL_optinteger(L, idx + 1, kDefaultBackLog);
         case socket::protocol::uds:
             return (int)luaL_optinteger(L, idx, kDefaultBackLog);
         default:
         case socket::protocol::udp:
+        case socket::protocol::udp_ipv6:
             return kDefaultBackLog;
         }
     }
@@ -308,7 +294,7 @@ namespace bee::lua_socket {
     }
     static int connect(lua_State* L) {
         luafd& self = checkfd(L, 1);
-        if (self.protocol != socket::protocol::udp) {
+        if (self.protocol != socket::protocol::udp && self.protocol != socket::protocol::udp_ipv6) {
             self.type = luafd::tag::connect;
         }
         auto ep = read_endpoint(L, self.protocol, 2);
@@ -328,14 +314,14 @@ namespace bee::lua_socket {
     }
     static int bind(lua_State* L) {
         luafd& self = checkfd(L, 1);
-        if (self.protocol != socket::protocol::udp) {
+        if (self.protocol != socket::protocol::udp && self.protocol != socket::protocol::udp_ipv6) {
             self.type = luafd::tag::listen;
         }
         auto ep = read_endpoint(L, self.protocol, 2);
         if (socket::status::success != socket::bind(self.fd, ep)) {
             return push_neterror(L, "bind");
         }
-        if (self.protocol != socket::protocol::udp) {
+        if (self.protocol != socket::protocol::udp && self.protocol != socket::protocol::udp_ipv6) {
             int backlog = read_backlog(L, 3, self.protocol);
             if (socket::status::success != socket::listen(self.fd, backlog)) {
                 return push_neterror(L, "listen");
@@ -385,7 +371,11 @@ namespace bee::lua_socket {
     }
 #endif
     static int create(lua_State* L) {
-        socket::protocol protocol = read_protocol(L, 1);
+        static const char *const opts[] = {
+            "tcp", "udp", "unix",
+            NULL
+        };
+        socket::protocol protocol = (socket::protocol)luaL_checkoption(L, 1, NULL, opts);
         socket::fd_t fd = socket::open(protocol);
         if (fd == socket::retired_fd) {
             return push_neterror(L, "socket");

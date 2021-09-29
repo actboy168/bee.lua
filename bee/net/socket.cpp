@@ -265,9 +265,13 @@ namespace bee::net::socket {
     {
         switch (protocol) {
         case protocol::tcp:
-            return createSocket(AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP);
+            return createSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         case protocol::udp:
-            return createSocket(AF_UNSPEC, SOCK_DGRAM, IPPROTO_UDP);
+            return createSocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        case protocol::tcp_ipv6:
+            return createSocket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+        case protocol::udp_ipv6:
+            return createSocket( AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
         case protocol::uds:
 #if defined _WIN32
             if (!supportUnixDomainSocket()) {

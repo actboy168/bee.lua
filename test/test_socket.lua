@@ -32,7 +32,7 @@ function test_socket:test_bind()
     end
     assert_ok(ls.bind('tcp', '127.0.0.1', 0))
     assert_ok(ls.bind('udp', '127.0.0.1', 0))
-    lu.assertErrorMsgEquals('invalid protocol `icmp`.', ls.bind, 'icmp', '127.0.0.1', 0)
+    lu.assertErrorMsgEquals([[bad argument #1 to 'bee.socket.bind' (invalid option 'icmp')]], ls.bind, 'icmp', '127.0.0.1', 0)
 
     local fd, err = ls.bind('unix', 'test.unixsock')
     lu.assertIsUserdata(fd, err)
