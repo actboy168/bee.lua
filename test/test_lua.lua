@@ -1,9 +1,9 @@
-local lu = require 'ltest'
+local lt = require 'ltest'
 
-local test_lua = lu.test "lua"
+local test_lua = lt.test "lua"
 
 function test_lua:test_stack_overflow_1()
-    lu.assertError(function()
+    lt.assertError(function()
         local function a()
             a()
         end
@@ -12,7 +12,7 @@ function test_lua:test_stack_overflow_1()
 end
 
 function test_lua:test_stack_overflow_2()
-    lu.assertError(function()
+    lt.assertError(function()
         local t = setmetatable({}, {__index = function(t)
             table.concat(t,'',1,1)
         end})
@@ -32,7 +32,7 @@ function test_lua:test_next()
         local key
         for i = 1, 26 do
             key = next(t, key)
-            lu.assertEquals(key, expected[i])
+            lt.assertEquals(key, expected[i])
         end
     end
     checkOK()

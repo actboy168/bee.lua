@@ -1,24 +1,24 @@
-local lu = require 'ltest'
+local lt = require 'ltest'
 
 local seri = require 'bee.serialization'
 
 local function TestEq(...)
-    lu.assertEquals(
+    lt.assertEquals(
         table.pack(seri.unpack(seri.pack(...))),
         table.pack(...)
     )
-    lu.assertEquals(
+    lt.assertEquals(
         table.pack(seri.unpack(seri.packstring(...))),
         table.pack(...)
     )
 end
 
 local function TestErr(msg, ...)
-    lu.assertErrorMsgEquals(msg, seri.pack, ...)
-    lu.assertErrorMsgEquals(msg, seri.packstring, ...)
+    lt.assertErrorMsgEquals(msg, seri.pack, ...)
+    lt.assertErrorMsgEquals(msg, seri.packstring, ...)
 end
 
-local test_seri = lu.test "serialization"
+local test_seri = lt.test "serialization"
 
 function test_seri:test_ok_1()
     TestEq(1)
@@ -49,18 +49,18 @@ function test_seri:test_ref()
     local t = {}
     t.a = t
     local newt = seri.unpack(seri.pack(t))
-    lu.assertEquals(newt, newt.a)
+    lt.assertEquals(newt, newt.a)
 end
 
 function test_seri:test_lightuserdata()
-    lu.assertError(seri.lightuserdata, "")
-    lu.assertError(seri.lightuserdata, 1.1)
-    lu.assertEquals(seri.lightuserdata(1), seri.lightuserdata(1))
-    lu.assertNotEquals(seri.lightuserdata(1), seri.lightuserdata(2))
-    lu.assertEquals(type(seri.lightuserdata(1)), "userdata")
-    lu.assertEquals(seri.lightuserdata((seri.lightuserdata(10086))), 10086)
+    lt.assertError(seri.lightuserdata, "")
+    lt.assertError(seri.lightuserdata, 1.1)
+    lt.assertEquals(seri.lightuserdata(1), seri.lightuserdata(1))
+    lt.assertNotEquals(seri.lightuserdata(1), seri.lightuserdata(2))
+    lt.assertEquals(type(seri.lightuserdata(1)), "userdata")
+    lt.assertEquals(seri.lightuserdata((seri.lightuserdata(10086))), 10086)
 
     local t = {[seri.lightuserdata(0)]=seri.lightuserdata(1)}
     local newt = seri.unpack(seri.pack(t))
-    lu.assertEquals(t, newt)
+    lt.assertEquals(t, newt)
 end

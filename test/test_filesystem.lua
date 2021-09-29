@@ -1,6 +1,6 @@
 local platform = require 'bee.platform'
 local fs = require 'bee.filesystem'
-local lu = require 'ltest'
+local lt = require 'ltest'
 local shell = require 'shell'
 
 local C
@@ -35,10 +35,10 @@ local function read_file(filename)
 end
 
 local function assertPathEquals(p1, p2)
-    lu.assertEquals(fs.path(p1):lexically_normal():string(), fs.path(p2):lexically_normal():string())
+    lt.assertEquals(fs.path(p1):lexically_normal():string(), fs.path(p2):lexically_normal():string())
 end
 
-local test_fs = lu.test "filesystem"
+local test_fs = lt.test "filesystem"
 
 local ALLOW_WRITE = 0x92
 local USER_WRITE = 0x80
@@ -56,13 +56,13 @@ end
 
 function test_fs:test_path()
     local path = fs.path('')
-    lu.assertEquals(type(path) == 'userdata' or type(path) == 'table', true)
+    lt.assertEquals(type(path) == 'userdata' or type(path) == 'table', true)
 end
 
 function test_fs:test_string()
-    lu.assertEquals(fs.path('a/b'):string(), 'a/b')
+    lt.assertEquals(fs.path('a/b'):string(), 'a/b')
     if platform.OS == 'Windows' then
-        lu.assertEquals(fs.path('a\\b'):string(), 'a/b')
+        lt.assertEquals(fs.path('a\\b'):string(), 'a/b')
     end
 end
 
@@ -70,11 +70,11 @@ function test_fs:test_filename()
     local function get_filename(path)
         return fs.path(path):filename():string()
     end
-    lu.assertEquals(get_filename('a/b'), 'b')
-    lu.assertEquals(get_filename('a/b/'), '')
+    lt.assertEquals(get_filename('a/b'), 'b')
+    lt.assertEquals(get_filename('a/b/'), '')
     if platform.OS == 'Windows' then
-        lu.assertEquals(get_filename('a\\b'), 'b')
-        lu.assertEquals(get_filename('a\\b\\'), '')
+        lt.assertEquals(get_filename('a\\b'), 'b')
+        lt.assertEquals(get_filename('a\\b\\'), '')
     end
 end
 
@@ -82,11 +82,11 @@ function test_fs:test_parent_path()
     local function get_parent_path(path)
         return fs.path(path):parent_path():string()
     end
-    lu.assertEquals(get_parent_path('a/b/c'), 'a/b')
-    lu.assertEquals(get_parent_path('a/b/'), 'a/b')
+    lt.assertEquals(get_parent_path('a/b/c'), 'a/b')
+    lt.assertEquals(get_parent_path('a/b/'), 'a/b')
     if platform.OS == 'Windows' then
-        lu.assertEquals(get_parent_path('a\\b\\c'), 'a/b')
-        lu.assertEquals(get_parent_path('a\\b\\'), 'a/b')
+        lt.assertEquals(get_parent_path('a\\b\\c'), 'a/b')
+        lt.assertEquals(get_parent_path('a\\b\\'), 'a/b')
     end
 end
 
@@ -94,13 +94,13 @@ function test_fs:test_stem()
     local function get_stem(path)
         return fs.path(path):stem():string()
     end
-    lu.assertEquals(get_stem('a/b/c.ext'), 'c')
-    lu.assertEquals(get_stem('a/b/c'), 'c')
-    lu.assertEquals(get_stem('a/b/.ext'), '.ext')
+    lt.assertEquals(get_stem('a/b/c.ext'), 'c')
+    lt.assertEquals(get_stem('a/b/c'), 'c')
+    lt.assertEquals(get_stem('a/b/.ext'), '.ext')
     if platform.OS == 'Windows' then
-        lu.assertEquals(get_stem('a\\b\\c.ext'), 'c')
-        lu.assertEquals(get_stem('a\\b\\c'), 'c')
-        lu.assertEquals(get_stem('a\\b\\.ext'), '.ext')
+        lt.assertEquals(get_stem('a\\b\\c.ext'), 'c')
+        lt.assertEquals(get_stem('a\\b\\c'), 'c')
+        lt.assertEquals(get_stem('a\\b\\.ext'), '.ext')
     end
 end
 
@@ -108,28 +108,28 @@ function test_fs:test_extension()
     local function get_extension(path)
         return fs.path(path):extension():string()
     end
-    lu.assertEquals(get_extension('a/b/c.ext'), '.ext')
-    lu.assertEquals(get_extension('a/b/c'), '')
-    lu.assertEquals(get_extension('a/b/.ext'), '')
+    lt.assertEquals(get_extension('a/b/c.ext'), '.ext')
+    lt.assertEquals(get_extension('a/b/c'), '')
+    lt.assertEquals(get_extension('a/b/.ext'), '')
     if platform.OS == 'Windows' then
-        lu.assertEquals(get_extension('a\\b\\c.ext'), '.ext')
-        lu.assertEquals(get_extension('a\\b\\c'), '')
-        lu.assertEquals(get_extension('a\\b\\.ext'), '')
+        lt.assertEquals(get_extension('a\\b\\c.ext'), '.ext')
+        lt.assertEquals(get_extension('a\\b\\c'), '')
+        lt.assertEquals(get_extension('a\\b\\.ext'), '')
     end
 
-    lu.assertEquals(get_extension('a/b/c.'), '.')
-    lu.assertEquals(get_extension('a/b/c..'), '.')
-    lu.assertEquals(get_extension('a/b/c..lua'), '.lua')
+    lt.assertEquals(get_extension('a/b/c.'), '.')
+    lt.assertEquals(get_extension('a/b/c..'), '.')
+    lt.assertEquals(get_extension('a/b/c..lua'), '.lua')
 end
 
 function test_fs:test_absolute_relative()
     local function assertIsAbsolute(path)
-        lu.assertEquals(fs.path(path):is_absolute(), true)
-        lu.assertEquals(fs.path(path):is_relative(), false)
+        lt.assertEquals(fs.path(path):is_absolute(), true)
+        lt.assertEquals(fs.path(path):is_relative(), false)
     end
     local function assertIsRelative(path)
-        lu.assertEquals(fs.path(path):is_absolute(), false)
-        lu.assertEquals(fs.path(path):is_relative(), true)
+        lt.assertEquals(fs.path(path):is_absolute(), false)
+        lt.assertEquals(fs.path(path):is_relative(), true)
     end
     assertIsAbsolute(C..'a/b')
     if not (platform.OS == 'Windows' and platform.CRT == 'libstdc++') then
@@ -150,11 +150,11 @@ function test_fs:test_remove_filename()
     local function remove_filename(path)
         return fs.path(path):remove_filename():string()
     end
-    lu.assertEquals(remove_filename('a/b/c'), 'a/b/')
-    lu.assertEquals(remove_filename('a/b/'), 'a/b/')
+    lt.assertEquals(remove_filename('a/b/c'), 'a/b/')
+    lt.assertEquals(remove_filename('a/b/'), 'a/b/')
     if platform.OS == 'Windows' then
-        lu.assertEquals(remove_filename('a\\b\\c'), 'a/b/')
-        lu.assertEquals(remove_filename('a\\b\\'), 'a/b/')
+        lt.assertEquals(remove_filename('a\\b\\c'), 'a/b/')
+        lt.assertEquals(remove_filename('a\\b\\'), 'a/b/')
     end
 end
 
@@ -162,13 +162,13 @@ function test_fs:test_replace_filename()
     local function replace_filename(path, ext)
         return fs.path(path):replace_filename(ext):string()
     end
-    lu.assertEquals(replace_filename('a/b/c.lua', 'd.lua'), 'a/b/d.lua')
-    lu.assertEquals(replace_filename('a/b/c', 'd.lua'), 'a/b/d.lua')
-    lu.assertEquals(replace_filename('a/b/', 'd.lua'), 'a/b/d.lua')
+    lt.assertEquals(replace_filename('a/b/c.lua', 'd.lua'), 'a/b/d.lua')
+    lt.assertEquals(replace_filename('a/b/c', 'd.lua'), 'a/b/d.lua')
+    lt.assertEquals(replace_filename('a/b/', 'd.lua'), 'a/b/d.lua')
     if platform.OS == 'Windows' then
-        lu.assertEquals(replace_filename('a\\b\\c.lua', 'd.lua'), 'a/b/d.lua')
-        lu.assertEquals(replace_filename('a\\b\\c', 'd.lua'), 'a/b/d.lua')
-        lu.assertEquals(replace_filename('a\\b\\', 'd.lua'), 'a/b/d.lua')
+        lt.assertEquals(replace_filename('a\\b\\c.lua', 'd.lua'), 'a/b/d.lua')
+        lt.assertEquals(replace_filename('a\\b\\c', 'd.lua'), 'a/b/d.lua')
+        lt.assertEquals(replace_filename('a\\b\\', 'd.lua'), 'a/b/d.lua')
     end
 end
 
@@ -176,23 +176,23 @@ function test_fs:test_replace_extension()
     local function replace_extension(path, ext)
         return fs.path(path):replace_extension(ext):string()
     end
-    lu.assertEquals(replace_extension('a/b/c.ext', '.lua'), 'a/b/c.lua')
-    lu.assertEquals(replace_extension('a/b/c', '.lua'), 'a/b/c.lua')
-    lu.assertEquals(replace_extension('a/b/.ext', '.lua'), 'a/b/.ext.lua')
+    lt.assertEquals(replace_extension('a/b/c.ext', '.lua'), 'a/b/c.lua')
+    lt.assertEquals(replace_extension('a/b/c', '.lua'), 'a/b/c.lua')
+    lt.assertEquals(replace_extension('a/b/.ext', '.lua'), 'a/b/.ext.lua')
     if platform.OS == 'Windows' then
-        lu.assertEquals(replace_extension('a\\b\\c.ext', '.lua'), 'a/b/c.lua')
-        lu.assertEquals(replace_extension('a\\b\\c', '.lua'), 'a/b/c.lua')
-        lu.assertEquals(replace_extension('a\\b\\.ext', '.lua'), 'a/b/.ext.lua')
+        lt.assertEquals(replace_extension('a\\b\\c.ext', '.lua'), 'a/b/c.lua')
+        lt.assertEquals(replace_extension('a\\b\\c', '.lua'), 'a/b/c.lua')
+        lt.assertEquals(replace_extension('a\\b\\.ext', '.lua'), 'a/b/.ext.lua')
     end
 
-    lu.assertEquals(replace_extension('a/b/c.ext', 'lua'), 'a/b/c.lua')
-    lu.assertEquals(replace_extension('a/b/c.ext', '..lua'), 'a/b/c..lua')
-    lu.assertEquals(replace_extension('c.ext', '.lua'), 'c.lua')
+    lt.assertEquals(replace_extension('a/b/c.ext', 'lua'), 'a/b/c.lua')
+    lt.assertEquals(replace_extension('a/b/c.ext', '..lua'), 'a/b/c..lua')
+    lt.assertEquals(replace_extension('c.ext', '.lua'), 'c.lua')
 end
 
 function test_fs:test_equal_extension()
     local function equal_extension(path, ext)
-        return lu.assertEquals(fs.path(path):equal_extension(ext), true)
+        return lt.assertEquals(fs.path(path):equal_extension(ext), true)
     end
     equal_extension('a/b/c.ext', '.ext')
     equal_extension('a/b/c.ext', 'ext')
@@ -208,9 +208,9 @@ function test_fs:test_get_permissions()
     local filename = 'temp.txt'
     create_file(filename)
 
-    lu.assertEquals(fs.permissions(fs.path(filename)) & USER_WRITE, USER_WRITE)
+    lt.assertEquals(fs.permissions(fs.path(filename)) & USER_WRITE, USER_WRITE)
     shell:add_readonly(filename)
-    lu.assertEquals(fs.permissions(fs.path(filename)) & USER_WRITE, 0)
+    lt.assertEquals(fs.permissions(fs.path(filename)) & USER_WRITE, 0)
     shell:del_readonly(filename)
 
     os.remove(filename)
@@ -220,22 +220,22 @@ function test_fs:test_set_permissions()
     local filename = fs.path 'temp.txt'
     create_file(filename)
 
-    lu.assertEquals(fs.permissions(filename) & USER_WRITE, USER_WRITE)
+    lt.assertEquals(fs.permissions(filename) & USER_WRITE, USER_WRITE)
     fs.permissions(filename, ALLOW_WRITE, fs.perm_options.remove)
-    lu.assertEquals(fs.permissions(filename) & USER_WRITE, 0)
+    lt.assertEquals(fs.permissions(filename) & USER_WRITE, 0)
     fs.permissions(filename, ALLOW_WRITE, fs.perm_options.add)
-    lu.assertEquals(fs.permissions(filename) & USER_WRITE, USER_WRITE)
+    lt.assertEquals(fs.permissions(filename) & USER_WRITE, USER_WRITE)
     fs.permissions(filename, 0)
-    lu.assertEquals(fs.permissions(filename) & USER_WRITE, 0)
+    lt.assertEquals(fs.permissions(filename) & USER_WRITE, 0)
     fs.permissions(filename, ALLOW_WRITE)
-    lu.assertEquals(fs.permissions(filename) & USER_WRITE, USER_WRITE)
+    lt.assertEquals(fs.permissions(filename) & USER_WRITE, USER_WRITE)
 
     os.remove(filename:string())
 end
 
 function test_fs:test_div()
     local function eq_div(A, B, C)
-        lu.assertEquals(fs.path(A) / B, fs.path(C))
+        lt.assertEquals(fs.path(A) / B, fs.path(C))
     end
     eq_div('a', 'b', 'a/b')
     eq_div('a/b', 'c', 'a/b/c')
@@ -259,8 +259,8 @@ end
 
 function test_fs:test_concat()
     local function concat(a, b, c)
-        lu.assertEquals(fs.path(a) .. b, fs.path(c))
-        lu.assertEquals(fs.path(a) .. fs.path(b), fs.path(c))
+        lt.assertEquals(fs.path(a) .. b, fs.path(c))
+        lt.assertEquals(fs.path(a) .. fs.path(b), fs.path(c))
     end
     concat('a', 'b', 'ab')
     concat('a/b', 'c', 'a/bc')
@@ -268,7 +268,7 @@ end
 
 function test_fs:test_lexically_normal()
     local function test(path1, path2)
-        return lu.assertEquals(fs.path(path1):lexically_normal():string(), path2)
+        return lt.assertEquals(fs.path(path1):lexically_normal():string(), path2)
     end
     test("a/", "a/")
     test("a/b", "a/b")
@@ -286,7 +286,7 @@ end
 
 function test_fs:test_absolute()
     local function eq_absolute2(path1, path2)
-        return lu.assertEquals(fs.absolute(fs.path(path1)), fs.current_path() / path2)
+        return lt.assertEquals(fs.absolute(fs.path(path1)), fs.current_path() / path2)
     end
     local function eq_absolute1(path)
         return eq_absolute2(path, path)
@@ -303,7 +303,7 @@ end
 
 function test_fs:test_relative()
     local function relative(a, b, c)
-        return lu.assertEquals(fs.relative(fs.path(a), fs.path(b)):string(), c)
+        return lt.assertEquals(fs.relative(fs.path(a), fs.path(b)):string(), c)
     end
     relative(C..'a/b/c', C..'a/b', 'c')
     relative(C..'a/b', C..'a/b/c',  '..')
@@ -324,7 +324,7 @@ end
 
 function test_fs:test_eq()
     local function eq(A, B)
-        return lu.assertEquals(fs.path(A), fs.path(B))
+        return lt.assertEquals(fs.path(A), fs.path(B))
     end
     eq('a/b', 'a/b')
     eq('a/./b', 'a/b')
@@ -338,7 +338,7 @@ end
 
 function test_fs:test_exists()
     local function is_exists(path, b)
-        lu.assertEquals(fs.exists(fs.path(path)), b, path)
+        lt.assertEquals(fs.exists(fs.path(path)), b, path)
     end
     local filename = 'temp.txt'
     os.remove(filename)
@@ -355,14 +355,14 @@ end
 
 function test_fs:test_remove()
     local function remove_ok(path, b)
-        lu.assertEquals(fs.exists(fs.path(path)), b)
-        lu.assertEquals(fs.remove(fs.path(path)), b)
-        lu.assertEquals(fs.exists(fs.path(path)), false)
+        lt.assertEquals(fs.exists(fs.path(path)), b)
+        lt.assertEquals(fs.remove(fs.path(path)), b)
+        lt.assertEquals(fs.exists(fs.path(path)), false)
     end
     local function remove_failed(path)
-        lu.assertEquals(fs.exists(fs.path(path)), true)
-        lu.assertError(fs.remove, fs.path(path))
-        lu.assertEquals(fs.exists(fs.path(path)), true)
+        lt.assertEquals(fs.exists(fs.path(path)), true)
+        lt.assertError(fs.remove, fs.path(path))
+        lt.assertEquals(fs.exists(fs.path(path)), true)
     end
 
     local filename = 'temp.txt'
@@ -395,9 +395,9 @@ end
 
 function test_fs:test_remove_all()
     local function remove_all(path, n)
-        lu.assertEquals(fs.exists(fs.path(path)), n ~= 0)
-        lu.assertEquals(fs.remove_all(fs.path(path)), n)
-        lu.assertEquals(fs.exists(fs.path(path)), false)
+        lt.assertEquals(fs.exists(fs.path(path)), n ~= 0)
+        lt.assertEquals(fs.remove_all(fs.path(path)), n)
+        lt.assertEquals(fs.exists(fs.path(path)), false)
     end
 
     local filename = 'temp.txt'
@@ -428,7 +428,7 @@ end
 
 function test_fs:test_is_directory()
     local function is_directory(path, b)
-        lu.assertEquals(fs.is_directory(fs.path(path)), b, path)
+        lt.assertEquals(fs.is_directory(fs.path(path)), b, path)
     end
     local filename = 'temp.txt'
     is_directory('.', true)
@@ -440,7 +440,7 @@ end
 
 function test_fs:test_is_regular_file()
     local function is_regular_file(path, b)
-        lu.assertEquals(fs.is_regular_file(fs.path(path)), b, path)
+        lt.assertEquals(fs.is_regular_file(fs.path(path)), b, path)
     end
     local filename = 'temp.txt'
     is_regular_file('.', false)
@@ -454,20 +454,20 @@ function test_fs:test_create_directory()
     local function create_directory_ok(path, cb)
         local fspath = fs.path(path)
         fs.remove_all(fspath)
-        lu.assertEquals(fs.exists(fs.path(path)), false)
-        lu.assertEquals(fs.create_directory(fspath), true)
-        lu.assertEquals(fs.is_directory(fspath), true)
+        lt.assertEquals(fs.exists(fs.path(path)), false)
+        lt.assertEquals(fs.create_directory(fspath), true)
+        lt.assertEquals(fs.is_directory(fspath), true)
         if cb then cb() end
-        lu.assertEquals(fs.remove(fspath), true)
-        lu.assertEquals(fs.exists(fs.path(path)), false)
+        lt.assertEquals(fs.remove(fspath), true)
+        lt.assertEquals(fs.exists(fs.path(path)), false)
     end
     local function create_directory_failed(path)
         local fspath = fs.path(path)
         fs.remove_all(fspath)
-        lu.assertEquals(fs.exists(fs.path(path)), false)
-        lu.assertError(fs.create_directory, fspath)
-        lu.assertEquals(fs.is_directory(fspath), false)
-        lu.assertEquals(fs.exists(fs.path(path)), false)
+        lt.assertEquals(fs.exists(fs.path(path)), false)
+        lt.assertError(fs.create_directory, fspath)
+        lt.assertEquals(fs.is_directory(fspath), false)
+        lt.assertEquals(fs.exists(fs.path(path)), false)
     end
     create_directory_ok('temp', function()
         create_directory_ok('temp/temp')
@@ -479,12 +479,12 @@ function test_fs:test_create_directories()
     local function create_directories_ok(path, cb)
         local fspath = fs.path(path)
         fs.remove_all(fspath)
-        lu.assertEquals(fs.exists(fs.path(path)), false)
-        lu.assertEquals(fs.create_directories(fspath), true)
-        lu.assertEquals(fs.is_directory(fspath), true)
+        lt.assertEquals(fs.exists(fs.path(path)), false)
+        lt.assertEquals(fs.create_directories(fspath), true)
+        lt.assertEquals(fs.is_directory(fspath), true)
         if cb then cb() end
-        lu.assertEquals(fs.remove(fspath), true)
-        lu.assertEquals(fs.exists(fs.path(path)), false)
+        lt.assertEquals(fs.remove(fspath), true)
+        lt.assertEquals(fs.exists(fs.path(path)), false)
     end
     create_directories_ok('temp', function()
         create_directories_ok('temp/temp')
@@ -494,19 +494,19 @@ end
 
 function test_fs:test_rename()
     local function rename_ok(from, to)
-        lu.assertEquals(fs.exists(fs.path(from)), true)
+        lt.assertEquals(fs.exists(fs.path(from)), true)
         fs.rename(fs.path(from), fs.path(to))
-        lu.assertEquals(fs.exists(fs.path(from)), false)
-        lu.assertEquals(fs.exists(fs.path(to)), true)
+        lt.assertEquals(fs.exists(fs.path(from)), false)
+        lt.assertEquals(fs.exists(fs.path(to)), true)
         fs.remove_all(fs.path(to))
-        lu.assertEquals(fs.exists(fs.path(to)), false)
+        lt.assertEquals(fs.exists(fs.path(to)), false)
     end
     local function rename_failed(from, to)
-        lu.assertError(fs.rename, fs.path(from), fs.path(to))
+        lt.assertError(fs.rename, fs.path(from), fs.path(to))
         fs.remove_all(fs.path(from))
         fs.remove_all(fs.path(to))
-        lu.assertEquals(fs.exists(fs.path(from)), false)
-        lu.assertEquals(fs.exists(fs.path(to)), false)
+        lt.assertEquals(fs.exists(fs.path(from)), false)
+        lt.assertEquals(fs.exists(fs.path(to)), false)
     end
     os.remove('temp1.txt')
     os.remove('temp2.txt')
@@ -537,24 +537,24 @@ function test_fs:test_rename()
 end
 
 function test_fs:test_current_path()
-    lu.assertEquals(fs.current_path(), fs.path(shell:pwd()))
+    lt.assertEquals(fs.current_path(), fs.path(shell:pwd()))
 end
 
 function test_fs:test_copy_file()
     local function copy_file_ok(from, to)
-        lu.assertEquals(fs.exists(fs.path(from)), true)
-        lu.assertEquals(fs.exists(fs.path(to)), true)
-        lu.assertEquals(read_file(from), read_file(to))
+        lt.assertEquals(fs.exists(fs.path(from)), true)
+        lt.assertEquals(fs.exists(fs.path(to)), true)
+        lt.assertEquals(read_file(from), read_file(to))
         fs.remove_all(fs.path(from))
         fs.remove_all(fs.path(to))
-        lu.assertEquals(fs.exists(fs.path(from)), false)
-        lu.assertEquals(fs.exists(fs.path(to)), false)
+        lt.assertEquals(fs.exists(fs.path(from)), false)
+        lt.assertEquals(fs.exists(fs.path(to)), false)
     end
     local function copy_file_failed(from, to)
         fs.remove_all(fs.path(from))
         fs.remove_all(fs.path(to))
-        lu.assertEquals(fs.exists(fs.path(from)), false)
-        lu.assertEquals(fs.exists(fs.path(to)), false)
+        lt.assertEquals(fs.exists(fs.path(from)), false)
+        lt.assertEquals(fs.exists(fs.path(to)), false)
     end
     for _, copy in ipairs {fs.copy_file, fs.copy} do
         local NONE = fs.copy_options.none
@@ -582,27 +582,27 @@ function test_fs:test_copy_file()
 
         create_file('temp1.txt', tostring(os.time()))
         create_file('temp2.txt', tostring(os.clock()))
-        lu.assertError(copy, fs.path 'temp1.txt', fs.path 'temp2.txt', NONE)
+        lt.assertError(copy, fs.path 'temp1.txt', fs.path 'temp2.txt', NONE)
         copy_file_failed('temp1.txt', 'temp2.txt')
     end
 
     create_file('temp1.txt', tostring(os.time()))
     create_file('temp2.txt', tostring(os.clock()))
-    lu.assertEquals(fs.path('temp1.txt'):permissions() & USER_WRITE, USER_WRITE)
+    lt.assertEquals(fs.path('temp1.txt'):permissions() & USER_WRITE, USER_WRITE)
     fs.path('temp1.txt'):remove_permissions(ALLOW_WRITE)
-    lu.assertEquals(fs.path('temp1.txt'):permissions() & USER_WRITE, 0)
-    lu.assertEquals(fs.path('temp2.txt'):permissions() & USER_WRITE, USER_WRITE)
+    lt.assertEquals(fs.path('temp1.txt'):permissions() & USER_WRITE, 0)
+    lt.assertEquals(fs.path('temp2.txt'):permissions() & USER_WRITE, USER_WRITE)
     fs.copy_file(fs.path('temp1.txt'), fs.path('temp2.txt'), fs.copy_options.overwrite_existing)
-    lu.assertEquals(fs.exists(fs.path('temp1.txt')), true)
-    lu.assertEquals(fs.exists(fs.path('temp2.txt')), true)
-    lu.assertEquals(fs.path('temp2.txt'):permissions() & USER_WRITE, 0)
-    lu.assertEquals(read_file('temp1.txt'), read_file('temp2.txt'))
+    lt.assertEquals(fs.exists(fs.path('temp1.txt')), true)
+    lt.assertEquals(fs.exists(fs.path('temp2.txt')), true)
+    lt.assertEquals(fs.path('temp2.txt'):permissions() & USER_WRITE, 0)
+    lt.assertEquals(read_file('temp1.txt'), read_file('temp2.txt'))
     fs.path('temp1.txt'):add_permissions(ALLOW_WRITE)
     fs.path('temp2.txt'):add_permissions(ALLOW_WRITE)
     os.remove('temp1.txt')
     os.remove('temp2.txt')
-    lu.assertEquals(fs.exists(fs.path('temp1.txt')), false)
-    lu.assertEquals(fs.exists(fs.path('temp2.txt')), false)
+    lt.assertEquals(fs.exists(fs.path('temp1.txt')), false)
+    lt.assertEquals(fs.exists(fs.path('temp2.txt')), false)
 end
 
 function test_fs:test_copy_file_2()
@@ -614,22 +614,22 @@ function test_fs:test_copy_file_2()
     --copy_options::none
     create_file(from, FromContext)
     create_file(to,   ToContext)
-    lu.assertError(fs.copy_file, from, to, fs.copy_options.none)
-    lu.assertEquals(ToContext, read_file(to))
+    lt.assertError(fs.copy_file, from, to, fs.copy_options.none)
+    lt.assertEquals(ToContext, read_file(to))
     --copy_options::skip_existing
     COPIED = fs.copy_file(from, to, fs.copy_options.skip_existing)
-    lu.assertEquals(COPIED, false)
-    lu.assertEquals(ToContext, read_file(to))
+    lt.assertEquals(COPIED, false)
+    lt.assertEquals(ToContext, read_file(to))
     --copy_options::overwrite_existing
     COPIED = fs.copy_file(from, to, fs.copy_options.overwrite_existing)
-    lu.assertEquals(COPIED, true)
-    lu.assertEquals(FromContext, read_file(to))
+    lt.assertEquals(COPIED, true)
+    lt.assertEquals(FromContext, read_file(to))
     --copy_options::update_existing
     create_file(from, FromContext)
     create_file(to,   ToContext)
     COPIED = fs.copy_file(from, to, fs.copy_options.update_existing)
-    lu.assertEquals(COPIED, false)
-    lu.assertEquals(ToContext, read_file(to))
+    lt.assertEquals(COPIED, false)
+    lt.assertEquals(ToContext, read_file(to))
 
     --TODO: gcc实现的文件写时间精度太低
     --TODO: macos暂时还需要兼容低版本
@@ -641,8 +641,8 @@ function test_fs:test_copy_file_2()
     --clean
     os.remove(from:string())
     os.remove(to:string())
-    lu.assertEquals(fs.exists(from), false)
-    lu.assertEquals(fs.exists(to), false)
+    lt.assertEquals(fs.exists(from), false)
+    lt.assertEquals(fs.exists(to), false)
 end
 
 function test_fs:test_pairs()
@@ -652,11 +652,11 @@ function test_fs:test_pairs()
         for path in fs.pairs(fsdir, flags) do
             result[path:string()] = true
         end
-        lu.assertEquals(result, expected)
+        lt.assertEquals(result, expected)
     end
     local function pairs_failed(dir)
         local fsdir = fs.path(dir)
-        lu.assertError(fsdir.pairs, fsdir)
+        lt.assertError(fsdir.pairs, fsdir)
     end
 
     fs.create_directories(fs.path('temp'))
@@ -707,7 +707,7 @@ function test_fs:test_copy_dir()
         return result
     end
     local function file_equals(a, b)
-        lu.assertEquals(read_file(a), read_file(b))
+        lt.assertEquals(read_file(a), read_file(b))
     end
 
     fs.create_directories(fs.path('temp/temp'))
@@ -718,14 +718,14 @@ function test_fs:test_copy_dir()
 
     fs.copy(fs.path('temp'), fs.path('temp1'), fs.copy_options.overwrite_existing | fs.copy_options.recursive)
 
-    lu.assertEquals(each_directory('temp'), {
+    lt.assertEquals(each_directory('temp'), {
         ['temp/temp1.txt'] = true,
         ['temp/temp2.txt'] = true,
         ['temp/temp/temp1.txt'] = true,
         ['temp/temp/temp2.txt'] = true,
         ['temp/temp'] = true,
     })
-    lu.assertEquals(each_directory('temp1'), {
+    lt.assertEquals(each_directory('temp1'), {
         ['temp1/temp1.txt'] = true,
         ['temp1/temp2.txt'] = true,
         ['temp1/temp/temp1.txt'] = true,
@@ -749,8 +749,8 @@ function test_fs:test_last_write_time()
         local tf = fs.last_write_time(fs.path(filename))
         local t2 = os.time()
         os.remove(filename)
-        lu.assertEquals(tf >= t1 - 10, true)
-        lu.assertEquals(tf <= t2 + 10, true)
+        lt.assertEquals(tf >= t1 - 10, true)
+        lt.assertEquals(tf <= t2 + 10, true)
     end
     last_write_time('temp.txt')
 end
@@ -791,11 +791,11 @@ end
 function test_fs:test_filelock_1()
     local lock = fs.path("temp.lock")
     local f1, err1 = fs.filelock(lock)
-    lu.assertIsUserdata(f1, err1)
-    lu.assertEquals(fs.filelock(lock), nil)
+    lt.assertIsUserdata(f1, err1)
+    lt.assertEquals(fs.filelock(lock), nil)
     f1:close()
     local f2, err2 = fs.filelock(lock)
-    lu.assertIsUserdata(f2, err2)
+    lt.assertIsUserdata(f2, err2)
     f2:close()
     fs.remove(fs.path("temp.lock"))
 end
@@ -827,21 +827,21 @@ function test_fs:test_filelock_2()
         io.stdout:flush()
         io.read 'a'
     ]], { stdin = true, stdout = true, stderr = true })
-    lu.assertEquals(process.stdout:read(2), 'ok')
-    lu.assertEquals(fs.filelock(fs.path("temp.lock")), nil)
+    lt.assertEquals(process.stdout:read(2), 'ok')
+    lt.assertEquals(fs.filelock(fs.path("temp.lock")), nil)
     process.stdin:close()
-    lu.assertEquals(process.stderr:read 'a', '')
-    lu.assertEquals(process:wait(), 0)
+    lt.assertEquals(process.stderr:read 'a', '')
+    lt.assertEquals(process:wait(), 0)
     local f, err = fs.filelock(fs.path("temp.lock"))
-    lu.assertIsUserdata(f, err)
+    lt.assertIsUserdata(f, err)
     f:close()
     fs.remove(fs.path("temp.lock"))
 end
 
 function test_fs:test_tostring()
     local function test(s)
-        lu.assertEquals(fs.path(s):string(), s)
-        lu.assertEquals(tostring(fs.path(s)), s)
+        lt.assertEquals(fs.path(s):string(), s)
+        lt.assertEquals(tostring(fs.path(s)), s)
     end
     test ""
     test "简体中文"

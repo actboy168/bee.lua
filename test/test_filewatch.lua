@@ -1,9 +1,9 @@
-local lu = require 'ltest'
+local lt = require 'ltest'
 local fw = require 'bee.filewatch'
 local fs = require 'bee.filesystem'
 local thread = require 'bee.thread'
 
-local test_fw = lu.test "filewatch"
+local test_fw = lt.test "filewatch"
 
 local function create_dir(filename)
     fs.create_directories(fs.path 'temp' / filename)
@@ -22,11 +22,11 @@ local function assertSelect(what, value)
     while true do
         local w, v = fw.select()
         if w then
-            lu.assertEquals(w, what)
+            lt.assertEquals(w, what)
             if type(value) == 'userdata' or type(value) == 'table' then
-                lu.assertEquals(fs.path(v), value)
+                lt.assertEquals(fs.path(v), value)
             else
-                lu.assertEquals(v, value)
+                lt.assertEquals(v, value)
             end
             break
         else
@@ -40,7 +40,7 @@ local function test(f)
     pcall(fs.remove_all, root)
     fs.create_directories(root)
     local id = fw.add(root:string())
-    lu.assertIsNumber(id)
+    lt.assertIsNumber(id)
     assertSelect('confirm', ('add `%d` `%s`'):format(id, root:string()))
 
     f(root)
@@ -87,7 +87,7 @@ function test_fw:test_2()
                     return
                 end
             end
-            lu.assertEquals(path, nil)
+            lt.assertEquals(path, nil)
         end
         assertHas(root / 'test1')
         assertHas(root / 'test1.txt')
