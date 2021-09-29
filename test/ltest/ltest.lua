@@ -1,7 +1,15 @@
+local LuaVersion = (function ()
+    local major, minor = _VERSION:match "Lua (%d)%.(%d)"
+    return tonumber(major)*10+tonumber(minor)
+end)()
+
 local m = {}
 
 local stringify = require "stringify"
-local coverage = require "coverage"
+local coverage
+if LuaVersion >= 53 then
+    coverage = require "coverage"
+end
 
 local function split(str)
     local r = {}
@@ -128,6 +136,7 @@ for _, name in ipairs {'Nil', 'Number', 'String', 'Table', 'Boolean', 'Function'
         if type(value) ~= typeExpected then
             failure('expected: a %s value, actual: type %s, value %s.%s', typeExpected, type(value), stringify(value), errmsg or '')
         end
+        return value
     end
 end
 
@@ -142,9 +151,14 @@ local function parseCmdLine(cmdLine)
             elseif cmdArg == '--shuffle' or cmdArg == '-s' then
                 result.shuffle = true
             elseif cmdArg == '--coverage' or cmdArg == '-c' then
-                result.coverage = true
+                if coverage then
+                    result.coverage = true
+                end
             elseif cmdArg == '--list' or cmdArg == '-l' then
                 result.list = true
+            elseif cmdArg == '--test' or cmdArg == '-t' then
+                i = i + 1
+                result.test = cmdLine[i]
             else
                 error('Unknown option: '..cmdArg)
             end
@@ -199,7 +213,41 @@ local function matchPattern(expr, patterns)
     end
 end
 
+local function randomizeTable(t)
+    for i = #t, 2, -1 do
+        local j = math.random(i)
+        if i ~= j then
+            t[i], t[j] = t[j], t[i]
+        end
+    end
+end
+
 local function selectList(lst)
+    local testname = options.test
+    if testname then
+        local hasMethod = testname:find(".", 1, true)
+        if hasMethod then
+            for _, v in ipairs(lst) do
+                local expr = v[1]
+                if expr == testname then
+                    return {v}
+                end
+            end
+        else
+            testname = testname.."."
+            local sz = #testname
+            for _, v in ipairs(lst) do
+                local expr = v[1]
+                if expr:sub(1,sz) == testname then
+                    return {v}
+                end
+            end
+        end
+        return {}
+    end
+    if options.shuffle then
+        randomizeTable(lst)
+    end
     local patterns = options
     if #patterns == 0 then
         return lst
@@ -231,15 +279,6 @@ local function selectList(lst)
     return res
 end
 
-local function randomizeTable(t)
-    for i = #t, 2, -1 do
-        local j = math.random(i)
-        if i ~= j then
-            t[i], t[j] = t[j], t[i]
-        end
-    end
-end
-
 local function showList(selected)
     for _, v in ipairs(selected) do
         local name = v[1]
@@ -265,16 +304,17 @@ function m.test(name)
     return instance
 end
 
+function m.format(className, methodName)
+    return className..'.'..methodName
+end
+
 function m.run()
     local lst = {}
     for _, name in ipairs(instanceSet) do
         local instance = instanceSet[name]
         for _, methodName in ipairs(instance) do
-            lst[#lst+1] = { name..'.'..methodName, instance, instance[methodName] }
+            lst[#lst+1] = { m.format(name, methodName), instance, instance[methodName] }
         end
-    end
-    if options.shuffle then
-        randomizeTable(lst)
     end
     local selected = selectList(lst)
     if options.list then
@@ -321,10 +361,16 @@ function m.run()
     if #failures == 0 then
         print('OK')
     end
-    return #failures == 0
+    if #failures == 0 then
+        return 0
+    end
+    return 1
 end
 
 function m.moduleCoverage(name)
+    if not options.coverage then
+        return
+    end
     local path = assert(package.searchpath(name, package.path))
     local f = assert(loadfile(path))
     local source = debug.getinfo(f, "S").source
@@ -334,7 +380,6 @@ end
 if options.coverage then
     coverage.start()
 end
-
 m.options = options
 
 return m

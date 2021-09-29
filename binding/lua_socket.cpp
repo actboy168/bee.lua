@@ -360,22 +360,12 @@ namespace bee::lua_socket {
         lua_setmetatable(L, -2);
         return *self;
     }
-#if defined _WIN32
-    static bool safe_exists(std::string& path) {
-        FILE* f = _wfopen(u2w(path).c_str(), L"rb");
-        if (f) {
-            fclose(f);
-            return true;
-        }
-        return errno != ENOENT;
-    }
-#endif
-    static int create(lua_State* L) {
+    static int create(lua_State* L, int idx) {
         static const char *const opts[] = {
             "tcp", "udp", "unix", "tcp6", "udp6",
             NULL
         };
-        socket::protocol protocol = (socket::protocol)luaL_checkoption(L, 1, NULL, opts);
+        socket::protocol protocol = (socket::protocol)luaL_checkoption(L, idx, NULL, opts);
         socket::fd_t fd = socket::open(protocol);
         if (fd == socket::retired_fd) {
             return push_neterror(L, "socket");
@@ -384,7 +374,7 @@ namespace bee::lua_socket {
         return 1;
     }
     static int _connect(lua_State* L) {
-        int r = create(L);
+        int r = create(L, 1);
         if (r != 1) {
             return r;
         }
@@ -398,7 +388,7 @@ namespace bee::lua_socket {
         return 2;
     }
     static int _bind(lua_State* L) {
-        int r = create(L);
+        int r = create(L, 1);
         if (r != 1) {
             return r;
         }
@@ -418,6 +408,9 @@ namespace bee::lua_socket {
         pushfd(L, sv[0], socket::protocol::uds, luafd::tag::accept);
         pushfd(L, sv[1], socket::protocol::uds, luafd::tag::connect);
         return 2;
+    }
+    static int __call(lua_State* L) {
+        return create(L, 2);
     }
 #if defined(_WIN32)
 #define MAXFD_INIT()
@@ -542,9 +535,8 @@ namespace bee::lua_socket {
     static int luaopen(lua_State* L) {
         socket::initialize();
         luaL_Reg lib[] = {
-            {"create", create},
-            {"connect", _connect},
-            {"bind", _bind},
+            {"connect", _connect}, //deprecated
+            {"bind", _bind},       //deprecated
             {"pair", pair},
             {"select", select},
 #if defined _WIN32
@@ -554,6 +546,13 @@ namespace bee::lua_socket {
         };
         lua_newtable(L);
         luaL_setfuncs(L, lib, 0);
+        luaL_Reg mt[] = {
+            {"__call", __call},
+            {NULL, NULL}
+        };
+        lua_newtable(L);
+        luaL_setfuncs(L, mt, 0);
+        lua_setmetatable(L, -2);
         return 1;
     }
 }

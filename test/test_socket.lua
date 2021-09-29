@@ -26,30 +26,37 @@ function test_socket:setup()
 end
 
 function test_socket:test_bind()
-    local function assert_ok(fd, err)
-        lt.assertIsUserdata(fd, err)
+    do
+        local fd = lt.assertIsUserdata(socket 'tcp')
+        lt.assertIsBoolean(fd:bind('127.0.0.1', 0))
         fd:close()
     end
-    assert_ok(socket.bind('tcp', '127.0.0.1', 0))
-    assert_ok(socket.bind('udp', '127.0.0.1', 0))
-    lt.assertErrorMsgEquals([[bad argument #1 to 'bee.socket.bind' (invalid option 'icmp')]], socket.bind, 'icmp', '127.0.0.1', 0)
-
-    local fd, err = socket.bind('unix', 'test.unixsock')
-    lt.assertIsUserdata(fd, err)
-    lt.assertEquals(file_exists('test.unixsock'), true)
-    fd:close()
-    lt.assertEquals(file_exists('test.unixsock'), false)
+    do
+        local fd = lt.assertIsUserdata(socket 'udp')
+        lt.assertIsBoolean(fd:bind('127.0.0.1', 0))
+        fd:close()
+    end
+    do
+        lt.assertErrorMsgEquals([[bad argument #2 to '?' (invalid option 'icmp')]], socket, 'icmp')
+    end
+    do
+        local fd = lt.assertIsUserdata(socket 'unix')
+        lt.assertIsBoolean(fd:bind('test.unixsock'))
+        lt.assertEquals(file_exists('test.unixsock'), true)
+        fd:close()
+        lt.assertEquals(file_exists('test.unixsock'), false)
+    end
 end
 
 function test_socket:test_tcp_connect()
-    local server, err = socket.bind('tcp', '127.0.0.1', 0)
-    lt.assertIsUserdata(server, err)
+    local server = lt.assertIsUserdata(socket "tcp")
+    lt.assertIsBoolean(server:bind('127.0.0.1', 0))
     local address, port = server:info('socket')
     lt.assertIsString(address)
     lt.assertIsNumber(port)
     for _ = 1, 2 do
-        local client, err = socket.connect('tcp', '127.0.0.1', port)
-        lt.assertIsUserdata(client, err)
+        local client = lt.assertIsUserdata(socket "tcp")
+        lt.assertIsBoolean(client:connect('127.0.0.1', port))
         client:close()
     end
     server:close()
@@ -57,15 +64,15 @@ end
 
 function test_socket:test_unix_connect()
     os.remove 'test.unixsock'
-    lt.assertEquals(socket.connect('unix', 'test.unixsock'), nil)
+    lt.assertEquals(socket 'unix':connect('test.unixsock'), nil)
     lt.assertEquals(file_exists('test.unixsock'), false)
 
-    local server, err = socket.bind('unix', 'test.unixsock')
-    lt.assertIsUserdata(server, err)
+    local server = lt.assertIsUserdata(socket "unix")
+    lt.assertIsBoolean(server:bind('test.unixsock'))
     lt.assertEquals(file_exists('test.unixsock'), true)
     for _ = 1, 2 do
-        local client = socket.connect('unix', 'test.unixsock')
-        lt.assertIsUserdata(client)
+        local client = lt.assertIsUserdata(socket 'unix')
+        lt.assertIsBoolean(client:connect 'test.unixsock')
         client:close()
     end
     server:close()
@@ -73,22 +80,21 @@ function test_socket:test_unix_connect()
 end
 
 function test_socket:test_tcp_accept()
-    local server = socket.bind('tcp', '127.0.0.1', 0)
-    lt.assertIsUserdata(server)
+    local server = lt.assertIsUserdata(socket "tcp")
+    lt.assertIsBoolean(server:bind('127.0.0.1', 0))
     local address, port = server:info('socket')
     lt.assertIsString(address)
     lt.assertIsNumber(port)
     for _ = 1, 2 do
-        local client = socket.connect('tcp', '127.0.0.1', port)
-        lt.assertIsUserdata(client)
+        local client = lt.assertIsUserdata(socket "tcp")
+        lt.assertIsBoolean(client:connect('127.0.0.1', port))
         local rd, _ = socket.select({server}, nil)
         local _, wr = socket.select(nil, {client})
         lt.assertIsTable(rd)
         lt.assertIsTable(wr)
         lt.assertEquals(rd[1], server)
         lt.assertEquals(wr[1], client)
-        local session = server:accept()
-        lt.assertIsUserdata(session)
+        local session = lt.assertIsUserdata(server:accept())
         lt.assertEquals(client:status(), true)
         lt.assertEquals(session:status(), true)
         session:close()
@@ -98,20 +104,19 @@ function test_socket:test_tcp_accept()
 end
 
 function test_socket:test_unix_accept()
-    local server, err = socket.bind('unix', 'test.unixsock')
-    lt.assertIsUserdata(server, err)
+    local server = lt.assertIsUserdata(socket "unix")
+    lt.assertIsBoolean(server:bind('test.unixsock'))
     lt.assertEquals(file_exists('test.unixsock'), true)
     for _ = 1, 2 do
-        local client, err = socket.connect('unix', 'test.unixsock')
-        lt.assertIsUserdata(client, err)
+        local client = lt.assertIsUserdata(socket 'unix')
+        lt.assertIsBoolean(client:connect 'test.unixsock')
         local rd, _ = socket.select({server}, nil)
         local _, wr = socket.select(nil, {client})
         lt.assertIsTable(rd)
         lt.assertIsTable(wr)
         lt.assertEquals(rd[1], server)
         lt.assertEquals(wr[1], client)
-        local session = server:accept()
-        lt.assertIsUserdata(session)
+        local session = lt.assertIsUserdata(server:accept())
         lt.assertEquals(client:status(), true)
         lt.assertEquals(session:status(), true)
         session:close()
@@ -132,14 +137,16 @@ end
 local function createEchoThread(name, ...)
 return thread.thread(([[
     -- %s
-    local ls = require 'bee.socket'
-    local client = assert(ls.connect(...))
-    local _, wr = ls.select(nil, {client})
+    local protocol, address, port = ...
+    local socket = require 'bee.socket'
+    local client = assert(socket(protocol))
+    client:connect(address, port)
+    local _, wr = socket.select(nil, {client})
     assert(wr[1] == client)
     assert(client:status())
     local queue = ''
     while true do
-        local rd, wr = ls.select({client}, {client})
+        local rd, wr = socket.select({client}, {client})
         if rd and rd[1] then
             local data = client:recv()
             if data == nil then
@@ -165,8 +172,8 @@ return thread.thread(([[
 end
 
 local function createTcpEchoTest(name, f)
-    local server, errmsg = socket.bind('tcp', '127.0.0.1', 0)
-    lt.assertIsUserdata(server, errmsg)
+    local server = lt.assertIsUserdata(socket "tcp")
+    lt.assertIsBoolean(server:bind('127.0.0.1', 0))
     local _, port = server:info('socket')
     lt.assertIsNumber(port)
     local client = createEchoThread(name, 'tcp', '127.0.0.1', port)
@@ -184,8 +191,8 @@ local function createTcpEchoTest(name, f)
 end
 
 local function createUnixEchoTest(name, f)
-    local server, errmsg = socket.bind('unix', 'test.unixsock')
-    lt.assertIsUserdata(server, errmsg)
+    local server = lt.assertIsUserdata(socket "unix")
+    lt.assertIsBoolean(server:bind('test.unixsock'))
     local client = createEchoThread(name, 'unix', 'test.unixsock')
     local rd, _ = socket.select({server}, nil)
     assert(rd[1], server)
