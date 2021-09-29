@@ -22,8 +22,8 @@ namespace bee::net::socket {
         tcp = 0,
         udp,
         uds,
-        tcp_ipv6,
-        udp_ipv6,
+        tcp6,
+        udp6,
     };
 
     enum class shutdown_flag {

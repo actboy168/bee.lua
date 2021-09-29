@@ -54,13 +54,13 @@ namespace bee::lua_socket {
     static int read_backlog(lua_State* L, int idx, socket::protocol protocol) {
         switch (protocol) {
         case socket::protocol::tcp:
-        case socket::protocol::tcp_ipv6:
+        case socket::protocol::tcp6:
             return (int)luaL_optinteger(L, idx + 1, kDefaultBackLog);
         case socket::protocol::uds:
             return (int)luaL_optinteger(L, idx, kDefaultBackLog);
         default:
         case socket::protocol::udp:
-        case socket::protocol::udp_ipv6:
+        case socket::protocol::udp6:
             return kDefaultBackLog;
         }
     }
@@ -294,7 +294,7 @@ namespace bee::lua_socket {
     }
     static int connect(lua_State* L) {
         luafd& self = checkfd(L, 1);
-        if (self.protocol != socket::protocol::udp && self.protocol != socket::protocol::udp_ipv6) {
+        if (self.protocol != socket::protocol::udp && self.protocol != socket::protocol::udp6) {
             self.type = luafd::tag::connect;
         }
         auto ep = read_endpoint(L, self.protocol, 2);
@@ -314,14 +314,14 @@ namespace bee::lua_socket {
     }
     static int bind(lua_State* L) {
         luafd& self = checkfd(L, 1);
-        if (self.protocol != socket::protocol::udp && self.protocol != socket::protocol::udp_ipv6) {
+        if (self.protocol != socket::protocol::udp && self.protocol != socket::protocol::udp6) {
             self.type = luafd::tag::listen;
         }
         auto ep = read_endpoint(L, self.protocol, 2);
         if (socket::status::success != socket::bind(self.fd, ep)) {
             return push_neterror(L, "bind");
         }
-        if (self.protocol != socket::protocol::udp && self.protocol != socket::protocol::udp_ipv6) {
+        if (self.protocol != socket::protocol::udp && self.protocol != socket::protocol::udp6) {
             int backlog = read_backlog(L, 3, self.protocol);
             if (socket::status::success != socket::listen(self.fd, backlog)) {
                 return push_neterror(L, "listen");
@@ -372,7 +372,7 @@ namespace bee::lua_socket {
 #endif
     static int create(lua_State* L) {
         static const char *const opts[] = {
-            "tcp", "udp", "unix",
+            "tcp", "udp", "unix", "tcp6", "udp6",
             NULL
         };
         socket::protocol protocol = (socket::protocol)luaL_checkoption(L, 1, NULL, opts);
