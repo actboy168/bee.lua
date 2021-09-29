@@ -346,16 +346,7 @@ namespace bee::lua_socket {
 #endif
     static int connect(lua_State* L) {
         socket::protocol protocol = read_protocol(L, 1);
-        auto             ep = read_endpoint(L, protocol, 2);
-#if defined _WIN32
-        if (ep.family() == AF_UNIX) {
-            auto [path, type] = ep.info();
-            if (type == 0 && !safe_exists(path)) {
-                ::WSASetLastError(WSAECONNREFUSED);
-                return push_neterror(L, "socket");
-            }
-        }
-#endif
+        auto ep = read_endpoint(L, protocol, 2);
         socket::fd_t fd = socket::open(protocol, ep);
         if (fd == socket::retired_fd) {
             return push_neterror(L, "socket");
@@ -377,8 +368,8 @@ namespace bee::lua_socket {
     }
     static int bind(lua_State* L) {
         socket::protocol protocol = read_protocol(L, 1);
-        auto             ep = read_endpoint(L, protocol, 2);
-        int          backlog = read_backlog(L, protocol);
+        auto ep = read_endpoint(L, protocol, 2);
+        int backlog = read_backlog(L, protocol);
         socket::fd_t fd = socket::open(protocol, ep);
         if (fd == socket::retired_fd) {
             return push_neterror(L, "socket");
