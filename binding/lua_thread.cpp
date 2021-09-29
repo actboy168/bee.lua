@@ -1,13 +1,14 @@
 #include <atomic>
 #include <bee/lua/binding.h>
-#include <bee/utility/lockqueue.h>
-#include <bee/utility/semaphore.h>
+#include <bee/thread/lockqueue.h>
+#include <bee/thread/semaphore.h>
+#include <bee/thread/simplethread.h>
+#include <bee/error.h>
 #include <functional>
 #include <lua.hpp>
 #include <map>
 #include <queue>
 #include <string>
-#include <thread>
 
 extern "C" {
 #include <lua-seri.h>
@@ -143,14 +144,6 @@ namespace bee::lua_thread {
         boxchannel(std::shared_ptr<channel> c_) : c(c_) {}
     };
 
-    struct luathread : public std::thread {
-        template <typename Fn>
-        luathread(int id, Fn&& f)
-            : std::thread(std::forward<Fn>(f))
-            , _id(id) {}
-        int _id;
-    };
-
     static channelmgr       g_channel;
     static std::atomic<int> g_thread_id = -1;
     static int       THREADID;
@@ -237,7 +230,7 @@ namespace bee::lua_thread {
 
     static int lsleep(lua_State* L) {
         lua_Number sec = luaL_checknumber(L, 1);
-        std::this_thread::sleep_for(std::chrono::duration<double>(sec));
+        thread_sleep((int)(sec * 1000));
         return 0;
     }
 
@@ -319,8 +312,13 @@ namespace bee::lua_thread {
         LUA_TRY;
         int id = gen_threadid();
         thread_args* args = new thread_args { std::move(source), id, params };
-        luathread* thread = new luathread(id, std::bind(thread_main, args));
-        lua_pushlightuserdata(L, thread);
+        thread_handle handle = thread_create(thread_main, args);
+        if (!handle) {
+            auto error = make_syserror("thread_create");
+            delete args;
+            return luaL_error(L, "%s (%d)", error.what(), error.code().value());
+        }
+        lua_pushlightuserdata(L, handle);
         return 1;
         LUA_TRY_END;
     }
@@ -339,19 +337,9 @@ namespace bee::lua_thread {
 
     static int lwait(lua_State* L) {
         luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
-        luathread* thread = (luathread*)lua_touserdata(L, 1);
-        if (thread->joinable()) {
-            thread->join();
-        }
-        thread->~luathread();
+        thread_handle th = (thread_handle)lua_touserdata(L, 1);
+        thread_wait(th);
         return 0;
-    }
-
-    static int lgetid(lua_State* L) {
-        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
-        luathread* thread = (luathread*)lua_touserdata(L, 1);
-        lua_pushinteger(L, thread->_id);
-        return 1;
     }
 
     static void init_threadid(lua_State* L) {
@@ -373,7 +361,6 @@ namespace bee::lua_thread {
             {"channel", lchannel},
             {"reset", lreset},
             {"wait", lwait},
-            {"getid", lgetid},
             {NULL, NULL},
         };
         lua_newtable(L);

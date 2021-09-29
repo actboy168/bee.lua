@@ -118,21 +118,6 @@ function test_thread:test_id_2()
     assertNotThreadError()
 end
 
-function test_thread:test_id_3()
-    thread.reset()
-    assertNotThreadError()
-    thread.newchannel 'test'
-    local thd = createThread [[
-        local thread = require "bee.thread"
-        local channel = thread.channel 'test'
-        assert(thread.id == channel:bpop())
-    ]]
-    local channel = thread.channel 'test'
-    channel:push(thread.getid(thd))
-    thread.wait(thd)
-    assertNotThreadError()
-end
-
 function test_thread:test_reset_1()
     thread.reset()
     lu.assertErrorMsgEquals("Can't query channel 'test'", thread.channel, 'test')

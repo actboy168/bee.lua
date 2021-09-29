@@ -4,7 +4,7 @@
 #include <map>
 #include <memory>
 #include <thread>
-#include <bee/utility/lockqueue.h>
+#include <bee/thread/lockqueue.h>
 
 namespace bee::win::fsevent {
     class task;

@@ -6,8 +6,8 @@
 #include <vector>
 #include <string>
 #include <map>
-#include <bee/utility/lockqueue.h>
-#include <bee/utility/semaphore.h>
+#include <bee/thread/lockqueue.h>
+#include <bee/thread/semaphore.h>
 
 namespace bee::osx::fsevent {
     typedef int taskid;
