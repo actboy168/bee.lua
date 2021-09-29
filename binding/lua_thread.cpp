@@ -189,6 +189,46 @@ namespace bee::lua_thread {
         return 1 + seri_unpackptr(L, data);
     }
 
+    struct rpc {
+        binary_semaphore trigger;
+        void* data;
+    };
+
+    static struct rpc* create_rpc(lua_State *L) {
+        struct rpc* r = (struct rpc*)lua_newuserdatauv(L, sizeof(*r), 0);
+        new (r) rpc;
+        if (luaL_newmetatable(L, "THREAD_RPC")) {
+            luaL_Reg l[] = {
+                { NULL, NULL },
+            };
+            luaL_setfuncs(L, l, 0);
+            lua_pushvalue(L, -1);
+            lua_setfield(L, -2, "__index");
+        }
+        lua_setmetatable(L, -2);
+        r->data = NULL;
+        return r;
+    }
+
+    static int lchannel_call(lua_State* L) {
+        boxchannel* bc = (boxchannel*)getObject(L, 1, "channel");
+        struct rpc *r = create_rpc(L);
+        lua_pushlightuserdata(L, r);
+        lua_rotate(L, 2, 2);
+        void * buffer = seri_pack(L, 2, NULL);
+        bc->c->push(buffer);
+        r->trigger.acquire();
+        return seri_unpackptr(L, r->data);
+    }
+
+    static int lchannel_ret(lua_State* L) {
+        luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+        struct rpc *r = (struct rpc *)lua_touserdata(L, 2);
+        r->data = seri_pack(L, 2, NULL);
+        r->trigger.release();
+        return 0;
+    }
+
     static int lchannel_gc(lua_State* L) {
         boxchannel* bc = (boxchannel*)getObject(L, 1, "channel");
         bc->~boxchannel();
@@ -217,6 +257,8 @@ namespace bee::lua_thread {
                 {"push", lchannel_push},
                 {"pop", lchannel_pop},
                 {"bpop", lchannel_bpop},
+                {"call", lchannel_call},
+                {"ret", lchannel_ret},
                 {"__gc", lchannel_gc},
                 {NULL, NULL},
             };
