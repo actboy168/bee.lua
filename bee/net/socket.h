@@ -45,7 +45,7 @@ namespace bee::net::socket {
     };
 
     void initialize();
-    fd_t open(protocol protocol, const endpoint& ep);
+    fd_t open(protocol protocol);
     bool pair(fd_t sv[2]);
 #if !defined(_WIN32)
     bool blockpair(fd_t sv[2]);

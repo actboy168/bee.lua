@@ -261,13 +261,13 @@ namespace bee::net::socket {
 #endif
     }
 
-    fd_t open(protocol protocol, const endpoint& ep)
+    fd_t open(protocol protocol)
     {
         switch (protocol) {
         case protocol::tcp:
-            return createSocket(ep.family(), SOCK_STREAM, IPPROTO_TCP);
+            return createSocket(AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP);
         case protocol::udp:
-            return createSocket(ep.family(), SOCK_DGRAM, IPPROTO_UDP);
+            return createSocket(AF_UNSPEC, SOCK_DGRAM, IPPROTO_UDP);
         case protocol::uds:
 #if defined _WIN32
             if (!supportUnixDomainSocket()) {
@@ -626,7 +626,7 @@ namespace bee::net::socket {
         if (!sep.valid()) {
             goto failed;
         }
-        sfd = open(protocol::tcp, sep);
+        sfd = open(protocol::tcp);
         if (sfd == retired_fd) {
             goto failed;
         }
@@ -639,7 +639,7 @@ namespace bee::net::socket {
         if (!getsockname(sfd, cep)) {
             goto failed;
         }
-        cfd = open(protocol::tcp, cep);
+        cfd = open(protocol::tcp);
         if (cfd == retired_fd) {
             goto failed;
         }
