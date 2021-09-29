@@ -1,4 +1,4 @@
-local lu = require 'ltest'
+local lt = require 'ltest'
 
 local thread = require "bee.thread"
 local err = thread.channel "errlog"
@@ -8,16 +8,16 @@ local function createThread(script, ...)
 end
 
 local function assertNotThreadError()
-    lu.assertEquals(err:pop(), false)
+    lt.assertEquals(err:pop(), false)
 end
 
 local function assertHasThreadError(m)
     local ok, msg = err:pop()
-    lu.assertEquals(ok, true)
-    lu.assertEquals(not not string.find(msg, m, nil, true), true)
+    lt.assertEquals(ok, true)
+    lt.assertEquals(not not string.find(msg, m, nil, true), true)
 end
 
-local test_thread = lu.test "thread"
+local test_thread = lt.test "thread"
 
 function test_thread:test_thread_1()
     local function file_exists(filename)
@@ -30,12 +30,12 @@ function test_thread:test_thread_1()
     end
     assertNotThreadError()
     os.remove('temp.txt')
-    lu.assertEquals(file_exists('temp.txt'), false)
+    lt.assertEquals(file_exists('temp.txt'), false)
     local thd = createThread [[
         io.open('temp.txt', 'w'):close()
     ]]
     thread.wait(thd)
-    lu.assertEquals(file_exists('temp.txt'), true)
+    lt.assertEquals(file_exists('temp.txt'), true)
     os.remove('temp.txt')
     assertNotThreadError()
 end
@@ -44,16 +44,16 @@ function test_thread:test_thread_2()
     assertNotThreadError()
     GLOBAL = true
     THREAD = nil
-    lu.assertNotEquals(GLOBAL, nil)
-    lu.assertEquals(THREAD, nil)
+    lt.assertNotEquals(GLOBAL, nil)
+    lt.assertEquals(THREAD, nil)
     local thd = createThread [[
         THREAD = true
         assert(GLOBAL == nil)
     ]]
     thread.wait(thd)
     assertNotThreadError()
-    lu.assertNotEquals(GLOBAL, nil)
-    lu.assertEquals(THREAD, nil)
+    lt.assertNotEquals(GLOBAL, nil)
+    lt.assertEquals(THREAD, nil)
     GLOBAL = nil
     THREAD = nil
 end
@@ -80,23 +80,23 @@ end
 
 function test_thread:test_channel_1()
     thread.reset()
-    lu.assertErrorMsgEquals("Can't query channel 'test'", thread.channel, 'test')
+    lt.assertErrorMsgEquals("Can't query channel 'test'", thread.channel, 'test')
     thread.newchannel 'test'
-    lu.assertIsUserdata(thread.channel 'test')
-    lu.assertIsUserdata(thread.channel 'test')
+    lt.assertIsUserdata(thread.channel 'test')
+    lt.assertIsUserdata(thread.channel 'test')
     thread.reset()
 end
 
 function test_thread:test_channel_2()
     thread.reset()
     thread.newchannel 'test'
-    lu.assertErrorMsgEquals("Duplicate channel 'test'", thread.newchannel, 'test')
+    lt.assertErrorMsgEquals("Duplicate channel 'test'", thread.newchannel, 'test')
     thread.reset()
 end
 
 function test_thread:test_id_1()
     assertNotThreadError()
-    lu.assertEquals(thread.id, 0)
+    lt.assertEquals(thread.id, 0)
     local thd = createThread [[
         local thread = require "bee.thread"
         assert(thread.id ~= 0)
@@ -107,9 +107,9 @@ end
 
 function test_thread:test_id_2()
     assertNotThreadError()
-    lu.assertEquals(thread.id, 0)
+    lt.assertEquals(thread.id, 0)
     thread.reset()
-    lu.assertEquals(thread.id, 0)
+    lt.assertEquals(thread.id, 0)
     local thd = createThread [[
         local thread = require "bee.thread"
         assert(thread.id ~= 0)
@@ -120,13 +120,13 @@ end
 
 function test_thread:test_reset_1()
     thread.reset()
-    lu.assertErrorMsgEquals("Can't query channel 'test'", thread.channel, 'test')
+    lt.assertErrorMsgEquals("Can't query channel 'test'", thread.channel, 'test')
     thread.newchannel 'test'
-    lu.assertIsUserdata(thread.channel 'test')
+    lt.assertIsUserdata(thread.channel 'test')
     thread.reset()
-    lu.assertErrorMsgEquals("Can't query channel 'test'", thread.channel, 'test')
+    lt.assertErrorMsgEquals("Can't query channel 'test'", thread.channel, 'test')
     thread.newchannel 'test'
-    lu.assertIsUserdata(thread.channel 'test')
+    lt.assertIsUserdata(thread.channel 'test')
     thread.reset()
 end
 
@@ -159,14 +159,14 @@ function test_thread:test_pop_1()
     thread.newchannel 'test'
     local channel = thread.channel 'test'
     local function pack_pop(ok, ...)
-        lu.assertEquals(ok, true)
+        lt.assertEquals(ok, true)
         return table.pack(...)
     end
     local function test_ok(...)
         channel:push(...)
-        lu.assertEquals(pack_pop(channel:pop()), table.pack(...))
+        lt.assertEquals(pack_pop(channel:pop()), table.pack(...))
         channel:push(...)
-        lu.assertEquals(table.pack(channel:bpop()), table.pack(...))
+        lt.assertEquals(table.pack(channel:bpop()), table.pack(...))
     end
     TestSuit(test_ok)
     -- 基本和serialization的测试重复，所以failed就不测了
@@ -179,13 +179,13 @@ function test_thread:test_pop_2()
 
     local function assertIs(expected)
         local ok, v = channel:pop()
-        lu.assertEquals(ok, true)
-        lu.assertEquals(v, expected)
+        lt.assertEquals(ok, true)
+        lt.assertEquals(v, expected)
     end
     local function assertEmpty()
         local ok, v = channel:pop()
-        lu.assertEquals(ok, false)
-        lu.assertEquals(v, nil)
+        lt.assertEquals(ok, false)
+        lt.assertEquals(v, nil)
     end
 
     assertEmpty()
@@ -235,7 +235,7 @@ function test_thread:test_thread_bpop()
     local res = thread.channel 'testRes'
     local function test_ok(...)
         req:push(...)
-        lu.assertEquals(table.pack(res:bpop()), table.pack(...))
+        lt.assertEquals(table.pack(res:bpop()), table.pack(...))
     end
     TestSuit(test_ok)
     req:push 'exit'
@@ -283,7 +283,7 @@ function test_thread:test_thread_pop()
             end
             thread.sleep(0)
         end
-        lu.assertEquals(t, table.pack(...))
+        lt.assertEquals(t, table.pack(...))
     end
     TestSuit(test_ok)
     req:push 'exit'
@@ -314,8 +314,8 @@ function test_thread:test_rpc()
         end
     ]]
     local c = thread.channel "test"
-    lu.assertEquals(c:call("add", 1, 2) , 3)
-    lu.assertEquals(c:call("exit") ,"ok")
+    lt.assertEquals(c:call("add", 1, 2) , 3)
+    lt.assertEquals(c:call("exit") ,"ok")
     thread.wait(thd)
     assertNotThreadError()
     thread.reset()

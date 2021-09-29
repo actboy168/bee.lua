@@ -1,11 +1,11 @@
-local lu = require 'ltest'
-local ls = require 'bee.socket'
+local lt = require 'ltest'
+local socket = require 'bee.socket'
 local platform = require 'bee.platform'
 local thread = require 'bee.thread'
 local errlog = thread.channel "errlog"
 
 local function assertNotThreadError()
-    lu.assertEquals(errlog:pop(), false)
+    lt.assertEquals(errlog:pop(), false)
 end
 
 local function file_exists(filename)
@@ -17,39 +17,39 @@ local function file_exists(filename)
     return errno ~= 2
 end
 
-local test_socket = lu.test "socket"
+local test_socket = lt.test "socket"
 
 function test_socket:setup()
     if platform.OS == "Windows" then
-        ls.simulationUDS(self.UDS)
+        socket.simulationUDS(self.UDS)
     end
 end
 
 function test_socket:test_bind()
     local function assert_ok(fd, err)
-        lu.assertIsUserdata(fd, err)
+        lt.assertIsUserdata(fd, err)
         fd:close()
     end
-    assert_ok(ls.bind('tcp', '127.0.0.1', 0))
-    assert_ok(ls.bind('udp', '127.0.0.1', 0))
-    lu.assertErrorMsgEquals([[bad argument #1 to 'bee.socket.bind' (invalid option 'icmp')]], ls.bind, 'icmp', '127.0.0.1', 0)
+    assert_ok(socket.bind('tcp', '127.0.0.1', 0))
+    assert_ok(socket.bind('udp', '127.0.0.1', 0))
+    lt.assertErrorMsgEquals([[bad argument #1 to 'bee.socket.bind' (invalid option 'icmp')]], socket.bind, 'icmp', '127.0.0.1', 0)
 
-    local fd, err = ls.bind('unix', 'test.unixsock')
-    lu.assertIsUserdata(fd, err)
-    lu.assertEquals(file_exists('test.unixsock'), true)
+    local fd, err = socket.bind('unix', 'test.unixsock')
+    lt.assertIsUserdata(fd, err)
+    lt.assertEquals(file_exists('test.unixsock'), true)
     fd:close()
-    lu.assertEquals(file_exists('test.unixsock'), false)
+    lt.assertEquals(file_exists('test.unixsock'), false)
 end
 
 function test_socket:test_tcp_connect()
-    local server, err = ls.bind('tcp', '127.0.0.1', 0)
-    lu.assertIsUserdata(server, err)
+    local server, err = socket.bind('tcp', '127.0.0.1', 0)
+    lt.assertIsUserdata(server, err)
     local address, port = server:info('socket')
-    lu.assertIsString(address)
-    lu.assertIsNumber(port)
+    lt.assertIsString(address)
+    lt.assertIsNumber(port)
     for _ = 1, 2 do
-        local client, err = ls.connect('tcp', '127.0.0.1', port)
-        lu.assertIsUserdata(client, err)
+        local client, err = socket.connect('tcp', '127.0.0.1', port)
+        lt.assertIsUserdata(client, err)
         client:close()
     end
     server:close()
@@ -57,40 +57,40 @@ end
 
 function test_socket:test_unix_connect()
     os.remove 'test.unixsock'
-    lu.assertEquals(ls.connect('unix', 'test.unixsock'), nil)
-    lu.assertEquals(file_exists('test.unixsock'), false)
+    lt.assertEquals(socket.connect('unix', 'test.unixsock'), nil)
+    lt.assertEquals(file_exists('test.unixsock'), false)
 
-    local server, err = ls.bind('unix', 'test.unixsock')
-    lu.assertIsUserdata(server, err)
-    lu.assertEquals(file_exists('test.unixsock'), true)
+    local server, err = socket.bind('unix', 'test.unixsock')
+    lt.assertIsUserdata(server, err)
+    lt.assertEquals(file_exists('test.unixsock'), true)
     for _ = 1, 2 do
-        local client = ls.connect('unix', 'test.unixsock')
-        lu.assertIsUserdata(client)
+        local client = socket.connect('unix', 'test.unixsock')
+        lt.assertIsUserdata(client)
         client:close()
     end
     server:close()
-    lu.assertEquals(file_exists('test.unixsock'), false)
+    lt.assertEquals(file_exists('test.unixsock'), false)
 end
 
 function test_socket:test_tcp_accept()
-    local server = ls.bind('tcp', '127.0.0.1', 0)
-    lu.assertIsUserdata(server)
+    local server = socket.bind('tcp', '127.0.0.1', 0)
+    lt.assertIsUserdata(server)
     local address, port = server:info('socket')
-    lu.assertIsString(address)
-    lu.assertIsNumber(port)
+    lt.assertIsString(address)
+    lt.assertIsNumber(port)
     for _ = 1, 2 do
-        local client = ls.connect('tcp', '127.0.0.1', port)
-        lu.assertIsUserdata(client)
-        local rd, _ = ls.select({server}, nil)
-        local _, wr = ls.select(nil, {client})
-        lu.assertIsTable(rd)
-        lu.assertIsTable(wr)
-        lu.assertEquals(rd[1], server)
-        lu.assertEquals(wr[1], client)
+        local client = socket.connect('tcp', '127.0.0.1', port)
+        lt.assertIsUserdata(client)
+        local rd, _ = socket.select({server}, nil)
+        local _, wr = socket.select(nil, {client})
+        lt.assertIsTable(rd)
+        lt.assertIsTable(wr)
+        lt.assertEquals(rd[1], server)
+        lt.assertEquals(wr[1], client)
         local session = server:accept()
-        lu.assertIsUserdata(session)
-        lu.assertEquals(client:status(), true)
-        lu.assertEquals(session:status(), true)
+        lt.assertIsUserdata(session)
+        lt.assertEquals(client:status(), true)
+        lt.assertEquals(session:status(), true)
         session:close()
         client:close()
     end
@@ -98,33 +98,33 @@ function test_socket:test_tcp_accept()
 end
 
 function test_socket:test_unix_accept()
-    local server, err = ls.bind('unix', 'test.unixsock')
-    lu.assertIsUserdata(server, err)
-    lu.assertEquals(file_exists('test.unixsock'), true)
+    local server, err = socket.bind('unix', 'test.unixsock')
+    lt.assertIsUserdata(server, err)
+    lt.assertEquals(file_exists('test.unixsock'), true)
     for _ = 1, 2 do
-        local client, err = ls.connect('unix', 'test.unixsock')
-        lu.assertIsUserdata(client, err)
-        local rd, _ = ls.select({server}, nil)
-        local _, wr = ls.select(nil, {client})
-        lu.assertIsTable(rd)
-        lu.assertIsTable(wr)
-        lu.assertEquals(rd[1], server)
-        lu.assertEquals(wr[1], client)
+        local client, err = socket.connect('unix', 'test.unixsock')
+        lt.assertIsUserdata(client, err)
+        local rd, _ = socket.select({server}, nil)
+        local _, wr = socket.select(nil, {client})
+        lt.assertIsTable(rd)
+        lt.assertIsTable(wr)
+        lt.assertEquals(rd[1], server)
+        lt.assertEquals(wr[1], client)
         local session = server:accept()
-        lu.assertIsUserdata(session)
-        lu.assertEquals(client:status(), true)
-        lu.assertEquals(session:status(), true)
+        lt.assertIsUserdata(session)
+        lt.assertEquals(client:status(), true)
+        lt.assertEquals(session:status(), true)
         session:close()
         client:close()
     end
     server:close()
-    lu.assertEquals(file_exists('test.unixsock'), false)
+    lt.assertEquals(file_exists('test.unixsock'), false)
 end
 
 function test_socket:test_pair()
-    local server, client = assert(ls.pair())
-    lu.assertIsUserdata(server)
-    lu.assertIsUserdata(client)
+    local server, client = assert(socket.pair())
+    lt.assertIsUserdata(server)
+    lt.assertIsUserdata(client)
     client:close()
     server:close()
 end
@@ -165,12 +165,12 @@ return thread.thread(([[
 end
 
 local function createTcpEchoTest(name, f)
-    local server, errmsg = ls.bind('tcp', '127.0.0.1', 0)
-    lu.assertIsUserdata(server, errmsg)
+    local server, errmsg = socket.bind('tcp', '127.0.0.1', 0)
+    lt.assertIsUserdata(server, errmsg)
     local _, port = server:info('socket')
-    lu.assertIsNumber(port)
+    lt.assertIsNumber(port)
     local client = createEchoThread(name, 'tcp', '127.0.0.1', port)
-    local rd, _ = ls.select({server}, nil)
+    local rd, _ = socket.select({server}, nil)
     assert(rd[1], server)
     local session = server:accept()
     assert(session and session:status())
@@ -184,10 +184,10 @@ local function createTcpEchoTest(name, f)
 end
 
 local function createUnixEchoTest(name, f)
-    local server, errmsg = ls.bind('unix', 'test.unixsock')
-    lu.assertIsUserdata(server, errmsg)
+    local server, errmsg = socket.bind('unix', 'test.unixsock')
+    lt.assertIsUserdata(server, errmsg)
     local client = createEchoThread(name, 'unix', 'test.unixsock')
-    local rd, _ = ls.select({server}, nil)
+    local rd, _ = socket.select({server}, nil)
     assert(rd[1], server)
     local session = server:accept()
     assert(session and session:status())
@@ -198,12 +198,12 @@ local function createUnixEchoTest(name, f)
     server:close()
     thread.wait(client)
     assertNotThreadError()
-    lu.assertEquals(file_exists('test.unixsock'), false)
+    lt.assertEquals(file_exists('test.unixsock'), false)
 end
 
 local function syncSend(fd, data)
     while true do
-        ls.select(nil, {fd})
+        socket.select(nil, {fd})
         local n = fd:send(data)
         if not n then
             return n, data
@@ -219,7 +219,7 @@ end
 local function syncRecv(fd, n)
     local res = ''
     while true do
-        ls.select({fd}, nil)
+        socket.select({fd}, nil)
         local data = fd:recv(n)
         if data == nil then
             return nil, n
@@ -238,19 +238,19 @@ local function testEcho1()
 end
 
 local function testEcho2(session)
-    lu.assertEquals(syncSend(session, "ok"), true)
-    lu.assertEquals(syncRecv(session, 2), "ok")
+    lt.assertEquals(syncSend(session, "ok"), true)
+    lt.assertEquals(syncRecv(session, 2), "ok")
 
-    lu.assertEquals(syncSend(session, "ok(1)"), true)
-    lu.assertEquals(syncSend(session, "ok(2)"), true)
-    lu.assertEquals(syncRecv(session, 10), "ok(1)ok(2)")
+    lt.assertEquals(syncSend(session, "ok(1)"), true)
+    lt.assertEquals(syncSend(session, "ok(2)"), true)
+    lt.assertEquals(syncRecv(session, 10), "ok(1)ok(2)")
 
-    lu.assertEquals(syncSend(session, "1234567890"), true)
-    lu.assertEquals(syncRecv(session, 2), "12")
-    lu.assertEquals(syncRecv(session, 2), "34")
-    lu.assertEquals(syncRecv(session, 2), "56")
-    lu.assertEquals(syncRecv(session, 2), "78")
-    lu.assertEquals(syncRecv(session, 2), "90")
+    lt.assertEquals(syncSend(session, "1234567890"), true)
+    lt.assertEquals(syncRecv(session, 2), "12")
+    lt.assertEquals(syncRecv(session, 2), "34")
+    lt.assertEquals(syncRecv(session, 2), "56")
+    lt.assertEquals(syncRecv(session, 2), "78")
+    lt.assertEquals(syncRecv(session, 2), "90")
 end
 
 local function testEcho3(session)
@@ -259,8 +259,8 @@ local function testEcho3(session)
         t[#t+1] = tostring(math.random(1, 100000))
     end
     local s = table.concat(t, ",")
-    lu.assertEquals(syncSend(session, s), true)
-    lu.assertEquals(syncRecv(session, #s), s)
+    lt.assertEquals(syncSend(session, s), true)
+    lt.assertEquals(syncRecv(session, #s), s)
 end
 
 function test_socket:test_tcp_echo_1()
@@ -288,8 +288,8 @@ function test_socket:test_unix_echo_3()
 end
 
 if platform.OS == "Windows" then
-    local test_socket_1 = lu.test "socket"
-    local test_socket_2 = lu.test "socket-uds"
+    local test_socket_1 = lt.test "socket"
+    local test_socket_2 = lt.test "socket-uds"
     for _, k in ipairs(test_socket_1) do
         test_socket_2[k] = test_socket_1[k]
     end
