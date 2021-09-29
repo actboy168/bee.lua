@@ -139,10 +139,7 @@ namespace bee::lua_thread {
         std::mutex                                      mutex;
     };
 
-    struct boxchannel {
-        std::shared_ptr<channel> c;
-        boxchannel(std::shared_ptr<channel> c_) : c(c_) {}
-    };
+    using boxchannel = std::shared_ptr<channel>;
 
     static channelmgr       g_channel;
     static std::atomic<int> g_thread_id = -1;
@@ -155,32 +152,32 @@ namespace bee::lua_thread {
     }
 
     static int lchannel_push(lua_State* L) {
-        boxchannel* bc = (boxchannel*)getObject(L, 1, "channel");
+        boxchannel& bc = *(boxchannel*)getObject(L, 1, "channel");
         void*       buffer = seri_pack(L, 1, NULL);
-        bc->c->push(buffer);
+        bc->push(buffer);
         return 0;
     }
 
     static int lchannel_bpop(lua_State* L) {
-        boxchannel* bc = (boxchannel*)getObject(L, 1, "channel");
+        boxchannel& bc = *(boxchannel*)getObject(L, 1, "channel");
         void*       data;
-        bc->c->blocked_pop(data);
+        bc->blocked_pop(data);
         return seri_unpackptr(L, data);
     }
 
     static int lchannel_pop(lua_State* L) {
-        boxchannel* bc = (boxchannel*)getObject(L, 1, "channel");
+        boxchannel& bc = *(boxchannel*)getObject(L, 1, "channel");
         void*       data;
         lua_settop(L, 2);
         lua_Number sec = lua_tonumber(L, 2);
         if (sec == 0) {
-            if (!bc->c->pop(data)) {
+            if (!bc->pop(data)) {
                 lua_pushboolean(L, 0);
                 return 1;
             }
         }
         else {
-            if (!bc->c->timed_pop(data, std::chrono::duration<double>(sec))) {
+            if (!bc->timed_pop(data, std::chrono::duration<double>(sec))) {
                 lua_pushboolean(L, 0);
                 return 1;
             }
@@ -195,13 +192,13 @@ namespace bee::lua_thread {
     };
 
     static int lchannel_call(lua_State* L) {
-        boxchannel* bc = (boxchannel*)getObject(L, 1, "channel");
+        boxchannel& bc = *(boxchannel*)getObject(L, 1, "channel");
         struct rpc* r = (struct rpc*)lua_newuserdatauv(L, sizeof(*r), 0);
         new (r) rpc;
         lua_pushlightuserdata(L, r);
         lua_rotate(L, 2, 2);
         void * buffer = seri_pack(L, 2, NULL);
-        bc->c->push(buffer);
+        bc->push(buffer);
         r->trigger.acquire();
         return seri_unpackptr(L, r->data);
     }
