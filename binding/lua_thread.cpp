@@ -191,28 +191,13 @@ namespace bee::lua_thread {
 
     struct rpc {
         binary_semaphore trigger;
-        void* data;
+        void* data = nullptr;
     };
-
-    static struct rpc* create_rpc(lua_State *L) {
-        struct rpc* r = (struct rpc*)lua_newuserdatauv(L, sizeof(*r), 0);
-        new (r) rpc;
-        if (luaL_newmetatable(L, "THREAD_RPC")) {
-            luaL_Reg l[] = {
-                { NULL, NULL },
-            };
-            luaL_setfuncs(L, l, 0);
-            lua_pushvalue(L, -1);
-            lua_setfield(L, -2, "__index");
-        }
-        lua_setmetatable(L, -2);
-        r->data = NULL;
-        return r;
-    }
 
     static int lchannel_call(lua_State* L) {
         boxchannel* bc = (boxchannel*)getObject(L, 1, "channel");
-        struct rpc *r = create_rpc(L);
+        struct rpc* r = (struct rpc*)lua_newuserdatauv(L, sizeof(*r), 0);
+        new (r) rpc;
         lua_pushlightuserdata(L, r);
         lua_rotate(L, 2, 2);
         void * buffer = seri_pack(L, 2, NULL);
