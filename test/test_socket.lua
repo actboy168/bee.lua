@@ -301,6 +301,23 @@ function test_socket:test_unix_echo_3()
     createUnixEchoTest('unix_echo_3', testEcho3)
 end
 
+function test_socket:test_dump()
+    local server = lt.assertIsUserdata(socket "tcp")
+    lt.assertIsBoolean(server:bind('127.0.0.1', 0))
+    lt.assertIsBoolean(server:listen())
+    local bindata = socket.dump(server)
+    server = socket.undump(bindata)
+    local address, port = server:info('socket')
+    lt.assertIsString(address)
+    lt.assertIsNumber(port)
+    for _ = 1, 2 do
+        local client = lt.assertIsUserdata(socket "tcp")
+        lt.assertIsBoolean(client:connect('127.0.0.1', port))
+        client:close()
+    end
+    server:close()
+end
+
 if platform.OS == "Windows" then
     local test_socket_1 = lt.test "socket"
     local test_socket_2 = lt.test "socket-uds"

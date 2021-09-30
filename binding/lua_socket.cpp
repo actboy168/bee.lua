@@ -27,7 +27,6 @@ namespace bee::lua_socket {
         socket::fd_t     fd;
         socket::protocol protocol;
         tag              type;
-        luafd(socket::fd_t s, socket::protocol p, tag t) : fd(s), protocol(p), type(t) {}
     };
     static int push_neterror(lua_State* L, const char* msg) {
         auto error = make_neterror(msg);
@@ -335,7 +334,7 @@ namespace bee::lua_socket {
     }
     static luafd& pushfd(lua_State* L, socket::fd_t fd, socket::protocol protocol, luafd::tag type) {
         luafd* self = (luafd*)lua_newuserdatauv(L, sizeof(luafd), 0);
-        new (self) luafd(fd, protocol, type);
+        new (self) luafd {fd, protocol, type };
         if (newObject(L, "socket")) {
             luaL_Reg mt[] = {
                 {"connect", connect},
@@ -420,6 +419,22 @@ namespace bee::lua_socket {
         pushfd(L, sv[0], socket::protocol::uds, luafd::tag::accept);
         pushfd(L, sv[1], socket::protocol::uds, luafd::tag::connect);
         return 2;
+    }
+    static int dump(lua_State* L) {
+        luafd& self = checkfd(L, 1);
+        lua_pushlstring(L, (const char*)&self, sizeof(luafd));
+        self.fd = socket::retired_fd;
+        return 1;
+    }
+    static int undump(lua_State* L) {
+        size_t sz = 0;
+        const char* s = luaL_checklstring(L, 1, &sz);
+        if (sz != sizeof(luafd)) {
+            return luaL_error(L, "invalid string length");
+        }
+        luafd& self = *(luafd*)s;
+        pushfd(L, self.fd, self.protocol, self.type);
+        return 1;
     }
     static int __call(lua_State* L) {
         return create(L, 2);
@@ -551,6 +566,8 @@ namespace bee::lua_socket {
             {"bind", _bind},       //deprecated
             {"pair", pair},
             {"select", select},
+            {"dump", dump},
+            {"undump", undump},
 #if defined _WIN32
             {"simulationUDS", simulationUDS},
 #endif
