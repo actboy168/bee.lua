@@ -265,20 +265,20 @@ namespace bee::net::socket {
     {
         switch (protocol) {
         case protocol::tcp:
-            return createSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+            return createSocket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
         case protocol::udp:
-            return createSocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+            return createSocket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
         case protocol::tcp6:
-            return createSocket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+            return createSocket(PF_INET6, SOCK_STREAM, IPPROTO_TCP);
         case protocol::udp6:
-            return createSocket( AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+            return createSocket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
         case protocol::uds:
 #if defined _WIN32
             if (!supportUnixDomainSocket()) {
-                return createSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+                return createSocket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
             }
 #endif
-            return createSocket(AF_UNIX, SOCK_STREAM, 0);
+            return createSocket(PF_UNIX, SOCK_STREAM, 0);
         default:
             return retired_fd;
         }
