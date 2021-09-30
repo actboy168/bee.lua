@@ -609,14 +609,14 @@ namespace bee::net::socket {
 #if !defined(_WIN32)
     bool blockpair(fd_t sv[2]) {
 #if defined(__APPLE__)
-        bool ok = 0 == ::socketpair(AF_UNIX, SOCK_STREAM, 0, sv);
+        bool ok = 0 == ::socketpair(PF_UNIX, SOCK_STREAM, 0, sv);
         if (ok) {
             no_inherit(sv[0]);
             no_inherit(sv[1]);
         }
         return ok;
 #else
-        return 0 == ::socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, sv);
+        return 0 == ::socketpair(PF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, sv);
 #endif
     }
 #endif
@@ -689,7 +689,7 @@ namespace bee::net::socket {
         no_blocking(sv[1]);
         return true;
 #else
-        return 0 == ::socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0, sv);
+        return 0 == ::socketpair(PF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0, sv);
 #endif
     }
 
