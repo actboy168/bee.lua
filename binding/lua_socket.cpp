@@ -321,11 +321,14 @@ namespace bee::lua_socket {
         if (socket::status::success != socket::bind(self.fd, ep)) {
             return push_neterror(L, "bind");
         }
-        if (self.protocol != socket::protocol::udp && self.protocol != socket::protocol::udp6) {
-            int backlog = read_backlog(L, 3, self.protocol);
-            if (socket::status::success != socket::listen(self.fd, backlog)) {
-                return push_neterror(L, "listen");
-            }
+        lua_pushboolean(L, 1);
+        return 1;
+    }
+    static int listen(lua_State* L) {
+        luafd& self = checkfd(L, 1);
+        int backlog = (int)luaL_optinteger(L, 2, kDefaultBackLog);
+        if (socket::status::success != socket::listen(self.fd, backlog)) {
+            return push_neterror(L, "listen");
         }
         lua_pushboolean(L, 1);
         return 1;
@@ -337,6 +340,7 @@ namespace bee::lua_socket {
             luaL_Reg mt[] = {
                 {"connect", connect},
                 {"bind", bind},
+                {"listen", listen},
                 {"accept", accept},
                 {"recv", recv},
                 {"send", send},
@@ -396,6 +400,14 @@ namespace bee::lua_socket {
         r = bind(L);
         if (r != 1) {
             return r;
+        }
+        lua_pop(L, 1);
+        luafd& self = checkfd(L, 1);
+        if (self.protocol != socket::protocol::udp && self.protocol != socket::protocol::udp6) {
+            int backlog = read_backlog(L, 3, self.protocol);
+            if (socket::status::success != socket::listen(self.fd, backlog)) {
+                return push_neterror(L, "listen");
+            }
         }
         lua_pushvalue(L, 1);
         return 1;

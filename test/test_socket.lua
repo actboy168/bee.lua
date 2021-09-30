@@ -40,6 +40,7 @@ function test_socket:test_bind()
         lt.assertErrorMsgEquals([[bad argument #2 to '?' (invalid option 'icmp')]], socket, 'icmp')
     end
     do
+        os.remove 'test.unixsock'
         local fd = lt.assertIsUserdata(socket 'unix')
         lt.assertIsBoolean(fd:bind('test.unixsock'))
         lt.assertEquals(file_exists('test.unixsock'), true)
@@ -51,6 +52,7 @@ end
 function test_socket:test_tcp_connect()
     local server = lt.assertIsUserdata(socket "tcp")
     lt.assertIsBoolean(server:bind('127.0.0.1', 0))
+    lt.assertIsBoolean(server:listen())
     local address, port = server:info('socket')
     lt.assertIsString(address)
     lt.assertIsNumber(port)
@@ -69,6 +71,7 @@ function test_socket:test_unix_connect()
 
     local server = lt.assertIsUserdata(socket "unix")
     lt.assertIsBoolean(server:bind('test.unixsock'))
+    lt.assertIsBoolean(server:listen())
     lt.assertEquals(file_exists('test.unixsock'), true)
     for _ = 1, 2 do
         local client = lt.assertIsUserdata(socket 'unix')
@@ -82,6 +85,7 @@ end
 function test_socket:test_tcp_accept()
     local server = lt.assertIsUserdata(socket "tcp")
     lt.assertIsBoolean(server:bind('127.0.0.1', 0))
+    lt.assertIsBoolean(server:listen())
     local address, port = server:info('socket')
     lt.assertIsString(address)
     lt.assertIsNumber(port)
@@ -106,6 +110,7 @@ end
 function test_socket:test_unix_accept()
     local server = lt.assertIsUserdata(socket "unix")
     lt.assertIsBoolean(server:bind('test.unixsock'))
+    lt.assertIsBoolean(server:listen())
     lt.assertEquals(file_exists('test.unixsock'), true)
     for _ = 1, 2 do
         local client = lt.assertIsUserdata(socket 'unix')
@@ -174,6 +179,7 @@ end
 local function createTcpEchoTest(name, f)
     local server = lt.assertIsUserdata(socket "tcp")
     lt.assertIsBoolean(server:bind('127.0.0.1', 0))
+    lt.assertIsBoolean(server:listen())
     local _, port = server:info('socket')
     lt.assertIsNumber(port)
     local client = createEchoThread(name, 'tcp', '127.0.0.1', port)
@@ -193,6 +199,7 @@ end
 local function createUnixEchoTest(name, f)
     local server = lt.assertIsUserdata(socket "unix")
     lt.assertIsBoolean(server:bind('test.unixsock'))
+    lt.assertIsBoolean(server:listen())
     local client = createEchoThread(name, 'unix', 'test.unixsock')
     local rd, _ = socket.select({server}, nil)
     assert(rd[1], server)
