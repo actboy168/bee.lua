@@ -2,13 +2,11 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <errno.h>
 
 namespace bee {
     struct simplethread {
         thread_func func;
         void* ud;
-        thread_handle handle;
     };
 
     static void* thread_function(void * args) {
