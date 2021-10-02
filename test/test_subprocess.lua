@@ -17,8 +17,7 @@ local function createLua(script, option)
     option = option or {}
     option[1] = {
         getexe(),
-        '-e', init,
-        '-e', script,
+        '-e', init.."\n"..script,
     }
     return subprocess.spawn(option)
 end
