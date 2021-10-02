@@ -116,6 +116,8 @@ namespace bee::win::fsevent {
             this,
             &task_event_cb))
         {
+            ::CloseHandle(m_directory);
+            m_directory = INVALID_HANDLE_VALUE;
             push_notify(tasktype::Error, u2w(make_syserror("ReadDirectoryChangesW").what()).c_str());
             return false;
         }
