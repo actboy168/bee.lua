@@ -4,12 +4,12 @@
 
 #if defined(_WIN32)
     #include <windows.h>
-    inline void cpu_relax() { YieldProcessor(); }
+    namespace bee { inline void cpu_relax() { YieldProcessor(); }}
 #elif defined(__x86_64__)
     #include <immintrin.h>
-    inline void cpu_relax() { _mm_pause(); }
+    namespace bee { inline void cpu_relax() { _mm_pause(); }}
 #elif defined(__aarch64__)
-    inline void cpu_relax() { asm volatile("yield" ::: "memory"); }
+    namespace bee { inline void cpu_relax() { asm volatile("yield" ::: "memory"); }}
 #else
     #error unsupport platform
 #endif
