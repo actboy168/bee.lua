@@ -3,6 +3,7 @@
 #include <bee/thread/lockqueue.h>
 #include <bee/thread/semaphore.h>
 #include <bee/thread/simplethread.h>
+#include <bee/thread/spinlock.h>
 #include <bee/error.h>
 #include <functional>
 #include <lua.hpp>
@@ -105,8 +106,8 @@ namespace bee::lua_thread {
             channels.emplace(std::make_pair("errlog", new channel));
         }
         bool create(const std::string& name) {
-            std::unique_lock<std::mutex> lk(mutex);
-            auto                         it = channels.find(name);
+            std::unique_lock<spinlock> lk(mutex);
+            auto                       it = channels.find(name);
             if (it != channels.end()) {
                 return false;
             }
@@ -114,8 +115,8 @@ namespace bee::lua_thread {
             return true;
         }
         void clear() {
-            std::unique_lock<std::mutex> lk(mutex);
-            auto                         it = channels.find("errlog");
+            std::unique_lock<spinlock> lk(mutex);
+            auto                       it = channels.find("errlog");
             if (it != channels.end()) {
                 auto errlog = it->second;
                 channels.clear();
@@ -126,8 +127,8 @@ namespace bee::lua_thread {
             }
         }
         std::shared_ptr<channel> query(const std::string& name) {
-            std::unique_lock<std::mutex> lk(mutex);
-            auto                         it = channels.find(name);
+            std::unique_lock<spinlock> lk(mutex);
+            auto                       it = channels.find(name);
             if (it != channels.end()) {
                 return it->second;
             }
@@ -136,7 +137,7 @@ namespace bee::lua_thread {
 
     private:
         std::map<std::string, std::shared_ptr<channel>> channels;
-        std::mutex                                      mutex;
+        spinlock                                        mutex;
     };
 
     using boxchannel = std::shared_ptr<channel>;

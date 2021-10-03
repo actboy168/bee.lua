@@ -2,21 +2,22 @@
 
 #include <queue>
 #include <mutex>
+#include <bee/thread/spinlock.h>
 
 namespace bee {
     template <class T>
     class lockqueue {
     public:
         void push(const T& data) {
-            std::unique_lock<std::mutex> lk(mutex);
+            std::unique_lock<spinlock> lk(mutex);
             queue.push(data);
         }
         void push(T&& data) {
-            std::unique_lock<std::mutex> lk(mutex);
+            std::unique_lock<spinlock> lk(mutex);
             queue.push(std::forward<T>(data));
         }
         bool pop(T& data) {
-            std::unique_lock<std::mutex> lk(mutex);
+            std::unique_lock<spinlock> lk(mutex);
             if (queue.empty()) {
                 return false;
             }
@@ -26,6 +27,6 @@ namespace bee {
         }
     protected:
         std::queue<T> queue;
-        std::mutex mutex;
+        spinlock mutex;
     };
 }
