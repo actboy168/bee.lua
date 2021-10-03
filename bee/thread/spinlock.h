@@ -8,8 +8,10 @@
 #elif defined(__x86_64__)
     #include <immintrin.h>
     inline void cpu_relax() { _mm_pause(); }
+#elif defined(__aarch64__)
+    inline void cpu_relax() { asm volatile("yield" ::: "memory"); }
 #else
-    inline void cpu_relax() {}
+    #error unsupport platform
 #endif
 
 namespace bee {
