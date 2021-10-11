@@ -799,25 +799,7 @@ function test_fs:test_filelock_1()
 end
 
 function test_fs:test_filelock_2()
-    local subprocess = require "bee.subprocess"
-    local function getexe()
-        local i = 0
-        while arg[i] ~= nil do
-            i = i - 1
-        end
-        return arg[i + 1]
-    end
-    local function createLua(script, option)
-        local init = ("package.cpath = [[%s]]"):format(package.cpath)
-        option = option or {}
-        option[1] = {
-            getexe(),
-            '-e', init.."\n"..script,
-        }
-        return subprocess.spawn(option)
-    end
-
-    local process = createLua([[
+    local process = shell:runlua([[
         local fs = require 'bee.filesystem'
         fs.filelock(fs.path("temp.lock"))
         io.stdout:write 'ok'
