@@ -7,22 +7,12 @@ lm:import 'common.lua'
 local BOOTSTRAP = lm.EXE_NAME or "bootstrap"
 local EXE_DIR = lm.EXE_DIR or "$bin"
 
-lm:executable (BOOTSTRAP) {
-    bindir = lm.EXE_DIR,
+lm:source_set "source_bootstrap" {
     deps = { "source_bee", "source_lua" },
     includes = "3rd/lua",
     sources = "bootstrap/*.cpp",
     windows = {
-        sources = {
-            "3rd/lua/utf8_crt.c",
-            lm.EXE_RESOURCE,
-        }
-    },
-    msvc = {
-        ldflags = "/IMPLIB:$obj/"..BOOTSTRAP.."/"..BOOTSTRAP..".lib"
-    },
-    mingw = {
-        ldflags = "-Wl,--out-implib,$obj/"..BOOTSTRAP.."/"..BOOTSTRAP..".lib"
+        sources = "3rd/lua/utf8_crt.c",
     },
     macos = {
         defines = "LUA_USE_MACOSX",
@@ -43,6 +33,22 @@ lm:executable (BOOTSTRAP) {
         ldflags = "-Wl,-E",
         links = { "m", "dl" }
     }
+}
+
+lm:executable (BOOTSTRAP) {
+    bindir = lm.EXE_DIR,
+    deps = "source_bootstrap",
+    windows = {
+        sources = {
+            lm.EXE_RESOURCE,
+        }
+    },
+    msvc = {
+        ldflags = "/IMPLIB:$obj/"..BOOTSTRAP.."/"..BOOTSTRAP..".lib"
+    },
+    mingw = {
+        ldflags = "-Wl,--out-implib,$obj/"..BOOTSTRAP.."/"..BOOTSTRAP..".lib"
+    },
 }
 
 local exe = lm.os == 'windows' and ".exe" or ""
