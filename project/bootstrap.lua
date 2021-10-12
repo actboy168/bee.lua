@@ -44,10 +44,10 @@ lm:executable (BOOTSTRAP) {
         }
     },
     msvc = {
-        ldflags = "/IMPLIB:$obj/"..BOOTSTRAP.."/"..BOOTSTRAP..".lib"
+        ldflags = "/IMPLIB:$obj/"..BOOTSTRAP..".lib"
     },
     mingw = {
-        ldflags = "-Wl,--out-implib,$obj/"..BOOTSTRAP.."/"..BOOTSTRAP..".lib"
+        ldflags = "-Wl,--out-implib,$obj/"..BOOTSTRAP..".lib"
     },
 }
 
@@ -92,7 +92,7 @@ if lm.os == "windows" then
         bindir = lm.EXE_DIR,
         includes = "bootstrap",
         sources = "bootstrap/forward_lua.c",
-        ldflags = "$obj/"..BOOTSTRAP.."/"..BOOTSTRAP..".lib",
+        ldflags = "$obj/"..BOOTSTRAP..".lib",
         deps = {
             "forward_lua",
             BOOTSTRAP,
