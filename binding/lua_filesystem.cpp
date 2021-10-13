@@ -176,99 +176,6 @@ namespace bee::lua_filesystem {
             LUA_TRY_END;
         }
 
-        template <typename T>
-        struct pairs_directory {
-            static pairs_directory& get(lua_State* L, int idx) {
-                return *static_cast<pairs_directory*>(lua_touserdata(L, idx));
-            }
-            static int next(lua_State* L) {
-                LUA_TRY;
-                pairs_directory& self = get(L, lua_upvalueindex(1));
-                if (self.cur == self.end) {
-                    lua_pushnil(L);
-                    return 1;
-                }
-                const int nreslut = path::constructor_(L, self.cur->path());
-                ++self.cur;
-                return nreslut;
-                LUA_TRY_END;
-            }
-            static int close(lua_State* L) {
-                pairs_directory& self = get(L, 1);
-                self.cur = self.end;
-                return 0;
-            }
-            static int gc(lua_State* L) {
-                get(L, 1).~pairs_directory();
-                return 0;
-            }
-            static int constructor(lua_State* L, const fs::path& path) {
-                void* storage = lua_newuserdatauv(L, sizeof(pairs_directory), 0);
-                new (storage) pairs_directory(path);
-                if (newObject(L, "pairs_directory")) {
-                    static luaL_Reg mt[] = {
-                        {"__gc", pairs_directory::gc},
-                        {"__close", pairs_directory::close},
-                        {NULL, NULL},
-                    };
-                    luaL_setfuncs(L, mt, 0);
-                }
-                lua_setmetatable(L, -2);
-                lua_pushvalue(L, -1);
-                lua_pushcclosure(L, pairs_directory::next, 1);
-                return 2;
-            }
-            pairs_directory(const fs::path& path)
-                : cur(T(path))
-                , end(T()) {}
-            T cur;
-            T end;
-        };
-
-        static int list_directory(lua_State* L) {
-            LUA_TRY;
-            const fs::path& self = path::to(L, 1);
-            const char* flags = luaL_optstring(L, 2, "");
-            luaL_argcheck(L, (flags[0] == '\0' || (flags[0] == 'r' && flags[1] == '\0')), 2, "invalid flags");
-            if (flags[0] == 'r') {
-                pairs_directory<fs::recursive_directory_iterator>::constructor(L, self);
-            }
-            else {
-                pairs_directory<fs::directory_iterator>::constructor(L, self);
-            }
-            lua_pushnil(L);
-            lua_pushnil(L);
-            lua_rotate(L, -4, -1);
-            return 4;
-            LUA_TRY_END;
-        }
-
-        static int permissions(lua_State* L) {
-            LUA_TRY;
-            const fs::path& self = path::to(L, 1);
-            lua_pushinteger(L, lua_Integer(fs::status(self).permissions()));
-            return 1;
-            LUA_TRY_END;
-        }
-
-        static int add_permissions(lua_State* L) {
-            LUA_TRY;
-            const fs::path& self = path::to(L, 1);
-            const fs::perms perms = fs::perms::mask & fs::perms(luaL_checkinteger(L, 2));
-            fs::permissions(self, perms, fs::perm_options::add);
-            return 0;
-            LUA_TRY_END;
-        }
-
-        static int remove_permissions(lua_State* L) {
-            LUA_TRY;
-            const fs::path& self = path::to(L, 1);
-            const fs::perms perms = fs::perms::mask & fs::perms(luaL_checkinteger(L, 2));
-            fs::permissions(self, perms, fs::perm_options::remove);
-            return 0;
-            LUA_TRY_END;
-        }
-
         static int lexically_normal(lua_State* L) {
             LUA_TRY;
             fs::path& self = path::to(L, 1);
@@ -351,10 +258,6 @@ namespace bee::lua_filesystem {
                     {"replace_filename", path::replace_filename},
                     {"replace_extension", path::replace_extension},
                     {"equal_extension", path::equal_extension},
-                    {"list_directory", path::list_directory},         //deprecated
-                    {"permissions", path::permissions},               //deprecated
-                    {"add_permissions", path::add_permissions},       //deprecated
-                    {"remove_permissions", path::remove_permissions}, //deprecated
                     {"lexically_normal", path::lexically_normal},
                     {"__div", path::mt_div},
                     {"__concat", path::mt_concat},
@@ -558,8 +461,71 @@ namespace bee::lua_filesystem {
         LUA_TRY_END;
     }
 
+    template <typename T>
+    struct pairs_directory {
+        static pairs_directory& get(lua_State* L, int idx) {
+            return *static_cast<pairs_directory*>(lua_touserdata(L, idx));
+        }
+        static int next(lua_State* L) {
+            LUA_TRY;
+            pairs_directory& self = get(L, lua_upvalueindex(1));
+            if (self.cur == self.end) {
+                lua_pushnil(L);
+                return 1;
+            }
+            const int nreslut = path::constructor_(L, self.cur->path());
+            ++self.cur;
+            return nreslut;
+            LUA_TRY_END;
+        }
+        static int close(lua_State* L) {
+            pairs_directory& self = get(L, 1);
+            self.cur = self.end;
+            return 0;
+        }
+        static int gc(lua_State* L) {
+            get(L, 1).~pairs_directory();
+            return 0;
+        }
+        static int constructor(lua_State* L, const fs::path& path) {
+            void* storage = lua_newuserdatauv(L, sizeof(pairs_directory), 0);
+            new (storage) pairs_directory(path);
+            if (newObject(L, "pairs_directory")) {
+                static luaL_Reg mt[] = {
+                    {"__gc", pairs_directory::gc},
+                    {"__close", pairs_directory::close},
+                    {NULL, NULL},
+                };
+                luaL_setfuncs(L, mt, 0);
+            }
+            lua_setmetatable(L, -2);
+            lua_pushvalue(L, -1);
+            lua_pushcclosure(L, pairs_directory::next, 1);
+            return 2;
+        }
+        pairs_directory(const fs::path& path)
+            : cur(T(path))
+            , end(T()) {}
+        T cur;
+        T end;
+    };
+    
     static int pairs(lua_State* L) {
-        return path::list_directory(L);
+        LUA_TRY;
+        const fs::path& self = path::to(L, 1);
+        const char* flags = luaL_optstring(L, 2, "");
+        luaL_argcheck(L, (flags[0] == '\0' || (flags[0] == 'r' && flags[1] == '\0')), 2, "invalid flags");
+        if (flags[0] == 'r') {
+            pairs_directory<fs::recursive_directory_iterator>::constructor(L, self);
+        }
+        else {
+            pairs_directory<fs::directory_iterator>::constructor(L, self);
+        }
+        lua_pushnil(L);
+        lua_pushnil(L);
+        lua_rotate(L, -4, -1);
+        return 4;
+        LUA_TRY_END;
     }
 
     static int exe_path(lua_State* L) {
