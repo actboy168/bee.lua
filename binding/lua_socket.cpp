@@ -376,41 +376,6 @@ namespace bee::lua_socket {
         pushfd(L, fd, protocol, luafd::tag::unknown);
         return 1;
     }
-    static int _connect(lua_State* L) {
-        int r = create(L, 1);
-        if (r != 1) {
-            return r;
-        }
-        lua_replace(L, 1);
-        r = connect(L);
-        if (r != 1) {
-            return r;
-        }
-        lua_pushvalue(L, 1);
-        lua_insert(L, -2);
-        return 2;
-    }
-    static int _bind(lua_State* L) {
-        int r = create(L, 1);
-        if (r != 1) {
-            return r;
-        }
-        lua_replace(L, 1);
-        r = bind(L);
-        if (r != 1) {
-            return r;
-        }
-        lua_pop(L, 1);
-        luafd& self = checkfd(L, 1);
-        if (self.protocol != socket::protocol::udp && self.protocol != socket::protocol::udp6) {
-            int backlog = read_backlog(L, 3, self.protocol);
-            if (socket::status::success != socket::listen(self.fd, backlog)) {
-                return push_neterror(L, "listen");
-            }
-        }
-        lua_pushvalue(L, 1);
-        return 1;
-    }
     static int pair(lua_State* L) {
         socket::fd_t sv[2];
         if (!socket::pair(sv)) {
@@ -562,8 +527,6 @@ namespace bee::lua_socket {
     static int luaopen(lua_State* L) {
         socket::initialize();
         luaL_Reg lib[] = {
-            {"connect", _connect}, //deprecated
-            {"bind", _bind},       //deprecated
             {"pair", pair},
             {"select", select},
             {"dump", dump},
