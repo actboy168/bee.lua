@@ -50,19 +50,6 @@ namespace bee::lua_socket {
         }
         return ep;
     }
-    static int read_backlog(lua_State* L, int idx, socket::protocol protocol) {
-        switch (protocol) {
-        case socket::protocol::tcp:
-        case socket::protocol::tcp6:
-            return (int)luaL_optinteger(L, idx + 1, kDefaultBackLog);
-        case socket::protocol::uds:
-            return (int)luaL_optinteger(L, idx, kDefaultBackLog);
-        default:
-        case socket::protocol::udp:
-        case socket::protocol::udp6:
-            return kDefaultBackLog;
-        }
-    }
     static luafd& tofd(lua_State* L, int idx) {
         return *(luafd*)lua_touserdata(L, idx);
     }
