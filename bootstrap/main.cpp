@@ -6,6 +6,7 @@
 #include "utf8_prefix.h"
 #endif
 #include <lua.hpp>
+#include <bee/lua/binding.h>
 
 #if !defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
@@ -18,9 +19,6 @@
 static lua_State *globalL = NULL;
 
 static const char *progname = LUA_PROGNAME;
-
-namespace bee::lua { void preload_module(lua_State* L); }
-
 /*
 ** Hook set by signal function to stop the interpreter.
 */
