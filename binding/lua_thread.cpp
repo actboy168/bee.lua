@@ -15,53 +15,6 @@ extern "C" {
 #include <lua-seri.h>
 }
 
-namespace bee {
-#if !defined(BEE_THREAD_MODULE)
-
-extern "C" int luaopen_bee(lua_State* L);
-extern "C" int luaopen_bee_filesystem(lua_State* L);
-extern "C" int luaopen_bee_filewatch(lua_State* L);
-extern "C" int luaopen_bee_platform(lua_State* L);
-extern "C" int luaopen_bee_serialization(lua_State* L);
-extern "C" int luaopen_bee_socket(lua_State* L);
-extern "C" int luaopen_bee_subprocess(lua_State* L);
-BEE_LUA_API int luaopen_bee_thread(lua_State* L);
-extern "C" int luaopen_bee_time(lua_State* L);
-#if defined(_WIN32)
-extern "C" int luaopen_bee_unicode(lua_State* L);
-#endif
-
-static luaL_Reg CMODULE[] = {
-    {"bee.filesystem", luaopen_bee_filesystem},
-    {"bee.filewatch", luaopen_bee_filewatch},
-    {"bee.platform", luaopen_bee_platform},
-    {"bee.serialization", luaopen_bee_serialization},
-    {"bee.socket", luaopen_bee_socket},
-    {"bee.subprocess", luaopen_bee_subprocess},
-    {"bee.thread", luaopen_bee_thread},
-    {"bee.time", luaopen_bee_time},
-#if defined(_WIN32)
-    {"bee.unicode", luaopen_bee_unicode},
-#endif
-    {NULL, NULL},
-};
-
-#define BEE_THREAD_MODULE CMODULE
-
-#endif
-
-void preload(lua_State* L) {
-    const luaL_Reg *lib;
-    const luaL_Reg* modules = BEE_THREAD_MODULE;
-    luaL_getsubtable(L, LUA_REGISTRYINDEX, "_PRELOAD");
-    for (lib = modules; lib->func; lib++) {
-        lua_pushcfunction(L, lib->func);
-        lua_setfield(L, -2, lib->name);
-    }
-    lua_pop(L, 1);
-}
-}
-
 namespace bee::lua_thread {
     class channel : public lockqueue<void*> {
     public:
@@ -283,7 +236,7 @@ namespace bee::lua_thread {
         thread_args* args = (thread_args*)ud;
         lua_pushinteger(L, args->id);
         lua_rawsetp(L, LUA_REGISTRYINDEX, &THREADID);
-        ::bee::preload(L);
+        ::bee::lua::preload_module(L);
 
 #if LUA_VERSION_NUM >= 504
         lua_gc(L, LUA_GCGEN, 0, 0);
