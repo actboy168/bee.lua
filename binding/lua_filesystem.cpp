@@ -479,13 +479,17 @@ namespace bee::lua_filesystem {
             LUA_TRY_END;
         }
         static int close(lua_State* L) {
+            LUA_TRY;
             pairs_directory& self = get(L, 1);
             self.cur = self.end;
             return 0;
+            LUA_TRY_END;
         }
         static int gc(lua_State* L) {
+            LUA_TRY;
             get(L, 1).~pairs_directory();
             return 0;
+            LUA_TRY_END;
         }
         static int constructor(lua_State* L, const fs::path& path) {
             void* storage = lua_newuserdatauv(L, sizeof(pairs_directory), 0);

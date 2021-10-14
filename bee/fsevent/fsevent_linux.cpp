@@ -23,20 +23,33 @@ namespace bee::linux::fsevent {
             m_fd_path.emplace(std::make_pair(desc, path));
             m_path_fd.emplace(std::make_pair(path, desc));
         }
-        for (auto& p : fs::directory_iterator(path, fs::directory_options::skip_permission_denied)) {
-            if (fs::is_directory(p)) {
-                add_dir(p);
+        std::error_code ec;
+        fs::directory_iterator iter(path, fs::directory_options::skip_permission_denied, ec);
+        try {
+            if (ec) {
+                for (auto& p : iter) {
+                    if (fs::is_directory(p, ec) && ec) {
+                        add_dir(p);
+                    }
+                }
             }
+        } catch(...) {
         }
     }
     void watch::del_dir(const fs::path& path)  {
         int desc = m_path_fd[path];
         inotify_rm_watch(m_inotify_fd, desc);
-        del_dir(desc);
-        for (auto& p : fs::directory_iterator(path, fs::directory_options::skip_permission_denied)) {
-            if (fs::is_directory(p)) {
-                del_dir(p);
+        std::error_code ec;
+        fs::directory_iterator iter(path, fs::directory_options::skip_permission_denied, ec);
+        try {
+            if (ec) {
+                for (auto& p : iter) {
+                    if (fs::is_directory(p, ec) && ec) {
+                        del_dir(p);
+                    }
+                }
             }
+        } catch(...) {
         }
     }
     void watch::del_dir(int desc)  {
