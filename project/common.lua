@@ -1,5 +1,7 @@
 local lm = require 'luamake'
 
+local internal = lm.INTERNAL
+
 lm:source_set "source_bee" {
     includes = {
         "3rd/lua",
@@ -18,9 +20,7 @@ lm:source_set "source_bee" {
         "bee/nonstd",
         "."
     },
-    defines = {
-        "BEE_INLINE",
-    },
+    defines = "BEE_INLINE",
     sources = {
         "bee/**.cpp",
         "bee/nonstd/fmt/*.cc",
@@ -61,7 +61,10 @@ lm:source_set "source_bee" {
         "bee/nonstd",
         "."
     },
-    defines = "BEE_INLINE",
+    defines = {
+        "BEE_INLINE",
+        internal and "BEE_STATIC",
+    },
     sources = "binding/*.cpp",
     windows = {
         defines = "_CRT_SECURE_NO_WARNINGS",
@@ -115,19 +118,19 @@ lm:source_set 'source_lua' {
         "!3rd/lua/utf8_*.c",
     },
     windows = {
-        defines = "LUA_BUILD_AS_DLL",
+        defines = not internal and "LUA_BUILD_AS_DLL",
     },
     macos = {
         defines = "LUA_USE_MACOSX",
-        visibility = "default",
+        visibility = not internal and "default",
     },
     linux = {
         defines = "LUA_USE_LINUX",
-        visibility = "default",
+        visibility = not internal and "default",
     },
     android = {
         defines = "LUA_USE_LINUX",
-        visibility = "default",
+        visibility = not internal and "default",
     },
     msvc = {
         warnings = {
