@@ -108,6 +108,7 @@ function test_socket:test_tcp_accept()
 end
 
 function test_socket:test_unix_accept()
+    os.remove 'test.unixsock'
     local server = lt.assertIsUserdata(socket "unix")
     lt.assertIsBoolean(server:bind('test.unixsock'))
     lt.assertIsBoolean(server:listen())
@@ -197,6 +198,7 @@ local function createTcpEchoTest(name, f)
 end
 
 local function createUnixEchoTest(name, f)
+    os.remove 'test.unixsock'
     local server = lt.assertIsUserdata(socket "unix")
     lt.assertIsBoolean(server:bind('test.unixsock'))
     lt.assertIsBoolean(server:listen())
