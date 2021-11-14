@@ -5,7 +5,7 @@
 #if defined(_WIN32)
     #include <windows.h>
     namespace bee { inline void cpu_relax() { YieldProcessor(); }}
-#elif defined(__x86_64__)
+#elif defined(__x86_64__) || defined(__i386__)
     #include <immintrin.h>
     namespace bee { inline void cpu_relax() { _mm_pause(); }}
 #elif defined(__aarch64__)
