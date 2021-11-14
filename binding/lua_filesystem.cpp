@@ -411,6 +411,13 @@ namespace bee::lua_filesystem {
         LUA_TRY_END;
     }
 
+    static int canonical(lua_State* L) {
+        LUA_TRY;
+        const fs::path& p = path::to(L, 1);
+        return path::constructor_(L, fs::canonical(p));
+        LUA_TRY_END;
+    }
+ 
     static int relative(lua_State* L) {
         LUA_TRY;
         if (lua_gettop(L) == 1) {
@@ -585,6 +592,7 @@ namespace bee::lua_filesystem {
             {"copy", copy},
             {"copy_file", copy_file},
             {"absolute", absolute},
+            {"canonical", canonical},
             {"relative", relative},
             {"last_write_time", last_write_time},
             {"permissions", permissions},

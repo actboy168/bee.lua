@@ -830,3 +830,16 @@ function test_fs:test_tostring()
     test "עברית"
     test "🤣🤪"
 end
+
+
+function test_fs:test_canonical()
+    local function test(a, b)
+        lt.assertEquals(fs.canonical(fs.path(a)):string(), fs.absolute(fs.path(b)):string())
+    end
+    create_file "ABCabc.txt"
+    if platform.OS == 'Windows' then
+        test("abcabc.txt", "ABCabc.txt")
+    end
+    test("ABCabc.txt", "ABCabc.txt")
+    os.remove "ABCabc.txt"
+end
