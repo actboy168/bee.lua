@@ -18,9 +18,7 @@ lm:source_set "source_bee" {
         "bee/nonstd",
         "."
     },
-    defines = {
-        "BEE_INLINE",
-    },
+    defines = "BEE_INLINE",
     sources = {
         "bee/**.cpp",
         "bee/nonstd/fmt/*.cc",
@@ -61,7 +59,10 @@ lm:source_set "source_bee" {
         "bee/nonstd",
         "."
     },
-    defines = "BEE_INLINE",
+    defines = {
+        "BEE_INLINE",
+        lm.EXE ~= "lua" and "BEE_STATIC",
+    },
     sources = "binding/*.cpp",
     windows = {
         defines = "_CRT_SECURE_NO_WARNINGS",

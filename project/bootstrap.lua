@@ -19,7 +19,6 @@ lm:source_set "source_bootstrap" {
         links = { "m", "dl" },
     },
     linux = {
-        crt = "static",
         defines = "LUA_USE_LINUX",
         ldflags = "-Wl,-E",
         links = {
@@ -48,6 +47,9 @@ lm:executable (BOOTSTRAP) {
     },
     mingw = {
         ldflags = "-Wl,--out-implib,$obj/"..BOOTSTRAP..".lib"
+    },
+    linux = {
+        crt = "static",
     },
 }
 
