@@ -10,6 +10,8 @@
     namespace bee { inline void cpu_relax() { _mm_pause(); }}
 #elif defined(__aarch64__)
     namespace bee { inline void cpu_relax() { asm volatile("yield" ::: "memory"); }}
+#elif defined(__arm__)
+    namespace bee { inline void cpu_relax() { asm volatile("":::"memory"); }}
 #else
     #error unsupport platform
 #endif
