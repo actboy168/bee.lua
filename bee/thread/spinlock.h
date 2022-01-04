@@ -12,6 +12,12 @@
     namespace bee { inline void cpu_relax() { asm volatile("yield" ::: "memory"); }}
 #elif defined(__arm__)
     namespace bee { inline void cpu_relax() { asm volatile("":::"memory"); }}
+#elif defined(__riscv)
+    namespace bee { inline void cpu_relax() {
+        int dummy;
+        asm volatile ("div %0, %0, zero" : "=r" (dummy));
+        asm volatile ("" ::: "memory");
+    }}
 #else
     #error unsupport platform
 #endif
