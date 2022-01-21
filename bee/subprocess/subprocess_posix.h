@@ -49,6 +49,8 @@ namespace bee::posix::subprocess {
         void push(const std::string& str);
     };
 
+    bool support_cwd();
+
     class spawn {
         friend class process;
     public:

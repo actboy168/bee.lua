@@ -202,7 +202,18 @@ namespace bee::posix::subprocess {
         del_env_.insert(key);
     }
 
+    bool support_cwd() {
+#if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 101500
+        return true;
+#else
+        return false;
+#endif
+    }
+
     bool spawn::raw_exec(char* const args[], const char* cwd) {
+#if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 101500
+        posix_spawn_file_actions_addchdir_np(&spawnfile_, cwd);
+#endif
         pid_t pid;
         for (int i = 0; i < 3; ++i) {
             if (fds_[i] > 0) {
