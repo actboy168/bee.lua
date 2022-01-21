@@ -1,5 +1,6 @@
 local platform = require 'bee.platform'
 local subprocess = require 'bee.subprocess'
+local fs = require 'bee.filesystem'
 
 local isWindows = platform.OS == 'Windows'
 local isMingw = os.getenv 'MSYSTEM' ~= nil
@@ -42,6 +43,7 @@ local luaexe = (function()
     end
     return arg[i + 1]
 end)()
+luaexe = fs.absolute(fs.path(luaexe)):string()
 
 function shell:runlua(script, option)
     local init = ("package.cpath = [[%s]]"):format(package.cpath)
