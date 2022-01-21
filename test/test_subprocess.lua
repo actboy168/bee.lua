@@ -282,3 +282,15 @@ function test_subprocess:test_encoding()
     lt.assertEquals(process:wait(), 0)
     lt.assertEquals(process.stdout:read(6), "中文")
 end
+
+function test_subprocess:test_cwd()
+    local fs = require "bee.filesystem"
+    local path = fs.absolute(fs.path("test_cwd"))
+    fs.create_directories(path)
+    local process = shell:runlua([[
+        local fs = require "bee.filesystem"
+        assert(fs.path(arg[3]) == fs.current_path())
+    ]], { "", path:string(), cwd = path })
+    lt.assertEquals(process:wait(), 0)
+    fs.remove_all(path)
+end
