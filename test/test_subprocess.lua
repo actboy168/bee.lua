@@ -283,18 +283,17 @@ function test_subprocess:test_encoding()
     lt.assertEquals(process.stdout:read(6), "中文")
 end
 
-function test_subprocess:test_cwd()
-    if not subprocess.support_cwd then
-        return
-    end
-    local fs = require "bee.filesystem"
-    local path = fs.absolute(fs.path("test_cwd"))
-    fs.create_directories(path)
-    local process, errmsg = shell:runlua([[
+if subprocess.support_cwd then
+    function test_subprocess:test_cwd()
         local fs = require "bee.filesystem"
-        assert(fs.path(arg[3]) == fs.current_path())
-    ]], { "", path:string(), cwd = path })
-    lt.assertIsUserdata(process, errmsg)
-    lt.assertEquals(process:wait(), 0)
-    fs.remove_all(path)
+        local path = fs.absolute(fs.path("test_cwd"))
+        fs.create_directories(path)
+        local process, errmsg = shell:runlua([[
+            local fs = require "bee.filesystem"
+            assert(fs.path(arg[3]) == fs.current_path())
+        ]], { "", path:string(), cwd = path })
+        lt.assertIsUserdata(process, errmsg)
+        lt.assertEquals(process:wait(), 0)
+        fs.remove_all(path)
+    end
 end

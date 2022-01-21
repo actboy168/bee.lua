@@ -202,8 +202,15 @@ namespace bee::posix::subprocess {
         del_env_.insert(key);
     }
 
-    bool support_cwd() {
 #if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 101500
+#define SUPPORT_CWD 1
+#endif
+#if defined(__GLIBC__) && __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 29
+#define SUPPORT_CWD 1
+#endif
+
+    bool support_cwd() {
+#if defined(SUPPORT_CWD)
         return true;
 #else
         return false;
@@ -211,7 +218,7 @@ namespace bee::posix::subprocess {
     }
 
     bool spawn::raw_exec(char* const args[], const char* cwd) {
-#if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 101500
+#if defined(SUPPORT_CWD)
         if (cwd) {
             posix_spawn_file_actions_addchdir_np(&spawnfile_, cwd);
         }
