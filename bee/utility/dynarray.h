@@ -75,7 +75,7 @@ namespace bee {
             if (n > (std::numeric_limits<size_type>::max)()/sizeof(T)) {
                 throw bad_array_length();
             }
-            return reinterpret_cast<pointer>(new char[n*sizeof(T)]); 
+            return reinterpret_cast<pointer>(new uint8_t[n*sizeof(T)]); 
         }
         void uninitialized_copy(const_iterator f, const_iterator l, iterator v) {
             memcpy(v, f, sizeof(value_type) * (l - f));
