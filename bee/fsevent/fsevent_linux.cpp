@@ -201,22 +201,22 @@ namespace bee::linux::fsevent {
             case apc_arg::type::Add:
                 apc_add(arg.m_id, arg.m_path);
                 m_notify.push({
-                    tasktype::Confirm,
-                    std::format("add `{}` `{}`", arg.m_id, arg.m_path)
+                    tasktype::TaskAdd,
+                    std::format("({}){}", arg.m_id, arg.m_path)
                 });
                 break;
             case apc_arg::type::Remove:
                 apc_remove(arg.m_id);
                 m_notify.push({
-                    tasktype::Confirm,
-                    std::format("remove `{}`", arg.m_id)
+                    tasktype::TaskRemove,
+                    std::format("{}", arg.m_id)
                 });
                 break;
             case apc_arg::type::Terminate:
                 apc_terminate();
                 m_notify.push({
-                    tasktype::Confirm,
-                    "terminate"
+                    tasktype::TaskTerminate,
+                    ""
                 });
                 return;
             }

@@ -71,7 +71,7 @@ namespace bee::win::fsevent {
 
         m_directory = ::CreateFileW(m_path.c_str(),
             FILE_LIST_DIRECTORY,
-            FILE_SHARE_READ | FILE_SHARE_WRITE,
+            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
             NULL,
             OPEN_EXISTING,
             FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
@@ -121,11 +121,13 @@ namespace bee::win::fsevent {
             push_notify(tasktype::Error, u2w(make_syserror("ReadDirectoryChangesW").what()).c_str());
             return false;
         }
+        push_notify(tasktype::TaskAdd, std::format(L"({}){}", m_id, m_path.generic_wstring()));
         return true;
     }
 
     void task::event_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered) {
         if (dwErrorCode != 0) {
+            push_notify(tasktype::TaskRemove, std::format(L"{}", m_id));
             remove();
             return;
         }
@@ -270,23 +272,15 @@ namespace bee::win::fsevent {
             switch (arg.m_type) {
             case apc_arg::type::Add:
                 apc_add(arg.m_id, arg.m_path);
-                m_notify.push({
-                    tasktype::Confirm,
-                    std::format(L"add `{}` `{}`", arg.m_id, arg.m_path)
-                });
                 break;
             case apc_arg::type::Remove:
                 apc_remove(arg.m_id);
-                m_notify.push({
-                    tasktype::Confirm,
-                    std::format(L"remove `{}`", arg.m_id)
-                });
                 break;
             case apc_arg::type::Terminate:
                 apc_terminate();
                 m_notify.push({
-                    tasktype::Confirm,
-                    L"terminate"
+                    tasktype::TaskTerminate,
+                    L""
                 });
                 return;
             }
