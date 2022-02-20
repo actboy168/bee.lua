@@ -14,7 +14,9 @@ namespace bee::linux::fsevent {
     typedef int taskid;
     enum class tasktype {
         Error,
-        Confirm,
+        TaskAdd,
+        TaskRemove,
+        TaskTerminate,
         Modify,
         Rename,
     };

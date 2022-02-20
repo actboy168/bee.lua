@@ -20,11 +20,12 @@ lm:source_set "source_bootstrap" {
     },
     linux = {
         defines = "LUA_USE_LINUX",
-        ldflags = "-Wl,-E",
+        ldflags = {
+            "-Wl,-E",
+            "-pthread"
+        },
         links = {
             "m", "dl",
-            -- https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67791
-            "pthread",
         }
     },
     android = {

@@ -4,6 +4,7 @@
 #include <format>
 #else
 #include <fmt/format.h>
+#include <fmt/xchar.h>
 namespace std {
     using ::fmt::format;
 }

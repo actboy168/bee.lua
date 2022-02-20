@@ -45,12 +45,13 @@ lm:executable 'lua' {
         links = { "m", "dl" },
     },
     linux = {
-        ldflags = "-Wl,-E",
         defines = "LUA_USE_LINUX",
+        ldflags = {
+            "-Wl,-E",
+            "-pthread"
+        },
         links = {
             "m", "dl",
-            -- https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67791
-            "pthread",
         }
     },
     android = {

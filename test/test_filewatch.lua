@@ -41,12 +41,12 @@ local function test(f)
     fs.create_directories(root)
     local id = fw.add(root:string())
     lt.assertIsNumber(id)
-    assertSelect('confirm', ('add `%d` `%s`'):format(id, root:string()))
+    assertSelect('task_add', ('(%d)%s'):format(id, root:string()))
 
     f(root)
 
     fw.remove(id)
-    assertSelect('confirm', ('remove `%d`'):format(id))
+    assertSelect('task_remove', ('%d'):format(id))
     pcall(fs.remove_all, root)
 end
 
