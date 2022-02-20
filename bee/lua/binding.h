@@ -67,13 +67,14 @@ namespace bee::lua {
         return usermodules::v.insert(std::pair(name, func)).second;
     }
 
-    inline void preload_module(lua_State* L) {
+    inline int preload_module(lua_State* L) {
         luaL_getsubtable(L, LUA_REGISTRYINDEX, "_PRELOAD");
         for (auto const& m : usermodules::v) {
             lua_pushcfunction(L, m.second);
             lua_setfield(L, -2, m.first.c_str());
         }
         lua_pop(L, 1);
+        return 0;
     }
 }
 

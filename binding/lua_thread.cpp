@@ -339,6 +339,7 @@ namespace bee::lua_thread {
             {"channel", lchannel},
             {"reset", lreset},
             {"wait", lwait},
+            {"preload_module", ::bee::lua::preload_module},
             {NULL, NULL},
         };
         lua_newtable(L);
