@@ -34,7 +34,9 @@ function test_seri:test_ok_1()
 end
 
 function test_seri:test_err_1()
-    TestErr("Unsupport type function to serialize", function() end)
+    TestErr("Only light C function can be serialized", function() end)
+    TestErr("Only light C function can be serialized", require)
+    TestEq(os.clock)
 end
 
 function test_seri:test_err_2()
