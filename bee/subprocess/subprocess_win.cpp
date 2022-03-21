@@ -12,7 +12,7 @@
 
 #define SIGKILL 9
 
-namespace bee::win::subprocess {
+namespace bee::subprocess {
     template <class char_t>
     struct strbuilder {
         struct node {
@@ -150,9 +150,20 @@ namespace bee::win::subprocess {
         return res.string();
     }
 
-    static std::unique_ptr<wchar_t[]> make_env(std::map<std::wstring, std::wstring, ignore_case::less<std::wstring>>& set, std::set<std::wstring, ignore_case::less<std::wstring>>& del) {
+    void envbuilder::set(const std::wstring& key, const std::wstring& value) {
+        set_env_[key] = value;
+    }
+
+    void envbuilder::del(const std::wstring& key) {
+        del_env_.insert(key);
+    }
+
+    environment envbuilder::release() {
         EnvironmentStrings es;
         if (!es) {
+            return nullptr;
+        }
+        if (set_env_.empty() && del_env_.empty()) {
             return nullptr;
         }
         strbuilder<wchar_t> res;
@@ -161,15 +172,15 @@ namespace bee::win::subprocess {
             std::wstring str = escp;
             std::wstring::size_type pos = str.find(L'=');
             std::wstring key = str.substr(0, pos);
-            if (del.find(key) != del.end()) {
+            if (del_env_.find(key) != del_env_.end()) {
                 escp += str.length() + 1;
                 continue;
             }
             std::wstring val = str.substr(pos + 1, str.length());
-            auto it = set.find(key);
-            if (it != set.end()) {
+            auto it = set_env_.find(key);
+            if (it != set_env_.end()) {
                 val = it->second;
-                set.erase(it);
+                set_env_.erase(it);
             }
             res += key;
             res += L"=";
@@ -177,10 +188,10 @@ namespace bee::win::subprocess {
             res += L"\0";
             escp += str.length() + 1;
         }
-        for (auto& e : set) {
+        for (auto& e : set_env_) {
             const std::wstring& key = e.first;
             const std::wstring& val = e.second;
-            if (del.find(key) != del.end()) {
+            if (del_env_.find(key) != del_env_.end()) {
                 continue;
             }
             res += key;
@@ -188,7 +199,7 @@ namespace bee::win::subprocess {
             res += val;
             res += L"\0";
         }
-        return res.string();
+        return res.string().release();
     }
 
     static HANDLE create_job() {
@@ -381,9 +392,7 @@ namespace bee::win::subprocess {
             return false;
         }
         const wchar_t* application = search_path_ ? 0 : args[0].c_str();
-        std::unique_ptr<wchar_t[]> environment;
-        if (!set_env_.empty() || !del_env_.empty()) {
-            environment = make_env(set_env_, del_env_);
+        if (env_) {
             flags_ |= CREATE_UNICODE_ENVIRONMENT;
         }
         ::SetHandleInformation(si_.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
@@ -395,7 +404,7 @@ namespace bee::win::subprocess {
             NULL, NULL,
             inherit_handle_,
             flags_ | NORMAL_PRIORITY_CLASS,
-            environment.get(),
+            env_,
             cwd,
             &si_, &pi_
         ))
@@ -413,12 +422,8 @@ namespace bee::win::subprocess {
         return true;
     }
 
-    void spawn::env_set(const std::wstring& key, const std::wstring& value) {
-        set_env_[key] = value;
-    }
-
-    void spawn::env_del(const std::wstring& key) {
-        del_env_.insert(key);
+    void spawn::env(environment&& env) {
+        env_ = std::move(env);
     }
 
     process::process(spawn& spawn)

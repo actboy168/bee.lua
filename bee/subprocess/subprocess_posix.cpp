@@ -19,7 +19,7 @@
 extern char **environ;
 #endif
 
-namespace bee::posix::subprocess {
+namespace bee::subprocess {
 
     args_t::~args_t() {
         for (size_t i = 0; i < size(); ++i) {
@@ -63,75 +63,61 @@ namespace bee::posix::subprocess {
     }
 
 
-    struct envbuilder {
-        struct env {
-            env(char** v)
-                : v(v)
-            {}
-            ~env() {
-                if (!v) {
-                    return;
-                }
-                for (char** p = v; *p; ++p) {
-                    delete[] (*p);
-                }
-                delete[] v;
-            }
-            operator char**() const {
-                return v;
-            }
-            char** v;
-        };
-    
-        std::vector<char*> data;
-        env release() {
-            data.emplace_back(nullptr);
-            char** r = new char*[data.size()];
-            memcpy(r, data.data(), data.size() * sizeof(char*));
-            return r;
-        }
-        void append(const std::string& k, const std::string& v) {
-            size_t n = k.size() + v.size() + 2;
-            char* str = new char[n];
-            memcpy(str, k.data(), k.size());
-            str[k.size()] = '=';
-            memcpy(str+k.size()+1, v.data(), v.size());
-            str[n-1] = '\0';
-            data.emplace_back(str);
-        }
-    };
+    void envbuilder::set(const std::string& key, const std::string& value) {
+        set_env_[key] = value;
+    }
 
+    void envbuilder::del(const std::string& key) {
+        del_env_.insert(key);
+    }
 
-    static envbuilder::env make_env(std::map<std::string, std::string>& set, std::set<std::string>& del) {
+    static void env_append(std::vector<char*>& envs, const std::string& k, const std::string& v) {
+        size_t n = k.size() + v.size() + 2;
+        char* str = new char[n];
+        memcpy(str, k.data(), k.size());
+        str[k.size()] = '=';
+        memcpy(str+k.size()+1, v.data(), v.size());
+        str[n-1] = '\0';
+        envs.emplace_back(str);
+    }
+
+    static char** env_release(std::vector<char*>& envs) {
+        envs.emplace_back(nullptr);
+        char** r = new char*[envs.size()];
+        memcpy(r, envs.data(), envs.size() * sizeof(char*));
+        return r;
+    }
+
+    environment envbuilder::release() {
         char** es = environ;
         if (es == 0) {
             return nullptr;
         }
-        envbuilder envs;
+        std::vector<char*> envs;
         for (; *es; ++es) {
             std::string str = *es;
             std::string::size_type pos = str.find(L'=');
             std::string key = str.substr(0, pos);
-            if (del.find(key) != del.end()) {
+            if (del_env_.find(key) != del_env_.end()) {
                 continue;
             }
             std::string val = str.substr(pos + 1, str.length());
-            auto it = set.find(key);
-            if (it != set.end()) {
+            auto it = set_env_.find(key);
+            if (it != set_env_.end()) {
                 val = it->second;
-                set.erase(it);
+                set_env_.erase(it);
             }
-            envs.append(key, val);
+            env_append(envs, key, val);
         }
-        for (auto& e : set) {
+        for (auto& e : set_env_) {
             const std::string& key = e.first;
             const std::string& val = e.second;
-            if (del.find(key) != del.end()) {
+            if (del_env_.find(key) != del_env_.end()) {
                 continue;
             }
-            envs.append(key, val);
+            env_append(envs, key, val);
         }
-        return envs.release();
+        return env_release(envs);
     }
 
     spawn::spawn() {
@@ -183,12 +169,8 @@ namespace bee::posix::subprocess {
         }
     }
 
-    void spawn::env_set(const std::string& key, const std::string& value) {
-        set_env_[key] = value;
-    }
-
-    void spawn::env_del(const std::string& key) {
-        del_env_.insert(key);
+    void spawn::env(environment&& env) {
+        env_ = std::move(env);
     }
 
 #if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 101500
@@ -225,8 +207,7 @@ namespace bee::posix::subprocess {
                 }
             }
         }
-        auto env = make_env(set_env_, del_env_);
-        if (posix_spawnp(&pid, arguments[0], &spawnfile_, &spawnattr_, arguments, env)) {
+        if (posix_spawnp(&pid, arguments[0], &spawnfile_, &spawnattr_, arguments, env_)) {
             return false;
         }
         pid_ = pid;

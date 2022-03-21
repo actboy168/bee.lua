@@ -262,19 +262,21 @@ namespace bee::lua_subprocess {
         }
 
         static void cast_env(lua_State* L, subprocess::spawn& self) {
+            subprocess::envbuilder builder;
             if (LUA_TTABLE == lua_getfield(L, 1, "env")) {
                 lua_pushnil(L);
                 while (lua_next(L, -2)) {
                     if (LUA_TSTRING == lua_type(L, -1)) {
-                        self.env_set(lua::checkstring(L, -2), lua::checkstring(L, -1));
+                        builder.set(lua::checkstring(L, -2), lua::checkstring(L, -1));
                     }
                     else {
-                        self.env_del(lua::checkstring(L, -2));
+                        builder.del(lua::checkstring(L, -2));
                     }
                     lua_pop(L, 1);
                 }
             }
             lua_pop(L, 1);
+            self.env(builder.release());
         }
 
         static void cast_suspended(lua_State* L, subprocess::spawn& self) {

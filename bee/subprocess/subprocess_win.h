@@ -7,8 +7,9 @@
 #include <string>
 #include <memory>
 #include <bee/utility/file_helper.h>
+#include <bee/subprocess/common.h>
 
-namespace bee::win::subprocess {
+namespace bee::subprocess {
     namespace ignore_case {
         template <class T> struct less;
         template <> struct less<wchar_t> {
@@ -49,6 +50,17 @@ namespace bee::win::subprocess {
         _BEE_API open_result open();
         _BEE_API int         peek(FILE* f);
     }
+
+    class envbuilder {
+    public:
+        void set(const std::wstring& key, const std::wstring& value);
+        void del(const std::wstring& key);
+        environment release();
+    private:
+        using less = ignore_case::less<std::wstring>;
+        std::map<std::wstring, std::wstring, less> set_env_;
+        std::set<std::wstring, less>               del_env_;
+    };
 
     class spawn;
     class _BEE_API process {
@@ -92,16 +104,14 @@ namespace bee::win::subprocess {
         void suspended();
         void detached();
         void redirect(stdio type, file::handle h);
-        void env_set(const std::wstring& key, const std::wstring& value);
-        void env_del(const std::wstring& key);
+        void env(environment&& env);
         bool exec(const args_t& args, const wchar_t* cwd);
 
     private:
         void do_duplicate_shutdown();
 
     private:
-        std::map<std::wstring, std::wstring, ignore_case::less<std::wstring>> set_env_;
-        std::set<std::wstring, ignore_case::less<std::wstring>>               del_env_;
+        environment             env_ = nullptr;
         STARTUPINFOW            si_;
         PROCESS_INFORMATION     pi_;
         DWORD                   flags_ = 0;

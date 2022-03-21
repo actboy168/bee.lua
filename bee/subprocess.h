@@ -11,8 +11,6 @@
 #else
 #   include <bee/subprocess/subprocess_win.h>
 #endif
-namespace bee { namespace subprocess = win::subprocess; }
 #else
 #include <bee/subprocess/subprocess_posix.h>
-namespace bee { namespace subprocess = posix::subprocess; }
 #endif

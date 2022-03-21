@@ -7,9 +7,10 @@
 #include <set>
 #include <vector>
 #include <bee/utility/file_helper.h>
+#include <bee/subprocess/common.h>
 #include <spawn.h>
 
-namespace bee::posix::subprocess {
+namespace bee::subprocess {
     enum class stdio {
         eInput,
         eOutput,
@@ -27,6 +28,16 @@ namespace bee::posix::subprocess {
         open_result open();
         int         peek(FILE* f);
     }
+
+    class envbuilder {
+    public:
+        void set(const std::string& key, const std::string& value);
+        void del(const std::string& key);
+        environment release();
+    private:
+        std::map<std::string, std::string> set_env_;
+        std::set<std::string>               del_env_;
+    };
 
     class spawn;
     class process {
@@ -59,12 +70,10 @@ namespace bee::posix::subprocess {
         void suspended();
         void detached();
         void redirect(stdio type, file::handle f);
-        void env_set(const std::string& key, const std::string& value);
-        void env_del(const std::string& key);
+        void env(environment&& env);
         bool exec(args_t& args, const char* cwd);
     private:
-        std::map<std::string, std::string> set_env_;
-        std::set<std::string>              del_env_;
+        environment                        env_ = nullptr;
         int                                fds_[3];
         int                                pid_ = -1;
         posix_spawnattr_t                  spawnattr_;
