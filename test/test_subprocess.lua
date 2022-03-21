@@ -228,13 +228,11 @@ end
 function test_subprocess:test_env()
     local function test_env(cond, env)
         local script = ('assert(%s)'):format(cond)
-        lt.assertEquals(
-            shell:runlua(
-                script,
-                {env = env}
-            ):wait(),
-            0
-        )
+        local process = lt.assertIsUserdata(shell:runlua(
+            script,
+            {env = env}
+        ))
+        lt.assertEquals(process:wait(), 0)
     end
     test_env('os.getenv "BEE_TEST" == nil', {})
     test_env('os.getenv "BEE_TEST" == "ok"', { BEE_TEST = 'ok' })
