@@ -10,6 +10,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <assert.h>
+#include <vector>
 
 #if defined(__APPLE__)
 # include <crt_externs.h>
@@ -61,88 +62,76 @@ namespace bee::posix::subprocess {
         return err == pid;
     }
 
-    template <class T>
-    struct allocarray {
-        size_t size;
-        size_t maxsize;
-        T* data;
-        allocarray()
-            : size(0)
-            , maxsize(16)
-            , data((T*)malloc(maxsize * sizeof(T))) {
-            if (!data) {
-                throw std::bad_alloc();
+
+    struct envbuilder {
+        struct env {
+            env(char** v)
+                : v(v)
+            {}
+            ~env() {
+                if (!v) {
+                    return;
+                }
+                for (char** p = v; *p; ++p) {
+                    delete[] (*p);
+                }
+                delete[] v;
             }
-        }
-        ~allocarray() {
-            free(data);
-        }
-        T* release() {
-            append(0);
-            T* r = data;
-            data = nullptr;
+            operator char**() const {
+                return v;
+            }
+            char** v;
+        };
+    
+        std::vector<char*> data;
+        env release() {
+            data.emplace_back(nullptr);
+            char** r = new char*[data.size()];
+            memcpy(r, data.data(), data.size() * sizeof(char*));
             return r;
         }
-        void append(T t) {
-            if (size + 1 > maxsize) {
-                maxsize *= 2;
-                data = (T*)realloc(data, maxsize * sizeof(T));
-                if (!data) {
-                    throw std::bad_alloc();
-                }
-            }
-            data[size++] = t;
+        void append(const std::string& k, const std::string& v) {
+            size_t n = k.size() + v.size() + 2;
+            char* str = new char[n];
+            memcpy(str, k.data(), k.size());
+            str[k.size()] = '=';
+            memcpy(str+k.size()+1, v.data(), v.size());
+            str[n-1] = '\0';
+            data.emplace_back(str);
         }
     };
 
-    static char*  env_aloc(const std::string& key, const std::string& val) {
-        size_t n = key.size() + val.size() + 2;
-        char* res = (char*)malloc(n);
-        if (!res) {
-            return 0;
-        }
-        memcpy(res, key.data(), key.size());
-        res[key.size()] = '=';
-        memcpy(res+key.size()+1, val.data(), val.size());
-        res[n-1] = '\0';
-        return res;
-    }
 
-    static char** make_env(std::map<std::string, std::string>& set, std::set<std::string>& del) {
+    static envbuilder::env make_env(std::map<std::string, std::string>& set, std::set<std::string>& del) {
         char** es = environ;
         if (es == 0) {
             return nullptr;
         }
-        try {
-            allocarray<char*> envs;
-            for (; *es; ++es) {
-                std::string str = *es;
-                std::string::size_type pos = str.find(L'=');
-                std::string key = str.substr(0, pos);
-                if (del.find(key) != del.end()) {
-                    continue;
-                }
-                std::string val = str.substr(pos + 1, str.length());
-                auto it = set.find(key);
-                if (it != set.end()) {
-                    val = it->second;
-                    set.erase(it);
-                }
-                envs.append(env_aloc(key, val));
+        envbuilder envs;
+        for (; *es; ++es) {
+            std::string str = *es;
+            std::string::size_type pos = str.find(L'=');
+            std::string key = str.substr(0, pos);
+            if (del.find(key) != del.end()) {
+                continue;
             }
-            for (auto& e : set) {
-                const std::string& key = e.first;
-                const std::string& val = e.second;
-                if (del.find(key) != del.end()) {
-                    continue;
-                }
-                envs.append(env_aloc(key, val));
+            std::string val = str.substr(pos + 1, str.length());
+            auto it = set.find(key);
+            if (it != set.end()) {
+                val = it->second;
+                set.erase(it);
             }
-            return envs.release();
+            envs.append(key, val);
         }
-        catch (...) {
+        for (auto& e : set) {
+            const std::string& key = e.first;
+            const std::string& val = e.second;
+            if (del.find(key) != del.end()) {
+                continue;
+            }
+            envs.append(key, val);
         }
-        return nullptr;
+        return envs.release();
     }
 
     spawn::spawn() {
@@ -236,7 +225,8 @@ namespace bee::posix::subprocess {
                 }
             }
         }
-        if (posix_spawnp(&pid, arguments[0], &spawnfile_, &spawnattr_, arguments, make_env(set_env_, del_env_))) {
+        auto env = make_env(set_env_, del_env_);
+        if (posix_spawnp(&pid, arguments[0], &spawnfile_, &spawnattr_, arguments, env)) {
             return false;
         }
         pid_ = pid;

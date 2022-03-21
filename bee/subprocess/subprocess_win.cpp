@@ -18,25 +18,22 @@ namespace bee::win::subprocess {
         struct node {
             size_t size;
             size_t maxsize;
-            char_t* data;
+            std::unique_ptr<char_t[]> data;
             node(size_t maxsize)
                 : size(0)
                 , maxsize(maxsize)
                 , data(new char_t[maxsize])
             { }
-            ~node() {
-                delete[] data;
-            }
-            char_t* release() {
-                char_t* r = data;
-                data = nullptr;
+            std::unique_ptr<char_t[]> release() {
+                std::unique_ptr<char_t[]> r;
+                std::swap(r, data);
                 return r;
             }
             bool append(const char_t* str, size_t n) {
                 if (size + n > maxsize) {
                     return false;
                 }
-                memcpy(data + size, str, n * sizeof(char_t));
+                memcpy(data.get() + size, str, n * sizeof(char_t));
                 size += n;
                 return true;
             }
@@ -75,10 +72,10 @@ namespace bee::win::subprocess {
             append(s.data(), s.size());
             return *this;
         }
-        char_t* string() {
+        std::unique_ptr<char_t[]> string() {
             node r(size + 1);
             for (auto& s : data) {
-                r.append(s.data, s.size);
+                r.append(s.data.get(), s.size);
             }
             char_t empty[] = { '\0' };
             r.append(empty, 1);
@@ -86,6 +83,21 @@ namespace bee::win::subprocess {
         }
         std::deque<node> data;
         size_t size;
+    };
+
+    struct EnvironmentStrings {
+        ~EnvironmentStrings() {
+            if (str) {
+                FreeEnvironmentStringsW(str);
+            }
+        }
+        operator wchar_t*() const {
+            return str;
+        }
+        operator bool() const {
+            return !!str;
+        }
+        wchar_t* str = GetEnvironmentStringsW();
     };
 
     template <class char_t>
@@ -124,7 +136,7 @@ namespace bee::win::subprocess {
         return target;
     }
 
-    static wchar_t* make_args(const args_t& args, std::wstring_view prefix = std::wstring_view()) {
+    static std::unique_ptr<wchar_t[]> make_args(const args_t& args, std::wstring_view prefix = std::wstring_view()) {
         strbuilder<wchar_t> res;
         if (!prefix.empty()) {
             res += prefix;
@@ -138,52 +150,45 @@ namespace bee::win::subprocess {
         return res.string();
     }
 
-    static wchar_t* make_env(std::map<std::wstring, std::wstring, ignore_case::less<std::wstring>>& set, std::set<std::wstring, ignore_case::less<std::wstring>>& del) {
-        wchar_t* es = GetEnvironmentStringsW();
-        if (es == 0) {
+    static std::unique_ptr<wchar_t[]> make_env(std::map<std::wstring, std::wstring, ignore_case::less<std::wstring>>& set, std::set<std::wstring, ignore_case::less<std::wstring>>& del) {
+        EnvironmentStrings es;
+        if (!es) {
             return nullptr;
         }
-        try {
-            strbuilder<wchar_t> res;
-            wchar_t* escp = es;
-            while (*escp != L'\0') {
-                std::wstring str = escp;
-                std::wstring::size_type pos = str.find(L'=');
-                std::wstring key = str.substr(0, pos);
-                if (del.find(key) != del.end()) {
-                    escp += str.length() + 1;
-                    continue;
-                }
-                std::wstring val = str.substr(pos + 1, str.length());
-                auto it = set.find(key);
-                if (it != set.end()) {
-                    val = it->second;
-                    set.erase(it);
-                }
-                res += key;
-                res += L"=";
-                res += val;
-                res += L"\0";
-
+        strbuilder<wchar_t> res;
+        wchar_t* escp = es;
+        while (*escp != L'\0') {
+            std::wstring str = escp;
+            std::wstring::size_type pos = str.find(L'=');
+            std::wstring key = str.substr(0, pos);
+            if (del.find(key) != del.end()) {
                 escp += str.length() + 1;
+                continue;
             }
-            for (auto& e : set) {
-                const std::wstring& key = e.first;
-                const std::wstring& val = e.second;
-                if (del.find(key) != del.end()) {
-                    continue;
-                }
-                res += key;
-                res += L"=";
-                res += val;
-                res += L"\0";
+            std::wstring val = str.substr(pos + 1, str.length());
+            auto it = set.find(key);
+            if (it != set.end()) {
+                val = it->second;
+                set.erase(it);
             }
-            return res.string();
+            res += key;
+            res += L"=";
+            res += val;
+            res += L"\0";
+            escp += str.length() + 1;
         }
-        catch (...) {
+        for (auto& e : set) {
+            const std::wstring& key = e.first;
+            const std::wstring& val = e.second;
+            if (del.find(key) != del.end()) {
+                continue;
+            }
+            res += key;
+            res += L"=";
+            res += val;
+            res += L"\0";
         }
-        FreeEnvironmentStringsW(es);
-        return nullptr;
+        return res.string();
     }
 
     static HANDLE create_job() {
@@ -371,15 +376,14 @@ namespace bee::win::subprocess {
         if (args.size() == 0) {
             return false;
         }
-        wchar_t* commandline = make_args(args);
-        if (!commandline) {
+        std::unique_ptr<wchar_t[]> command_line = make_args(args);
+        if (!command_line) {
             return false;
         }
         const wchar_t* application = search_path_ ? 0 : args[0].c_str();
-        std::unique_ptr<wchar_t[]> command_line(commandline);
         std::unique_ptr<wchar_t[]> environment;
         if (!set_env_.empty() || !del_env_.empty()) {
-            environment.reset(make_env(set_env_, del_env_));
+            environment = make_env(set_env_, del_env_);
             flags_ |= CREATE_UNICODE_ENVIRONMENT;
         }
         ::SetHandleInformation(si_.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
