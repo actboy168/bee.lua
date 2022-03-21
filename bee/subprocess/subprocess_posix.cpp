@@ -217,7 +217,12 @@ namespace bee::posix::subprocess {
 #endif
     }
 
-    bool spawn::raw_exec(char* const args[], const char* cwd) {
+    bool spawn::exec(args_t& args, const char* cwd) {
+        if (args.size() == 0) {
+            return false;
+        }
+        args.push(nullptr);
+        char** arguments = args.data();
 #if defined(SUPPORT_CWD)
         if (cwd) {
             posix_spawn_file_actions_addchdir_np(&spawnfile_, cwd);
@@ -231,7 +236,7 @@ namespace bee::posix::subprocess {
                 }
             }
         }
-        if (posix_spawnp(&pid, args[0], &spawnfile_, &spawnattr_, args, make_env(set_env_, del_env_))) {
+        if (posix_spawnp(&pid, arguments[0], &spawnfile_, &spawnattr_, arguments, make_env(set_env_, del_env_))) {
             return false;
         }
         pid_ = pid;
@@ -241,14 +246,6 @@ namespace bee::posix::subprocess {
             }
         }
         return true;
-    }
-
-    bool spawn::exec(args_t& args, const char* cwd) {
-        if (args.size() == 0) {
-            return false;
-        }
-        args.push(nullptr);
-        return raw_exec(args.data(), cwd);
     }
 
     process::process(spawn& spawn)

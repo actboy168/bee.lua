@@ -63,8 +63,6 @@ namespace bee::posix::subprocess {
         void env_del(const std::string& key);
         bool exec(args_t& args, const char* cwd);
     private:
-        bool raw_exec(char* const args[], const char* cwd);
-    private:
         std::map<std::string, std::string> set_env_;
         std::set<std::string>              del_env_;
         int                                fds_[3];
