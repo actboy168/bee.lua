@@ -9,10 +9,10 @@
 #include <bee/net/endpoint.h>
 #include <bee/net/socket.h>
 #include <bee/filesystem.h>
+#include <bee/utility/unreachable.h>
 #include <chrono>
 #include <limits>
 #include <thread>
-#include <assert.h>
 
 namespace bee::lua_socket {
     using namespace bee::net;
@@ -86,11 +86,10 @@ namespace bee::lua_socket {
         case socket::status::success:
             luaL_pushresultsize(&b, rc);
             return 1;
-        default:
-            assert(false);
-            [[fallthrough]];
         case socket::status::failed:
             return push_neterror(L, "recv");
+        default:
+            unreachable();
         }
     }
     static int send(lua_State* L) {
@@ -104,11 +103,10 @@ namespace bee::lua_socket {
         case socket::status::success:
             lua_pushinteger(L, rc);
             return 1;
-        default:
-            assert(false);
-            [[fallthrough]];
         case socket::status::failed:
             return push_neterror(L, "send");
+        default:
+            unreachable();
         }
     }
     static int recvfrom(lua_State* L) {
@@ -136,11 +134,10 @@ namespace bee::lua_socket {
             lua_pushinteger(L, port);
             return 3;
         }
-        default:
-            assert(false);
-            [[fallthrough]];
         case socket::status::failed:
             return push_neterror(L, "recvfrom");
+        default:
+            unreachable();
         }
     }
     static int sendto(lua_State* L) {
@@ -160,11 +157,10 @@ namespace bee::lua_socket {
         case socket::status::success:
             lua_pushinteger(L, rc);
             return 1;
-        default:
-            assert(false);
-            [[fallthrough]];
         case socket::status::failed:
             return push_neterror(L, "sendto");
+        default:
+            unreachable();
         }
     }
     static bool socket_destroy(luafd& self) {
@@ -291,11 +287,10 @@ namespace bee::lua_socket {
         case socket::status::wait:
             lua_pushboolean(L, 0);
             return 1;
-        default:
-            assert(false);
-            [[fallthrough]];
         case socket::status::failed:
             return push_neterror(L, "connect");
+        default:
+            unreachable();
         }
     }
     static int bind(lua_State* L) {
