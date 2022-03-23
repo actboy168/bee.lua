@@ -1,6 +1,7 @@
 #include <bee/subprocess.h>
 #include <bee/format.h>
 #include <bee/net/socket.h>
+#include <bee/utility/unreachable.h>
 #include <memory.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
@@ -165,7 +166,7 @@ namespace bee::subprocess {
             fds_[2] = h;
             break;
         default:
-            break;
+            unreachable();
         }
     }
 

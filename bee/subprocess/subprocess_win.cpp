@@ -1,5 +1,6 @@
 #include <bee/subprocess.h>
 #include <bee/format.h>
+#include <bee/utility/unreachable.h>
 #include <Windows.h>
 #include <Shobjidl.h>
 #include <memory>
@@ -320,7 +321,7 @@ namespace bee::subprocess {
         search_path_ = true;
     }
 
-    bool spawn::set_console(console type) {
+    void spawn::set_console(console type) {
 		console_ = type;
         flags_ &= ~(CREATE_NO_WINDOW | CREATE_NEW_CONSOLE | DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP);
         switch (type) {
@@ -337,9 +338,8 @@ namespace bee::subprocess {
             flags_ |= CREATE_NEW_CONSOLE;
             break;
         default:
-            return false;
+            unreachable();
         }
-        return true;
     }
 
     bool spawn::hide_window() {
@@ -371,7 +371,7 @@ namespace bee::subprocess {
             si_.hStdError = h;
             break;
         default:
-            break;
+            unreachable();
         }
     }
 

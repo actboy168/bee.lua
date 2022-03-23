@@ -2,11 +2,13 @@
 #include <bee/utility/unicode_win.h>
 #include <bee/format.h>
 #include <bee/error.h>
+#include <bee/utility/unreachable.h>
 #include <array>
 #include <functional>
 #include <assert.h>
 #include <Windows.h>
 #include <filesystem>
+
 namespace fs = std::filesystem;
 
 namespace bee::win::fsevent {
@@ -283,6 +285,8 @@ namespace bee::win::fsevent {
                     L""
                 });
                 return;
+            default:
+                unreachable();
             }
         }
     }

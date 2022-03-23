@@ -1,6 +1,7 @@
 #include <bee/fsevent/fsevent_linux.h>
 #include <bee/format.h>
 #include <bee/error.h>
+#include <bee/utility/unreachable.h>
 #include <assert.h>
 #include <functional>
 #include <unistd.h>
@@ -219,6 +220,8 @@ namespace bee::linux::fsevent {
                     ""
                 });
                 return;
+            default:
+                unreachable();
             }
         }
     }

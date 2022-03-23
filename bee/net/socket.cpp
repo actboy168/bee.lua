@@ -26,6 +26,7 @@
 #include <bee/net/socket.h>
 #include <bee/net/endpoint.h>
 #include <bee/error.h>
+#include <bee/utility/unreachable.h>
 #include <assert.h>
 
 #if defined(_WIN32)
@@ -280,7 +281,7 @@ namespace bee::net::socket {
 #endif
             return createSocket(PF_UNIX, SOCK_STREAM, 0);
         default:
-            return retired_fd;
+            unreachable();
         }
     }
 
@@ -319,18 +320,16 @@ namespace bee::net::socket {
         case shutdown_flag::both:  return net_success(::shutdown(s, SD_BOTH));
         case shutdown_flag::read:  return net_success(::shutdown(s, SD_RECEIVE));
         case shutdown_flag::write: return net_success(::shutdown(s, SD_SEND));
-        default: break;
+        default: unreachable();
         }
 #else
         switch (flag) {
         case shutdown_flag::both:  return net_success(::shutdown(s, SHUT_RDWR));
         case shutdown_flag::read:  return net_success(::shutdown(s, SHUT_RD));
         case shutdown_flag::write: return net_success(::shutdown(s, SHUT_WR));
-        default: break;
+        default: unreachable();
         }
 #endif
-        assert(false);
-        return false;
     }
 
     template <typename T>
@@ -350,6 +349,8 @@ namespace bee::net::socket {
         case option::rcvbuf:
             setoption(s, SOL_SOCKET, SO_RCVBUF, value);
             break;
+        default:
+            unreachable();
         }
     }
 

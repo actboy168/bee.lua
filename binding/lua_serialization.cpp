@@ -12,9 +12,10 @@ namespace bee::lua_serialization {
             return seri_unpackptr(L, lua_touserdata(L, 1));
         case LUA_TSTRING: {
             return seri_unpack(L);
+        default:
+            return luaL_error(L, "unsupported type %s", luaL_typename(L, lua_type(L, 1)));
         }
         }
-        return 0;
     }
     static int pack(lua_State* L) {
         void* data = seri_pack(L, 0, NULL);
@@ -37,8 +38,7 @@ namespace bee::lua_serialization {
             lua_pushlightuserdata(L, (void*)(intptr_t)luaL_checkinteger(L, 1));
             return 1;
         default:
-            luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
-            return 0;
+            return luaL_error(L, "unsupported type %s", luaL_typename(L, lua_type(L, 1)));
         }
     }
     static int luaopen(lua_State* L) {

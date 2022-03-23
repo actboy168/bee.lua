@@ -99,7 +99,7 @@ namespace bee::subprocess {
         spawn();
         ~spawn();
         void search_path();
-        bool set_console(console type);
+        void set_console(console type);
         bool hide_window();
         void suspended();
         void detached();
