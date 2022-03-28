@@ -36,7 +36,7 @@ namespace bee::subprocess {
         environment release();
     private:
         std::map<std::string, std::string> set_env_;
-        std::set<std::string>               del_env_;
+        std::set<std::string>              del_env_;
     };
 
     class spawn;
