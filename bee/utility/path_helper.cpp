@@ -1,6 +1,6 @@
 #include <bee/utility/path_helper.h>
-#include <bee/utility/dynarray.h>
 #include <bee/error.h>
+#include <vector>
 
 #if defined(_WIN32)
 
@@ -21,7 +21,7 @@ namespace bee::path_helper {
             return fs::path(buffer, buffer + path_len);
         }
         for (DWORD buf_len = 0x200; buf_len <= 0x10000; buf_len <<= 1) {
-            dynarray<wchar_t> buf(buf_len);
+            std::vector<wchar_t> buf(buf_len);
             path_len = ::GetModuleFileNameW((HMODULE)module_handle, buf.data(), buf_len);
             if (path_len == 0) {
                 throw make_syserror("GetModuleFileNameW");
@@ -65,7 +65,7 @@ namespace bee::path_helper {
         if (path_len <= 1) {
             throw std::runtime_error("_NSGetExecutablePath failed.");
         }
-        dynarray<char> buf(path_len);
+        std::vector<char> buf(path_len);
         int rv = _NSGetExecutablePath(buf.data(), &path_len);
         if (rv != 0) {
             throw std::runtime_error("_NSGetExecutablePath failed.");
@@ -89,7 +89,7 @@ namespace bee::path_helper {
             return fs::path(buffer, buffer + path_len);
         }
         for (size_t buf_len = 0x200; buf_len <= 0x10000; buf_len <<= 1) {
-            dynarray<char> buf(buf_len);
+            std::vector<char> buf(buf_len);
             ssize_t path_len = ::readlink("/proc/self/exe", buf.data(), buf_len-1);
             if (path_len == 0) {
                 throw make_syserror("readlink");
