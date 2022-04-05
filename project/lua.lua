@@ -48,7 +48,6 @@ lm:executable 'lua' {
         defines = "LUA_USE_LINUX",
         ldflags = {
             "-Wl,-E",
-            "-pthread"
         },
         links = {
             "m", "dl",
