@@ -95,6 +95,9 @@ lm:source_set "source_bee" {
         sources = {
             "!binding/lua_unicode.cpp",
         },
+        links = {
+            "stdc++fs"
+        },
         ldflags = {
             "-pthread"
         },
