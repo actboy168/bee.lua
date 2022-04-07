@@ -11,11 +11,11 @@
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
 namespace bee::path_helper {
-    fs::path dll_path(void* module_handle) {
+    path_expected dll_path(void* module_handle) {
         wchar_t buffer[MAX_PATH];
         DWORD path_len = ::GetModuleFileNameW((HMODULE)module_handle, buffer, _countof(buffer));
         if (path_len == 0) {
-            throw make_syserror("GetModuleFileNameW");
+            return unexpected<std::string>(make_syserror("GetModuleFileNameW").what());
         }
         if (path_len < _countof(buffer)) {
             return fs::path(buffer, buffer + path_len);
@@ -24,31 +24,31 @@ namespace bee::path_helper {
             std::vector<wchar_t> buf(buf_len);
             path_len = ::GetModuleFileNameW((HMODULE)module_handle, buf.data(), buf_len);
             if (path_len == 0) {
-                throw make_syserror("GetModuleFileNameW");
+                return unexpected<std::string>(make_syserror("GetModuleFileNameW").what());
             }
             if (path_len < _countof(buffer)) {
                 return fs::path(buf.data(), buf.data() + path_len);
             }
         }
-        throw std::runtime_error("::GetModuleFileNameW return too long.");
+        return unexpected<std::string>("::GetModuleFileNameW return too long.");
     }
 
-    fs::path exe_path() {
+    path_expected exe_path() {
         return dll_path(NULL);
     }
 
-    fs::path dll_path() {
+    path_expected dll_path() {
         return dll_path(reinterpret_cast<void*>(&__ImageBase));
     }
 
-    fs::path appdata_path() {
+    path_expected appdata_path() {
         wchar_t* path;
         if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &path))) {
             fs::path res(path);
             CoTaskMemFree(path);
             return res;
         }
-        throw std::runtime_error("::SHGetKnownFolderPath failed.");
+        return unexpected<std::string>("::SHGetKnownFolderPath failed.");
     }
 }
 
@@ -59,16 +59,16 @@ namespace bee::path_helper {
 #include <mach-o/dyld.h>
 
 namespace bee::path_helper {
-    fs::path exe_path() {
+    path_expected exe_path() {
         uint32_t path_len = 0;
         _NSGetExecutablePath(0, &path_len);
         if (path_len <= 1) {
-            throw std::runtime_error("_NSGetExecutablePath failed.");
+            return unexpected<std::string>("_NSGetExecutablePath failed.");
         }
         std::vector<char> buf(path_len);
         int rv = _NSGetExecutablePath(buf.data(), &path_len);
         if (rv != 0) {
-            throw std::runtime_error("_NSGetExecutablePath failed.");
+            return unexpected<std::string>("_NSGetExecutablePath failed.");
         }
         return fs::path(buf.data(), buf.data() + path_len - 1);
     }
@@ -79,11 +79,11 @@ namespace bee::path_helper {
 #include <unistd.h>
 
 namespace bee::path_helper {
-    fs::path exe_path() {
+    path_expected exe_path() {
         char buffer[0x100];
         ssize_t path_len = ::readlink("/proc/self/exe", buffer, sizeof(buffer)-1);
         if (path_len < 0) {
-            throw make_syserror("readlink");
+            return unexpected<std::string>(make_syserror("readlink").what());
         }
         if (path_len < (ssize_t)sizeof(buffer)-1) {
             return fs::path(buffer, buffer + path_len);
@@ -92,23 +92,23 @@ namespace bee::path_helper {
             std::vector<char> buf(buf_len);
             ssize_t path_len = ::readlink("/proc/self/exe", buf.data(), buf_len-1);
             if (path_len == 0) {
-                throw make_syserror("readlink");
+                return unexpected<std::string>(make_syserror("readlink"),what());
             }
             if (path_len < (ssize_t)sizeof(buffer)-1) {
                 return fs::path(buf.data(), buf.data() + path_len);
             }
         }
-        throw std::runtime_error("readlink return too long.");
+        return unexpected<std::string>("readlink return too long.");
     }
 
-    fs::path appdata_path() {
+    path_expected appdata_path() {
         if (const char* env = getenv("XDG_DATA_HOME")) {
             return fs::path(env);
         }
         if (const char* env = getenv("HOME")) {
             return fs::path(env) / ".local" / "share";
         }
-        throw std::runtime_error("neither XDG_DATA_HOME nor HOME environment is set");
+        return unexpected<std::string>("neither XDG_DATA_HOME nor HOME environment is set");
     }
 }
 
@@ -117,10 +117,10 @@ namespace bee::path_helper {
 #if defined(BEE_DISABLE_DLOPEN)
 
 namespace bee::path_helper {
-    fs::path dll_path(void* module_handle) {
-        throw std::runtime_error("disable dl.");
+    path_expected dll_path(void* module_handle) {
+        return unexpected<std::string>("disable dl.");
     }
-    fs::path dll_path() {
+    path_expected dll_path() {
         return dll_path(nullptr);
     }
 }
@@ -130,17 +130,17 @@ namespace bee::path_helper {
 #include <dlfcn.h>
 
 namespace bee::path_helper {
-    fs::path dll_path(void* module_handle) {
+    path_expected dll_path(void* module_handle) {
         ::Dl_info dl_info;
         dl_info.dli_fname = 0;
         int const ret = ::dladdr(module_handle, &dl_info);
         if (0 != ret && dl_info.dli_fname != NULL) {
             return fs::absolute(dl_info.dli_fname).lexically_normal();
         }
-        throw std::runtime_error("::dladdr failed.");
+        return unexpected<std::string>("::dladdr failed.");
     }
 
-    fs::path dll_path() {
+    path_expected dll_path() {
         return dll_path((void*)&exe_path);
     }
 }

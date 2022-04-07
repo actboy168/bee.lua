@@ -434,7 +434,7 @@ end
 
 function test_fs:test_is_directory()
     local function is_directory(path, b)
-        lt.assertEquals(fs.is_directory(fs.path(path)), b, path)
+        lt.assertEquals(fs.is_directory(fs.path(path)), b)
     end
     local filename = 'temp.txt'
     is_directory('.', true)
@@ -446,7 +446,7 @@ end
 
 function test_fs:test_is_regular_file()
     local function is_regular_file(path, b)
-        lt.assertEquals(fs.is_regular_file(fs.path(path)), b, path)
+        lt.assertEquals(fs.is_regular_file(fs.path(path)), b)
     end
     local filename = 'temp.txt'
     is_regular_file('.', false)

@@ -9,142 +9,170 @@
 #include <lua.hpp>
 
 namespace bee::lua_filesystem {
+    static int pusherror(
+        lua_State* L,
+        const char* op,
+        const std::error_code& ec
+    ) noexcept {
+        return luaL_error(L,
+            "%s: %s",
+            op,
+            ec.message().c_str()
+        );
+    }
+
+    static int pusherror(
+        lua_State* L,
+        const char* op,
+        const std::error_code& ec,
+        const fs::path& path1
+    ) noexcept {
+        return luaL_error(L,
+            "%s: %s: \"%s\"",
+            op,
+            ec.message().c_str(),
+            path1.generic_u8string().c_str()
+        );
+    }
+
+    static int pusherror(
+        lua_State* L,
+        const char* op,
+        const std::error_code& ec,
+        const fs::path& path1,
+        const fs::path& path2
+    ) noexcept {
+        return luaL_error(L,
+            "%s: %s: \"%s\", \"%s\"",
+            op,
+            ec.message().c_str(),
+            path1.generic_u8string().c_str(),
+            path2.generic_u8string().c_str()
+        );
+    }
+
+    static bool status_good(const std::error_code& ec, const fs::file_status& status) {
+        return ec && status.type() != fs::file_type::not_found && status.type() != fs::file_type::unknown;
+    }
+
+    static fs::path& checkpath(lua_State* L, int idx) noexcept {
+        return *(fs::path*)getObject(L, idx, "filesystem");
+    }
+
     namespace path {
         static void* newudata(lua_State* L);
+    }
 
-        static fs::path& to(lua_State* L, int idx) {
-            return *(fs::path*)getObject(L, idx, "filesystem");
-        }
+    static void pushpath(lua_State* L) noexcept {
+        void* storage = path::newudata(L);
+        new (storage) fs::path();
+    }
+    static void pushpath(lua_State* L, fs::path::string_type&& path) noexcept {
+        void* storage = path::newudata(L);
+        new (storage) fs::path(std::forward<fs::path::string_type>(path));
+    }
+    static void pushpath(lua_State* L, const fs::path& path) noexcept {
+        void* storage = path::newudata(L);
+        new (storage) fs::path(path);
+    }
+    static void pushpath(lua_State* L, fs::path&& path) noexcept {
+        void* storage = path::newudata(L);
+        new (storage) fs::path(std::forward<fs::path>(path));
+    }
 
-        static int constructor_(lua_State* L) {
-            void* storage = newudata(L);
-            new (storage) fs::path();
-            return 1;
-        }
-
-        static int constructor_(lua_State* L, fs::path::string_type&& path) {
-            void* storage = newudata(L);
-            new (storage) fs::path(std::forward<fs::path::string_type>(path));
-            return 1;
-        }
-
-        static int constructor_(lua_State* L, const fs::path& path) {
-            void* storage = newudata(L);
-            new (storage) fs::path(path);
-            return 1;
-        }
-
-        static int constructor_(lua_State* L, fs::path&& path) {
-            void* storage = newudata(L);
-            new (storage) fs::path(std::forward<fs::path>(path));
-            return 1;
-        }
-
-        static int constructor(lua_State* L) {
-            LUA_TRY;
+    namespace path {
+        static int constructor(lua_State* L) noexcept {
             if (lua_gettop(L) == 0) {
-                return constructor_(L);
+                pushpath(L);
+                return 1;
             }
             switch (lua_type(L, 1)) {
             case LUA_TSTRING:
-                return constructor_(L, lua::checkstring(L, 1));
+                pushpath(L, lua::checkstring(L, 1));
+                return 1;
             case LUA_TUSERDATA:
-                return constructor_(L, to(L, 1));
+                pushpath(L, checkpath(L, 1));
+                return 1;
             default:
                 luaL_checktype(L, 1, LUA_TSTRING);
                 return 0;
             }
-            LUA_TRY_END;
         }
 
         static int filename(lua_State* L) {
-            LUA_TRY;
-            const fs::path& self = path::to(L, 1);
-            return constructor_(L, self.filename());
-            LUA_TRY_END;
+            const fs::path& self = checkpath(L, 1);
+            pushpath(L, self.filename());
+            return 1;
         }
 
         static int parent_path(lua_State* L) {
-            LUA_TRY;
-            const fs::path& self = path::to(L, 1);
-            return constructor_(L, self.parent_path());
-            LUA_TRY_END;
+            const fs::path& self = checkpath(L, 1);
+            pushpath(L, self.parent_path());
+            return 1;
         }
 
         static int stem(lua_State* L) {
-            LUA_TRY;
-            const fs::path& self = path::to(L, 1);
-            return constructor_(L, self.stem());
-            LUA_TRY_END;
+            const fs::path& self = checkpath(L, 1);
+            pushpath(L, self.stem());
+            return 1;
         }
 
         static int extension(lua_State* L) {
-            LUA_TRY;
-            const fs::path& self = path::to(L, 1);
-            return constructor_(L, self.extension());
-            LUA_TRY_END;
+            const fs::path& self = checkpath(L, 1);
+            pushpath(L, self.extension());
+            return 1;
         }
 
-        static int is_absolute(lua_State* L) {
-            LUA_TRY;
-            const fs::path& self = path::to(L, 1);
+        static int is_absolute(lua_State* L) noexcept {
+            const fs::path& self = checkpath(L, 1);
             lua_pushboolean(L, self.is_absolute());
             return 1;
-            LUA_TRY_END;
         }
 
-        static int is_relative(lua_State* L) {
-            LUA_TRY;
-            const fs::path& self = path::to(L, 1);
+        static int is_relative(lua_State* L) noexcept {
+            const fs::path& self = checkpath(L, 1);
             lua_pushboolean(L, self.is_relative());
             return 1;
-            LUA_TRY_END;
         }
 
-        static int remove_filename(lua_State* L) {
-            LUA_TRY;
-            fs::path& self = path::to(L, 1);
+        static int remove_filename(lua_State* L) noexcept {
+            fs::path& self = checkpath(L, 1);
             self.remove_filename();
             return 1;
-            LUA_TRY_END;
         }
 
         static int replace_filename(lua_State* L) {
-            LUA_TRY;
-            fs::path& self = path::to(L, 1);
+            fs::path& self = checkpath(L, 1);
             switch (lua_type(L, 2)) {
             case LUA_TSTRING:
                 self.replace_filename(lua::checkstring(L, 2));
                 lua_settop(L, 1);
                 return 1;
             case LUA_TUSERDATA:
-                self.replace_filename(to(L, 2));
+                self.replace_filename(checkpath(L, 2));
                 lua_settop(L, 1);
                 return 1;
             default:
                 luaL_checktype(L, 2, LUA_TSTRING);
                 return 0;
             }
-            LUA_TRY_END;
         }
 
         static int replace_extension(lua_State* L) {
-            LUA_TRY;
-            fs::path& self = path::to(L, 1);
+            fs::path& self = checkpath(L, 1);
             switch (lua_type(L, 2)) {
             case LUA_TSTRING:
                 self.replace_extension(lua::checkstring(L, 2));
                 lua_settop(L, 1);
                 return 1;
             case LUA_TUSERDATA:
-                self.replace_extension(to(L, 2));
+                self.replace_extension(checkpath(L, 2));
                 lua_settop(L, 1);
                 return 1;
             default:
                 luaL_checktype(L, 2, LUA_TSTRING);
                 return 0;
             }
-            LUA_TRY_END;
         }
 
         static int equal_extension(lua_State* L, const fs::path& self, const fs::path::string_type& ext) {
@@ -162,77 +190,69 @@ namespace bee::lua_filesystem {
         }
 
         static int equal_extension(lua_State* L) {
-            LUA_TRY;
-            const fs::path& self = path::to(L, 1);
+            const fs::path& self = checkpath(L, 1);
             switch (lua_type(L, 2)) {
             case LUA_TSTRING:
                 return equal_extension(L, self, lua::checkstring(L, 2));
             case LUA_TUSERDATA:
-                return equal_extension(L, self, to(L, 2));
+                return equal_extension(L, self, checkpath(L, 2));
             default:
                 luaL_checktype(L, 2, LUA_TSTRING);
                 return 0;
             }
-            LUA_TRY_END;
         }
 
         static int lexically_normal(lua_State* L) {
-            LUA_TRY;
-            fs::path& self = path::to(L, 1);
-            return constructor_(L, self.lexically_normal());
-            LUA_TRY_END;
+            fs::path& self = checkpath(L, 1);
+            pushpath(L, self.lexically_normal());
+            return 1;
         }
 
         static int mt_div(lua_State* L) {
-            LUA_TRY;
-            const fs::path& self = path::to(L, 1);
+            const fs::path& self = checkpath(L, 1);
             switch (lua_type(L, 2)) {
             case LUA_TSTRING:
-                return constructor_(L, self / lua::checkstring(L, 2));
+                pushpath(L, self / lua::checkstring(L, 2));
+                return 1;
             case LUA_TUSERDATA:
-                return constructor_(L, self / to(L, 2));
+                pushpath(L, self / checkpath(L, 2));
+                return 1;
             default:
                 luaL_checktype(L, 2, LUA_TSTRING);
                 return 0;
             }
-            LUA_TRY_END;
         }
 
         static int mt_concat(lua_State* L) {
-            LUA_TRY;
-            const fs::path& self = path::to(L, 1);
+            const fs::path& self = checkpath(L, 1);
             switch (lua_type(L, 2)) {
             case LUA_TSTRING:
-                return constructor_(L, self.native() + lua::checkstring(L, 2));
+                pushpath(L, self.native() + lua::checkstring(L, 2));
+                return 1;
             case LUA_TUSERDATA:
-                return constructor_(L, self.native() + to(L, 2).native());
+                pushpath(L, self.native() + checkpath(L, 2).native());
+                return 1;
             default:
                 luaL_checktype(L, 2, LUA_TSTRING);
                 return 0;
             }
-            LUA_TRY_END;
         }
 
         static int mt_eq(lua_State* L) {
-            LUA_TRY;
-            const fs::path& self = path::to(L, 1);
-            const fs::path& rht = path::to(L, 2);
+            const fs::path& self = checkpath(L, 1);
+            const fs::path& rht = checkpath(L, 2);
             lua_pushboolean(L, path_helper::equal(self, rht));
             return 1;
-            LUA_TRY_END;
         }
 
         static int destructor(lua_State* L) {
-            LUA_TRY;
-            fs::path& self = path::to(L, 1);
+            fs::path& self = checkpath(L, 1);
             self.~path();
             return 0;
-            LUA_TRY_END;
         }
 
         static int mt_tostring(lua_State* L) {
-            LUA_TRY;
-            const fs::path& self = path::to(L, 1);
+            const fs::path& self = checkpath(L, 1);
             auto            res = self.generic_u8string();
 #if defined(__cpp_lib_char8_t)
             lua_pushlstring(L, reinterpret_cast<const char*>(res.data()), res.size());
@@ -240,7 +260,6 @@ namespace bee::lua_filesystem {
             lua_pushlstring(L, res.data(), res.size());
 #endif
             return 1;
-            LUA_TRY_END;
         }
 
         static void* newudata(lua_State* L) {
@@ -276,155 +295,215 @@ namespace bee::lua_filesystem {
         }
     }
 
-    static int exists(lua_State* L) {
-        LUA_TRY;
-        const fs::path& p = path::to(L, 1);
-        lua_pushboolean(L, fs::exists(p));
-        return 1;
-        LUA_TRY_END;
-    }
-
-    static int is_directory(lua_State* L) {
-        LUA_TRY;
-        const fs::path& p = path::to(L, 1);
-        lua_pushboolean(L, fs::is_directory(p));
-        return 1;
-        LUA_TRY_END;
-    }
-
-    static int is_regular_file(lua_State* L) {
-        LUA_TRY;
-        const fs::path& p = path::to(L, 1);
-        lua_pushboolean(L, fs::is_regular_file(p));
-        return 1;
-        LUA_TRY_END;
-    }
-
-    static int create_directory(lua_State* L) {
-        LUA_TRY;
-        const fs::path& p = path::to(L, 1);
-        lua_pushboolean(L, fs::create_directory(p));
-        return 1;
-        LUA_TRY_END;
-    }
-
-    static int create_directories(lua_State* L) {
-        LUA_TRY;
-        const fs::path& p = path::to(L, 1);
-        lua_pushboolean(L, fs::create_directories(p));
-        return 1;
-        LUA_TRY_END;
-    }
-
-    static int rename(lua_State* L) {
-        LUA_TRY;
-        const fs::path& from = path::to(L, 1);
-        const fs::path& to = path::to(L, 2);
-        fs::rename(from, to);
-        return 0;
-        LUA_TRY_END;
-    }
-
-    static int remove(lua_State* L) {
-        LUA_TRY;
-        const fs::path& p = path::to(L, 1);
-        lua_pushboolean(L, fs::remove(p));
-        return 1;
-        LUA_TRY_END;
-    }
-
-    static int remove_all(lua_State* L) {
-        LUA_TRY;
-        const fs::path& p = path::to(L, 1);
-        lua_pushinteger(L, fs::remove_all(p));
-        return 1;
-        LUA_TRY_END;
-    }
-
-    static int current_path(lua_State* L) {
-        LUA_TRY;
-        if (lua_gettop(L) == 0) {
-            return path::constructor_(L, fs::current_path());
+    static int exists(lua_State* L) noexcept {
+        const fs::path& p = checkpath(L, 1);
+        std::error_code ec;
+        bool r = fs::exists(p, ec);
+        if (ec) {
+            return pusherror(L, "exists", ec, p); 
         }
-        const fs::path& p = path::to(L, 1);
-        fs::current_path(p);
-        return 0;
-        LUA_TRY_END;
+        lua_pushboolean(L, r);
+        return 1;
     }
 
-    static int copy(lua_State* L) {
-        LUA_TRY;
-        const fs::path& from = path::to(L, 1);
-        const fs::path& to = path::to(L, 2);
+    static int is_directory(lua_State* L) noexcept {
+        const fs::path& p = checkpath(L, 1);
+        std::error_code ec;
+        auto status = fs::status(p, ec);
+        if (status_good(ec, status)) {
+            return pusherror(L, "status", ec, p); 
+        }
+        lua_pushboolean(L, status.type() == fs::file_type::directory);
+        return 1;
+    }
+
+    static int is_regular_file(lua_State* L) noexcept {
+        const fs::path& p = checkpath(L, 1);
+        std::error_code ec;
+        auto status = fs::status(p, ec);
+        if (status_good(ec, status)) {
+            return pusherror(L, "status", ec, p); 
+        }
+        lua_pushboolean(L, status.type() == fs::file_type::regular);
+        return 1;
+    }
+
+    static int create_directory(lua_State* L) noexcept {
+        const fs::path& p = checkpath(L, 1);
+        std::error_code ec;
+        bool r = fs::create_directory(p, ec);
+        if (ec) {
+            return pusherror(L, "create_directory", ec, p); 
+        }
+        lua_pushboolean(L, r);
+        return 1;
+    }
+
+    static int create_directories(lua_State* L) noexcept {
+        const fs::path& p = checkpath(L, 1);
+        std::error_code ec;
+        bool r = fs::create_directories(p, ec);
+        if (ec) {
+            return pusherror(L, "create_directories", ec, p); 
+        }
+        lua_pushboolean(L, r);
+        return 1;
+    }
+
+    static int rename(lua_State* L) noexcept {
+        const fs::path& from = checkpath(L, 1);
+        const fs::path& to = checkpath(L, 2);
+        std::error_code ec;
+        fs::rename(from, to, ec);
+        if (ec) {
+            return pusherror(L, "rename", ec, from, to); 
+        }
+        return 0;
+    }
+
+    static int remove(lua_State* L) noexcept {
+        const fs::path& p = checkpath(L, 1);
+        std::error_code ec;
+        bool r = fs::remove(p, ec);
+        if (ec) {
+            return pusherror(L, "remove", ec, p); 
+        }
+        lua_pushboolean(L, r);
+        return 1;
+    }
+
+    static int remove_all(lua_State* L) noexcept {
+        const fs::path& p = checkpath(L, 1);
+        std::error_code ec;
+        uintmax_t r = fs::remove_all(p, ec);
+        if (ec) {
+            return pusherror(L, "remove_all", ec, p); 
+        }
+        lua_pushinteger(L, static_cast<lua_Integer>(r));
+        return 1;
+    }
+
+    static int current_path(lua_State* L) noexcept {
+        std::error_code ec;
+        if (lua_gettop(L) == 0) {
+            fs::path r = fs::current_path(ec);
+            if (ec) {
+                return pusherror(L, "current_path()", ec); 
+            }
+            pushpath(L, r);
+            return 1;
+        }
+        const fs::path& p = checkpath(L, 1);
+        fs::current_path(p, ec);
+        if (ec) {
+            return pusherror(L, "current_path(path)", ec, p); 
+        }
+        return 0;
+    }
+
+    static int copy(lua_State* L) noexcept {
+        const fs::path& from = checkpath(L, 1);
+        const fs::path& to = checkpath(L, 2);
         fs::copy_options options = fs::copy_options::none;
         if (lua_gettop(L) > 2) {
             options = static_cast<fs::copy_options>(luaL_checkinteger(L, 3));
         }
-        fs::copy(from, to, options);
+        std::error_code ec;
+        fs::copy(from, to, options, ec);
+        if (ec) {
+            return pusherror(L, "copy", ec, from, to); 
+        }
         return 0;
-        LUA_TRY_END;
     }
 
-    static bool patch_copy_file(const fs::path& from, const fs::path& to, fs::copy_options options) {
 #if defined(__MINGW32__)
-        if (fs::exists(from) && fs::exists(to)) {
-            if ((options & fs::copy_options::overwrite_existing) != fs::copy_options::none) {
-                fs::remove(to);
-            }
-            else if ((options & fs::copy_options::update_existing) != fs::copy_options::none) {
-                if (fs::last_write_time(from) > fs::last_write_time(to)) {
+    static bool mingw_copy_file(const fs::path& from, const fs::path& to, fs::copy_options options, std::error_code& ec) {
+        try {
+            if (fs::exists(from) && fs::exists(to)) {
+                if ((options & fs::copy_options::overwrite_existing) != fs::copy_options::none) {
                     fs::remove(to);
                 }
-                else {
+                else if ((options & fs::copy_options::update_existing) != fs::copy_options::none) {
+                    if (fs::last_write_time(from) > fs::last_write_time(to)) {
+                        fs::remove(to);
+                    }
+                    else {
+                        return false;
+                    }
+                }
+                else if ((options & fs::copy_options::skip_existing) != fs::copy_options::none) {
                     return false;
                 }
             }
-            else if ((options & fs::copy_options::skip_existing) != fs::copy_options::none) {
-                return false;
-            }
+            return fs::copy_file(from, to, options);
         }
-#endif
-        return fs::copy_file(from, to, options);
+        catch(const fs::filesystem_error& e) {
+            ec = e.code();
+            return false;
+        }
     }
+#endif
 
-    static int copy_file(lua_State* L) {
-        LUA_TRY;
-        const fs::path& from = path::to(L, 1);
-        const fs::path& to = path::to(L, 2);
+    static int copy_file(lua_State* L) noexcept {
+        const fs::path& from = checkpath(L, 1);
+        const fs::path& to = checkpath(L, 2);
         fs::copy_options options = fs::copy_options::none;
         if (lua_gettop(L) > 2) {
             options = static_cast<fs::copy_options>(luaL_checkinteger(L, 3));
         }
-        bool ok = patch_copy_file(from, to, options);
+        std::error_code ec;
+#if defined(__MINGW32__)
+        bool ok = mingw_copy_file(from, to, options, ec);
+#else
+        bool ok = fs::copy_file(from, to, options, ec);
+#endif
+        if (ec) {
+            return pusherror(L, "copy_file", ec, from, to); 
+        }
         lua_pushboolean(L, ok);
         return 1;
-        LUA_TRY_END;
     }
 
-    static int absolute(lua_State* L) {
-        LUA_TRY;
-        if (lua_gettop(L) != 1) {
-            return luaL_error(L, "fs.absolute only one parameter.");
+    static int absolute(lua_State* L) noexcept {
+        const fs::path& p = checkpath(L, 1);
+        std::error_code ec;
+        fs::path r = fs::absolute(p, ec);
+        if (ec) {
+            return pusherror(L, "absolute", ec, p); 
         }
-        const fs::path& p = path::to(L, 1);
-        return path::constructor_(L, fs::absolute(p));
-        LUA_TRY_END;
+        pushpath(L, r);
+        return 1;
     }
 
-    static int canonical(lua_State* L) {
-        LUA_TRY;
-        const fs::path& p = path::to(L, 1);
-        return path::constructor_(L, fs::canonical(p));
-        LUA_TRY_END;
+    static int canonical(lua_State* L) noexcept {
+        const fs::path& p = checkpath(L, 1);
+        std::error_code ec;
+        fs::path r = fs::canonical(p, ec);
+        if (ec) {
+            return pusherror(L, "canonical", ec, p); 
+        }
+        pushpath(L, r);
+        return 1;
     }
  
-    static int relative(lua_State* L) {
-        LUA_TRY;
+    static int relative(lua_State* L) noexcept {
+        const fs::path& p = checkpath(L, 1);
+        std::error_code ec;
         if (lua_gettop(L) == 1) {
-            return path::constructor_(L, fs::relative(path::to(L, 1)));
+            fs::path r = fs::relative(p, ec);
+            if (ec) {
+                return pusherror(L, "relative", ec, p); 
+            }
+            pushpath(L, r);
+            return 1;
         }
-        return path::constructor_(L, fs::relative(path::to(L, 1), path::to(L, 2)));
-        LUA_TRY_END;
+        const fs::path& base = checkpath(L, 2);
+        fs::path r = fs::relative(p, base, ec);
+        if (ec) {
+            return pusherror(L, "relative", ec, p, base); 
+        }
+        pushpath(L, r);
+        return 1;
     }
 
 #if !defined(__cpp_lib_chrono) || __cpp_lib_chrono < 201907
@@ -434,73 +513,94 @@ namespace bee::lua_filesystem {
     }
 #endif
 
-    static int last_write_time(lua_State* L) {
+    static int last_write_time(lua_State* L) noexcept {
         using namespace std::chrono;
-        LUA_TRY;
-        const fs::path& p = path::to(L, 1);
+        const fs::path& p = checkpath(L, 1);
+        std::error_code ec;
         if (lua_gettop(L) == 1) {
-            auto system_time = clock_cast<system_clock>(fs::last_write_time(p));
+            auto time = fs::last_write_time(p, ec);
+            if (ec) {
+                return pusherror(L, "last_write_time", ec, p); 
+            }
+            auto system_time = clock_cast<system_clock>(time);
             lua_pushinteger(L, duration_cast<seconds>(system_time.time_since_epoch()).count());
             return 1;
         }
         auto file_time = clock_cast<fs::file_time_type::clock>(system_clock::time_point() + seconds(luaL_checkinteger(L, 2)));
-        fs::last_write_time(p, file_time);
+        fs::last_write_time(p, file_time, ec);
+        if (ec) {
+            return pusherror(L, "last_write_time", ec, p); 
+        }
         return 0;
-        LUA_TRY_END;
     }
     
-    static int permissions(lua_State* L) {
-        LUA_TRY;
-        const fs::path& p = path::to(L, 1);
-        int             n = lua_gettop(L);
-        if (n == 1) {
-            lua_pushinteger(L, lua_Integer(fs::status(p).permissions()));
+    static int permissions(lua_State* L) noexcept {
+        const fs::path& p = checkpath(L, 1);
+        std::error_code ec;
+        switch (lua_gettop(L)) {
+        case 1: {
+            auto status = fs::status(p, ec);
+            if (status_good(ec, status)) {
+                return pusherror(L, "status", ec, p); 
+            }
+            lua_pushinteger(L, lua_Integer(status.permissions()));
             return 1;
         }
-        const fs::perms perms = fs::perms::mask & fs::perms(luaL_checkinteger(L, 2));
-        if (n == 2) {
-            fs::permissions(p, perms, fs::perm_options::replace);
+        case 2: {
+            auto perms = fs::perms::mask & fs::perms(luaL_checkinteger(L, 2));
+            fs::permissions(p, perms, ec);
+            if (ec) {
+                return pusherror(L, "permissions", ec, p); 
+            }
             return 0;
         }
-        const fs::perm_options options = fs::perm_options(luaL_checkinteger(L, 3));
-        fs::permissions(p, perms, options);
-        return 0;
-        LUA_TRY_END;
+        default: {
+            auto perms = fs::perms::mask & fs::perms(luaL_checkinteger(L, 2));
+            auto options = fs::perm_options(luaL_checkinteger(L, 3));
+            fs::permissions(p, perms, options, ec);
+            if (ec) {
+                return pusherror(L, "permissions", ec, p); 
+            }
+            return 0;
+        }
+        }
     }
 
     template <typename T>
     struct pairs_directory {
-        static pairs_directory& get(lua_State* L, int idx) {
+        static pairs_directory& get(lua_State* L, int idx) noexcept {
             return *static_cast<pairs_directory*>(lua_touserdata(L, idx));
         }
-        static int next(lua_State* L) {
-            LUA_TRY;
+        static int next(lua_State* L) noexcept {
             pairs_directory& self = get(L, lua_upvalueindex(1));
             if (self.cur == self.end) {
                 lua_pushnil(L);
                 return 1;
             }
-            const int nreslut = path::constructor_(L, self.cur->path());
-            ++self.cur;
-            return nreslut;
-            LUA_TRY_END;
+            pushpath(L, self.cur->path());
+            std::error_code ec;
+            self.cur.increment(ec);
+            if (ec) {
+                return pusherror(L, "directory_iterator::operator++", ec); 
+            }
+            return 1;
         }
-        static int close(lua_State* L) {
-            LUA_TRY;
+        static int close(lua_State* L) noexcept {
             pairs_directory& self = get(L, 1);
             self.cur = self.end;
             return 0;
-            LUA_TRY_END;
         }
-        static int gc(lua_State* L) {
-            LUA_TRY;
+        static int gc(lua_State* L) noexcept {
             get(L, 1).~pairs_directory();
             return 0;
-            LUA_TRY_END;
         }
-        static int constructor(lua_State* L, const fs::path& path) {
+        static int constructor(lua_State* L, const fs::path& path) noexcept {
             void* storage = lua_newuserdatauv(L, sizeof(pairs_directory), 0);
-            new (storage) pairs_directory(path);
+            std::error_code ec;
+            new (storage) pairs_directory(path, ec);
+            if (ec) {
+                return pusherror(L, "directory_iterator::directory_iterator", ec, path); 
+            }
             if (newObject(L, "pairs_directory")) {
                 static luaL_Reg mt[] = {
                     {"__gc", pairs_directory::gc},
@@ -514,52 +614,59 @@ namespace bee::lua_filesystem {
             lua_pushcclosure(L, pairs_directory::next, 1);
             return 2;
         }
-        pairs_directory(const fs::path& path)
-            : cur(T(path))
-            , end(T()) {}
+        pairs_directory(const fs::path& path, std::error_code& ec) noexcept
+            : cur(T(path, ec))
+            , end(T())
+        {}
         T cur;
         T end;
     };
     
-    static int pairs(lua_State* L) {
-        LUA_TRY;
-        const fs::path& self = path::to(L, 1);
+    static int pairs(lua_State* L) noexcept {
+        const fs::path& p = checkpath(L, 1);
         const char* flags = luaL_optstring(L, 2, "");
         luaL_argcheck(L, (flags[0] == '\0' || (flags[0] == 'r' && flags[1] == '\0')), 2, "invalid flags");
         if (flags[0] == 'r') {
-            pairs_directory<fs::recursive_directory_iterator>::constructor(L, self);
+            pairs_directory<fs::recursive_directory_iterator>::constructor(L, p);
         }
         else {
-            pairs_directory<fs::directory_iterator>::constructor(L, self);
+            pairs_directory<fs::directory_iterator>::constructor(L, p);
         }
         lua_pushnil(L);
         lua_pushnil(L);
         lua_rotate(L, -4, -1);
         return 4;
-        LUA_TRY_END;
     }
 
     static int exe_path(lua_State* L) {
-        LUA_TRY;
-        return path::constructor_(L, path_helper::exe_path());
-        LUA_TRY_END;
+        auto r = path_helper::exe_path();
+        if (!r) {
+            return luaL_error(L, "%s\n", r.error().c_str());
+        }
+        pushpath(L, r.value());
+        return 1;
     }
 
     static int dll_path(lua_State* L) {
-        LUA_TRY;
-        return path::constructor_(L, path_helper::dll_path());
-        LUA_TRY_END;
+        auto r = path_helper::dll_path();
+        if (!r) {
+            return luaL_error(L, "%s\n", r.error().c_str());
+        }
+        pushpath(L, r.value());
+        return 1;
     }
 
     static int appdata_path(lua_State* L) {
-        LUA_TRY;
-        return path::constructor_(L, path_helper::appdata_path());
-        LUA_TRY_END;
+        auto r = path_helper::appdata_path();
+        if (!r) {
+            return luaL_error(L, "%s\n", r.error().c_str());
+        }
+        pushpath(L, r.value());
+        return 1;
     }
 
     static int filelock(lua_State* L) {
-        LUA_TRY;
-        const fs::path& self = path::to(L, 1);
+        const fs::path& self = checkpath(L, 1);
         file::handle    fd = file::lock(self.string<file::handle::string_type::value_type>());
         if (!fd) {
             lua_pushnil(L);
@@ -574,7 +681,6 @@ namespace bee::lua_filesystem {
         }
         lua::newfile(L, f);
         return 1;
-        LUA_TRY_END;
     }
 
     static int luaopen(lua_State* L) {
