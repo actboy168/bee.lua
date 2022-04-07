@@ -92,7 +92,7 @@ namespace bee::path_helper {
             std::vector<char> buf(buf_len);
             ssize_t path_len = ::readlink("/proc/self/exe", buf.data(), buf_len-1);
             if (path_len == 0) {
-                return unexpected<std::string>(make_syserror("readlink"),what());
+                return unexpected<std::string>(make_syserror("readlink").what());
             }
             if (path_len < (ssize_t)sizeof(buffer)-1) {
                 return fs::path(buf.data(), buf.data() + path_len);
