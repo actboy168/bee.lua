@@ -13,7 +13,7 @@ namespace bee::lua_filesystem {
         lua_State* L,
         const char* op,
         const std::error_code& ec
-    ) noexcept {
+    ) {
         return luaL_error(L,
             "%s: %s",
             op,
@@ -26,7 +26,7 @@ namespace bee::lua_filesystem {
         const char* op,
         const std::error_code& ec,
         const fs::path& path1
-    ) noexcept {
+    ) {
         return luaL_error(L,
             "%s: %s: \"%s\"",
             op,
@@ -41,7 +41,7 @@ namespace bee::lua_filesystem {
         const std::error_code& ec,
         const fs::path& path1,
         const fs::path& path2
-    ) noexcept {
+    ) {
         return luaL_error(L,
             "%s: %s: \"%s\", \"%s\"",
             op,
