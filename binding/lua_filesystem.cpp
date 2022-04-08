@@ -1,12 +1,11 @@
+#include <bee/lua/binding.h>
 #include <bee/config.h>
 #include <bee/error.h>
 #include <bee/filesystem.h>
-#include <bee/lua/binding.h>
 #include <bee/lua/file.h>
 #include <bee/utility/file_helper.h>
 #include <bee/utility/path_helper.h>
 #include <utility>
-#include <lua.hpp>
 
 namespace bee::lua_filesystem {
     static int pusherror(

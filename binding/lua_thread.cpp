@@ -1,12 +1,11 @@
-#include <atomic>
 #include <bee/lua/binding.h>
 #include <bee/thread/lockqueue.h>
 #include <bee/thread/semaphore.h>
 #include <bee/thread/simplethread.h>
 #include <bee/thread/spinlock.h>
 #include <bee/error.h>
+#include <atomic>
 #include <functional>
-#include <lua.hpp>
 #include <map>
 #include <queue>
 #include <string>

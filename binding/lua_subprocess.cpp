@@ -1,10 +1,9 @@
-#include <bee/error.h>
 #include <bee/lua/binding.h>
+#include <bee/error.h>
 #include <bee/lua/file.h>
 #include <bee/filesystem.h>
 #include <bee/subprocess.h>
 #include <errno.h>
-#include <lua.hpp>
 #include <optional>
 #include <string.h>
 #if defined(_WIN32)

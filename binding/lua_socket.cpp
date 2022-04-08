@@ -1,11 +1,10 @@
-﻿#include <lua.hpp>
+﻿#include <bee/lua/binding.h>
 #if defined _WIN32
 #include <winsock.h>
 #else
 #include <sys/select.h>
 #endif
 #include <bee/error.h>
-#include <bee/lua/binding.h>
 #include <bee/net/endpoint.h>
 #include <bee/net/socket.h>
 #include <bee/utility/unreachable.h>

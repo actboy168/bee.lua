@@ -88,4 +88,3 @@ namespace bee::lua {
 
 #define newObject(L, name)      luaL_newmetatable((L), "bee::" name)
 #define getObject(L, idx, name) luaL_checkudata((L), (idx), "bee::" name)
-

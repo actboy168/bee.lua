@@ -1,9 +1,8 @@
 #pragma once
 
-#include <lua.hpp>
+#include <bee/lua/binding.h>
 #include <errno.h>
 #include <string.h>
-#include <bee/lua/binding.h>
 
 namespace bee::lua {
 #if defined(LUA_USE_POSIX)

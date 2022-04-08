@@ -1,5 +1,4 @@
 #include <bee/lua/binding.h>
-#include <lua.hpp>
 
 extern "C" {
 #include <lua-seri.h>
