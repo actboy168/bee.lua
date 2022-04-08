@@ -14,7 +14,6 @@
 #           define BEE_ENABLE_FILESYSTEM 1
 #       endif
 #   elif defined(__ANDROID__)
-#       include <bee/platform.h>
 #       if defined(__NDK_MAJOR__) && __NDK_MAJOR__ >= 22
 #           define BEE_ENABLE_FILESYSTEM 1
 #       endif
