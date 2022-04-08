@@ -51,10 +51,6 @@ namespace bee::lua_filesystem {
         );
     }
 
-    static bool status_good(const std::error_code& ec, const fs::file_status& status) {
-        return ec && status.type() != fs::file_type::not_found && status.type() != fs::file_type::unknown;
-    }
-
     static fs::path& checkpath(lua_State* L, int idx) noexcept {
         return *(fs::path*)getObject(L, idx, "filesystem");
     }
@@ -310,7 +306,7 @@ namespace bee::lua_filesystem {
         const fs::path& p = checkpath(L, 1);
         std::error_code ec;
         auto status = fs::status(p, ec);
-        if (status_good(ec, status)) {
+        if (!fs::status_known(status)) {
             return pusherror(L, "status", ec, p); 
         }
         lua_pushboolean(L, status.type() == fs::file_type::directory);
@@ -321,7 +317,7 @@ namespace bee::lua_filesystem {
         const fs::path& p = checkpath(L, 1);
         std::error_code ec;
         auto status = fs::status(p, ec);
-        if (status_good(ec, status)) {
+        if (!fs::status_known(status)) {
             return pusherror(L, "status", ec, p); 
         }
         lua_pushboolean(L, status.type() == fs::file_type::regular);
@@ -540,7 +536,7 @@ namespace bee::lua_filesystem {
         switch (lua_gettop(L)) {
         case 1: {
             auto status = fs::status(p, ec);
-            if (status_good(ec, status)) {
+            if (!fs::status_known(status) || status.type() == fs::file_type::not_found) {
                 return pusherror(L, "status", ec, p); 
             }
             lua_pushinteger(L, lua_Integer(status.permissions()));
