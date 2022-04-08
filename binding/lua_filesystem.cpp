@@ -294,11 +294,8 @@ namespace bee::lua_filesystem {
     static int exists(lua_State* L) noexcept {
         const fs::path& p = checkpath(L, 1);
         std::error_code ec;
-        bool r = fs::exists(p, ec);
-        if (ec) {
-            return pusherror(L, "exists", ec, p); 
-        }
-        lua_pushboolean(L, r);
+        auto status = fs::status(p, ec);
+        lua_pushboolean(L, fs::exists(status));
         return 1;
     }
 
@@ -306,10 +303,7 @@ namespace bee::lua_filesystem {
         const fs::path& p = checkpath(L, 1);
         std::error_code ec;
         auto status = fs::status(p, ec);
-        if (!fs::status_known(status)) {
-            return pusherror(L, "status", ec, p); 
-        }
-        lua_pushboolean(L, status.type() == fs::file_type::directory);
+        lua_pushboolean(L, fs::is_directory(status));
         return 1;
     }
 
@@ -317,10 +311,7 @@ namespace bee::lua_filesystem {
         const fs::path& p = checkpath(L, 1);
         std::error_code ec;
         auto status = fs::status(p, ec);
-        if (!fs::status_known(status)) {
-            return pusherror(L, "status", ec, p); 
-        }
-        lua_pushboolean(L, status.type() == fs::file_type::regular);
+        lua_pushboolean(L, fs::is_regular_file(status));
         return 1;
     }
 

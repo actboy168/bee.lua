@@ -344,7 +344,7 @@ end
 
 function test_fs:test_exists()
     local function is_exists(path, b)
-        lt.assertEquals(fs.exists(fs.path(path)), b, path)
+        lt.assertEquals(fs.exists(fs.path(path)), b)
     end
     local filename = 'temp.txt'
     os.remove(filename)
