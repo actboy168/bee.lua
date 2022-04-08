@@ -200,7 +200,7 @@ namespace bee::subprocess {
             res += val;
             res += L"\0";
         }
-        return res.string().release();
+        return res.string();
     }
 
     static HANDLE create_job() {

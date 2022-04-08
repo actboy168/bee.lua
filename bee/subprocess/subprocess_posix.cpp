@@ -82,10 +82,10 @@ namespace bee::subprocess {
         envs.emplace_back(str);
     }
 
-    static char** env_release(std::vector<char*>& envs) {
+    static std::unique_ptr<char*[]> env_release(std::vector<char*>& envs) {
         envs.emplace_back(nullptr);
-        char** r = new char*[envs.size()];
-        memcpy(r, envs.data(), envs.size() * sizeof(char*));
+        std::unique_ptr<char*[]> r(new char*[envs.size()]);
+        memcpy(r.get(), envs.data(), envs.size() * sizeof(char*));
         return r;
     }
 
