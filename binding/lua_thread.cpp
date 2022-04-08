@@ -287,7 +287,6 @@ namespace bee::lua_thread {
     static int lthread(lua_State* L) {
         std::string source = checkstring(L, 1);
         void*       params = seri_pack(L, 1, NULL);
-        LUA_TRY;
         int id = gen_threadid();
         thread_args* args = new thread_args { std::move(source), id, params };
         thread_handle handle = thread_create(thread_main, args);
@@ -298,7 +297,6 @@ namespace bee::lua_thread {
         }
         lua_pushlightuserdata(L, handle);
         return 1;
-        LUA_TRY_END;
     }
 
     static int lreset(lua_State* L) {

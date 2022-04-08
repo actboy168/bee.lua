@@ -14,16 +14,6 @@ namespace bee::lua {
     typedef std::string string_type;
 #endif
 
-    inline int push_error(lua_State* L, const std::exception& e)
-    {
-#if defined(_MSC_VER)
-        lua_pushstring(L, a2u(e.what()).c_str());
-#else
-        lua_pushstring(L, e.what());
-#endif
-        return lua_error(L);
-    }
-
     inline std::string_view to_strview(lua_State* L, int idx)
     {
         size_t len = 0;
@@ -77,9 +67,6 @@ namespace bee::lua {
         return 0;
     }
 }
-
-#define LUA_TRY     try {   
-#define LUA_TRY_END } catch (const std::exception& e) { return lua::push_error(L, e); }
 
 #if !defined(BEE_STATIC)
 #    if defined(_WIN32)

@@ -18,7 +18,7 @@ namespace bee::net {
 
     struct endpoint_info {
         std::string ip;
-        int port;
+        uint16_t port;
     };
 
     struct endpoint {

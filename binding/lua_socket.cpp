@@ -8,11 +8,9 @@
 #include <bee/lua/binding.h>
 #include <bee/net/endpoint.h>
 #include <bee/net/socket.h>
-#include <bee/filesystem.h>
 #include <bee/utility/unreachable.h>
-#include <chrono>
+#include <bee/thread/simplethread.h>
 #include <limits>
-#include <thread>
 
 namespace bee::lua_socket {
     using namespace bee::net;
@@ -420,7 +418,7 @@ namespace bee::lua_socket {
                 return luaL_error(L, "no open sockets to check and no timeout set");
             }
             else {
-                std::this_thread::sleep_for(std::chrono::duration<double>(timeo));
+                thread_sleep(static_cast<int>(timeo * 1000));
                 lua_newtable(L);
                 lua_newtable(L);
                 return 2;
