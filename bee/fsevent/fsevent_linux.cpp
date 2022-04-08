@@ -25,32 +25,28 @@ namespace bee::linux::fsevent {
             m_path_fd.emplace(std::make_pair(path, desc));
         }
         std::error_code ec;
-        fs::directory_iterator iter(path, fs::directory_options::skip_permission_denied, ec);
-        try {
-            if (ec) {
-                for (auto& p : iter) {
-                    if (fs::is_directory(p, ec) && ec) {
-                        add_dir(p);
-                    }
-                }
+        fs::directory_iterator iter {path, fs::directory_options::skip_permission_denied, ec };
+        fs::directory_iterator end {};
+        for (; !ec && iter != end; iter.increment(ec)) {
+            auto const& p = iter->path();
+            std::error_code _;
+            if (fs::is_directory(p, _)) {
+                add_dir(p);
             }
-        } catch(...) {
         }
     }
     void watch::del_dir(const fs::path& path)  {
         int desc = m_path_fd[path];
         inotify_rm_watch(m_inotify_fd, desc);
         std::error_code ec;
-        fs::directory_iterator iter(path, fs::directory_options::skip_permission_denied, ec);
-        try {
-            if (ec) {
-                for (auto& p : iter) {
-                    if (fs::is_directory(p, ec) && ec) {
-                        del_dir(p);
-                    }
-                }
+        fs::directory_iterator iter {path, fs::directory_options::skip_permission_denied, ec };
+        fs::directory_iterator end {};
+        for (; !ec && iter != end; iter.increment(ec)) {
+            auto const& p = iter->path();
+            std::error_code _;
+            if (fs::is_directory(p, _)) {
+                del_dir(p);
             }
-        } catch(...) {
         }
     }
     void watch::del_dir(int desc)  {
