@@ -14,9 +14,11 @@ else
 end
 
 local function isMinGW()
-    if platform.OS == 'Windows' and platform.CRT == 'libstdc++' then
-        return true
-    end
+    return platform.OS == 'Windows' and platform.CRT == 'libstdc++'
+end
+
+local function isAndroid()
+    return platform.OS == 'Android'
 end
 
 local function create_file(filename, content)
@@ -909,6 +911,9 @@ function test_fs:test_symlink()
 end
 
 function test_fs:test_hard_link()
+    if isAndroid() then
+        return
+    end
     local function test_create(createf, target, link)
         fs.remove_all(link)
         createf(target, link)
