@@ -694,7 +694,7 @@ namespace bee::lua_filesystem {
 
     static int filelock(lua_State* L) {
         const fs::path& self = getpath(L, 1);
-        file_handle    fd = file_handle::lock(self.string<file_handle::string_type::value_type>());
+        file_handle fd = file_handle::lock(self);
         if (!fd) {
             lua_pushnil(L);
             lua_pushstring(L, make_syserror().what());
