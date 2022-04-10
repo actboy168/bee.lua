@@ -136,7 +136,7 @@ namespace bee::lua_subprocess {
                 return ret;
             }
             case LUA_TUSERDATA: {
-                const fs::path& path = *(fs::path*)getObject(L, -1, "filesystem");
+                const fs::path& path = *(fs::path*)getObject(L, -1, "path");
                 auto ret = path.string<lua::string_type::value_type>();
                 lua_pop(L, 1);
                 return ret;
@@ -156,7 +156,7 @@ namespace bee::lua_subprocess {
                     args.push(lua::checkstring(L, -1));
                     break;
                 case LUA_TUSERDATA: {
-                    const fs::path& path = *(fs::path*)getObject(L, -1, "filesystem");
+                    const fs::path& path = *(fs::path*)getObject(L, -1, "path");
                     args.push(path.string<lua::string_type::value_type>());
                     break;
                 }
