@@ -837,7 +837,6 @@ function test_fs:test_tostring()
     test "🤣🤪"
 end
 
-
 function test_fs:test_canonical()
     local function test(a, b)
         lt.assertEquals(fs.canonical(fs.path(a)):string(), fs.absolute(fs.path(b)):string())
@@ -848,4 +847,91 @@ function test_fs:test_canonical()
     end
     test("ABCabc.txt", "ABCabc.txt")
     os.remove "ABCabc.txt"
+end
+
+function test_fs:test_status()
+    local function test_status(type, createf)
+        local path = fs.path("temp."..type)
+        fs.remove_all(path)
+        createf(path)
+        lt.assertEquals(fs.status(path), type)
+        fs.remove_all(path)
+    end
+    test_status("not_found", function () end)
+    test_status("regular", create_file)
+    test_status("directory", fs.create_directories)
+end
+
+function test_fs:test_symlink()
+    local function test_create(createf, target, link)
+        fs.remove_all(link)
+        createf(target, link)
+        lt.assertEquals(fs.status(target), fs.status(link))
+        lt.assertEquals(fs.exists(target), fs.exists(link))
+        lt.assertEquals(fs.is_directory(target), fs.is_directory(link))
+        lt.assertEquals(fs.is_regular_file(target), fs.is_regular_file(link))
+        lt.assertEquals(fs.status(target), fs.symlink_status(target))
+        lt.assertEquals(fs.symlink_status(link), "symlink")
+    end
+    local function test_remove(target, link)
+        fs.remove_all(target)
+        lt.assertEquals(fs.status(target), "not_found")
+        lt.assertEquals(fs.symlink_status(target), "not_found")
+        lt.assertEquals(fs.status(link), "not_found")
+        lt.assertEquals(fs.symlink_status(link), "symlink")
+        fs.remove_all(link)
+        lt.assertEquals(fs.status(link), "not_found")
+        lt.assertEquals(fs.symlink_status(link), "not_found")
+    end
+
+    do
+        local target = fs.path "temp.txt"
+        local link = fs.path "temp.link"
+        fs.remove_all(target)
+        local content = os.date()
+        create_file(target, content)
+        test_create(fs.create_symlink, target, link)
+        lt.assertEquals(read_file(target), content)
+        test_remove(target, link)
+    end
+
+    do
+        local target = fs.path "tempdir"
+        local link = fs.path "tempdir.link"
+        fs.remove_all(target)
+        fs.create_directories(target)
+        test_create(fs.create_directory_symlink, target, link)
+        local content = os.date()
+        create_file(target / "temp.txt", content)
+        lt.assertEquals(read_file(link / "temp.txt"), content)
+        test_remove(target, link)
+    end
+end
+
+function test_fs:test_hard_link()
+    local function test_create(createf, target, link)
+        fs.remove_all(link)
+        createf(target, link)
+        lt.assertEquals(fs.status(target), fs.symlink_status(target))
+        lt.assertEquals(fs.status(link), fs.symlink_status(link))
+        lt.assertEquals(fs.status(link), fs.status(target))
+    end
+    local function test_remove(target, link)
+        fs.remove_all(target)
+        lt.assertEquals(fs.status(target), "not_found")
+        lt.assertEquals(fs.symlink_status(target), "not_found")
+        lt.assertNotEquals(fs.status(link), "not_found")
+        lt.assertNotEquals(fs.symlink_status(link), "not_found")
+        fs.remove_all(link)
+        lt.assertEquals(fs.status(link), "not_found")
+        lt.assertEquals(fs.symlink_status(link), "not_found")
+    end
+    local target = fs.path "temphard.txt"
+    local link = fs.path "temphard.link"
+    fs.remove_all(target)
+    local content = os.date()
+    create_file(target, content)
+    test_create(fs.create_hard_link, target, link)
+    lt.assertEquals(read_file(target), content)
+    test_remove(target, link)
 end

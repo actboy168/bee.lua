@@ -290,6 +290,40 @@ namespace bee::lua_filesystem {
         }
     }
 
+    static const char* filetypename(fs::file_type type) {
+        switch (type) {
+        case fs::file_type::none:      return "none";
+        case fs::file_type::not_found: return "not_found";
+        case fs::file_type::regular:   return "regular";
+        case fs::file_type::directory: return "directory";
+        case fs::file_type::symlink:   return "symlink";
+        case fs::file_type::block:     return "block";
+        case fs::file_type::character: return "character";
+        case fs::file_type::fifo:      return "fifo";
+#if defined(BEE_ENABLE_FILESYSTEM) && defined(_MSV_VER)
+        case fs::file_type::junction:  return "junction";
+#endif
+        default:
+        case fs::file_type::unknown:   return "unknown";
+        }
+    }
+
+    static int status(lua_State* L) noexcept {
+        const fs::path& p = checkpath(L, 1);
+        std::error_code ec;
+        auto status = fs::status(p, ec);
+        lua_pushstring(L, filetypename(status.type()));
+        return 1;
+    }
+    
+    static int symlink_status(lua_State* L) noexcept {
+        const fs::path& p = checkpath(L, 1);
+        std::error_code ec;
+        auto status = fs::symlink_status(p, ec);
+        lua_pushstring(L, filetypename(status.type()));
+        return 1;
+    }
+
     static int exists(lua_State* L) noexcept {
         const fs::path& p = checkpath(L, 1);
         std::error_code ec;
@@ -551,6 +585,39 @@ namespace bee::lua_filesystem {
         }
         }
     }
+    
+    static int create_symlink(lua_State* L) noexcept {
+        const fs::path& target = checkpath(L, 1);
+        const fs::path& link = checkpath(L, 2);
+        std::error_code ec;
+        fs::create_symlink(target, link, ec);
+        if (ec) {
+            return pusherror(L, "create_symlink", ec, target, link); 
+        }
+        return 0;
+    }
+
+    static int create_directory_symlink(lua_State* L) noexcept {
+        const fs::path& target = checkpath(L, 1);
+        const fs::path& link = checkpath(L, 2);
+        std::error_code ec;
+        fs::create_directory_symlink(target, link, ec);
+        if (ec) {
+            return pusherror(L, "create_directory_symlink", ec, target, link); 
+        }
+        return 0;
+    }
+
+    static int create_hard_link(lua_State* L) noexcept {
+        const fs::path& target = checkpath(L, 1);
+        const fs::path& link = checkpath(L, 2);
+        std::error_code ec;
+        fs::create_hard_link(target, link, ec);
+        if (ec) {
+            return pusherror(L, "create_hard_link", ec, target, link); 
+        }
+        return 0;
+    }
 
     template <typename T>
     struct pairs_directory {
@@ -672,6 +739,8 @@ namespace bee::lua_filesystem {
     static int luaopen(lua_State* L) {
         static luaL_Reg lib[] = {
             {"path", path::constructor},
+            {"status", status},
+            {"symlink_status", symlink_status},
             {"exists", exists},
             {"is_directory", is_directory},
             {"is_regular_file", is_regular_file},
@@ -688,6 +757,9 @@ namespace bee::lua_filesystem {
             {"relative", relative},
             {"last_write_time", last_write_time},
             {"permissions", permissions},
+            {"create_symlink", create_symlink},
+            {"create_directory_symlink", create_directory_symlink},
+            {"create_hard_link", create_hard_link},
             {"pairs", pairs},
             {"exe_path", exe_path},
             {"dll_path", dll_path},
