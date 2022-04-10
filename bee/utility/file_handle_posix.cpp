@@ -23,4 +23,9 @@ namespace bee {
     file_handle file_handle::dup(FILE* f) {
         return {::dup(from_file(f).value())};
     }
+
+    file_handle file_handle::open_link(const fs::path& filename) {
+        int fd = ::open(filename.c_str(), O_PATH | O_NOFOLLOW);
+        return {fd};
+    }
 }

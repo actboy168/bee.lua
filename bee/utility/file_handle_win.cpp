@@ -54,16 +54,27 @@ namespace bee {
         return {h};
     }
 
+    file_handle file_handle::open_link(const fs::path& filename) {
+        HANDLE h = CreateFileW(filename.c_str(),
+            0,
+            0, NULL,
+            OPEN_EXISTING,
+            FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+            NULL
+        );
+        return {h};
+    }
+
     std::optional<fs::path> file_handle::path() const {
         if (!valid()) {
             return std::nullopt;
         }
-        DWORD len = GetFinalPathNameByHandleW(h, NULL, 0, 0);
+        DWORD len = GetFinalPathNameByHandleW(h, NULL, 0, VOLUME_NAME_DOS);
         if (len == 0) {
             return std::nullopt;
         }
         std::vector<wchar_t> path(static_cast<size_t>(len));
-        DWORD len2 = GetFinalPathNameByHandleW(h, path.data(), len, 0);
+        DWORD len2 = GetFinalPathNameByHandleW(h, path.data(), len, VOLUME_NAME_DOS);
         if (len2 == 0 || len2 >= len) {
             return std::nullopt;
         }

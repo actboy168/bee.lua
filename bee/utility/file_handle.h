@@ -33,6 +33,7 @@ namespace bee {
         static file_handle from_file(FILE* f);
         static file_handle dup(FILE* f);
         static file_handle lock(const fs::path& filename);
+        static file_handle open_link(const fs::path& filename);
     private:
         value_type h;
     };
