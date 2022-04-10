@@ -80,25 +80,12 @@ namespace bee::path_helper {
 
 namespace bee::path_helper {
     path_expected exe_path() {
-        char buffer[0x100];
-        ssize_t path_len = ::readlink("/proc/self/exe", buffer, sizeof(buffer)-1);
-        if (path_len < 0) {
-            return unexpected<std::string>(make_syserror("readlink").what());
+        std::error_code ec;
+        auto res = fs::read_symlink("/proc/self/exe", ec);
+        if (ec) {
+            return unexpected<std::string>(make_syserror("exe_path").what());
         }
-        if (path_len < (ssize_t)sizeof(buffer)-1) {
-            return fs::path(buffer, buffer + path_len);
-        }
-        for (size_t buf_len = 0x200; buf_len <= 0x10000; buf_len <<= 1) {
-            std::vector<char> buf(buf_len);
-            ssize_t path_len = ::readlink("/proc/self/exe", buf.data(), buf_len-1);
-            if (path_len == 0) {
-                return unexpected<std::string>(make_syserror("readlink").what());
-            }
-            if (path_len < (ssize_t)sizeof(buffer)-1) {
-                return fs::path(buf.data(), buf.data() + path_len);
-            }
-        }
-        return unexpected<std::string>("readlink return too long.");
+        return res;
     }
 
     path_expected appdata_path() {
