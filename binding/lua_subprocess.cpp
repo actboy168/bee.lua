@@ -202,15 +202,15 @@ namespace bee::lua_subprocess {
             return (luaL_Stream*)r;
         }
 
-        static file::handle cast_stdio(lua_State* L, const char* name, const file::handle handle) {
+        static file_handle cast_stdio(lua_State* L, const char* name, const file_handle handle) {
             switch (lua_getfield(L, 1, name)) {
             case LUA_TUSERDATA: {
                 luaL_Stream* p = get_file(L, -1);
                 if (!p->closef) {
                     lua_pop(L, 1);
-                    return file::handle::invalid();
+                    return {};
                 }
-                return file::dup(p->f);
+                return file_handle::dup(p->f);
             }
             case LUA_TBOOLEAN: {
                 if (!lua_toboolean(L, -1)) {
@@ -224,7 +224,7 @@ namespace bee::lua_subprocess {
                 if (strcmp(name, "stdin") == 0) {
                     FILE* f = pipe.open_write();
                     if (!f) {
-                        return file::handle::invalid();
+                        return {};
                     }
                     lua::newfile(L, f);
                     return pipe.rd;
@@ -232,14 +232,14 @@ namespace bee::lua_subprocess {
                 else {
                     FILE* f = pipe.open_read();
                     if (!f) {
-                        return file::handle::invalid();
+                        return {};
                     }
                     lua::newfile(L, f);
                     return pipe.wr;
                 }
             }
             case LUA_TSTRING: {
-                if (strcmp(name, "stderr") == 0 && strcmp(lua_tostring(L,-1), "stdout") == 0 && file::handle::invalid() != handle) {
+                if (strcmp(name, "stderr") == 0 && strcmp(lua_tostring(L,-1), "stdout") == 0 &&  handle) {
                     lua_pop(L, 1);
                     lua_pushvalue(L, -1);
                     return handle;
@@ -249,11 +249,11 @@ namespace bee::lua_subprocess {
                 break;
             }
             lua_pop(L, 1);
-            return file::handle::invalid();
+            return {};
         }
 
-        static file::handle cast_stdio(lua_State* L, subprocess::spawn& self, const char* name, subprocess::stdio type, const file::handle handle = file::handle::invalid()) {
-            file::handle f = cast_stdio(L, name, handle);
+        static file_handle cast_stdio(lua_State* L, subprocess::spawn& self, const char* name, subprocess::stdio type, const file_handle handle = {}) {
+            file_handle f = cast_stdio(L, name, handle);
             if (f) {
                 self.redirect(type, f);
             }
@@ -350,9 +350,9 @@ namespace bee::lua_subprocess {
             cast_option(L, spawn);
             cast_detached(L, spawn);
 
-            file::handle f_stdin = cast_stdio(L, spawn, "stdin", subprocess::stdio::eInput);
-            file::handle f_stdout = cast_stdio(L, spawn, "stdout", subprocess::stdio::eOutput);
-            file::handle f_stderr = cast_stdio(L, spawn, "stderr", subprocess::stdio::eError, f_stdout);
+            file_handle f_stdin = cast_stdio(L, spawn, "stdin", subprocess::stdio::eInput);
+            file_handle f_stdout = cast_stdio(L, spawn, "stdout", subprocess::stdio::eOutput);
+            file_handle f_stderr = cast_stdio(L, spawn, "stderr", subprocess::stdio::eError, f_stdout);
             if (!spawn.exec(args, cwd ? cwd->c_str() : 0)) {
                 lua_pushnil(L);
                 lua_pushstring(L, make_syserror().what());

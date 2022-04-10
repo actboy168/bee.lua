@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <utility>
+#include <bee/utility/file_handle.h>
 
 namespace bee::subprocess {
     struct environment {
@@ -43,4 +44,18 @@ namespace bee::subprocess {
             return v.get();
         }
     };
+    
+    namespace pipe {
+        struct open_result {
+            file_handle rd;
+            file_handle wr;
+            inline FILE* open_read() {
+                return rd.to_file(file_handle::mode::read);
+            }
+            inline FILE* open_write() {
+                return wr.to_file(file_handle::mode::write);
+            }
+            operator bool() const { return rd && wr; }
+        };
+    }
 }

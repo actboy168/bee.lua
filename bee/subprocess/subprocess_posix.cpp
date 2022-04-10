@@ -154,16 +154,16 @@ namespace bee::subprocess {
 #endif
     }
 
-    void spawn::redirect(stdio type, file::handle h) { 
+    void spawn::redirect(stdio type, file_handle h) { 
         switch (type) {
         case stdio::eInput:
-            fds_[0] = h;
+            fds_[0] = h.value();
             break;
         case stdio::eOutput:
-            fds_[1] = h;
+            fds_[1] = h.value();
             break;
         case stdio::eError:
-            fds_[2] = h;
+            fds_[2] = h.value();
             break;
         default:
             unreachable();
@@ -260,22 +260,16 @@ namespace bee::subprocess {
     }
 
     namespace pipe {
-        FILE* open_result::open_read() {
-            return file::open_read(rd);
-        }
-        FILE* open_result::open_write() {
-            return file::open_write(wr);
-        }
         open_result open() {
             int fds[2];
             if (!net::socket::blockpair(fds)) {
-                return { file::handle::invalid(), file::handle::invalid() };
+                return { {}, {} };
             }
-            return { file::handle(fds[0]), file::handle(fds[1]) };
+            return { {fds[0]}, {fds[1]} };
         }
         int peek(FILE* f) {
             char tmp[256];
-            int rc = recv(file::get_handle(f), tmp, sizeof(tmp), MSG_PEEK | MSG_DONTWAIT);
+            int rc = recv(file_handle::from_file(f).value(), tmp, sizeof(tmp), MSG_PEEK | MSG_DONTWAIT);
             if (rc == 0) {
                 return -1;
             }

@@ -3,7 +3,7 @@
 #include <bee/error.h>
 #include <bee/filesystem.h>
 #include <bee/lua/file.h>
-#include <bee/utility/file_helper.h>
+#include <bee/utility/file_handle.h>
 #include <bee/utility/path_helper.h>
 #include <utility>
 
@@ -694,13 +694,13 @@ namespace bee::lua_filesystem {
 
     static int filelock(lua_State* L) {
         const fs::path& self = getpath(L, 1);
-        file::handle    fd = file::lock(self.string<file::handle::string_type::value_type>());
+        file_handle    fd = file_handle::lock(self.string<file_handle::string_type::value_type>());
         if (!fd) {
             lua_pushnil(L);
             lua_pushstring(L, make_syserror().what());
             return 2;
         }
-        FILE* f = file::open_write(fd);
+        FILE* f = fd.to_file(file_handle::mode::write);
         if (!f) {
             lua_pushnil(L);
             lua_pushstring(L, make_crterror().what());

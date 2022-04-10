@@ -357,18 +357,18 @@ namespace bee::subprocess {
         detached_ = true;
     }
 
-    void spawn::redirect(stdio type, file::handle h) {
+    void spawn::redirect(stdio type, file_handle h) {
         si_.dwFlags |= STARTF_USESTDHANDLES;
         inherit_handle_ = true;
         switch (type) {
         case stdio::eInput:
-            si_.hStdInput = h;
+            si_.hStdInput = h.value();
             break;
         case stdio::eOutput:
-            si_.hStdOutput = h;
+            si_.hStdOutput = h.value();
             break;
         case stdio::eError:
-            si_.hStdError = h;
+            si_.hStdError = h.value();
             break;
         default:
             unreachable();
@@ -500,14 +500,6 @@ namespace bee::subprocess {
     }
 
     namespace pipe {
-        FILE* open_result::open_read() {
-            return file::open_read(rd);
-        }
-
-        FILE* open_result::open_write() {
-            return file::open_write(wr);
-        }
-
         open_result open() {
             SECURITY_ATTRIBUTES sa;
             sa.nLength = sizeof(SECURITY_ATTRIBUTES);
@@ -515,14 +507,14 @@ namespace bee::subprocess {
             sa.lpSecurityDescriptor = NULL;
             HANDLE read_pipe = NULL, write_pipe = NULL;
             if (!::CreatePipe(&read_pipe, &write_pipe, &sa, 0)) {
-                return { file::handle::invalid(), file::handle::invalid() };
+                return { {}, {} };
             }
-            return { file::handle(read_pipe), file::handle(write_pipe) };
+            return { {read_pipe}, {write_pipe} };
         }
 
         int peek(FILE* f) {
             DWORD rlen = 0;
-            if (PeekNamedPipe(file::get_handle(f), 0, 0, 0, &rlen, 0)) {
+            if (PeekNamedPipe(file_handle::from_file(f).value(), 0, 0, 0, &rlen, 0)) {
                 return rlen;
             }
             return -1;

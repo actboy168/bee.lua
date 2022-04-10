@@ -6,7 +6,6 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include <bee/utility/file_helper.h>
 #include <bee/subprocess/common.h>
 
 namespace bee::subprocess {
@@ -40,13 +39,6 @@ namespace bee::subprocess {
     };
 
     namespace pipe {
-        struct open_result {
-            file::handle rd;
-            file::handle wr;
-            FILE*        open_read();
-            FILE*        open_write();
-            operator bool() { return rd && wr; }
-        };
         _BEE_API open_result open();
         _BEE_API int         peek(FILE* f);
     }
@@ -103,7 +95,7 @@ namespace bee::subprocess {
         bool hide_window();
         void suspended();
         void detached();
-        void redirect(stdio type, file::handle h);
+        void redirect(stdio type, file_handle h);
         void env(environment&& env);
         bool exec(const args_t& args, const wchar_t* cwd);
 

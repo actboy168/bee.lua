@@ -6,7 +6,6 @@
 #include <map>
 #include <set>
 #include <vector>
-#include <bee/utility/file_helper.h>
 #include <bee/subprocess/common.h>
 #include <spawn.h>
 
@@ -18,13 +17,6 @@ namespace bee::subprocess {
     };
 
     namespace pipe {
-        struct open_result {
-            file::handle rd;
-            file::handle wr;
-            FILE*        open_read();
-            FILE*        open_write();
-            operator bool() { return rd && wr; }
-        };
         open_result open();
         int         peek(FILE* f);
     }
@@ -69,7 +61,7 @@ namespace bee::subprocess {
         ~spawn();
         void suspended();
         void detached();
-        void redirect(stdio type, file::handle f);
+        void redirect(stdio type, file_handle f);
         void env(environment&& env);
         bool exec(args_t& args, const char* cwd);
     private:
