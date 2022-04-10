@@ -1,6 +1,7 @@
 #include <bee/error.h>
 #include <bee/fsevent.h>
 #include <bee/lua/binding.h>
+#include <bee/utility/unreachable.h>
 
 namespace bee::lua_filewatch {
     static fsevent::watch& to(lua_State* L) {
@@ -51,8 +52,7 @@ namespace bee::lua_filewatch {
             lua_pushstring(L, "rename");
             break;
         default:
-            lua_pushstring(L, "unknown");
-            break;
+            unreachable();
         }
         lua::push_string(L, notify.path);
         return 2;
