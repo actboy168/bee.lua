@@ -43,7 +43,7 @@ namespace bee {
         return newh;
     }
 
-    file_handle file_handle::lock(const string_type& filename) {
+    file_handle file_handle::lock(const fs::path& filename) {
         HANDLE h = CreateFileW(filename.c_str(),
             GENERIC_WRITE,
             0, NULL,
@@ -52,5 +52,30 @@ namespace bee {
             NULL
         );
         return {h};
+    }
+
+    std::optional<fs::path> file_handle::path() const {
+        if (!valid()) {
+            return std::nullopt;
+        }
+        DWORD len = GetFinalPathNameByHandleW(h, NULL, 0, 0);
+        if (len == 0) {
+            return std::nullopt;
+        }
+        std::vector<wchar_t> path(static_cast<size_t>(len));
+        DWORD len2 = GetFinalPathNameByHandleW(h, path.data(), len, 0);
+        if (len2 == 0 || len2 >= len) {
+            return std::nullopt;
+        }
+        path.resize(static_cast<size_t>(len2));
+        if (path[0] == L'\\' && path[1] == L'\\' && path[2] == L'?' && path[3] == L'\\') {
+            // Turn the \\?\UNC\ network path prefix into \\.
+            if (path[4] == L'U' && path[5] == L'N' && path[6] == L'C' && path[7] == L'\\') {
+                return fs::path(L"\\\\").concat(path.begin() + 8, path.end());
+            }
+            // Remove the \\?\ prefix.
+            return fs::path {path.begin() + 4, path.end()};
+        }
+        return fs::path {path.begin(), path.end()};
     }
 }

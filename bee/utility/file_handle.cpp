@@ -8,6 +8,9 @@ namespace bee {
         : h(v)
     { }
     file_handle::operator bool() const {
+        return valid();
+    }
+    bool file_handle::valid() const {
         return *this != file_handle{};
     }
     file_handle::value_type file_handle::value() const {
