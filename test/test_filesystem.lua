@@ -864,7 +864,20 @@ function test_fs:test_status()
     test_status("directory", fs.create_directories)
 end
 
+local function supportedSymlinks()
+    if platform.OS ~= "Windows" then
+        return true
+    end
+    -- see https://blogs.windows.com/windowsdeveloper/2016/12/02/symlinks-windows-10/
+    local ok = pcall(fs.create_symlink, "temp.txt", "temp.link")
+    fs.remove_all "temp.link"
+    return ok
+end
+
 function test_fs:test_symlink()
+    if not supportedSymlinks() then
+        return
+    end
     local function test_create(createf, target, link)
         fs.remove_all(link)
         createf(target, link)
