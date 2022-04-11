@@ -64,7 +64,7 @@ lm:copy "copy_script" {
 if not lm.notest then
     local tests = {}
     local fs = require "bee.filesystem"
-    for file in fs.pairs(lm.workdir .. "/test", "r") do
+    for file in fs.pairs(lm.workdir .. "/../test", "r") do
         if file:equal_extension ".lua" then
             tests[#tests+1] = file
         end
