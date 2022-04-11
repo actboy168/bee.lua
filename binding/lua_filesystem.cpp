@@ -100,14 +100,14 @@ namespace bee::lua_filesystem {
     };
     using path_ptr = constptr<fs::path>;
 
-    static path_ptr getpathptr(lua_State* L, int idx) noexcept {
+    static path_ptr getpathptr(lua_State* L, int idx) {
         if (lua_type(L, idx) == LUA_TSTRING) {
             return fs::path { lua::checkstring(L, idx) };
         }
         return (const fs::path*)luaL_checkudata(L, idx, "bee::path");
     }
 
-    static fs::path& getpath(lua_State* L, int idx) noexcept {
+    static fs::path& getpath(lua_State* L, int idx) {
         return *(fs::path*)luaL_checkudata(L, idx, "bee::path");
     }
 
@@ -115,21 +115,21 @@ namespace bee::lua_filesystem {
         static void* newudata(lua_State* L);
     }
 
-    static void pushpath(lua_State* L) noexcept {
+    static void pushpath(lua_State* L) {
         void* storage = path::newudata(L);
         new (storage) fs::path();
     }
-    static void pushpath(lua_State* L, const fs::path& path) noexcept {
+    static void pushpath(lua_State* L, const fs::path& path) {
         void* storage = path::newudata(L);
         new (storage) fs::path(path);
     }
-    static void pushpath(lua_State* L, fs::path&& path) noexcept {
+    static void pushpath(lua_State* L, fs::path&& path) {
         void* storage = path::newudata(L);
         new (storage) fs::path(std::forward<fs::path>(path));
     }
 
     namespace path {
-        static int constructor(lua_State* L) noexcept {
+        static int constructor(lua_State* L) {
             if (lua_gettop(L) == 0) {
                 pushpath(L);
             }
@@ -163,19 +163,19 @@ namespace bee::lua_filesystem {
             return 1;
         }
 
-        static int is_absolute(lua_State* L) noexcept {
+        static int is_absolute(lua_State* L) {
             path_ptr self = getpathptr(L, 1);
             lua_pushboolean(L, self->is_absolute());
             return 1;
         }
 
-        static int is_relative(lua_State* L) noexcept {
+        static int is_relative(lua_State* L) {
             path_ptr self = getpathptr(L, 1);
             lua_pushboolean(L, self->is_relative());
             return 1;
         }
 
-        static int remove_filename(lua_State* L) noexcept {
+        static int remove_filename(lua_State* L) {
             fs::path& self = getpath(L, 1);
             self.remove_filename();
             return 1;
@@ -312,7 +312,7 @@ namespace bee::lua_filesystem {
         }
     }
 
-    static int status(lua_State* L) noexcept {
+    static int status(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
         auto status = fs::status(p, ec);
@@ -320,7 +320,7 @@ namespace bee::lua_filesystem {
         return 1;
     }
     
-    static int symlink_status(lua_State* L) noexcept {
+    static int symlink_status(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
         auto status = fs::symlink_status(p, ec);
@@ -328,7 +328,7 @@ namespace bee::lua_filesystem {
         return 1;
     }
 
-    static int exists(lua_State* L) noexcept {
+    static int exists(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
         auto status = fs::status(p, ec);
@@ -336,7 +336,7 @@ namespace bee::lua_filesystem {
         return 1;
     }
 
-    static int is_directory(lua_State* L) noexcept {
+    static int is_directory(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
         auto status = fs::status(p, ec);
@@ -344,7 +344,7 @@ namespace bee::lua_filesystem {
         return 1;
     }
 
-    static int is_regular_file(lua_State* L) noexcept {
+    static int is_regular_file(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
         auto status = fs::status(p, ec);
@@ -352,7 +352,7 @@ namespace bee::lua_filesystem {
         return 1;
     }
 
-    static int create_directory(lua_State* L) noexcept {
+    static int create_directory(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
         bool r = fs::create_directory(p, ec);
@@ -363,7 +363,7 @@ namespace bee::lua_filesystem {
         return 1;
     }
 
-    static int create_directories(lua_State* L) noexcept {
+    static int create_directories(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
         bool r = fs::create_directories(p, ec);
@@ -374,7 +374,7 @@ namespace bee::lua_filesystem {
         return 1;
     }
 
-    static int rename(lua_State* L) noexcept {
+    static int rename(lua_State* L) {
         path_ptr from = getpathptr(L, 1);
         path_ptr to = getpathptr(L, 2);
         std::error_code ec;
@@ -385,7 +385,7 @@ namespace bee::lua_filesystem {
         return 0;
     }
 
-    static int remove(lua_State* L) noexcept {
+    static int remove(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
         bool r = fs::remove(p, ec);
@@ -396,7 +396,7 @@ namespace bee::lua_filesystem {
         return 1;
     }
 
-    static int remove_all(lua_State* L) noexcept {
+    static int remove_all(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
         uintmax_t r = fs::remove_all(p, ec);
@@ -407,7 +407,7 @@ namespace bee::lua_filesystem {
         return 1;
     }
 
-    static int current_path(lua_State* L) noexcept {
+    static int current_path(lua_State* L) {
         std::error_code ec;
         if (lua_gettop(L) == 0) {
             fs::path r = fs::current_path(ec);
@@ -425,7 +425,7 @@ namespace bee::lua_filesystem {
         return 0;
     }
 
-    static int copy(lua_State* L) noexcept {
+    static int copy(lua_State* L) {
         path_ptr from = getpathptr(L, 1);
         path_ptr to = getpathptr(L, 2);
         fs::copy_options options = fs::copy_options::none;
@@ -468,7 +468,7 @@ namespace bee::lua_filesystem {
     }
 #endif
 
-    static int copy_file(lua_State* L) noexcept {
+    static int copy_file(lua_State* L) {
         path_ptr from = getpathptr(L, 1);
         path_ptr to = getpathptr(L, 2);
         fs::copy_options options = fs::copy_options::none;
@@ -488,7 +488,7 @@ namespace bee::lua_filesystem {
         return 1;
     }
 
-    static int absolute(lua_State* L) noexcept {
+    static int absolute(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
         fs::path r = fs::absolute(p, ec);
@@ -499,7 +499,7 @@ namespace bee::lua_filesystem {
         return 1;
     }
 
-    static int canonical(lua_State* L) noexcept {
+    static int canonical(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
         fs::path r = fs::canonical(p, ec);
@@ -510,7 +510,7 @@ namespace bee::lua_filesystem {
         return 1;
     }
  
-    static int relative(lua_State* L) noexcept {
+    static int relative(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
         if (lua_gettop(L) == 1) {
@@ -537,7 +537,7 @@ namespace bee::lua_filesystem {
     }
 #endif
 
-    static int last_write_time(lua_State* L) noexcept {
+    static int last_write_time(lua_State* L) {
         using namespace std::chrono;
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
@@ -558,7 +558,7 @@ namespace bee::lua_filesystem {
         return 0;
     }
     
-    static int permissions(lua_State* L) noexcept {
+    static int permissions(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
         switch (lua_gettop(L)) {
@@ -590,7 +590,7 @@ namespace bee::lua_filesystem {
         }
     }
     
-    static int create_symlink(lua_State* L) noexcept {
+    static int create_symlink(lua_State* L) {
         path_ptr target = getpathptr(L, 1);
         path_ptr link = getpathptr(L, 2);
         std::error_code ec;
@@ -601,7 +601,7 @@ namespace bee::lua_filesystem {
         return 0;
     }
 
-    static int create_directory_symlink(lua_State* L) noexcept {
+    static int create_directory_symlink(lua_State* L) {
         path_ptr target = getpathptr(L, 1);
         path_ptr link = getpathptr(L, 2);
         std::error_code ec;
@@ -612,7 +612,7 @@ namespace bee::lua_filesystem {
         return 0;
     }
 
-    static int create_hard_link(lua_State* L) noexcept {
+    static int create_hard_link(lua_State* L) {
         path_ptr target = getpathptr(L, 1);
         path_ptr link = getpathptr(L, 2);
         std::error_code ec;
@@ -625,10 +625,10 @@ namespace bee::lua_filesystem {
 
     template <typename T>
     struct pairs_directory {
-        static pairs_directory& get(lua_State* L, int idx) noexcept {
+        static pairs_directory& get(lua_State* L, int idx) {
             return *static_cast<pairs_directory*>(lua_touserdata(L, idx));
         }
-        static int next(lua_State* L) noexcept {
+        static int next(lua_State* L) {
             pairs_directory& self = get(L, lua_upvalueindex(1));
             if (self.cur == self.end) {
                 lua_pushnil(L);
@@ -642,16 +642,16 @@ namespace bee::lua_filesystem {
             }
             return 1;
         }
-        static int close(lua_State* L) noexcept {
+        static int close(lua_State* L) {
             pairs_directory& self = get(L, 1);
             self.cur = self.end;
             return 0;
         }
-        static int gc(lua_State* L) noexcept {
+        static int gc(lua_State* L) {
             get(L, 1).~pairs_directory();
             return 0;
         }
-        static int constructor(lua_State* L, const fs::path& path) noexcept {
+        static int constructor(lua_State* L, const fs::path& path) {
             void* storage = lua_newuserdatauv(L, sizeof(pairs_directory), 0);
             std::error_code ec;
             new (storage) pairs_directory(path, ec);
@@ -671,7 +671,7 @@ namespace bee::lua_filesystem {
             lua_pushcclosure(L, pairs_directory::next, 1);
             return 2;
         }
-        pairs_directory(const fs::path& path, std::error_code& ec) noexcept
+        pairs_directory(const fs::path& path, std::error_code& ec)
             : cur(T(path, ec))
             , end(T())
         {}
@@ -679,7 +679,7 @@ namespace bee::lua_filesystem {
         T end;
     };
     
-    static int pairs(lua_State* L) noexcept {
+    static int pairs(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         const char* flags = luaL_optstring(L, 2, "");
         luaL_argcheck(L, (flags[0] == '\0' || (flags[0] == 'r' && flags[1] == '\0')), 2, "invalid flags");
