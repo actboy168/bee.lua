@@ -740,6 +740,20 @@ namespace bee::lua_filesystem {
         return 1;
     }
 
+    static int fullpath(lua_State* L) {
+        path_ptr path = getpathptr(L, 1);
+        file_handle fd = file_handle::open_link(path);
+        if (!fd) {
+            return pusherror(L, "fullpath", make_syserror().code()); 
+        }
+        auto fullpath = fd.path();
+        if (!fullpath) {
+            return pusherror(L, "fullpath", make_syserror().code()); 
+        }
+        pushpath(L, *fullpath);
+        return 1;
+    }
+
     static int luaopen(lua_State* L) {
         static luaL_Reg lib[] = {
             {"path", path::constructor},
@@ -769,6 +783,7 @@ namespace bee::lua_filesystem {
             {"dll_path", dll_path},
             {"appdata_path", appdata_path},
             {"filelock", filelock},
+            {"fullpath", fullpath},
             {NULL, NULL},
         };
         lua_newtable(L);

@@ -17,7 +17,10 @@ namespace bee {
         if (!valid()) {
             return std::nullopt;
         }
-        //TODO
-        return std::nullopt;
+        char path[PATH_MAX];
+        if (::fcntl(h, F_GETPATH, path) < 0) {
+            return std::nullopt;
+        }
+        return fs::path(path);
     }
 }

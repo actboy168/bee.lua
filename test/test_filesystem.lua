@@ -892,7 +892,9 @@ function test_fs:test_symlink()
         fs.remove_all(target)
         lt.assertEquals(fs.status(target), "not_found")
         lt.assertEquals(fs.symlink_status(target), "not_found")
-        --lt.assertEquals(fs.status(link), "not_found")
+        if platform.OS ~= "macOS" then
+            lt.assertEquals(fs.status(link), "not_found")
+        end
         lt.assertEquals(fs.symlink_status(link), "symlink")
         fs.remove_all(link)
         lt.assertEquals(fs.status(link), "not_found")
@@ -952,4 +954,32 @@ function test_fs:test_hard_link()
     test_create(fs.create_hard_link, target, link)
     lt.assertEquals(read_file(target), content)
     test_remove(target, link)
+end
+
+function test_fs:test_fullpath()
+    local file = "temp.txt"
+    do
+        fs.remove_all(file)
+        lt.assertError(fs.fullpath, file)
+        create_file(file)
+        lt.assertEquals(fs.canonical(file), fs.fullpath(file))
+    end
+
+    if supportedSymlinks() then
+        local link = "temp.symlink"
+        fs.remove_all(link)
+        fs.create_symlink(file, link)
+        lt.assertEquals(fs.absolute(link), fs.fullpath(link))
+        fs.remove_all(link)
+    end
+
+    do
+        local link = "temp.hardlink"
+        fs.remove_all(link)
+        fs.create_hard_link(file, link)
+        lt.assertEquals(fs.canonical(link), fs.fullpath(link))
+        fs.remove_all(link)
+    end
+
+    fs.remove_all(file)
 end
