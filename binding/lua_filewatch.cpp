@@ -13,7 +13,7 @@ namespace bee::lua_filewatch {
         fsevent::taskid id = self.add(path);
         if (id == fsevent::kInvalidTaskId) {
             lua_pushnil(L);
-            lua_pushstring(L, make_syserror().what());
+            lua::push_errormesg(L, "filewatch::add", make_syserror());
             return 2;
         }
         lua_pushinteger(L, id);

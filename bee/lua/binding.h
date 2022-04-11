@@ -3,6 +3,7 @@
 #include <lua.hpp>
 #include <map>
 #include <string>
+#include <bee/error.h>
 #if defined(_WIN32)
 #include <bee/utility/unicode_win.h>
 #endif
@@ -40,6 +41,14 @@ namespace bee::lua {
 #else
         lua_pushlstring(L, str.data(), str.size());
 #endif
+    }
+
+    inline void push_errormesg(lua_State* L, const char* msg, const std::error_code& ec) {
+        lua_pushfstring(L, "%s: %s (%d)", msg, error_message(ec).c_str(), ec.value());
+    }
+
+    inline void push_errormesg(lua_State* L, const char* msg, const std::system_error& err) {
+        push_errormesg(L, msg, err.code());
     }
 
     template <typename T>

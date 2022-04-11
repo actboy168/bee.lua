@@ -355,7 +355,7 @@ namespace bee::lua_subprocess {
             file_handle f_stderr = cast_stdio(L, spawn, "stderr", subprocess::stdio::eError, f_stdout);
             if (!spawn.exec(args, cwd ? cwd->c_str() : 0)) {
                 lua_pushnil(L);
-                lua_pushstring(L, make_syserror().what());
+                lua::push_errormesg(L, "subprocess::spawn", make_syserror());
                 return 2;
             }
             process::constructor(L, spawn);
@@ -380,14 +380,14 @@ namespace bee::lua_subprocess {
         if (!p->closef) {
             auto ec = std::make_error_code(std::errc::broken_pipe);
             lua_pushnil(L);
-            lua_pushfstring(L, "peek: %s (%d)", error_message(ec).c_str(), ec.value());
+            lua::push_errormesg(L, "subprocess::peek", ec);
             return 2;
         }
         int n = subprocess::pipe::peek(p->f);
         if (n < 0) {
-            auto error = make_syserror("peek");
+            auto error = make_syserror();
             lua_pushnil(L);
-            lua_pushfstring(L, "%s (%d)", error.what(), error.code().value());
+            lua::push_errormesg(L, "subprocess::peek", error);
             return 2;
         }
         lua_pushinteger(L, n);

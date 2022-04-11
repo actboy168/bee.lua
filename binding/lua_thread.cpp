@@ -292,7 +292,8 @@ namespace bee::lua_thread {
         if (!handle) {
             auto error = make_syserror("thread_create");
             delete args;
-            return luaL_error(L, "%s (%d)", error.what(), error.code().value());
+            lua::push_errormesg(L, "thread", error);
+            return lua_error(L);
         }
         lua_pushlightuserdata(L, handle);
         return 1;

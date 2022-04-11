@@ -28,7 +28,7 @@ namespace bee::lua_socket {
     static int push_neterror(lua_State* L, const char* msg) {
         auto error = make_neterror(msg);
         lua_pushnil(L);
-        lua_pushfstring(L, "(%d) %s", error.code().value(), error.what());
+        lua::push_errormesg(L, msg, error);
         return 2;
     }
     static endpoint read_endpoint(lua_State* L, socket::protocol protocol, int idx) {
@@ -231,7 +231,7 @@ namespace bee::lua_socket {
         }
         auto error = make_error(err);
         lua_pushnil(L);
-        lua_pushfstring(L, "(%d) %s", err, error.what());
+        lua::push_errormesg(L, "status", error);
         return 2;
     }
     static int info(lua_State* L) {

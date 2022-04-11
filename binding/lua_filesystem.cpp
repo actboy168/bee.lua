@@ -727,13 +727,13 @@ namespace bee::lua_filesystem {
         file_handle fd = file_handle::lock(self);
         if (!fd) {
             lua_pushnil(L);
-            lua_pushstring(L, make_syserror().what());
+            lua::push_errormesg(L, "filelock", make_syserror());
             return 2;
         }
         FILE* f = fd.to_file(file_handle::mode::write);
         if (!f) {
             lua_pushnil(L);
-            lua_pushstring(L, make_crterror().what());
+            lua::push_errormesg(L, "filelock", make_crterror());
             return 2;
         }
         lua::newfile(L, f);
