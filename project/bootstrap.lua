@@ -62,9 +62,20 @@ lm:copy "copy_script" {
 }
 
 if not lm.notest then
+    local tests = {}
+    local fs = require "bee.filesystem"
+    for file in fs.pairs("./test", "r") do
+        if file:equal_extension ".lua" then
+            tests[#tests+1] = file
+        end
+    end
     lm:build "test" {
         EXE_DIR.."/"..BOOTSTRAP..exe, "@test/test.lua",
+        "--touch", "$out",
         deps = { BOOTSTRAP, "copy_script" },
+        description = "Run test.",
+        input = tests,
+        output = "$obj/test.stamp",
         pool = "console",
     }
 end
