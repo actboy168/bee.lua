@@ -109,4 +109,12 @@ namespace bee {
     std::system_error make_neterror(const char* message) {
         return make_error(last_neterror(), message);
     }
+    
+    std::string error_message(const std::error_code& ec) {
+#if defined(_WIN32)
+        return windows_category().message(ec.value());
+#else
+        return ec.message();
+#endif
+    }
 }

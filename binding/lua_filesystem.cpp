@@ -16,7 +16,7 @@ namespace bee::lua_filesystem {
         return luaL_error(L,
             "%s: %s",
             op,
-            ec.message().c_str()
+            error_message(ec).c_str()
         );
     }
 
@@ -29,7 +29,7 @@ namespace bee::lua_filesystem {
         return luaL_error(L,
             "%s: %s: \"%s\"",
             op,
-            ec.message().c_str(),
+            error_message(ec).c_str(),
             path1.generic_u8string().c_str()
         );
     }
@@ -44,7 +44,7 @@ namespace bee::lua_filesystem {
         return luaL_error(L,
             "%s: %s: \"%s\", \"%s\"",
             op,
-            ec.message().c_str(),
+            error_message(ec).c_str(),
             path1.generic_u8string().c_str(),
             path2.generic_u8string().c_str()
         );

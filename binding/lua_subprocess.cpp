@@ -380,7 +380,7 @@ namespace bee::lua_subprocess {
         if (!p->closef) {
             auto ec = std::make_error_code(std::errc::broken_pipe);
             lua_pushnil(L);
-            lua_pushfstring(L, "peek: %s (%d)", ec.message().c_str(), ec.value());
+            lua_pushfstring(L, "peek: %s (%d)", error_message(ec).c_str(), ec.value());
             return 2;
         }
         int n = subprocess::pipe::peek(p->f);

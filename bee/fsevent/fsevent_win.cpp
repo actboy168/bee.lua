@@ -67,7 +67,7 @@ namespace bee::win::fsevent {
         std::error_code ec;
         m_path = fs::absolute(path, ec);
         if (ec) {
-            push_notify(tasktype::Error, std::format(L"`std::filesystem::absolute` failed: {}", u2w(ec.message())));
+            push_notify(tasktype::Error, std::format(L"`std::filesystem::absolute` failed: {}", u2w(error_message(ec))));
             return false;
         }
 
