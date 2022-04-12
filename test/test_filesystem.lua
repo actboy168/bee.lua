@@ -686,13 +686,13 @@ function test_fs:test_pairs()
         ['temp/temp2.txt'] = true,
         ['temp/temp'] = true,
     })
-    --pairs_ok('temp', "r", {
-    --    ['temp/temp1.txt'] = true,
-    --    ['temp/temp2.txt'] = true,
-    --    ['temp/temp'] = true,
-    --    ['temp/temp/temp1.txt'] = true,
-    --    ['temp/temp/temp2.txt'] = true,
-    --})
+    pairs_ok('temp', "r", {
+        ['temp/temp1.txt'] = true,
+        ['temp/temp2.txt'] = true,
+        ['temp/temp'] = true,
+        ['temp/temp/temp1.txt'] = true,
+        ['temp/temp/temp2.txt'] = true,
+    })
 
     fs.remove_all(fs.path('temp'))
     pairs_failed('temp.txt')
