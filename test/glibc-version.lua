@@ -44,6 +44,5 @@ local function glibVersion(paths)
 end
 
 print(glibVersion {
-    "./build/linux/bin/lua",
-    "./build/linux/bin/bee.so",
+    "./build/bin/bootstrap",
 })
