@@ -624,6 +624,18 @@ namespace bee::lua_filesystem {
     }
 
     template <typename T>
+    struct pairs_metatable {};
+
+    template <>
+    struct pairs_metatable<fs::recursive_directory_iterator> {
+        static inline const char name[] = "bee::pairs_r";
+    };
+    template <>
+    struct pairs_metatable<fs::directory_iterator> {
+        static inline const char name[] = "bee::pairs";
+    };
+
+    template <typename T>
     struct pairs_directory {
         static pairs_directory& get(lua_State* L, int idx) {
             return *static_cast<pairs_directory*>(lua_touserdata(L, idx));
@@ -658,7 +670,7 @@ namespace bee::lua_filesystem {
             if (ec) {
                 return pusherror(L, "directory_iterator::directory_iterator", ec, path); 
             }
-            if (newObject(L, "pairs_directory")) {
+            if (luaL_newmetatable(L, pairs_metatable<T>::name)) {
                 static luaL_Reg mt[] = {
                     {"__gc", pairs_directory::gc},
                     {"__close", pairs_directory::close},
@@ -678,7 +690,7 @@ namespace bee::lua_filesystem {
         T cur;
         T end;
     };
-    
+
     static int pairs(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         const char* flags = luaL_optstring(L, 2, "");
