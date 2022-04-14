@@ -14,7 +14,5 @@ jobs:
         submodules : recursive
     - uses: actboy168/setup-luamake@master
     - run: luamake -mode ${{ matrix.mode }}
-    - if: matrix.os == 'macos-11'
-      run: luamake -universal -mode ${{ matrix.mode }}
     - if: runner.os == 'Linux'
       run: luamake lua test/glibc-version.lua
