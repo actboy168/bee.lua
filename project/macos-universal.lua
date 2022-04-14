@@ -18,7 +18,7 @@ lm:build(BOOTSTRAP.."-x86_64") {
     "$luamake",
     "-notest",
     "-builddir", "$builddir/x86_64",
-    "-target", "x86_64-apple-macos10.12",
+    "-target", "x86_64-apple-macos10.15",
     "-EXE_NAME", BOOTSTRAP,
     "-f", "@../make.lua",
     pool = "console",
