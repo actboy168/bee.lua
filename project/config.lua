@@ -26,7 +26,7 @@ end
 
 lm.macos = {
     flags = "-Wunguarded-availability",
-    sys = "macos10.12"
+    sys = "macos10.15"
 }
 lm.linux = {
     flags = "-fPIC",
