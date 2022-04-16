@@ -2,7 +2,6 @@
 
 #if defined(_WIN32)
 
-#include <bee/config.h>
 #include <stdint.h>
 
 namespace bee::platform {
@@ -21,7 +20,7 @@ namespace bee::platform {
         }
 	};
 
-    _BEE_API version get_version();
+    version get_version();
 }
 
 #endif

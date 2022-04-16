@@ -2,9 +2,7 @@ local lm = require 'luamake'
 
 lm:lua_source "source_bee" {
     includes = "3rd/lua-seri",
-    sources = {
-        "3rd/lua-seri/*.c",
-    }
+    sources = "3rd/lua-seri/*.c",
 }
 
 lm:source_set "source_bee" {
@@ -14,10 +12,7 @@ lm:source_set "source_bee" {
 
 lm:source_set "source_bee" {
     includes = ".",
-    defines = "BEE_INLINE",
-    sources = {
-        "bee/**/*.cpp",
-    },
+    sources = "bee/**/*.cpp",
     windows = {
         sources = {
             "!bee/**/*_osx.cpp",
@@ -60,7 +55,6 @@ lm:lua_source "source_bee" {
         "."
     },
     defines = {
-        "BEE_INLINE",
         lm.EXE ~= "lua" and "BEE_STATIC",
     },
     sources = "binding/*.cpp",

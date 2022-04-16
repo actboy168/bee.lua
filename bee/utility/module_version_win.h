@@ -1,12 +1,11 @@
 #pragma once
 
-#include <bee/config.h>
 #include <Windows.h>
 #include <stdint.h>
 #include <memory>
 
 namespace bee {
-	class _BEE_API module_version {
+	class module_version {
 		const static WORD ansi_code_page = 1252;
 	public:
 		module_version();
@@ -40,7 +39,7 @@ namespace bee {
         bool vaild_;
 	};
 
-	struct _BEE_API simple_module_version {
+	struct simple_module_version {
 		simple_module_version();
 		simple_module_version(const wchar_t* module_path, const wchar_t* key = L"FileVersion", const wchar_t pred = L',');
 		uint32_t major;

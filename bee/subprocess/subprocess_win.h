@@ -39,8 +39,8 @@ namespace bee::subprocess {
     };
 
     namespace pipe {
-        _BEE_API open_result open();
-        _BEE_API int         peek(FILE* f);
+        open_result open();
+        int         peek(FILE* f);
     }
 
     class envbuilder {
@@ -55,7 +55,7 @@ namespace bee::subprocess {
     };
 
     class spawn;
-    class _BEE_API process {
+    class process {
     public:
         process(spawn& spawn);
         process(PROCESS_INFORMATION&& pi) { pi_ = std::move(pi); }
@@ -85,7 +85,7 @@ namespace bee::subprocess {
 
     inline bool support_cwd() { return true; }
 
-    class _BEE_API spawn {
+    class spawn {
         friend class process;
     public:
         spawn();
