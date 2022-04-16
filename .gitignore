@@ -4,3 +4,4 @@
 *.user
 /.vscode/ipch/
 /bootstrap/forward_lua.h
+/.cache
