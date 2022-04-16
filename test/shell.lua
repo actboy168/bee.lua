@@ -6,6 +6,19 @@ local isWindows = platform.OS == 'Windows'
 local isMingw = os.getenv 'MSYSTEM' ~= nil
 local isWindowsShell = (isWindows) and (not isMingw)
 
+local function runshell(command)
+    local p <close> = assert(io.popen(command))
+    return p:read "a"
+end
+
+local function isWSL2()
+    if platform.OS ~= "Linux" then
+        return false
+    end
+    local r = runshell "uname -r"
+    return r:match "WSL2" ~= nil
+end
+
 local shell = {}
 
 function shell:add_readonly(filename)
@@ -25,7 +38,7 @@ end
 
 function shell:pwd()
     local command = isWindows and 'echo %cd%' or 'pwd -P'
-    return (io.popen(command):read 'a'):gsub('[\n\r]*$', '')
+    return runshell(command):gsub('[\n\r]*$', '')
 end
 
 function shell:path()
@@ -57,5 +70,6 @@ end
 
 shell.isMingw = isMingw
 shell.isWindowsShell = isWindowsShell
+shell.isWSL2 = isWSL2()
 
 return shell

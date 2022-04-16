@@ -2,6 +2,7 @@ local lt = require 'ltest'
 local socket = require 'bee.socket'
 local platform = require 'bee.platform'
 local thread = require 'bee.thread'
+local shell = require 'shell'
 local errlog = thread.channel "errlog"
 
 local function assertNotThreadError()
@@ -19,9 +20,16 @@ end
 
 local test_socket = lt.test "socket"
 
+local TestUnixSock
+
 function test_socket:setup()
     if platform.OS == "Windows" then
         socket.simulationUDS(self.UDS)
+    end
+    if shell.isWSL2 then
+        TestUnixSock = '/tmp/test.unixsock'
+    else
+        TestUnixSock =(TestUnixSock)
     end
 end
 
@@ -40,12 +48,12 @@ function test_socket:test_bind()
         lt.assertErrorMsgEquals([[bad argument #2 to '?' (invalid option 'icmp')]], socket, 'icmp')
     end
     do
-        os.remove 'test.unixsock'
+        os.remove(TestUnixSock)
         local fd = lt.assertIsUserdata(socket 'unix')
-        lt.assertIsBoolean(fd:bind('test.unixsock'))
-        lt.assertEquals(file_exists('test.unixsock'), true)
+        lt.assertIsBoolean(fd:bind(TestUnixSock))
+        lt.assertEquals(file_exists(TestUnixSock), true)
         fd:close()
-        lt.assertEquals(file_exists('test.unixsock'), false)
+        lt.assertEquals(file_exists(TestUnixSock), false)
     end
 end
 
@@ -65,21 +73,21 @@ function test_socket:test_tcp_connect()
 end
 
 function test_socket:test_unix_connect()
-    os.remove 'test.unixsock'
-    lt.assertEquals(socket 'unix':connect('test.unixsock'), nil)
-    lt.assertEquals(file_exists('test.unixsock'), false)
+    os.remove(TestUnixSock)
+    lt.assertEquals(socket 'unix':connect(TestUnixSock), nil)
+    lt.assertEquals(file_exists(TestUnixSock), false)
 
     local server = lt.assertIsUserdata(socket "unix")
-    lt.assertIsBoolean(server:bind('test.unixsock'))
+    lt.assertIsBoolean(server:bind(TestUnixSock))
     lt.assertIsBoolean(server:listen())
-    lt.assertEquals(file_exists('test.unixsock'), true)
+    lt.assertEquals(file_exists(TestUnixSock), true)
     for _ = 1, 2 do
         local client = lt.assertIsUserdata(socket 'unix')
-        lt.assertIsBoolean(client:connect 'test.unixsock')
+        lt.assertIsBoolean(client:connect(TestUnixSock))
         client:close()
     end
     server:close()
-    lt.assertEquals(file_exists('test.unixsock'), false)
+    lt.assertEquals(file_exists(TestUnixSock), false)
 end
 
 function test_socket:test_tcp_accept()
@@ -108,14 +116,14 @@ function test_socket:test_tcp_accept()
 end
 
 function test_socket:test_unix_accept()
-    os.remove 'test.unixsock'
+    os.remove(TestUnixSock)
     local server = lt.assertIsUserdata(socket "unix")
-    lt.assertIsBoolean(server:bind('test.unixsock'))
+    lt.assertIsBoolean(server:bind(TestUnixSock))
     lt.assertIsBoolean(server:listen())
-    lt.assertEquals(file_exists('test.unixsock'), true)
+    lt.assertEquals(file_exists(TestUnixSock), true)
     for _ = 1, 2 do
         local client = lt.assertIsUserdata(socket 'unix')
-        lt.assertIsBoolean(client:connect 'test.unixsock')
+        lt.assertIsBoolean(client:connect(TestUnixSock))
         local rd, _ = socket.select({server}, nil)
         local _, wr = socket.select(nil, {client})
         lt.assertIsTable(rd)
@@ -129,7 +137,7 @@ function test_socket:test_unix_accept()
         client:close()
     end
     server:close()
-    lt.assertEquals(file_exists('test.unixsock'), false)
+    lt.assertEquals(file_exists(TestUnixSock), false)
 end
 
 function test_socket:test_pair()
@@ -198,11 +206,11 @@ local function createTcpEchoTest(name, f)
 end
 
 local function createUnixEchoTest(name, f)
-    os.remove 'test.unixsock'
+    os.remove(TestUnixSock)
     local server = lt.assertIsUserdata(socket "unix")
-    lt.assertIsBoolean(server:bind('test.unixsock'))
+    lt.assertIsBoolean(server:bind(TestUnixSock))
     lt.assertIsBoolean(server:listen())
-    local client = createEchoThread(name, 'unix', 'test.unixsock')
+    local client = createEchoThread(name, 'unix',(TestUnixSock))
     local rd, _ = socket.select({server}, nil)
     assert(rd[1], server)
     local session = server:accept()
@@ -214,7 +222,7 @@ local function createUnixEchoTest(name, f)
     server:close()
     thread.wait(client)
     assertNotThreadError()
-    lt.assertEquals(file_exists('test.unixsock'), false)
+    lt.assertEquals(file_exists(TestUnixSock), false)
 end
 
 local function syncSend(fd, data)
