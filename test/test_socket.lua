@@ -30,7 +30,7 @@ function test_socket:setup()
     if shell.isWSL2 then
         TestUnixSock = '/tmp/test.unixsock'
     else
-        TestUnixSock =(TestUnixSock)
+        TestUnixSock = 'test.unixsock'
     end
 end
 
