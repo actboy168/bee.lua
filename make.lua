@@ -1,7 +1,7 @@
 local lm = require 'luamake'
 if lm.EXE == "lua" then
-    lm:import 'project/lua.lua'
+    lm:import 'compile/lua.lua'
     return
 end
 
-lm:import 'project/bootstrap.lua'
+lm:import 'compile/bootstrap.lua'
