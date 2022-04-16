@@ -1,5 +1,4 @@
 #include <bee/lua/binding.h>
-#include <bee/config.h>
 #include <bee/error.h>
 #include <bee/filesystem.h>
 #include <bee/lua/file.h>
