@@ -66,9 +66,10 @@ if not lm.notest then
     local fs = require "bee.filesystem"
     for file in fs.pairs(lm.workdir .. "/../test", "r") do
         if file:equal_extension ".lua" then
-            tests[#tests+1] = file
+            tests[#tests+1] = file:lexically_normal():string()
         end
     end
+    table.sort(tests)
     lm:build "test" {
         EXE_DIR.."/"..BOOTSTRAP..exe, "@test/test.lua",
         "--touch", "$out",

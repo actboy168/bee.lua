@@ -151,10 +151,8 @@ lm:source_set 'source_lua' {
         visibility = "default",
     },
     msvc = {
-        warnings = {
-            disable = {
-                "4267"
-            }
+        flags = {
+            "/wd4267"
         }
     }
 }
