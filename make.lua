@@ -4,12 +4,4 @@ if lm.EXE == "lua" then
     return
 end
 
-if lm.universal then
-    if lm.os == "macos" then
-        lm:import 'project/macos-universal.lua'
-        return
-    end
-    error "universal does not support"
-end
-
 lm:import 'project/bootstrap.lua'
