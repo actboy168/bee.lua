@@ -26,6 +26,7 @@ function test_socket:setup()
     if platform.OS == "Windows" then
         socket.simulationUDS(self.UDS)
     end
+    -- see https://github.com/microsoft/WSL/issues/4240
     if shell.isWSL2 then
         TestUnixSock = '/tmp/test.unixsock'
     else

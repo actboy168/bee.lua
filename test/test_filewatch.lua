@@ -2,20 +2,16 @@ local lt = require 'ltest'
 local fw = require 'bee.filewatch'
 local fs = require 'bee.filesystem'
 local thread = require 'bee.thread'
+local shell = require 'shell'
 
 local test_fw = lt.test "filewatch"
 
-local function create_dir(filename)
-    fs.create_directories(fs.path 'temp' / filename)
-end
-
 local function create_file(filename, content)
-    os.remove(filename)
-    local f = assert(io.open('temp/' .. filename, 'wb'))
+    fs.remove(filename)
+    local f <close> = assert(io.open(filename:string(), 'wb'))
     if content ~= nil then
         f:write(content)
     end
-    f:close()
 end
 
 local function assertSelect(what, value)
@@ -36,7 +32,12 @@ local function assertSelect(what, value)
 end
 
 local function test(f)
-    local root = fs.absolute(fs.path './temp'):lexically_normal()
+    local root
+    if shell.isWSL2 then
+        root = fs.path "/tmp/bee_test_temp/"
+    else
+        root = fs.absolute('./temp/'):lexically_normal()
+    end
     pcall(fs.remove_all, root)
     fs.create_directories(root)
     local id = fw.add(root:string())
@@ -57,8 +58,8 @@ end
 
 function test_fw:test_2()
     test(function(root)
-        create_dir 'test1'
-        create_file 'test1.txt'
+        fs.create_directories(root / 'test1')
+        create_file(root / 'test1.txt')
         fs.rename(root / 'test1.txt', root / 'test2.txt')
         fs.remove(root / 'test2.txt')
 
