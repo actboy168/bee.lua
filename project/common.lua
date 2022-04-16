@@ -1,27 +1,22 @@
 local lm = require 'luamake'
 
-lm:source_set "source_bee" {
-    includes = {
-        "3rd/lua",
-        "3rd/lua-seri",
-    },
+lm:lua_source "source_bee" {
+    includes = "3rd/lua-seri",
     sources = {
         "3rd/lua-seri/*.c",
-    },
-    linux = {
-        flags = "-fPIC"
     }
 }
 
 lm:source_set "source_bee" {
-    includes = {
-        "bee/nonstd",
-        "."
-    },
+    includes = "bee/nonstd",
+    sources = "bee/nonstd/fmt/*.cc",
+}
+
+lm:source_set "source_bee" {
+    includes = ".",
     defines = "BEE_INLINE",
     sources = {
         "bee/**/*.cpp",
-        "bee/nonstd/fmt/*.cc",
     },
     windows = {
         sources = {
@@ -46,7 +41,6 @@ lm:source_set "source_bee" {
         }
     },
     linux = {
-        flags = "-fPIC",
         sources = {
             "!bee/**/*_win.cpp",
             "!bee/**/*_osx.cpp",
@@ -60,11 +54,9 @@ lm:source_set "source_bee" {
     }
 }
 
-lm:source_set "source_bee" {
+lm:lua_source "source_bee" {
     includes = {
-        "3rd/lua",
         "3rd/lua-seri",
-        "bee/nonstd",
         "."
     },
     defines = {
@@ -92,20 +84,12 @@ lm:source_set "source_bee" {
         }
     },
     linux = {
-        sources = {
-            "!binding/lua_unicode.cpp",
-        },
-        links = {
-            "stdc++fs"
-        },
-        ldflags = {
-            "-pthread"
-        },
+        sources = "!binding/lua_unicode.cpp",
+        links = "stdc++fs",
+        ldflags = "-pthread"
     },
     macos = {
-        sources = {
-            "!binding/lua_unicode.cpp",
-        },
+        sources = "!binding/lua_unicode.cpp",
         frameworks = {
             "Foundation",
             "CoreFoundation",
@@ -117,14 +101,10 @@ lm:source_set "source_bee" {
             "!binding/lua_unicode.cpp",
             "!binding/lua_filewatch.cpp",
         },
-        frameworks = {
-            "Foundation",
-        }
+        frameworks = "Foundation",
     },
     android = {
-        sources = {
-            "!binding/lua_unicode.cpp",
-        }
+        sources = "!binding/lua_unicode.cpp",
     }
 }
 
@@ -151,8 +131,6 @@ lm:source_set 'source_lua' {
         visibility = "default",
     },
     msvc = {
-        flags = {
-            "/wd4267"
-        }
+        flags = "/wd4267"
     }
 }
