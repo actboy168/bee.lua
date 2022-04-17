@@ -864,7 +864,7 @@ function test_fs:test_status()
     test_status("directory", fs.create_directories)
 end
 
-local function supportedSymlinks()
+local function supportedSymlink()
     if platform.OS ~= "Windows" then
         return true
     end
@@ -874,8 +874,12 @@ local function supportedSymlinks()
     return ok
 end
 
+local function supportedHardlink()
+    return not isAndroid()
+end
+
 function test_fs:test_symlink()
-    if not supportedSymlinks() then
+    if not supportedSymlink() then
         return
     end
     local function test_create(createf, target, link)
@@ -926,7 +930,7 @@ function test_fs:test_symlink()
 end
 
 function test_fs:test_hard_link()
-    if isAndroid() then
+    if not supportedHardlink() then
         return
     end
     local function test_create(createf, target, link)
@@ -965,7 +969,7 @@ function test_fs:test_fullpath()
         lt.assertEquals(fs.canonical(file), fs.fullpath(file))
     end
 
-    if supportedSymlinks() then
+    if supportedSymlink() then
         local link = "temp.symlink"
         fs.remove_all(link)
         fs.create_symlink(file, link)
@@ -973,7 +977,7 @@ function test_fs:test_fullpath()
         fs.remove_all(link)
     end
 
-    do
+    if supportedHardlink() then
         local link = "temp.hardlink"
         fs.remove_all(link)
         fs.create_hard_link(file, link)
