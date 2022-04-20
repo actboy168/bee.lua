@@ -71,13 +71,13 @@ if not lm.notest then
     end
     table.sort(tests)
 
-    lm:rule "test" {
+    lm:rule "test_rule" {
         EXE_DIR.."/"..BOOTSTRAP..exe, "@test/test.lua", "--touch", "$out",
         description = "Run test.",
         pool = "console",
     }
     lm:build "test" {
-        rule = "rule",
+        rule = "test_rule",
         deps = { BOOTSTRAP, "copy_script" },
         input = tests,
         output = "$obj/test.stamp",
@@ -85,11 +85,9 @@ if not lm.notest then
 end
 
 if lm.os == "windows" then
-    lm:build "forward_lua" {
-        "$luamake", "lua",
-        "@bootstrap/forward_lua.lua",
-        "@3rd/lua/", "$out",
-        BOOTSTRAP..".exe", lm.compiler,
+    lm:runlua "forward_lua" {
+        script = "bootstrap/forward_lua.lua",
+        args = {"@3rd/lua/", "$out", BOOTSTRAP..".exe", lm.compiler},
         input = {
             "bootstrap/forward_lua.lua",
             "3rd/lua/lua.h",
