@@ -71,13 +71,13 @@ if not lm.notest then
     end
     table.sort(tests)
 
-    lm:rule "test_rule" {
+    lm:rule "test" {
         EXE_DIR.."/"..BOOTSTRAP..exe, "@test/test.lua", "--touch", "$out",
         description = "Run test.",
         pool = "console",
     }
     lm:build "test" {
-        rule = "test_rule",
+        rule = "test",
         deps = { BOOTSTRAP, "copy_script" },
         input = tests,
         output = "$obj/test.stamp",
