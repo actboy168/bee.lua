@@ -2,8 +2,8 @@ local lm = require 'luamake'
 
 local isWindows = lm.os == 'windows'
 
-lm.c = lm.compiler == 'msvc' and 'c89' or 'c11'
 lm.cxx = 'c++17'
+
 local plat = (function ()
     if isWindows then
         if lm.compiler == "gcc" then
