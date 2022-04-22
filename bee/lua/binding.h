@@ -26,7 +26,7 @@ namespace bee::lua {
 #if defined(_WIN32)
         return u2w(str);
 #else
-        return str;
+        return string_type { str };
 #endif
     }
 
