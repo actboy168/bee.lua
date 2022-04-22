@@ -101,7 +101,7 @@ namespace bee::lua_filesystem {
 
     static path_ptr getpathptr(lua_State* L, int idx) {
         if (lua_type(L, idx) == LUA_TSTRING) {
-            return fs::path { lua::checkstring(L, idx) };
+            return fs::path { lua::to_string(L, idx) };
         }
         return (const fs::path*)luaL_checkudata(L, idx, "bee::path");
     }

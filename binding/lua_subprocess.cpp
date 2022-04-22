@@ -131,7 +131,7 @@ namespace bee::lua_subprocess {
             lua_getfield(L, 1, "cwd");
             switch (lua_type(L, -1)) {
             case LUA_TSTRING: {
-                auto ret = lua::checkstring(L, -1);
+                auto ret = lua::to_string(L, -1);
                 lua_pop(L, 1);
                 return ret;
             }
@@ -153,7 +153,7 @@ namespace bee::lua_subprocess {
                 lua_geti(L, idx, i);
                 switch (lua_type(L, -1)) {
                 case LUA_TSTRING:
-                    args.push(lua::checkstring(L, -1));
+                    args.push(lua::to_string(L, -1));
                     break;
                 case LUA_TUSERDATA: {
                     const fs::path& path = *(fs::path*)getObject(L, -1, "path");
@@ -266,10 +266,10 @@ namespace bee::lua_subprocess {
                 lua_pushnil(L);
                 while (lua_next(L, -2)) {
                     if (LUA_TSTRING == lua_type(L, -1)) {
-                        builder.set(lua::checkstring(L, -2), lua::checkstring(L, -1));
+                        builder.set(lua::to_string(L, -2), lua::to_string(L, -1));
                     }
                     else {
-                        builder.del(lua::checkstring(L, -2));
+                        builder.del(lua::to_string(L, -2));
                     }
                     lua_pop(L, 1);
                 }
