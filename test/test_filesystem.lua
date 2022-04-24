@@ -657,8 +657,8 @@ function test_fs:test_pairs()
     local function pairs_ok(dir, flags, expected)
         local fsdir = fs.path(dir)
         local result = {}
-        for path in fs.pairs(fsdir, flags) do
-            result[path:string()] = true
+        for path, status in fs.pairs(fsdir, flags) do
+            result[path:string()] = status:type()
         end
         lt.assertEquals(result, expected)
     end
@@ -671,8 +671,8 @@ function test_fs:test_pairs()
     create_file('temp/temp1.txt')
     create_file('temp/temp2.txt')
     pairs_ok('temp', nil, {
-        ['temp/temp1.txt'] = true,
-        ['temp/temp2.txt'] = true,
+        ['temp/temp1.txt'] = "regular",
+        ['temp/temp2.txt'] = "regular",
     })
     fs.remove_all(fs.path 'temp')
 
@@ -682,16 +682,16 @@ function test_fs:test_pairs()
     create_file('temp/temp/temp1.txt')
     create_file('temp/temp/temp2.txt')
     pairs_ok('temp', nil, {
-        ['temp/temp1.txt'] = true,
-        ['temp/temp2.txt'] = true,
-        ['temp/temp'] = true,
+        ['temp/temp1.txt'] = "regular",
+        ['temp/temp2.txt'] = "regular",
+        ['temp/temp'] = "directory",
     })
     pairs_ok('temp', "r", {
-        ['temp/temp1.txt'] = true,
-        ['temp/temp2.txt'] = true,
-        ['temp/temp'] = true,
-        ['temp/temp/temp1.txt'] = true,
-        ['temp/temp/temp2.txt'] = true,
+        ['temp/temp1.txt'] = "regular",
+        ['temp/temp2.txt'] = "regular",
+        ['temp/temp'] = "directory",
+        ['temp/temp/temp1.txt'] = "regular",
+        ['temp/temp/temp2.txt'] = "regular",
     })
 
     fs.remove_all(fs.path('temp'))
@@ -706,8 +706,8 @@ end
 function test_fs:test_copy_dir()
     local function each_directory(dir, result)
         result = result or {}
-        for path in fs.pairs(fs.path(dir)) do
-            if fs.is_directory(path) then
+        for path, status in fs.pairs(fs.path(dir)) do
+            if status:is_directory() then
                 each_directory(path, result)
             end
             result[path:string()] = true
@@ -856,7 +856,7 @@ function test_fs:test_status()
         local path = fs.path("temp."..type)
         fs.remove_all(path)
         createf(path)
-        lt.assertEquals(fs.status(path), type)
+        lt.assertEquals(fs.status(path):type(), type)
         fs.remove_all(path)
     end
     test_status("not_found", function () end)
@@ -890,19 +890,19 @@ function test_fs:test_symlink()
         lt.assertEquals(fs.is_directory(target), fs.is_directory(link))
         lt.assertEquals(fs.is_regular_file(target), fs.is_regular_file(link))
         lt.assertEquals(fs.status(target), fs.symlink_status(target))
-        lt.assertEquals(fs.symlink_status(link), "symlink")
+        lt.assertEquals(fs.symlink_status(link):type(), "symlink")
     end
     local function test_remove(target, link)
         fs.remove_all(target)
-        lt.assertEquals(fs.status(target), "not_found")
-        lt.assertEquals(fs.symlink_status(target), "not_found")
+        lt.assertEquals(fs.status(target):type(), "not_found")
+        lt.assertEquals(fs.symlink_status(target):type(), "not_found")
         if platform.OS ~= "macOS" then
-            lt.assertEquals(fs.status(link), "not_found")
+            lt.assertEquals(fs.status(link):type(), "not_found")
         end
-        lt.assertEquals(fs.symlink_status(link), "symlink")
+        lt.assertEquals(fs.symlink_status(link):type(), "symlink")
         fs.remove_all(link)
-        lt.assertEquals(fs.status(link), "not_found")
-        lt.assertEquals(fs.symlink_status(link), "not_found")
+        lt.assertEquals(fs.status(link):type(), "not_found")
+        lt.assertEquals(fs.symlink_status(link):type(), "not_found")
     end
 
     do
@@ -942,13 +942,13 @@ function test_fs:test_hard_link()
     end
     local function test_remove(target, link)
         fs.remove_all(target)
-        lt.assertEquals(fs.status(target), "not_found")
-        lt.assertEquals(fs.symlink_status(target), "not_found")
-        lt.assertNotEquals(fs.status(link), "not_found")
-        lt.assertNotEquals(fs.symlink_status(link), "not_found")
+        lt.assertEquals(fs.status(target):type(), "not_found")
+        lt.assertEquals(fs.symlink_status(target):type(), "not_found")
+        lt.assertNotEquals(fs.status(link):type(), "not_found")
+        lt.assertNotEquals(fs.symlink_status(link):type(), "not_found")
         fs.remove_all(link)
-        lt.assertEquals(fs.status(link), "not_found")
-        lt.assertEquals(fs.symlink_status(link), "not_found")
+        lt.assertEquals(fs.status(link):type(), "not_found")
+        lt.assertEquals(fs.symlink_status(link):type(), "not_found")
     end
     local target = fs.path "temphard.txt"
     local link = fs.path "temphard.link"

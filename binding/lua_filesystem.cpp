@@ -293,37 +293,106 @@ namespace bee::lua_filesystem {
         }
     }
 
-    static const char* filetypename(fs::file_type type) {
-        switch (type) {
-        case fs::file_type::none:      return "none";
-        case fs::file_type::not_found: return "not_found";
-        case fs::file_type::regular:   return "regular";
-        case fs::file_type::directory: return "directory";
-        case fs::file_type::symlink:   return "symlink";
-        case fs::file_type::block:     return "block";
-        case fs::file_type::character: return "character";
-        case fs::file_type::fifo:      return "fifo";
-#if defined(BEE_ENABLE_FILESYSTEM) && defined(_MSV_VER)
-        case fs::file_type::junction:  return "junction";
-#endif
-        default:
-        case fs::file_type::unknown:   return "unknown";
+    namespace file_status {
+        static void push(lua_State* L, fs::file_status&& status);
+
+        static fs::file_status& to(lua_State* L, int idx) {
+            return *(fs::file_status*)lua_touserdata(L, idx);
+        }
+
+        static const char* filetypename(fs::file_type type) {
+            switch (type) {
+            case fs::file_type::none:      return "none";
+            case fs::file_type::not_found: return "not_found";
+            case fs::file_type::regular:   return "regular";
+            case fs::file_type::directory: return "directory";
+            case fs::file_type::symlink:   return "symlink";
+            case fs::file_type::block:     return "block";
+            case fs::file_type::character: return "character";
+            case fs::file_type::fifo:      return "fifo";
+    #if defined(BEE_ENABLE_FILESYSTEM) && defined(_MSV_VER)
+            case fs::file_type::junction:  return "junction";
+    #endif
+            default:
+            case fs::file_type::unknown:   return "unknown";
+            }
+        }
+
+        static int type(lua_State* L) {
+            auto const& status = to(L, 1);
+            lua_pushstring(L, filetypename(status.type()));
+            return 1;
+        }
+
+        static int exists(lua_State* L) {
+            auto const& status = to(L, 1);
+            lua_pushboolean(L, fs::exists(status));
+            return 1;
+        }
+
+        static int is_directory(lua_State* L) {
+            auto const& status = to(L, 1);
+            lua_pushboolean(L, fs::is_directory(status));
+            return 1;
+        }
+
+        static int is_regular_file(lua_State* L) {
+            auto const& status = to(L, 1);
+            lua_pushboolean(L, fs::is_regular_file(status));
+            return 1;
+        }
+
+        static int eq(lua_State* L) {
+            auto const& l = to(L, 1);
+            auto const& r = to(L, 2);
+            lua_pushboolean(L, l.type() == r.type() && l.permissions() == r.permissions());
+            return 1;
+        }
+
+        static int destructor(lua_State* L) {
+            auto const& status = to(L, 1);
+            status.~file_status();
+            return 0;
+        }
+
+        static void* newudata(lua_State* L) {
+            void* storage = lua_newuserdatauv(L, sizeof(fs::file_status), 0);
+            if (newObject(L, "file_status")) {
+                static luaL_Reg mt[] = {
+                    {"type", type},
+                    {"exists", exists},
+                    {"is_directory", is_directory},
+                    {"is_regular_file", is_regular_file},
+                    {"__eq", eq},
+                    {"__gc", destructor},
+                    {"__tostring", type},
+                    {"__debugger_tostring", type},
+                    {NULL, NULL},
+                };
+                luaL_setfuncs(L, mt, 0);
+                lua_pushvalue(L, -1);
+                lua_setfield(L, -2, "__index");
+            }
+            lua_setmetatable(L, -2);
+            return storage;
+        }
+        static void push(lua_State* L, fs::file_status&& status) {
+            void* storage = newudata(L);
+            new (storage) fs::file_status(std::forward<fs::file_status>(status));
         }
     }
 
     static int status(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
-        auto status = fs::status(p, ec);
-        lua_pushstring(L, filetypename(status.type()));
+        file_status::push(L, fs::status(p, ec));
         return 1;
     }
     
     static int symlink_status(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
-        auto status = fs::symlink_status(p, ec);
-        lua_pushstring(L, filetypename(status.type()));
+        file_status::push(L, fs::symlink_status(p, ec));
         return 1;
     }
 
@@ -645,13 +714,14 @@ namespace bee::lua_filesystem {
                 lua_pushnil(L);
                 return 1;
             }
-            pushpath(L, self.cur->path());
             std::error_code ec;
+            pushpath(L, self.cur->path());
+            file_status::push(L, self.cur->status(ec));
             self.cur.increment(ec);
             if (ec) {
                 return pusherror(L, "directory_iterator::operator++", ec); 
             }
-            return 1;
+            return 2;
         }
         static int close(lua_State* L) {
             pairs_directory& self = get(L, 1);
