@@ -111,54 +111,41 @@ namespace bee::lua_filesystem {
     }
 
     namespace path {
-        static void* newudata(lua_State* L);
-    }
+        static void push(lua_State* L);
+        static void push(lua_State* L, const fs::path& path);
+        static void push(lua_State* L, fs::path&& path);
 
-    static void pushpath(lua_State* L) {
-        void* storage = path::newudata(L);
-        new (storage) fs::path();
-    }
-    static void pushpath(lua_State* L, const fs::path& path) {
-        void* storage = path::newudata(L);
-        new (storage) fs::path(path);
-    }
-    static void pushpath(lua_State* L, fs::path&& path) {
-        void* storage = path::newudata(L);
-        new (storage) fs::path(std::forward<fs::path>(path));
-    }
-
-    namespace path {
-        static int constructor(lua_State* L) {
+        static int  constructor(lua_State* L) {
             if (lua_gettop(L) == 0) {
-                pushpath(L);
+                push(L);
             }
             else {
-                pushpath(L, getpathptr(L, 1));
+                push(L, getpathptr(L, 1));
             }
             return 1;
         }
 
         static int filename(lua_State* L) {
             path_ptr self = getpathptr(L, 1);
-            pushpath(L, self->filename());
+            push(L, self->filename());
             return 1;
         }
 
         static int parent_path(lua_State* L) {
             path_ptr self = getpathptr(L, 1);
-            pushpath(L, self->parent_path());
+            push(L, self->parent_path());
             return 1;
         }
 
         static int stem(lua_State* L) {
             path_ptr self = getpathptr(L, 1);
-            pushpath(L, self->stem());
+            push(L, self->stem());
             return 1;
         }
 
         static int extension(lua_State* L) {
             path_ptr self = getpathptr(L, 1);
-            pushpath(L, self->extension());
+            push(L, self->extension());
             return 1;
         }
 
@@ -218,21 +205,21 @@ namespace bee::lua_filesystem {
 
         static int lexically_normal(lua_State* L) {
             path_ptr self = getpathptr(L, 1);
-            pushpath(L, self->lexically_normal());
+            push(L, self->lexically_normal());
             return 1;
         }
 
         static int mt_div(lua_State* L) {
             path_ptr self = getpathptr(L, 1);
             path_ptr path = getpathptr(L, 2);
-            pushpath(L, self / path);
+            push(L, self / path);
             return 1;
         }
 
         static int mt_concat(lua_State* L) {
             path_ptr self = getpathptr(L, 1);
             path_ptr path = getpathptr(L, 2);
-            pushpath(L, self->native() + path->native());
+            push(L, self->native() + path->native());
             return 1;
         }
 
@@ -290,6 +277,18 @@ namespace bee::lua_filesystem {
             }
             lua_setmetatable(L, -2);
             return storage;
+        }
+        static void push(lua_State* L) {
+            void* storage = path::newudata(L);
+            new (storage) fs::path();
+        }
+        static void push(lua_State* L, const fs::path& path) {
+            void* storage = path::newudata(L);
+            new (storage) fs::path(path);
+        }
+        static void push(lua_State* L, fs::path&& path) {
+            void* storage = path::newudata(L);
+            new (storage) fs::path(std::forward<fs::path>(path));
         }
     }
 
@@ -482,7 +481,7 @@ namespace bee::lua_filesystem {
             if (ec) {
                 return pusherror(L, "current_path()", ec); 
             }
-            pushpath(L, r);
+            path::push(L, r);
             return 1;
         }
         path_ptr p = getpathptr(L, 1);
@@ -563,7 +562,7 @@ namespace bee::lua_filesystem {
         if (ec) {
             return pusherror(L, "absolute", ec, p); 
         }
-        pushpath(L, r);
+        path::push(L, r);
         return 1;
     }
 
@@ -574,7 +573,7 @@ namespace bee::lua_filesystem {
         if (ec) {
             return pusherror(L, "canonical", ec, p); 
         }
-        pushpath(L, r);
+        path::push(L, r);
         return 1;
     }
  
@@ -586,7 +585,7 @@ namespace bee::lua_filesystem {
             if (ec) {
                 return pusherror(L, "relative", ec, p); 
             }
-            pushpath(L, r);
+            path::push(L, r);
             return 1;
         }
         path_ptr base = getpathptr(L, 2);
@@ -594,7 +593,7 @@ namespace bee::lua_filesystem {
         if (ec) {
             return pusherror(L, "relative", ec, p, base); 
         }
-        pushpath(L, r);
+        path::push(L, r);
         return 1;
     }
 
@@ -715,7 +714,7 @@ namespace bee::lua_filesystem {
                 return 1;
             }
             std::error_code ec;
-            pushpath(L, self.cur->path());
+            path::push(L, self.cur->path());
             file_status::push(L, self.cur->status(ec));
             self.cur.increment(ec);
             if (ec) {
@@ -781,7 +780,7 @@ namespace bee::lua_filesystem {
         if (!r) {
             return luaL_error(L, "%s\n", r.error().c_str());
         }
-        pushpath(L, r.value());
+        path::push(L, r.value());
         return 1;
     }
 
@@ -790,7 +789,7 @@ namespace bee::lua_filesystem {
         if (!r) {
             return luaL_error(L, "%s\n", r.error().c_str());
         }
-        pushpath(L, r.value());
+        path::push(L, r.value());
         return 1;
     }
 
@@ -799,7 +798,7 @@ namespace bee::lua_filesystem {
         if (!r) {
             return luaL_error(L, "%s\n", r.error().c_str());
         }
-        pushpath(L, r.value());
+        path::push(L, r.value());
         return 1;
     }
 
@@ -831,7 +830,7 @@ namespace bee::lua_filesystem {
         if (!fullpath) {
             return pusherror(L, "fullpath", make_syserror().code()); 
         }
-        pushpath(L, *fullpath);
+        path::push(L, *fullpath);
         return 1;
     }
 
