@@ -15,10 +15,11 @@ while true do
     end
     if n == 0 then
         thread.sleep(0.1)
+    else
+        local data = process.stdout:read(n)
+        io.write(data)
+        io.flush()
     end
-    local data = process.stdout:read(n)
-    io.write(data)
-    io.flush()
 end
 
 process.stdout:close()
