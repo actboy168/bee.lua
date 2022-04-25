@@ -103,12 +103,8 @@ lm:lua_source "source_bee" {
 }
 
 lm:source_set 'source_lua' {
-    sources = {
-        "3rd/lua/*.c",
-        "!3rd/lua/lua.c",
-        "!3rd/lua/luac.c",
-        "!3rd/lua/utf8_*.c",
-    },
+    sources = "3rd/lua/onelua.c",
+    defines = "MAKE_LIB",
     windows = {
         defines = "LUA_BUILD_AS_DLL",
     },
