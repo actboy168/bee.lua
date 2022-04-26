@@ -14,7 +14,7 @@ end
 function test_lua:test_stack_overflow_2()
     lt.assertError(function()
         local t = setmetatable({}, {__index = function(t)
-            table.concat(t,'',1,1)
+            local _ = table.concat(t,'',1,1)
         end})
         print(t[1])
     end)

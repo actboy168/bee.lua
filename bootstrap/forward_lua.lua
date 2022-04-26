@@ -28,7 +28,7 @@ local function parse(folder)
 end
 
 local input, output, dllname, compiler = ...
-local version, export = parse(input)
+local _, export = parse(input)
 local s = {}
 
 if compiler == "msvc" then

@@ -127,12 +127,14 @@ function test_subprocess:test_stdio_2()
     os.remove 'temp.txt'
     local f = io.open('temp.txt', 'w')
     lt.assertIsUserdata(f)
+    ---@cast f userdata
     local process = shell:runlua('io.write "ok"', { stdout = f })
     lt.assertEquals(process.stdout, f)
     f:close()
     lt.assertEquals(process:wait(), 0)
     local f = io.open('temp.txt', 'r')
     lt.assertIsUserdata(f)
+    ---@cast f userdata
     lt.assertEquals(f:read 'a', "ok")
     f:close()
 
@@ -141,6 +143,8 @@ function test_subprocess:test_stdio_2()
     local rd = io.open('temp.txt', 'r')
     lt.assertIsUserdata(wr)
     lt.assertIsUserdata(rd)
+    ---@cast wr userdata
+    ---@cast rd userdata
     local process = shell:runlua('io.write "ok"', { stdout = wr })
     wr:close()
     lt.assertEquals(process.stdout, wr)
