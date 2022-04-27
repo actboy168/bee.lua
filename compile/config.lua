@@ -26,8 +26,26 @@ end
 
 lm.macos = {
     flags = "-Wunguarded-availability",
-    sys = "macos10.15"
 }
+
+if lm.os == "macos" then
+    local function get_version()
+        local f <close> = io.popen("sw_vers", "r")
+        if f then
+            for line in f:lines() do
+                local major, minor = line:match "ProductVersion:%s*(%d+)%.(%d+)"
+                if major and minor then
+                    return tonumber(major) * 100 + tonumber(minor)
+                end
+            end
+        end
+    end
+    local ver = get_version()
+    if ver and ver >= 1015 then
+        lm.macos.sys = "macos10.15"
+    end
+end
+
 lm.linux = {
     flags = "-fPIC",
 }
