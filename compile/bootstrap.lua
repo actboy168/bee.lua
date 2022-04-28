@@ -11,9 +11,6 @@ lm:source_set "source_bootstrap" {
     deps = { "source_bee", "source_lua" },
     includes = {"3rd/lua", "."},
     sources = "bootstrap/*.cpp",
-    windows = {
-        sources = "3rd/lua/utf8_crt.c",
-    },
     macos = {
         defines = "LUA_USE_MACOSX",
         links = { "m", "dl" },

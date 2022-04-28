@@ -103,6 +103,10 @@ lm:lua_source "source_bee" {
 }
 
 lm:source_set 'source_lua' {
+    sources = "3rd/lua/utf8_crt.c",
+}
+
+lm:source_set 'source_lua' {
     sources = "3rd/lua/onelua.c",
     defines = "MAKE_LIB",
     windows = {
@@ -114,6 +118,7 @@ lm:source_set 'source_lua' {
     },
     linux = {
         defines = "LUA_USE_LINUX",
+        flags = "-Wno-maybe-uninitialized",
         visibility = "default",
     },
     android = {

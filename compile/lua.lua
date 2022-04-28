@@ -15,14 +15,13 @@ lm:lua_dll "bee" {
 }
 
 if lm.os == "windows" then
+    lm:source_set 'lua54' {
+        sources = "3rd/lua/utf8_crt.c",
+    }
     lm:shared_library 'lua54' {
-        sources = {
-            "3rd/lua/*.c",
-            "!3rd/lua/lua.c",
-            "!3rd/lua/luac.c",
-            "!3rd/lua/utf8_lua.c",
-        },
+        sources = "3rd/lua/onelua.c",
         defines = {
+            "MAKE_LIB",
             "LUA_BUILD_AS_DLL",
         }
     }
