@@ -83,8 +83,6 @@ namespace bee::subprocess {
         template <typename T> void push(T v) { push_back(v); }
     };
 
-    inline bool support_cwd() { return true; }
-
     class spawn {
         friend class process;
     public:
