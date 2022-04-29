@@ -494,8 +494,6 @@ return table.concat(t)
 
         lua_pushscript(L, script_quotearg);
         lua_setfield(L, -2, "quotearg");
-        lua_pushboolean(L, subprocess::support_cwd());
-        lua_setfield(L, -2, "support_cwd");
         return 1;
     }
 }

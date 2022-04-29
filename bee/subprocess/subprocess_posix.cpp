@@ -175,18 +175,49 @@ namespace bee::subprocess {
     }
 
 #if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 101500
-#define SUPPORT_CWD 1
+// for posix_spawn_file_actions_addchdir_np
+#define USE_POSIX_SPAWN 1
 #endif
 #if defined(__GLIBC__) && __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 29
-#define SUPPORT_CWD 1
+// for posix_spawn_file_actions_addchdir_np
+#define USE_POSIX_SPAWN 1
 #endif
 
-    bool support_cwd() {
-#if defined(SUPPORT_CWD)
+    bool spawn::fork_exec(args_t& args, const char* cwd) {
+        pid_t pid = fork();
+        if (pid == -1) {
+            return false;
+        }
+        if (pid == 0) {
+            //if (detached_) {
+            //    setsid();
+            //}
+            for (int i = 0; i < 3; ++i) {
+                if (fds_[i] > 0) {
+                    if (dup2(fds_[i], i) == -1) {
+                        _exit(127);
+                    }
+                }
+            }
+            if (env_) {
+                environ = env_;
+            }
+            if (cwd && chdir(cwd)) {
+                _exit(127);
+            }
+            //if (suspended_) {
+            //    ::kill(getpid(), SIGSTOP);
+            //}
+            execvp(args[0], args.data());
+            _exit(127);
+        }
+        pid_ = pid;
+        for (int i = 0; i < 3; ++i) {
+            if (fds_[i] > 0) {
+                close(fds_[i]);
+            }
+        }
         return true;
-#else
-        return false;
-#endif
     }
 
     bool spawn::exec(args_t& args, const char* cwd) {
@@ -194,12 +225,11 @@ namespace bee::subprocess {
             return false;
         }
         args.push(nullptr);
+#if defined(USE_POSIX_SPAWN)
         char** arguments = args.data();
-#if defined(SUPPORT_CWD)
         if (cwd) {
             posix_spawn_file_actions_addchdir_np(&spawnfile_, cwd);
         }
-#endif
         pid_t pid;
         for (int i = 0; i < 3; ++i) {
             if (fds_[i] > 0) {
@@ -218,6 +248,9 @@ namespace bee::subprocess {
             }
         }
         return true;
+#else
+        return fork_exec(args, cwd);
+#endif
     }
 
     process::process(spawn& spawn)

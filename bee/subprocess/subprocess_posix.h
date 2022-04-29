@@ -52,8 +52,6 @@ namespace bee::subprocess {
         void push(const std::string& str);
     };
 
-    bool support_cwd();
-
     class spawn {
         friend class process;
     public:
@@ -64,6 +62,8 @@ namespace bee::subprocess {
         void redirect(stdio type, file_handle f);
         void env(environment&& env);
         bool exec(args_t& args, const char* cwd);
+    private:
+        bool fork_exec(args_t& args, const char* cwd);
     private:
         environment                        env_ = nullptr;
         int                                fds_[3];
