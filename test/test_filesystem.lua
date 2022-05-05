@@ -21,6 +21,20 @@ local function isAndroid()
     return platform.OS == 'Android'
 end
 
+local function supportedSymlink()
+    if platform.OS ~= "Windows" then
+        return true
+    end
+    -- see https://blogs.windows.com/windowsdeveloper/2016/12/02/symlinks-windows-10/
+    local ok = pcall(fs.create_symlink, "temp.txt", "temp.link")
+    fs.remove_all "temp.link"
+    return ok
+end
+
+local function supportedHardlink()
+    return not isAndroid()
+end
+
 local function create_file(filename, content)
     if type(filename) == "userdata" then
         filename = filename:string()
@@ -667,16 +681,17 @@ function test_fs:test_pairs()
         lt.assertError(fsdir.pairs, fsdir)
     end
 
-    fs.create_directories(fs.path('temp'))
+    fs.remove_all 'temp'
+    fs.create_directories 'temp'
     create_file('temp/temp1.txt')
     create_file('temp/temp2.txt')
     pairs_ok('temp', nil, {
         ['temp/temp1.txt'] = "regular",
         ['temp/temp2.txt'] = "regular",
     })
-    fs.remove_all(fs.path 'temp')
+    fs.remove_all 'temp'
 
-    fs.create_directories(fs.path('temp/temp'))
+    fs.create_directories 'temp/temp'
     create_file('temp/temp1.txt')
     create_file('temp/temp2.txt')
     create_file('temp/temp/temp1.txt')
@@ -718,6 +733,7 @@ function test_fs:test_copy_dir()
         lt.assertEquals(read_file(a), read_file(b))
     end
 
+    fs.remove_all 'temp'
     fs.create_directories(fs.path('temp/temp'))
     create_file('temp/temp1.txt', tostring(math.random()))
     create_file('temp/temp2.txt', tostring(math.random()))
@@ -862,20 +878,6 @@ function test_fs:test_status()
     test_status("not_found", function () end)
     test_status("regular", create_file)
     test_status("directory", fs.create_directories)
-end
-
-local function supportedSymlink()
-    if platform.OS ~= "Windows" then
-        return true
-    end
-    -- see https://blogs.windows.com/windowsdeveloper/2016/12/02/symlinks-windows-10/
-    local ok = pcall(fs.create_symlink, "temp.txt", "temp.link")
-    fs.remove_all "temp.link"
-    return ok
-end
-
-local function supportedHardlink()
-    return not isAndroid()
 end
 
 function test_fs:test_symlink()
