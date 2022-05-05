@@ -30,7 +30,7 @@ namespace bee::linux::fsevent {
         for (; !ec && iter != end; iter.increment(ec)) {
             auto const& p = iter->path();
             std::error_code _;
-            if (fs::is_directory(p, _)) {
+            if (fs::is_directory(fs::symlink_status(p, _))) {
                 add_dir(p);
             }
         }
@@ -44,7 +44,7 @@ namespace bee::linux::fsevent {
         for (; !ec && iter != end; iter.increment(ec)) {
             auto const& p = iter->path();
             std::error_code _;
-            if (fs::is_directory(p, _)) {
+            if (fs::is_directory(fs::symlink_status(p, _))) {
                 del_dir(p);
             }
         }
