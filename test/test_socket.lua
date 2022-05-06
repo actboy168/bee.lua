@@ -213,7 +213,7 @@ local function createUnixEchoTest(name, f)
     lt.assertIsBoolean(server:listen())
     local client = createEchoThread(name, 'unix',(TestUnixSock))
     local rd, _ = socket.select({server}, nil)
-    assert(rd[1], server)
+    assert(rd and rd[1], server)
     local session = server:accept()
     assert(session and session:status())
 
