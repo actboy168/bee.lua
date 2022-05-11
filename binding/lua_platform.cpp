@@ -24,19 +24,27 @@ namespace bee::lua_platform {
 
 #if defined(_WIN32)
 		lua_pushstring(L, "Windows");
+		lua_pushstring(L, "windows");
 #elif defined(__ANDROID__)
 		lua_pushstring(L, "Android");
+		lua_pushstring(L, "android");
 #elif defined(__linux__)
 		lua_pushstring(L, "Linux");
+		lua_pushstring(L, "linux");
 #elif defined(__ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__)
 		lua_pushstring(L, "iOS");
+		lua_pushstring(L, "ios");
 #elif defined(__ENVIRONMENT_TV_OS_VERSION_MIN_REQUIRED__)
 		lua_pushstring(L, "iOS");
+		lua_pushstring(L, "ios");
 #elif defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)
 		lua_pushstring(L, "macOS");
+		lua_pushstring(L, "macos");
 #else
 		lua_pushstring(L, "unknown");
+		lua_pushstring(L, "unknown");
 #endif
+		lua_setfield(L, -3, "os");
 		lua_setfield(L, -2, "OS");
 
 #if defined(__clang__)
