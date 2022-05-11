@@ -9,23 +9,17 @@
 #	ifndef _WIN32_WINNT
 #		error "_WIN32_WINNT* is not defined!"
 #	endif
-#	define BEE_OS_WINDOWS _WIN32_WINNT
 #	define BEE_OS_NAME "Windows"
 #elif defined(__ANDROID__)
 #	include <sys/cdefs.h>
-#	define BEE_OS_ANDROID __ANDROID_API__
 #	define BEE_OS_NAME "Android"
 #elif defined(__linux__)
-#	define BEE_OS_LINUX 1
 #	define BEE_OS_NAME "Linux"
 #elif defined(__ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__)
-#	define BEE_OS_IOS __ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__
 #	define BEE_OS_NAME "iOS"
 #elif defined(__ENVIRONMENT_TV_OS_VERSION_MIN_REQUIRED__)
-#	define BEE_OS_IOS __ENVIRONMENT_TV_OS_VERSION_MIN_REQUIRED__
 #	define BEE_OS_NAME "iOS"
 #elif defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)
-#	define BEE_OS_OSX __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
 #	define BEE_OS_NAME "macOS"
 #else
 #	error "BEE_OS_* is not defined!"
