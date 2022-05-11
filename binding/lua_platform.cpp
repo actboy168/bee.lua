@@ -22,7 +22,6 @@ namespace bee::lua_platform {
 	static int luaopen(lua_State* L) {
 		lua_newtable(L);
 
-// see http://sourceforge.net/apps/mediawiki/predef/index.php?title=Operating_Systems
 #if defined(_WIN32)
 		lua_pushstring(L, "Windows");
 #elif defined(__ANDROID__)
@@ -68,7 +67,6 @@ namespace bee::lua_platform {
 		lua_setfield(L, -2, "Compiler");
 
 
-// see https://sourceforge.net/p/predef/wiki/Libraries/
 #if defined(__BIONIC__)
 		lua_pushstring(L, "bionic");
 #	if defined(__NDK_MAJOR__) && defined(__NDK_MINOR__)
@@ -113,13 +111,16 @@ namespace bee::lua_platform {
 		lua_setfield(L, -3, "CRTVersion");
 		lua_setfield(L, -2, "CRT");
 
-// http://sourceforge.net/apps/mediawiki/predef/index.php?title=Architectures
 #if defined(_M_ARM64) || defined(__aarch64__)
 		lua_pushstring(L, "arm64");
 #elif defined(_M_IX86) || defined(__i386__)
 		lua_pushstring(L, "x86");
 #elif defined(_M_X64) || defined(__x86_64__)
 		lua_pushstring(L, "x86_64");
+#elif defined(__arm__)
+		lua_pushstring(L, "arm");
+#elif defined(__riscv)
+		lua_pushstring(L, "riscv");
 #else
 		lua_pushstring(L, "unknown");
 #endif
