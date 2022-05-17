@@ -32,7 +32,7 @@ local function assertSelect(what, value)
 end
 
 local function test(f)
-    local root = fs.path './temp/'
+    local root = fs.absolute('./temp/'):lexically_normal()
 
     pcall(fs.remove_all, root)
     fs.create_directories(root)
