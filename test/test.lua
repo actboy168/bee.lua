@@ -36,4 +36,14 @@ require 'test_socket'
 require 'test_filewatch'
 require 'test_time'
 
+do
+    local fs = require 'bee.filesystem'
+    if lt.options.touch then
+        lt.options.touch = fs.absolute(lt.options.touch):string()
+    end
+    local tmpdir = fs.temp_directory_path() / "test_bee"
+    fs.create_directories(tmpdir)
+    fs.current_path(tmpdir)
+end
+
 os.exit(lt.run(), true)

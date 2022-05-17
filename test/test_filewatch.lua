@@ -32,12 +32,8 @@ local function assertSelect(what, value)
 end
 
 local function test(f)
-    local root
-    if shell.isWSL2 then
-        root = fs.path "/tmp/bee_test_temp/"
-    else
-        root = fs.absolute('./temp/'):lexically_normal()
-    end
+    local root = fs.path './temp/'
+
     pcall(fs.remove_all, root)
     fs.create_directories(root)
     local id = fw.add(root:string())
