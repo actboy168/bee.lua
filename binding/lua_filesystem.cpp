@@ -690,6 +690,16 @@ namespace bee::lua_filesystem {
         return 0;
     }
 
+    static int temp_directory_path(lua_State* L) {
+        std::error_code ec;
+        fs::path r = fs::temp_directory_path(ec);
+        if (ec) {
+            return pusherror(L, "temp_directory_path", ec); 
+        }
+        path::push(L, r);
+        return 1;
+    }
+
     template <typename T>
     struct pairs_metatable {};
 
@@ -858,6 +868,7 @@ namespace bee::lua_filesystem {
             {"create_symlink", create_symlink},
             {"create_directory_symlink", create_directory_symlink},
             {"create_hard_link", create_hard_link},
+            {"temp_directory_path", temp_directory_path},
             {"pairs", pairs},
             {"exe_path", exe_path},
             {"dll_path", dll_path},
