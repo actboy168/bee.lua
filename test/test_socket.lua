@@ -2,7 +2,6 @@ local lt = require 'ltest'
 local socket = require 'bee.socket'
 local platform = require 'bee.platform'
 local thread = require 'bee.thread'
-local shell = require 'shell'
 local errlog = thread.channel "errlog"
 
 local function assertNotThreadError()
