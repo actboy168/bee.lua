@@ -2,7 +2,6 @@ local lt = require 'ltest'
 local fw = require 'bee.filewatch'
 local fs = require 'bee.filesystem'
 local thread = require 'bee.thread'
-local shell = require 'shell'
 
 local test_fw = lt.test "filewatch"
 
