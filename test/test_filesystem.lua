@@ -779,16 +779,16 @@ function test_fs:test_last_write_time()
     last_write_time('temp.txt')
 end
 
-function test_fs:test_exe_path()
-    local function getexe()
-        local i = 0
-        while arg[i] ~= nil do
-            i = i - 1
-        end
-        return fs.path(arg[i + 1])
-    end
-    assertPathEquals(fs.exe_path(), fs.absolute(getexe()))
-end
+--function test_fs:test_exe_path()
+--    local function getexe()
+--        local i = 0
+--        while arg[i] ~= nil do
+--            i = i - 1
+--        end
+--        return fs.path(arg[i + 1])
+--    end
+--    assertPathEquals(fs.exe_path(), fs.absolute(getexe()))
+--end
 
 --function test_fs:test_dll_path()
 --    local function getdll()

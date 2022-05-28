@@ -2,7 +2,6 @@ local lt = require 'ltest'
 local socket = require 'bee.socket'
 local platform = require 'bee.platform'
 local thread = require 'bee.thread'
-local shell = require 'shell'
 local errlog = thread.channel "errlog"
 
 local function assertNotThreadError()
@@ -20,17 +19,11 @@ end
 
 local test_socket = lt.test "socket"
 
-local TestUnixSock
+local TestUnixSock = 'test.unixsock'
 
 function test_socket:setup()
     if platform.OS == "Windows" then
         socket.simulationUDS(self.UDS)
-    end
-    -- see https://github.com/microsoft/WSL/issues/4240
-    if shell.isWSL2 then
-        TestUnixSock = '/tmp/test.unixsock'
-    else
-        TestUnixSock = 'test.unixsock'
     end
 end
 
@@ -165,7 +158,6 @@ return thread.thread(([[
         if rd and rd[1] then
             local data = client:recv()
             if data == nil then
-                client:close()
                 break
             elseif data == false then
             else
@@ -173,15 +165,20 @@ return thread.thread(([[
             end
         end
         if wr and wr[1] then
+            if #queue == 0 then
+                goto continue
+            end
             local n = client:send(queue)
             if n == nil then
-                client:close()
                 break
+            elseif n == false then
             else
                 queue = queue:sub(n + 1)
             end
         end
+        ::continue::
     end
+    client:close()
 ]]):format(name), ...)
 
 end
@@ -228,7 +225,10 @@ end
 
 local function syncSend(fd, data)
     while true do
-        socket.select(nil, {fd})
+        local _, wr = socket.select(nil, {fd})
+        if not wr or wr[1] ~= fd then
+            break
+        end
         local n = fd:send(data)
         if not n then
             return n, data
@@ -244,7 +244,10 @@ end
 local function syncRecv(fd, n)
     local res = ''
     while true do
-        socket.select({fd}, nil)
+        local rd = socket.select({fd}, nil)
+        if not rd or rd[1] ~= fd then
+            break
+        end
         local data = fd:recv(n)
         if data == nil then
             return nil, n

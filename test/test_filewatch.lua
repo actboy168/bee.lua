@@ -2,7 +2,6 @@ local lt = require 'ltest'
 local fw = require 'bee.filewatch'
 local fs = require 'bee.filesystem'
 local thread = require 'bee.thread'
-local shell = require 'shell'
 
 local test_fw = lt.test "filewatch"
 
@@ -32,12 +31,8 @@ local function assertSelect(what, value)
 end
 
 local function test(f)
-    local root
-    if shell.isWSL2 then
-        root = fs.path "/tmp/bee_test_temp/"
-    else
-        root = fs.absolute('./temp/'):lexically_normal()
-    end
+    local root = fs.absolute('./temp/'):lexically_normal()
+
     pcall(fs.remove_all, root)
     fs.create_directories(root)
     local id = fw.add(root:string())

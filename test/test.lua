@@ -27,15 +27,6 @@ if not lt.options.list then
     print("DEBUG:    ", platform.DEBUG)
 end
 
---local function fd_count()
---    local ls = require "bee.socket"
---    local sock = assert(ls.bind("tcp", "127.0.0.1", 0))
---    local fd = tostring(sock):gsub("socket %((%d+)%)", "%1")
---    sock:close()
---    return tonumber(fd)
---end
---local initfd = fd_count()
-
 require 'test_lua'
 require 'test_serialization'
 require 'test_filesystem'
@@ -45,12 +36,14 @@ require 'test_socket'
 require 'test_filewatch'
 require 'test_time'
 
-local success = lt.run()
+do
+    local fs = require 'bee.filesystem'
+    if lt.options.touch then
+        lt.options.touch = fs.absolute(lt.options.touch):string()
+    end
+    local tmpdir = fs.temp_directory_path() / "test_bee"
+    fs.create_directories(tmpdir)
+    fs.current_path(tmpdir)
+end
 
---if platform.OS ~= "Windows" then
---    collectgarbage "collect"
---    local fd = fd_count()
---    assert(fd == initfd, "init cout = "..initfd..", fd count = " .. fd)
---end
-
-os.exit(success, true)
+os.exit(lt.run(), true)
