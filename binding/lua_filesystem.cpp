@@ -309,7 +309,7 @@ namespace bee::lua_filesystem {
             case fs::file_type::block:     return "block";
             case fs::file_type::character: return "character";
             case fs::file_type::fifo:      return "fifo";
-    #if defined(BEE_ENABLE_FILESYSTEM) && defined(_MSV_VER)
+    #if defined(BEE_ENABLE_FILESYSTEM) && defined(_MSC_VER)
             case fs::file_type::junction:  return "junction";
     #endif
             default:
