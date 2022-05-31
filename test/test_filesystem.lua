@@ -387,32 +387,28 @@ function test_fs:test_remove()
         lt.assertEquals(fs.exists(fs.path(path)), true)
     end
 
-    local filename = 'temp.txt'
-    os.remove(filename)
-    create_file(filename)
-    remove_ok(filename, true)
-    remove_ok(filename, false)
+    os.remove 'temp.txt'
+    create_file 'temp.txt'
+    remove_ok('temp.txt', true)
+    remove_ok('temp.txt', false)
 
-    local filename = 'temp'
-    fs.remove_all(fs.path(filename))
-    fs.create_directories(fs.path(filename))
-    remove_ok(filename, true)
-    remove_ok(filename, false)
+    fs.remove_all 'temp'
+    fs.create_directories 'temp'
+    remove_ok('temp', true)
+    remove_ok('temp', false)
 
-    local filename = 'temp/temp'
-    fs.remove_all(fs.path(filename))
-    fs.create_directories(fs.path(filename))
-    remove_ok(filename, true)
-    remove_ok(filename, false)
+    fs.remove_all 'temp/temp'
+    fs.create_directories 'temp/temp'
+    remove_ok('temp/temp', true)
+    remove_ok('temp/temp', false)
 
-    local filename = 'temp'
-    fs.remove_all(fs.path(filename))
-    fs.create_directories(fs.path(filename))
+    fs.remove_all 'temp'
+    fs.create_directories 'temp'
     create_file('temp/temp.txt')
-    remove_failed(filename)
+    remove_failed 'temp'
     remove_ok('temp/temp.txt', true)
-    remove_ok(filename, true)
-    remove_ok(filename, false)
+    remove_ok('temp', true)
+    remove_ok('temp', false)
 end
 
 function test_fs:test_remove_all()
@@ -422,30 +418,26 @@ function test_fs:test_remove_all()
         lt.assertEquals(fs.exists(fs.path(path)), false)
     end
 
-    local filename = 'temp.txt'
-    os.remove(filename)
-    create_file(filename)
-    remove_all(filename, 1)
-    remove_all(filename, 0)
+    os.remove 'temp.txt'
+    create_file 'temp.txt'
+    remove_all('temp.txt', 1)
+    remove_all('temp.txt', 0)
 
-    local filename = 'temp'
-    fs.remove_all(fs.path(filename))
-    fs.create_directories(fs.path(filename))
-    remove_all(filename, 1)
-    remove_all(filename, 0)
+    fs.remove_all 'temp'
+    fs.create_directories 'temp'
+    remove_all('temp', 1)
+    remove_all('temp', 0)
 
-    local filename = 'temp/temp'
-    fs.remove_all(fs.path(filename))
-    fs.create_directories(fs.path(filename))
-    remove_all(filename, 1)
-    remove_all(filename, 0)
+    fs.remove_all 'temp/temp'
+    fs.create_directories 'temp/temp'
+    remove_all('temp/temp', 1)
+    remove_all('temp/temp', 0)
 
-    local filename = 'temp'
-    fs.remove_all(fs.path(filename))
-    fs.create_directories(fs.path(filename))
+    fs.remove_all 'temp'
+    fs.create_directories 'temp'
     create_file('temp/temp.txt')
-    remove_all(filename, 2)
-    remove_all(filename, 0)
+    remove_all('temp', 2)
+    remove_all('temp', 0)
 end
 
 function test_fs:test_is_directory()
