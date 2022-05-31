@@ -118,7 +118,6 @@ lm:source_set 'source_lua' {
     },
     linux = {
         defines = "LUA_USE_LINUX",
-        flags = "-Wno-maybe-uninitialized",
         visibility = "default",
     },
     android = {
@@ -127,5 +126,8 @@ lm:source_set 'source_lua' {
     },
     msvc = {
         flags = "/wd4267"
+    },
+    gcc = {
+        flags = "-Wno-maybe-uninitialized",
     }
 }
