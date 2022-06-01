@@ -172,6 +172,33 @@ function test_subprocess:test_stdio_3()
     lt.assertEquals(process.stdout:read "a", "[stdout][stderr]")
 end
 
+function test_subprocess:test_stdio_4()
+    local process = shell:runlua([[
+        io.stdout:setvbuf "no"
+        while true do
+            local what = io.read(4)
+            if what ~= "PING" then
+                break
+            end
+            io.write "PONG"
+        end
+    ]], { stdin = true, stdout = true })
+    lt.assertIsUserdata(process.stdin)
+    lt.assertIsUserdata(process.stdout)
+    lt.assertEquals(process:is_running(), true)
+
+    process.stdin:setvbuf "no"
+
+    for _ = 1, 10 do
+        process.stdin:write "PING"
+        lt.assertEquals(process.stdout:read(4), "PONG")
+    end
+    process.stdin:write "EXIT"
+    process.stdin:close()
+    lt.assertEquals(process:wait(), 0)
+    lt.assertEquals(process.stdout:read(4), nil)
+end
+
 function test_subprocess:test_peek()
     local process = shell:runlua('io.write "ok"', { stdout = true })
     lt.assertEquals(process:wait(), 0)

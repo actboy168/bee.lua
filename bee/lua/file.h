@@ -170,6 +170,9 @@ namespace bee::lua {
             return 3;
         }
     }
+    static int f_flush (lua_State *L) {
+        return luaL_fileresult(L, fflush(tofile(L)) == 0, NULL);
+    }
     inline int aux_close(lua_State* L) {
         luaL_Stream *p = tolstream(L);
         volatile lua_CFunction cf = p->closef;
@@ -179,6 +182,15 @@ namespace bee::lua {
     inline int f_close(lua_State* L) {
         tofile(L); 
         return aux_close(L);
+    }
+    static int f_setvbuf (lua_State *L) {
+        static const int mode[] = {_IONBF, _IOFBF, _IOLBF};
+        static const char *const modenames[] = {"no", "full", "line", NULL};
+        FILE *f = tofile(L);
+        int op = luaL_checkoption(L, 2, NULL, modenames);
+        lua_Integer sz = luaL_optinteger(L, 3, LUAL_BUFFERSIZE);
+        int res = setvbuf(f, NULL, mode[op], (size_t)sz);
+        return luaL_fileresult(L, res == 0, NULL);
     }
     inline int f_gc(lua_State* L) {
         luaL_Stream *p = tolstream(L);
@@ -203,10 +215,10 @@ namespace bee::lua {
                 {"read", f_read},
                 {"write", f_write},
                 {"lines", f_lines},
-                //{"flush", f_flush},
+                {"flush", f_flush},
                 //{"seek", f_seek},
                 {"close", f_close},
-                //{"setvbuf", f_setvbuf},
+                {"setvbuf", f_setvbuf},
                 {NULL, NULL}
             };
             const luaL_Reg metameth[] = {
