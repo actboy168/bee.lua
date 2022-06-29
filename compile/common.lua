@@ -10,46 +10,67 @@ lm:source_set "source_bee" {
     sources = "bee/nonstd/fmt/*.cc",
 }
 
+local OS = {
+    "win",
+    "posix",
+    "osx",
+    "linux",
+    "netbsd",
+}
+
+local function need(lst)
+    local map = {}
+    if type(lst) == "table" then
+        for _, v in ipairs(lst) do
+            map[v] = true
+        end
+    else
+        map[lst] = true
+    end
+    local t = {}
+    for _, v in ipairs(OS) do
+        if not map[v] then
+            t[#t+1] = "!bee/**/*_"..v..".cpp"
+        end
+    end
+    return t
+end
+
 lm:source_set "source_bee" {
     includes = ".",
     sources = "bee/**/*.cpp",
     windows = {
-        sources = {
-            "!bee/**/*_osx.cpp",
-            "!bee/**/*_linux.cpp",
-            "!bee/**/*_posix.cpp",
-            "!bee/**/*_netbsd.cpp",
-        }
+        sources = need "win"
     },
     macos = {
         sources = {
             "bee/**/*.mm",
-            "!bee/**/*_win.cpp",
-            "!bee/**/*_linux.cpp",
-            "!bee/**/*_netbsd.cpp",
+            need {
+                "osx",
+                "posix",
+            }
         }
     },
     ios = {
         sources = {
             "bee/**/*.mm",
-            "!bee/**/*_win.cpp",
-            "!bee/**/*_linux.cpp",
-            "!bee/**/*_netbsd.cpp",
             "!bee/fsevent/**/",
+            need {
+                "osx",
+                "posix",
+            }
         }
     },
     linux = {
-        sources = {
-            "!bee/**/*_win.cpp",
-            "!bee/**/*_osx.cpp",
-            "!bee/**/*_netbsd.cpp",
+        sources = need {
+            "linux",
+            "posix",
         }
     },
     android = {
-        sources = {
-            "!bee/**/*_win.cpp",
-            "!bee/**/*_osx.cpp",
-            "!bee/**/*_netbsd.cpp",
+        sources = need {
+            "linux",
+            "posix",
         }
     }
 }
