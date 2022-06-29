@@ -18,6 +18,7 @@ lm:source_set "source_bee" {
             "!bee/**/*_osx.cpp",
             "!bee/**/*_linux.cpp",
             "!bee/**/*_posix.cpp",
+            "!bee/**/*_netbsd.cpp",
         }
     },
     macos = {
@@ -25,6 +26,7 @@ lm:source_set "source_bee" {
             "bee/**/*.mm",
             "!bee/**/*_win.cpp",
             "!bee/**/*_linux.cpp",
+            "!bee/**/*_netbsd.cpp",
         }
     },
     ios = {
