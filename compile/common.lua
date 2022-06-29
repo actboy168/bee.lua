@@ -34,6 +34,7 @@ lm:source_set "source_bee" {
             "bee/**/*.mm",
             "!bee/**/*_win.cpp",
             "!bee/**/*_linux.cpp",
+            "!bee/**/*_netbsd.cpp",
             "!bee/fsevent/**/",
         }
     },
@@ -41,12 +42,14 @@ lm:source_set "source_bee" {
         sources = {
             "!bee/**/*_win.cpp",
             "!bee/**/*_osx.cpp",
+            "!bee/**/*_netbsd.cpp",
         }
     },
     android = {
         sources = {
             "!bee/**/*_win.cpp",
             "!bee/**/*_osx.cpp",
+            "!bee/**/*_netbsd.cpp",
         }
     }
 }
