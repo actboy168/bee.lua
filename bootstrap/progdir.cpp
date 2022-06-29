@@ -55,7 +55,7 @@ void pushprogdir(lua_State *L) {
     free(linkname);
 }
 
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__NetBSD__)
 
 #include <unistd.h>
 #include <memory.h>

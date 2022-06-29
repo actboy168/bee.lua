@@ -955,6 +955,10 @@ function test_fs:test_hard_link()
 end
 
 function test_fs:test_fullpath()
+    if platform.os == "netbsd" then
+        --TODO
+        return
+    end
     local file = "temp.txt"
     do
         fs.remove_all(file)
