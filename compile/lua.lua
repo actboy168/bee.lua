@@ -45,12 +45,13 @@ lm:executable 'lua' {
     },
     linux = {
         defines = "LUA_USE_LINUX",
-        ldflags = {
-            "-Wl,-E",
-        },
-        links = {
-            "m", "dl",
-        }
+        ldflags = "-Wl,-E",
+        links = { "m", "dl" }
+    },
+    netbsd = {
+        defines = "LUA_USE_LINUX",
+        ldflags = "-Wl,-E",
+        links = "m",
     },
     android = {
         ldflags = "-Wl,-E",

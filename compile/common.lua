@@ -158,6 +158,10 @@ lm:source_set 'source_lua' {
         defines = "LUA_USE_LINUX",
         visibility = "default",
     },
+    netbsd = {
+        defines = "LUA_USE_LINUX",
+        visibility = "default",
+    },
     android = {
         defines = "LUA_USE_LINUX",
         visibility = "default",

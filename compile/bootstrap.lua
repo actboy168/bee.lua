@@ -17,12 +17,13 @@ lm:source_set "source_bootstrap" {
     },
     linux = {
         defines = "LUA_USE_LINUX",
-        ldflags = {
-            "-Wl,-E",
-        },
-        links = {
-            "m", "dl",
-        }
+        ldflags = "-Wl,-E",
+        links = { "m", "dl" }
+    },
+    netbsd = {
+        defines = "LUA_USE_LINUX",
+        ldflags = "-Wl,-E",
+        links = "m",
     },
     android = {
         defines = "LUA_USE_LINUX",
