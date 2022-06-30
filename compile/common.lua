@@ -72,6 +72,12 @@ lm:source_set "source_bee" {
             "linux",
             "posix",
         }
+    },
+    netbsd = {
+        sources = need {
+            "netbsd",
+            "posix",
+        }
     }
 }
 
@@ -125,7 +131,13 @@ lm:lua_source "source_bee" {
     },
     android = {
         sources = "!binding/lua_unicode.cpp",
-    }
+    },
+    netbsd = {
+        sources = {
+            "!binding/lua_unicode.cpp",
+            "!binding/lua_filewatch.cpp",
+        },
+    },
 }
 
 lm:source_set 'source_lua' {
