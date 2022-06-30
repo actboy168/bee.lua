@@ -137,6 +137,7 @@ lm:lua_source "source_bee" {
             "!binding/lua_unicode.cpp",
             "!binding/lua_filewatch.cpp",
         },
+        ldflags = "-pthread"
     },
 }
 
