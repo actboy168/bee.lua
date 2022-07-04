@@ -76,6 +76,32 @@ void pushprogdir(lua_State *L) {
         lua_pushstring(L, linkname);
     }
 }
+
+#elif defined(__FreeBSD__)
+
+#include <sys/param.h>
+#include <sys/sysctl.h>
+#include <memory.h>
+
+void pushprogdir(lua_State *L) {
+    int name[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
+    char linkname[1024];
+    size_t length = 1024;
+    int error = sysctl(name, 4, linkname, &length, NULL, 0);
+    if (error < 0 || length <= 1) {
+        luaL_error(L, "unable to get progdir");
+        return;
+    }
+    linkname[length] = '\0';
+    const char* lb = strrchr(linkname, '/');
+    if (lb) {
+        lua_pushlstring(L, linkname, lb - linkname + 1);
+    }
+    else {
+        lua_pushstring(L, linkname);
+    }
+}
+
 #else
 void pushprogdir(lua_State *L) {
     luaL_error(L, "unable to get progdir");

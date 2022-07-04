@@ -33,7 +33,7 @@ require 'test_filesystem'
 require 'test_thread'
 require 'test_subprocess'
 require 'test_socket'
-if platform.os ~= "netbsd" then
+if platform.os ~= "netbsd" and platform.os ~= "freebsd" then
     --TODO
     require 'test_filewatch'
 end
