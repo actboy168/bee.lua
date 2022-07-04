@@ -5,6 +5,9 @@
 #   include <netdb.h>
 #   include <sys/un.h>
 #   include <arpa/inet.h>
+#   if defined(__FreeBSD__)
+#       include <netinet/in.h>
+#   endif
 #   ifndef UNIX_PATH_MAX
 #       define UNIX_PATH_MAX (sizeof(sockaddr_un::sun_path) / sizeof(sockaddr_un::sun_path[0]))
 #   endif
