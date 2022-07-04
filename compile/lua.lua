@@ -53,6 +53,11 @@ lm:executable 'lua' {
         ldflags = "-Wl,-E",
         links = "m",
     },
+    freebsd = {
+        defines = "LUA_USE_LINUX",
+        ldflags = "-Wl,-E",
+        links = "m",
+    },
     android = {
         ldflags = "-Wl,-E",
         defines = "LUA_USE_LINUX",

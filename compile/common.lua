@@ -15,7 +15,7 @@ local OS = {
     "posix",
     "osx",
     "linux",
-    "netbsd",
+    "bsd",
 }
 
 local function need(lst)
@@ -75,7 +75,13 @@ lm:source_set "source_bee" {
     },
     netbsd = {
         sources = need {
-            "netbsd",
+            "bsd",
+            "posix",
+        }
+    },
+    freebsd = {
+        sources = need {
+            "bsd",
             "posix",
         }
     }
@@ -139,6 +145,13 @@ lm:lua_source "source_bee" {
         },
         ldflags = "-pthread"
     },
+    freebsd = {
+        sources = {
+            "!binding/lua_unicode.cpp",
+            "!binding/lua_filewatch.cpp",
+        },
+        ldflags = "-pthread"
+    },
 }
 
 lm:source_set 'source_lua' {
@@ -160,6 +173,10 @@ lm:source_set 'source_lua' {
         visibility = "default",
     },
     netbsd = {
+        defines = "LUA_USE_LINUX",
+        visibility = "default",
+    },
+    freebsd = {
         defines = "LUA_USE_LINUX",
         visibility = "default",
     },
