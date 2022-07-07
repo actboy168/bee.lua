@@ -13,23 +13,6 @@ local function create_file(filename, content)
     end
 end
 
-local function assertSelect(what, value)
-    while true do
-        local w, v = fw.select()
-        if w then
-            lt.assertEquals(w, what)
-            if type(value) == 'userdata' or type(value) == 'table' then
-                lt.assertEquals(fs.path(v), value)
-            else
-                lt.assertEquals(v, value)
-            end
-            break
-        else
-            thread.sleep(0)
-        end
-    end
-end
-
 local function test(f)
     local root = fs.absolute('./temp/'):lexically_normal()
 
@@ -37,12 +20,10 @@ local function test(f)
     fs.create_directories(root)
     local id = fw.add(root:string())
     lt.assertIsNumber(id)
-    assertSelect('task_add', ('(%d)%s'):format(id, root:string()))
 
     f(root)
 
     fw.remove(id)
-    assertSelect('task_remove', ('%d'):format(id))
     pcall(fs.remove_all, root)
 end
 

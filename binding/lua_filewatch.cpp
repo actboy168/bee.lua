@@ -33,18 +33,6 @@ namespace bee::lua_filewatch {
             return 0;
         }
         switch (notify.type) {
-        case filewatch::tasktype::Error:
-            lua_pushstring(L, "error");
-            break;
-        case filewatch::tasktype::TaskAdd:
-            lua_pushstring(L, "task_add");
-            break;
-        case filewatch::tasktype::TaskRemove:
-            lua_pushstring(L, "task_remove");
-            break;
-        case filewatch::tasktype::TaskTerminate:
-            lua_pushstring(L, "task_terminate");
-            break;
         case filewatch::tasktype::Modify:
             lua_pushstring(L, "modify");
             break;

@@ -23,7 +23,6 @@ namespace bee::win::filewatch {
         void   cancel();
         taskid getid();
         void   push_notify(tasktype type, std::wstring&& message);
-        void   remove();
         bool   event_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered);
         bool   update();
 
@@ -58,7 +57,6 @@ namespace bee::win::filewatch {
         std::error_code ec;
         m_path = fs::absolute(path, ec);
         if (ec) {
-            push_notify(tasktype::Error, std::format(L"`std::filesystem::absolute` failed: {}", u2w(error_message(ec))));
             return false;
         }
 
@@ -70,7 +68,6 @@ namespace bee::win::filewatch {
             FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
             NULL);
         if (m_directory == INVALID_HANDLE_VALUE) {
-            push_notify(tasktype::Error, u2w(make_syserror("CreateFileW").what()).c_str());
             return false;
         }
         return true;
@@ -86,13 +83,6 @@ namespace bee::win::filewatch {
 
     taskid task::task::getid() {
         return m_id;
-    }
-
-    void task::remove() {
-        cancel();
-        if (m_watch) {
-            m_watch->removetask(this);
-        }
     }
 
     bool task::start() {
@@ -115,7 +105,6 @@ namespace bee::win::filewatch {
         {
             ::CloseHandle(m_directory);
             m_directory = INVALID_HANDLE_VALUE;
-            push_notify(tasktype::Error, u2w(make_syserror("ReadDirectoryChangesW").what()).c_str());
             return false;
         }
         return true;
@@ -134,7 +123,7 @@ namespace bee::win::filewatch {
 
     bool task::event_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered) {
         if (dwErrorCode != 0) {
-            push_notify(tasktype::TaskRemove, std::format(L"{}", m_id));
+            cancel();
             return false;
         }
         if (!dwNumberOfBytesTransfered) {
@@ -182,7 +171,6 @@ namespace bee::win::filewatch {
         : m_notify()
         , m_gentask(kInvalidTaskId)
         , m_tasks()
-        , m_terminate(false)
     { }
 
     watch::~watch() {
@@ -190,58 +178,7 @@ namespace bee::win::filewatch {
         assert(m_tasks.empty());
     }
 
-    void watch::removetask(task* t) {
-        if (t) {
-            auto it = m_tasks.find(t->getid());
-            if (it != m_tasks.end()) {
-                m_tasks.erase(it);
-            }
-        }
-    }
-
     void watch::stop() {
-        apc_terminate();
-        m_notify.push({
-            tasktype::TaskTerminate,
-            L""
-        });
-    }
-
-    taskid watch::add(const std::wstring& path) {
-        taskid id = ++m_gentask;
-        apc_add(id, path);
-        m_notify.push({
-            tasktype::TaskAdd,
-            std::format(L"({}){}", id, path)
-        });
-        return id;
-    }
-
-    bool watch::remove(taskid id) {
-        apc_remove(id);
-        return true;
-    }
-
-    void watch::apc_add(taskid id, const std::wstring& path) {
-        auto t = std::make_unique<task>(this, id);
-        if (!t->open(path)) {
-            return;
-        }
-        if (!t->start()) {
-            return;
-        }
-        m_tasks.emplace(std::make_pair(id, std::move(t)));
-    }
-
-    void watch::apc_remove(taskid id) {
-        auto it = m_tasks.find(id);
-        if (it != m_tasks.end()) {
-            it->second->cancel();
-        }
-    }
-
-    void watch::apc_terminate() {
-        m_terminate = true;
         if (m_tasks.empty()) {
             return;
         }
@@ -250,7 +187,26 @@ namespace bee::win::filewatch {
         }
     }
 
-    void watch::update() {
+    taskid watch::add(const std::wstring& path) {
+        taskid id = ++m_gentask;
+        auto t = std::make_unique<task>(this, id);
+        if (t->open(path)) {
+            if (t->start()) {
+                m_tasks.emplace(std::make_pair(id, std::move(t)));
+            }
+        }
+        return id;
+    }
+
+    bool watch::remove(taskid id) {
+        auto it = m_tasks.find(id);
+        if (it != m_tasks.end()) {
+            it->second->cancel();
+        }
+        return true;
+    }
+
+    bool watch::select(notify& n) {
         for (auto iter = m_tasks.begin(); iter != m_tasks.end();) {
             if (iter->second->update()) {
                 ++iter;
@@ -259,10 +215,6 @@ namespace bee::win::filewatch {
                 iter = m_tasks.erase(iter);
             }
         }
-    }
-
-    bool watch::select(notify& n) {
-        update();
         return m_notify.pop(n);
     }
 }

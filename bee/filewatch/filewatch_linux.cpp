@@ -77,20 +77,12 @@ namespace bee::linux::filewatch {
             }
             m_tasks.clear();
         }
-        m_notify.push({
-            tasktype::TaskTerminate,
-            ""
-        });
     }
 
     taskid watch::add(const std::string& path) {
         taskid id = ++m_gentask;
         add_dir(path);
         m_tasks.emplace(std::make_pair(id, std::make_unique<task>(id, path)));
-        m_notify.push({
-            tasktype::TaskAdd,
-            std::format("({}){}", id, path)
-        });
         return id;
     }
 
@@ -100,10 +92,6 @@ namespace bee::linux::filewatch {
             del_dir(it->second->path);
             m_tasks.erase(it);
         }
-        m_notify.push({
-            tasktype::TaskRemove,
-            std::format("{}", id)
-        });
         return true;
     }
 

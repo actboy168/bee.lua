@@ -10,10 +10,6 @@ namespace bee::win::filewatch {
 
     typedef int taskid;
     enum class tasktype {
-        Error,
-        TaskAdd,
-        TaskRemove,
-        TaskTerminate,
         Modify,
         Rename,
     };
@@ -35,26 +31,8 @@ namespace bee::win::filewatch {
         bool   select(notify& notify);
 
     private:
-        struct apc_arg {
-            enum class type {
-                Add,
-                Remove,
-                Terminate,
-            };
-            type                  m_type;
-            taskid                m_id;
-            std::wstring          m_path;
-        };
-        void update();
-        void apc_add(taskid id, const std::wstring& path);
-        void apc_remove(taskid id);
-        void apc_terminate();
-        void removetask(task* task);
-
-    private:
         lockqueue<notify>                       m_notify;
         taskid                                  m_gentask;
         std::map<taskid, std::unique_ptr<task>> m_tasks;
-        bool                                    m_terminate;
     };
 }

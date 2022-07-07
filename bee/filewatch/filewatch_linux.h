@@ -12,10 +12,6 @@ namespace bee::linux::filewatch {
 
     typedef int taskid;
     enum class tasktype {
-        Error,
-        TaskAdd,
-        TaskRemove,
-        TaskTerminate,
         Modify,
         Rename,
     };
@@ -36,16 +32,6 @@ namespace bee::linux::filewatch {
         bool   select(notify& notify, int msec = 1);
 
     private:
-        struct apc_arg {
-            enum class type {
-                Add,
-                Remove,
-                Terminate,
-            };
-            type                  m_type;
-            taskid                m_id;
-            std::string           m_path;
-        };
         void update(int msec);
         void event_update(inotify_event* event);
         void add_dir(const fs::path& path);
