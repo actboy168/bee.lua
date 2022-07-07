@@ -24,7 +24,8 @@ namespace bee::win::filewatch {
         taskid getid();
         void   push_notify(tasktype type, std::wstring&& message);
         void   remove();
-        void   event_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered);
+        bool   event_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered);
+        bool   update();
 
     private:
         watch*                        m_watch;
@@ -35,16 +36,6 @@ namespace bee::win::filewatch {
         std::array<uint8_t, kBufSize> m_bakbuffer;
     };
 
-    static void __stdcall watch_apc_cb(ULONG_PTR arg) {
-        watch* self = (watch*)arg;
-        self->apc_cb();
-    }
-
-    static void __stdcall task_event_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped) {
-        task* self = (task*)lpOverlapped->hEvent;
-        self->event_cb(dwErrorCode, dwNumberOfBytesTransfered);
-    }
-
     task::task(watch* watch, taskid id)
         : m_watch(watch)
         , m_id(id)
@@ -52,7 +43,7 @@ namespace bee::win::filewatch {
         , m_directory(INVALID_HANDLE_VALUE)
     {
         memset((OVERLAPPED*)this, 0, sizeof(OVERLAPPED));
-        hEvent = this;
+        hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
     }
 
     task::~task() {
@@ -98,6 +89,7 @@ namespace bee::win::filewatch {
     }
 
     void task::remove() {
+        cancel();
         if (m_watch) {
             m_watch->removetask(this);
         }
@@ -105,6 +97,9 @@ namespace bee::win::filewatch {
 
     bool task::start() {
         if (m_directory == INVALID_HANDLE_VALUE) {
+            return false;
+        }
+        if (!ResetEvent(hEvent)) {
             return false;
         }
         if (!::ReadDirectoryChangesW(
@@ -116,25 +111,34 @@ namespace bee::win::filewatch {
             FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_CREATION,
             NULL,
             this,
-            &task_event_cb))
+            NULL))
         {
             ::CloseHandle(m_directory);
             m_directory = INVALID_HANDLE_VALUE;
             push_notify(tasktype::Error, u2w(make_syserror("ReadDirectoryChangesW").what()).c_str());
             return false;
         }
-        push_notify(tasktype::TaskAdd, std::format(L"({}){}", m_id, m_path.generic_wstring()));
         return true;
     }
 
-    void task::event_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered) {
+    bool task::update() {
+        DWORD bytes_returned;
+        bool ok = GetOverlappedResult(m_directory, this, &bytes_returned, FALSE);
+        if (!ok) {
+            if (::GetLastError() == ERROR_IO_INCOMPLETE) {
+                return true;
+            }
+        }
+        return event_cb(::GetLastError(), bytes_returned);
+    }
+
+    bool task::event_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered) {
         if (dwErrorCode != 0) {
             push_notify(tasktype::TaskRemove, std::format(L"{}", m_id));
-            remove();
-            return;
+            return false;
         }
         if (!dwNumberOfBytesTransfered) {
-            return;
+            return true;
         }
         assert(dwNumberOfBytesTransfered >= offsetof(FILE_NOTIFY_INFORMATION, FileName) + sizeof(WCHAR));
         assert(dwNumberOfBytesTransfered <= m_bakbuffer.size());
@@ -164,6 +168,7 @@ namespace bee::win::filewatch {
             }
             data += fni.NextEntryOffset;
         }
+        return true;
     }
 
     void task::push_notify(tasktype type, std::wstring&& message) {
@@ -174,9 +179,7 @@ namespace bee::win::filewatch {
     }
 
     watch::watch()
-        : m_thread()
-        , m_apc_queue()
-        , m_notify()
+        : m_notify()
         , m_gentask(kInvalidTaskId)
         , m_tasks()
         , m_terminate(false)
@@ -196,99 +199,27 @@ namespace bee::win::filewatch {
         }
     }
 
-    bool watch::thread_signal() {
-#if defined(__MINGW32__)
-        return !!::QueueUserAPC(watch_apc_cb, pthread_gethandle(m_thread->native_handle()), (ULONG_PTR)this);
-#else
-        return !!::QueueUserAPC(watch_apc_cb, m_thread->native_handle(), (ULONG_PTR)this);
-#endif
-
-    }
-
-    bool watch::thread_init() {
-        if (m_thread) {
-            return true;
-        }
-        m_thread.reset(new std::thread(std::bind(&watch::thread_cb, this)));
-        return true;
-    }
-
-    void watch::thread_cb() {
-        while (!m_terminate || !m_tasks.empty()) {
-            ::SleepEx(INFINITE, true);
-        }
-    }
-
     void watch::stop() {
-        if (!m_thread) {
-            return;
-        }
-        if (!m_thread->joinable()) {
-            m_thread.reset();
-            return;
-        }
-        m_apc_queue.push({
-            apc_arg::type::Terminate,
-            kInvalidTaskId,
-            std::wstring(),
+        apc_terminate();
+        m_notify.push({
+            tasktype::TaskTerminate,
+            L""
         });
-        if (!thread_signal()) {
-            m_thread->detach();
-            m_thread.reset();
-            return;
-        }
-        m_thread->join();
-        m_thread.reset();
     }
 
     taskid watch::add(const std::wstring& path) {
-        if (!thread_init()) {
-            return kInvalidTaskId;
-        }
         taskid id = ++m_gentask;
-        m_apc_queue.push({
-            apc_arg::type::Add,
-            id,
-            path
+        apc_add(id, path);
+        m_notify.push({
+            tasktype::TaskAdd,
+            std::format(L"({}){}", id, path)
         });
-        thread_signal();
         return id;
     }
 
     bool watch::remove(taskid id) {
-        if (!m_thread) {
-            return false;
-        }
-        m_apc_queue.push({
-            apc_arg::type::Remove,
-            id,
-            std::wstring(),
-        });
-        thread_signal();
+        apc_remove(id);
         return true;
-    }
-
-    void watch::apc_cb() {
-        apc_arg arg;
-        while (m_apc_queue.pop(arg)) {
-            switch (arg.m_type) {
-            case apc_arg::type::Add:
-                apc_add(arg.m_id, arg.m_path);
-                break;
-            case apc_arg::type::Remove:
-                apc_remove(arg.m_id);
-                break;
-            case apc_arg::type::Terminate:
-                apc_terminate();
-                m_notify.push({
-                    tasktype::TaskTerminate,
-                    L""
-                });
-                return;
-            default:
-                unreachable();
-            }
-        }
     }
 
     void watch::apc_add(taskid id, const std::wstring& path) {
@@ -319,7 +250,19 @@ namespace bee::win::filewatch {
         }
     }
 
+    void watch::update() {
+        for (auto iter = m_tasks.begin(); iter != m_tasks.end();) {
+            if (iter->second->update()) {
+                ++iter;
+            }
+            else {
+                iter = m_tasks.erase(iter);
+            }
+        }
+    }
+
     bool watch::select(notify& n) {
+        update();
         return m_notify.pop(n);
     }
 }

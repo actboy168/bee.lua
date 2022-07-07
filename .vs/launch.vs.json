@@ -5,7 +5,7 @@
     {
       "type": "native",
       "name": "debug",
-      "project": "build\\msvc\\bin\\lua.exe",
+      "project": "build\\bin\\bootstrap.exe",
       "args": [
         "test\\test.lua"
       ],

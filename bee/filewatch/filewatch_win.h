@@ -3,7 +3,6 @@
 #include <string>
 #include <map>
 #include <memory>
-#include <thread>
 #include <bee/thread/lockqueue.h>
 
 namespace bee::win::filewatch {
@@ -35,9 +34,6 @@ namespace bee::win::filewatch {
         bool   remove(taskid id);
         bool   select(notify& notify);
 
-    public:
-        void   apc_cb();
-
     private:
         struct apc_arg {
             enum class type {
@@ -49,17 +45,13 @@ namespace bee::win::filewatch {
             taskid                m_id;
             std::wstring          m_path;
         };
+        void update();
         void apc_add(taskid id, const std::wstring& path);
         void apc_remove(taskid id);
         void apc_terminate();
         void removetask(task* task);
-        bool thread_init();
-        bool thread_signal();
-        void thread_cb();
 
     private:
-        std::unique_ptr<std::thread>            m_thread;
-        lockqueue<apc_arg>                      m_apc_queue;
         lockqueue<notify>                       m_notify;
         taskid                                  m_gentask;
         std::map<taskid, std::unique_ptr<task>> m_tasks;
