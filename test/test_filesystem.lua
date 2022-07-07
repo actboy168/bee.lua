@@ -653,8 +653,8 @@ function test_fs:test_copy_file_2()
     --lu.assertEquals(COPIED, true)
     --lu.assertEquals(FromContext, read_file(to))
     --clean
-    os.remove(from:string())
-    os.remove(to:string())
+    fs.remove(from:string())
+    fs.remove(to:string())
     lt.assertEquals(fs.exists(from), false)
     lt.assertEquals(fs.exists(to), false)
 end
