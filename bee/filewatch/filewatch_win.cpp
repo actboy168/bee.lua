@@ -215,6 +215,11 @@ namespace bee::win::filewatch {
                 iter = m_tasks.erase(iter);
             }
         }
-        return m_notify.pop(n);
+        if (m_notify.empty()) {
+            return false;
+        }
+        n = m_notify.front();
+        m_notify.pop();
+        return true;
     }
 }

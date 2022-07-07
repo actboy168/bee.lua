@@ -26,10 +26,6 @@ namespace bee::osx::filewatch {
     void watch::stop() {
         destroy_stream();
         m_tasks.clear();
-        m_notify.push({
-            tasktype::TaskTerminate,
-            ""
-        });
     }
 
     bool watch::create_stream(CFArrayRef cf_paths) {
@@ -74,20 +70,12 @@ namespace bee::osx::filewatch {
         taskid id = ++m_gentask;
         m_tasks.insert(std::make_pair(id, path));
         update_stream();
-        m_notify.push({
-            tasktype::TaskAdd,
-            std::format("({}){}", id, path)
-        });
         return id;
     }
 
     bool watch::remove(taskid id) {
         m_tasks.erase(id);
         update_stream();
-        m_notify.push({
-            tasktype::TaskRemove,
-            std::format("{}", id)
-        });
         return true;
     }
 
@@ -115,8 +103,13 @@ namespace bee::osx::filewatch {
         CFRelease(cf_paths);
     }
 
-    bool watch::select(notify& notify) {
-        return m_notify.pop(notify);
+    bool watch::select(notify& n) {
+        if (m_notify.empty()) {
+            return false;
+        }
+        n = m_notify.front();
+        m_notify.pop();
+        return true;
     }
 
     void watch::event_cb(const char* paths[], const FSEventStreamEventFlags flags[], size_t n) {

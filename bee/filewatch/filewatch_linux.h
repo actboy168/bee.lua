@@ -3,7 +3,7 @@
 #include <string>
 #include <map>
 #include <memory>
-#include <bee/thread/lockqueue.h>
+#include <queue>
 #include <sys/inotify.h>
 #include <bee/filesystem.h>
 
@@ -41,7 +41,7 @@ namespace bee::linux::filewatch {
     private:
         static const unsigned int inotify_buf_size = (10 * ((sizeof(struct inotify_event)) + 255 + 1));
 
-        lockqueue<notify>                       m_notify;
+        std::queue<notify>                      m_notify;
         taskid                                  m_gentask;
         std::map<taskid, std::unique_ptr<task>> m_tasks;
         std::map<int, fs::path>                 m_fd_path;

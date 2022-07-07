@@ -3,7 +3,7 @@
 #include <string>
 #include <map>
 #include <memory>
-#include <bee/thread/lockqueue.h>
+#include <queue>
 
 namespace bee::win::filewatch {
     class task;
@@ -31,7 +31,7 @@ namespace bee::win::filewatch {
         bool   select(notify& notify);
 
     private:
-        lockqueue<notify>                       m_notify;
+        std::queue<notify>                      m_notify;
         taskid                                  m_gentask;
         std::map<taskid, std::unique_ptr<task>> m_tasks;
     };

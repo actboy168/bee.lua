@@ -97,7 +97,12 @@ namespace bee::linux::filewatch {
 
     bool   watch::select(notify& n, int msec) {
         update(msec);
-        return m_notify.pop(n);
+        if (m_notify.empty()) {
+            return false;
+        }
+        n = m_notify.front();
+        m_notify.pop();
+        return true;
     }
 
     void watch::update(int msec) {
