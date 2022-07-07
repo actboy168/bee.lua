@@ -6,7 +6,7 @@
 #include <thread>
 #include <bee/thread/lockqueue.h>
 
-namespace bee::win::fsevent {
+namespace bee::win::filewatch {
     class task;
 
     typedef int taskid;

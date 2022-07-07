@@ -54,7 +54,7 @@ lm:source_set "source_bee" {
     ios = {
         sources = {
             "bee/**/*.mm",
-            "!bee/fsevent/**/",
+            "!bee/filewatch/**/",
             need {
                 "osx",
                 "posix",

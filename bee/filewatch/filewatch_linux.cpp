@@ -1,4 +1,4 @@
-#include <bee/fsevent/fsevent_linux.h>
+#include <bee/filewatch/filewatch_linux.h>
 #include <bee/format.h>
 #include <bee/error.h>
 #include <bee/utility/unreachable.h>
@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <sys/select.h>
 
-namespace bee::linux::fsevent {
+namespace bee::linux::filewatch {
     class task {
     public:
         taskid      id;

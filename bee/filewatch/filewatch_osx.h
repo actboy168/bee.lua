@@ -9,7 +9,7 @@
 #include <bee/thread/lockqueue.h>
 #include <bee/thread/semaphore.h>
 
-namespace bee::osx::fsevent {
+namespace bee::osx::filewatch {
     typedef int taskid;
     static const taskid kInvalidTaskId = 0;
     enum class tasktype {

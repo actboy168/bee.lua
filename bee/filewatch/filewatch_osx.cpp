@@ -1,9 +1,9 @@
-#include <bee/fsevent/fsevent_osx.h>
+#include <bee/filewatch/filewatch_osx.h>
 #include <bee/format.h>
 #include <bee/utility/unreachable.h>
 #include <thread>
 
-namespace bee::osx::fsevent {
+namespace bee::osx::filewatch {
     static void watch_event_cb(ConstFSEventStreamRef streamRef,
         void* info,
         size_t numEvents,

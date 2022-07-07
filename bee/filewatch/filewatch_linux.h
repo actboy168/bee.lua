@@ -8,7 +8,7 @@
 #include <sys/inotify.h>
 #include <bee/filesystem.h>
 
-namespace bee::linux::fsevent {
+namespace bee::linux::filewatch {
     class task;
 
     typedef int taskid;

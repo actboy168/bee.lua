@@ -1,17 +1,17 @@
 #include <bee/error.h>
-#include <bee/fsevent.h>
+#include <bee/filewatch.h>
 #include <bee/lua/binding.h>
 #include <bee/utility/unreachable.h>
 
 namespace bee::lua_filewatch {
-    static fsevent::watch& to(lua_State* L) {
-        return *(fsevent::watch*)lua_touserdata(L, lua_upvalueindex(1));
+    static filewatch::watch& to(lua_State* L) {
+        return *(filewatch::watch*)lua_touserdata(L, lua_upvalueindex(1));
     }
     static int add(lua_State* L) {
-        fsevent::watch& self = to(L);
+        filewatch::watch& self = to(L);
         auto            path = lua::to_string(L, 1);
-        fsevent::taskid id = self.add(path);
-        if (id == fsevent::kInvalidTaskId) {
+        filewatch::taskid id = self.add(path);
+        if (id == filewatch::kInvalidTaskId) {
             lua_pushnil(L);
             lua::push_errormesg(L, "filewatch::add", make_syserror());
             return 2;
@@ -21,34 +21,34 @@ namespace bee::lua_filewatch {
     }
 
     static int remove(lua_State* L) {
-        fsevent::watch& self = to(L);
-        self.remove((fsevent::taskid)luaL_checkinteger(L, 1));
+        filewatch::watch& self = to(L);
+        self.remove((filewatch::taskid)luaL_checkinteger(L, 1));
         return 0;
     }
 
     static int select(lua_State* L) {
-        fsevent::watch& self = to(L);
-        fsevent::notify notify;
+        filewatch::watch& self = to(L);
+        filewatch::notify notify;
         if (!self.select(notify)) {
             return 0;
         }
         switch (notify.type) {
-        case fsevent::tasktype::Error:
+        case filewatch::tasktype::Error:
             lua_pushstring(L, "error");
             break;
-        case fsevent::tasktype::TaskAdd:
+        case filewatch::tasktype::TaskAdd:
             lua_pushstring(L, "task_add");
             break;
-        case fsevent::tasktype::TaskRemove:
+        case filewatch::tasktype::TaskRemove:
             lua_pushstring(L, "task_remove");
             break;
-        case fsevent::tasktype::TaskTerminate:
+        case filewatch::tasktype::TaskTerminate:
             lua_pushstring(L, "task_terminate");
             break;
-        case fsevent::tasktype::Modify:
+        case filewatch::tasktype::Modify:
             lua_pushstring(L, "modify");
             break;
-        case fsevent::tasktype::Rename:
+        case filewatch::tasktype::Rename:
             lua_pushstring(L, "rename");
             break;
         default:
@@ -59,20 +59,20 @@ namespace bee::lua_filewatch {
     }
 
     static int toclose(lua_State* L) {
-        fsevent::watch& self = to(L);
+        filewatch::watch& self = to(L);
         self.stop();
         return 0;
     }
 
     static int gc(lua_State* L) {
-        fsevent::watch& self = to(L);
+        filewatch::watch& self = to(L);
         self.~watch();
         return 0;
     }
 
     static int luaopen(lua_State* L) {
-        fsevent::watch* fw = (fsevent::watch*)lua_newuserdatauv(L, sizeof(fsevent::watch), 0);
-        new (fw) fsevent::watch;
+        filewatch::watch* fw = (filewatch::watch*)lua_newuserdatauv(L, sizeof(filewatch::watch), 0);
+        new (fw) filewatch::watch;
 
         static luaL_Reg lib[] = {
             {"add", add},

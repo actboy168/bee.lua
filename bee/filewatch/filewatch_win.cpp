@@ -1,4 +1,4 @@
-#include <bee/fsevent/fsevent_win.h>
+#include <bee/filewatch/filewatch_win.h>
 #include <bee/utility/unicode_win.h>
 #include <bee/format.h>
 #include <bee/error.h>
@@ -11,7 +11,7 @@
 
 namespace fs = std::filesystem;
 
-namespace bee::win::fsevent {
+namespace bee::win::filewatch {
     class task : public OVERLAPPED {
         static const size_t kBufSize = 16 * 1024;
     public:
