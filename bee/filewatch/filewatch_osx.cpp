@@ -18,7 +18,7 @@ namespace bee::osx::filewatch {
 
     watch::watch() 
         : m_stream(NULL)
-        , m_gentask(kInvalidTaskId)
+        , m_gentask(0)
     { }
     watch::~watch() {
         stop();
@@ -120,7 +120,7 @@ namespace bee::osx::filewatch {
                 kFSEventStreamEventFlagItemRenamed
             )) {
                 m_notify.push({
-                    tasktype::Rename, paths[i]
+                    notifytype::Rename, paths[i]
                 });
             }
             else if (flags[i] & (
@@ -131,7 +131,7 @@ namespace bee::osx::filewatch {
                 kFSEventStreamEventFlagItemXattrMod
             )) {
                 m_notify.push({
-                    tasktype::Modify, paths[i]
+                    notifytype::Modify, paths[i]
                 });
             }
         }

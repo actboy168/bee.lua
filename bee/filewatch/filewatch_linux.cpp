@@ -56,7 +56,7 @@ namespace bee::linux::filewatch {
     
     watch::watch()
         : m_notify()
-        , m_gentask(kInvalidTaskId)
+        , m_gentask(0)
         , m_tasks()
         , m_fd_path()
         , m_inotify_fd(inotify_init())
@@ -144,12 +144,12 @@ namespace bee::linux::filewatch {
         }
         if (event->mask & (IN_CREATE | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO)) {
             m_notify.push({
-                tasktype::Rename, filename
+                notifytype::Rename, filename
             });
         }
         else if (event->mask & (IN_MOVE_SELF | IN_ATTRIB | IN_CLOSE_WRITE | IN_MODIFY)) {
             m_notify.push({
-                tasktype::Modify, filename
+                notifytype::Modify, filename
             });
         }
 

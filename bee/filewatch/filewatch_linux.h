@@ -11,15 +11,14 @@ namespace bee::linux::filewatch {
     class task;
 
     typedef int taskid;
-    enum class tasktype {
+    enum class notifytype {
         Modify,
         Rename,
     };
     struct notify {
-        tasktype    type;
+        notifytype  type;
         std::string path;
     };
-    static const taskid kInvalidTaskId = 0;
 
     class watch {
     public:

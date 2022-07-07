@@ -11,11 +11,6 @@ namespace bee::lua_filewatch {
         filewatch::watch& self = to(L);
         auto            path = lua::to_string(L, 1);
         filewatch::taskid id = self.add(path);
-        if (id == filewatch::kInvalidTaskId) {
-            lua_pushnil(L);
-            lua::push_errormesg(L, "filewatch::add", make_syserror());
-            return 2;
-        }
         lua_pushinteger(L, id);
         return 1;
     }
@@ -33,10 +28,10 @@ namespace bee::lua_filewatch {
             return 0;
         }
         switch (notify.type) {
-        case filewatch::tasktype::Modify:
+        case filewatch::notifytype::Modify:
             lua_pushstring(L, "modify");
             break;
-        case filewatch::tasktype::Rename:
+        case filewatch::notifytype::Rename:
             lua_pushstring(L, "rename");
             break;
         default:

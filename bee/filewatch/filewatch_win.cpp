@@ -22,7 +22,7 @@ namespace bee::win::filewatch {
         bool   start();
         void   cancel();
         taskid getid();
-        void   push_notify(tasktype type, std::wstring&& message);
+        void   push_notify(notifytype type, std::wstring&& message);
         bool   event_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered);
         bool   update();
 
@@ -140,13 +140,13 @@ namespace bee::win::filewatch {
             std::wstring path(fni.FileName, fni.FileNameLength / sizeof(wchar_t));
             switch (fni.Action) {
             case FILE_ACTION_MODIFIED:
-                push_notify(tasktype::Modify, (m_path / path).wstring());
+                push_notify(notifytype::Modify, (m_path / path).wstring());
                 break;
             case FILE_ACTION_ADDED:
             case FILE_ACTION_REMOVED:
             case FILE_ACTION_RENAMED_OLD_NAME:
             case FILE_ACTION_RENAMED_NEW_NAME:
-                push_notify(tasktype::Rename, (m_path / path).wstring());
+                push_notify(notifytype::Rename, (m_path / path).wstring());
                 break;
             default:
                 assert(false);
@@ -160,7 +160,7 @@ namespace bee::win::filewatch {
         return true;
     }
 
-    void task::push_notify(tasktype type, std::wstring&& message) {
+    void task::push_notify(notifytype type, std::wstring&& message) {
         m_watch->m_notify.push({
             type,
             std::forward<std::wstring>(message),
@@ -169,7 +169,7 @@ namespace bee::win::filewatch {
 
     watch::watch()
         : m_notify()
-        , m_gentask(kInvalidTaskId)
+        , m_gentask(0)
         , m_tasks()
     { }
 

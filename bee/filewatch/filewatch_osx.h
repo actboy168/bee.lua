@@ -8,13 +8,12 @@
 
 namespace bee::osx::filewatch {
     typedef int taskid;
-    static const taskid kInvalidTaskId = 0;
-    enum class tasktype {
+    enum class notifytype {
         Modify,
         Rename,
     };
     struct notify {
-        tasktype    type;
+        notifytype  type;
         std::string path;
     };
     class watch {
