@@ -1,7 +1,6 @@
 #include <bee/filewatch/filewatch_osx.h>
 #include <bee/format.h>
 #include <bee/utility/unreachable.h>
-#include <thread>
 
 namespace bee::osx::filewatch {
     static void watch_event_cb(ConstFSEventStreamRef streamRef,
@@ -17,65 +16,23 @@ namespace bee::osx::filewatch {
         self->event_cb((const char**)eventPaths, eventFlags, numEvents);
     }
 
-    static void watch_apc_cb(void* arg) {
-        watch* self = (watch*)arg;
-        self->apc_cb();
-    }
-
     watch::watch() 
         : m_stream(NULL)
-        , m_loop(NULL)
-        , m_source(NULL)
         , m_gentask(kInvalidTaskId)
     { }
     watch::~watch() {
         stop();
     }
     void watch::stop() {
-        if (!m_thread) {
-            return;
-        }
-        if (!m_thread->joinable()) {
-            m_thread.reset();
-            return;
-        }
-        m_apc_queue.push ({
-            apc_arg::type::Terminate,
-            kInvalidTaskId,
-            std::string()
+        destroy_stream();
+        m_tasks.clear();
+        m_notify.push({
+            tasktype::TaskTerminate,
+            ""
         });
-        if (!thread_signal()) {
-            m_thread->detach();
-            m_thread.reset();
-            return;
-        }
-        m_thread->join();
-        m_thread.reset();
-    }
-    bool watch::thread_init() {
-        if (m_thread) {
-            return true;
-        }
-        CFRunLoopSourceContext ctx = { 0, this, NULL, NULL, NULL, NULL, NULL, NULL, NULL, watch_apc_cb };
-        m_source = CFRunLoopSourceCreate(NULL, 0, &ctx);
-        if (!m_source) {
-            return false;
-        }
-        m_thread.reset(new std::thread(std::bind(&watch::thread_cb, this)));
-        m_sem.acquire();
-        return true;
     }
 
-    bool watch::thread_signal() {
-        if (!m_source || !m_loop) {
-            return false;
-        }
-        CFRunLoopSourceSignal(m_source);
-        CFRunLoopWakeUp(m_loop);
-        return true;
-    }
-
-    bool watch::apc_create_stream(CFArrayRef cf_paths) {
+    bool watch::create_stream(CFArrayRef cf_paths) {
         if (m_stream) {
             return false;
         }
@@ -91,7 +48,8 @@ namespace bee::osx::filewatch {
                 kFSEventStreamCreateFlagNoDefer | kFSEventStreamCreateFlagFileEvents
             );
         assert(ref != NULL);
-        FSEventStreamScheduleWithRunLoop(ref, m_loop, kCFRunLoopDefaultMode);
+        m_fsevent_queue = dispatch_queue_create("fsevent_queue", NULL);
+        FSEventStreamSetDispatchQueue(ref, m_fsevent_queue);
         if (!FSEventStreamStart(ref)) {
             FSEventStreamInvalidate(ref);
             FSEventStreamRelease(ref);
@@ -101,84 +59,40 @@ namespace bee::osx::filewatch {
         return true;
     }
 
-    void watch::apc_destroy_stream() {
+    void watch::destroy_stream() {
         if (!m_stream) {
             return;
         }
         FSEventStreamStop(m_stream);
         FSEventStreamInvalidate(m_stream);
         FSEventStreamRelease(m_stream);
+        dispatch_release(m_fsevent_queue);
         m_stream = NULL;
     }
 
     taskid watch::add(const std::string& path) {
-        if (!thread_init()) {
-            return kInvalidTaskId;
-        }
         taskid id = ++m_gentask;
-        m_apc_queue.push ({
-            apc_arg::type::Add,
-            id,
-            path
+        m_tasks.insert(std::make_pair(id, path));
+        update_stream();
+        m_notify.push({
+            tasktype::TaskAdd,
+            std::format("({}){}", id, path)
         });
-        thread_signal();
         return id;
     }
 
     bool watch::remove(taskid id) {
-        if (!m_thread) {
-            return false;
-        }
-        m_apc_queue.push ({
-            apc_arg::type::Remove,
-            id,
-            std::string()
+        m_tasks.erase(id);
+        update_stream();
+        m_notify.push({
+            tasktype::TaskRemove,
+            std::format("{}", id)
         });
-        thread_signal();
         return true;
     }
-    void watch::thread_cb() {
-        m_loop = CFRunLoopGetCurrent();
-        m_sem.release();
-        CFRunLoopAddSource(m_loop, m_source, kCFRunLoopDefaultMode);
-        CFRunLoopRun();
-        CFRunLoopRemoveSource(m_loop, m_source, kCFRunLoopDefaultMode);
-        m_loop = NULL;
-    }
 
-    void watch::apc_cb() {
-        apc_arg arg;
-        while (m_apc_queue.pop(arg)) {
-            switch (arg.m_type) {
-            case apc_arg::type::Add:
-                apc_add(arg.m_id, arg.m_path);
-                m_notify.push({
-                    tasktype::TaskAdd,
-                    std::format("({}){}", arg.m_id, arg.m_path)
-                });
-                break;
-            case apc_arg::type::Remove:
-                apc_remove(arg.m_id);
-                m_notify.push({
-                    tasktype::TaskRemove,
-                    std::format("{}", arg.m_id)
-                });
-                break;
-            case apc_arg::type::Terminate:
-                apc_terminate();
-                m_notify.push({
-                    tasktype::TaskTerminate,
-                    ""
-                });
-                return;
-            default:
-                unreachable();
-            }
-        }
-    }
-
-    void watch::apc_update() {
-        apc_destroy_stream();
+    void watch::update_stream() {
+        destroy_stream();
         if (m_tasks.empty()) {
             return;
         }
@@ -195,26 +109,10 @@ namespace bee::osx::filewatch {
             i++;
         }
         CFArrayRef cf_paths = CFArrayCreate(NULL, (const void **)&paths[0], m_tasks.size(), NULL);
-        if (apc_create_stream(cf_paths)) {
+        if (create_stream(cf_paths)) {
             return;
         }
         CFRelease(cf_paths);
-    }
-
-    void watch::apc_add(taskid id, const std::string& path) {
-        m_tasks.insert(std::make_pair(id, path));
-        apc_update();
-    }
-
-    void watch::apc_remove(taskid id) {
-        m_tasks.erase(id);
-        apc_update();
-    }
-
-    void watch::apc_terminate() {
-        apc_destroy_stream();
-        m_tasks.clear();
-        CFRunLoopStop(m_loop);
     }
 
     bool watch::select(notify& notify) {

@@ -2,12 +2,9 @@
 
 #include <CoreServices/CoreServices.h>
 #include <memory>
-#include <thread>
-#include <vector>
 #include <string>
 #include <map>
 #include <bee/thread/lockqueue.h>
-#include <bee/thread/semaphore.h>
 
 namespace bee::osx::filewatch {
     typedef int taskid;
@@ -33,18 +30,12 @@ namespace bee::osx::filewatch {
         void   stop();
         bool   select(notify& notify);
     private:
-        bool apc_create_stream(CFArrayRef cf_paths);
-        void apc_destroy_stream();
-        void apc_add(taskid id, const std::string& path);
-        void apc_remove(taskid id);
-        void apc_terminate();
-        void apc_update();
-        bool thread_init();
-        bool thread_signal();
-        void thread_cb();
+        bool create_stream(CFArrayRef cf_paths);
+        void destroy_stream();
+        void update_stream();
    public:
         void event_cb(const char* paths[], const FSEventStreamEventFlags flags[], size_t n);
-        void apc_cb();
+
     private:
         struct apc_arg {
             enum class type {
@@ -58,13 +49,9 @@ namespace bee::osx::filewatch {
         };
 
         FSEventStreamRef              m_stream;
-        CFRunLoopRef                  m_loop;
-        CFRunLoopSourceRef            m_source;
-        std::unique_ptr<std::thread>  m_thread;
-        lockqueue<apc_arg>            m_apc_queue; 
+        dispatch_queue_t              m_fsevent_queue;
         lockqueue<notify>             m_notify;
         std::map<taskid, std::string> m_tasks; 
         taskid                        m_gentask;
-        binary_semaphore              m_sem;
     };
 }
