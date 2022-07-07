@@ -55,96 +55,76 @@ namespace bee::linux::filewatch {
     }
     
     watch::watch()
-        : m_thread()
-        , m_apc_queue()
-        , m_notify()
+        : m_notify()
         , m_gentask(kInvalidTaskId)
         , m_tasks()
         , m_fd_path()
-        , m_terminate(false)
-        , m_inotify_fd(-1)
-    { }
+        , m_inotify_fd(inotify_init())
+    {
+        assert(m_inotify_fd != -1);
+    }
 
     watch::~watch() {
         stop();
+        close(m_inotify_fd);
         assert(m_tasks.empty());
     }
 
     void   watch::stop() {
-        if (!m_thread) {
-            return;
+        if (!m_tasks.empty()) {
+            for (auto& it : m_tasks) {
+                del_dir(it.second->path);
+            }
+            m_tasks.clear();
         }
-        if (!m_thread->joinable()) {
-            m_thread.reset();
-            return;
-        }
-        m_apc_queue.push({
-            apc_arg::type::Terminate,
-            kInvalidTaskId,
-            std::string(),
+        m_notify.push({
+            tasktype::TaskTerminate,
+            ""
         });
-        m_thread->join();
-        m_thread.reset();
     }
 
     taskid watch::add(const std::string& path) {
-        if (!thread_init()) {
-            return kInvalidTaskId;
-        }
         taskid id = ++m_gentask;
-        m_apc_queue.push({
-            apc_arg::type::Add,
-            id,
-            path
+        add_dir(path);
+        m_tasks.emplace(std::make_pair(id, std::make_unique<task>(id, path)));
+        m_notify.push({
+            tasktype::TaskAdd,
+            std::format("({}){}", id, path)
         });
         return id;
     }
 
     bool   watch::remove(taskid id) {
-        if (!m_thread) {
-            return false;
+        auto it = m_tasks.find(id);
+        if (it != m_tasks.end()) {
+            del_dir(it->second->path);
+            m_tasks.erase(it);
         }
-        m_apc_queue.push({
-            apc_arg::type::Remove,
-            id,
-            std::string(),
+        m_notify.push({
+            tasktype::TaskRemove,
+            std::format("{}", id)
         });
         return true;
     }
 
-    bool   watch::select(notify& n) {
+    bool   watch::select(notify& n, int msec) {
+        update(msec);
         return m_notify.pop(n);
     }
 
-    bool watch::thread_init() {
-        if (m_thread) {
-            return true;
-        }
-        m_thread.reset(new std::thread(std::bind(&watch::thread_cb, this)));
-        return true;
-    }
-
-    void watch::thread_cb() {
-        m_inotify_fd = inotify_init();
-        if (m_inotify_fd == -1) {
-            return;
-        }
-        while (!m_terminate || !m_tasks.empty()) {
-            apc_update();
-            thread_update();
-        }
-        close(m_inotify_fd);
-        m_inotify_fd = -1;
-    }
-
-    void watch::thread_update() {
+    void watch::update(int msec) {
         fd_set set;
-        struct timeval timeout;
         FD_ZERO(&set);
         FD_SET(m_inotify_fd, &set);
-        timeout.tv_sec = 0;
-        timeout.tv_usec = 1000 * 20;
-        int rv = ::select(m_inotify_fd + 1, &set, nullptr, nullptr, &timeout);
+        struct timeval timeout, *timeop = &timeout;
+        if (msec < 0) {
+            timeop = NULL;
+        }
+        else {
+            timeout.tv_sec = (long)msec / 1000;
+            timeout.tv_usec = (long)(msec % 1000 * 1000);
+        }
+        int rv = ::select(m_inotify_fd + 1, &set, nullptr, nullptr, timeop);
         if (rv == 0 || rv == -1) {
             return;
         }
@@ -189,60 +169,5 @@ namespace bee::linux::filewatch {
         if ((event->mask & IN_ISDIR) && (event->mask & IN_CREATE)) {
             add_dir(filename);
         }
-    }
-
-    void watch::apc_update() {
-        apc_arg arg;
-        while (m_apc_queue.pop(arg)) {
-            switch (arg.m_type) {
-            case apc_arg::type::Add:
-                apc_add(arg.m_id, arg.m_path);
-                m_notify.push({
-                    tasktype::TaskAdd,
-                    std::format("({}){}", arg.m_id, arg.m_path)
-                });
-                break;
-            case apc_arg::type::Remove:
-                apc_remove(arg.m_id);
-                m_notify.push({
-                    tasktype::TaskRemove,
-                    std::format("{}", arg.m_id)
-                });
-                break;
-            case apc_arg::type::Terminate:
-                apc_terminate();
-                m_notify.push({
-                    tasktype::TaskTerminate,
-                    ""
-                });
-                return;
-            default:
-                unreachable();
-            }
-        }
-    }
-
-    void watch::apc_add(taskid id, const std::string& path) {
-        add_dir(path);
-        m_tasks.emplace(std::make_pair(id, std::make_unique<task>(id, path)));
-    }
-
-    void watch::apc_remove(taskid id) {
-        auto it = m_tasks.find(id);
-        if (it != m_tasks.end()) {
-            del_dir(it->second->path);
-            m_tasks.erase(it);
-        }
-    }
-
-    void watch::apc_terminate() {
-        m_terminate = true;
-        if (m_tasks.empty()) {
-            return;
-        }
-        for (auto& it : m_tasks) {
-            del_dir(it.second->path);
-        }
-        m_tasks.clear();
     }
 }
