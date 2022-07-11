@@ -23,13 +23,14 @@ namespace bee::osx::filewatch {
         taskid add(const std::string&  path);
         bool   remove(taskid id);
         void   stop();
+        void   update();
         bool   select(notify& notify);
     private:
-        bool create_stream(CFArrayRef cf_paths);
-        void destroy_stream();
-        void update_stream();
+        bool   create_stream(CFArrayRef cf_paths);
+        void   destroy_stream();
+        void   update_stream();
    public:
-        void event_cb(const char* paths[], const FSEventStreamEventFlags flags[], size_t n);
+        void   event_update(const char* paths[], const FSEventStreamEventFlags flags[], size_t n);
 
     private:
         FSEventStreamRef              m_stream;

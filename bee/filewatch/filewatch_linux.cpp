@@ -1,5 +1,4 @@
 #include <bee/filewatch/filewatch_linux.h>
-#include <bee/format.h>
 #include <bee/error.h>
 #include <bee/utility/unreachable.h>
 #include <assert.h>
@@ -95,8 +94,7 @@ namespace bee::linux::filewatch {
         return true;
     }
 
-    bool   watch::select(notify& n, int msec) {
-        update(msec);
+    bool   watch::select(notify& n) {
         if (m_notify.empty()) {
             return false;
         }

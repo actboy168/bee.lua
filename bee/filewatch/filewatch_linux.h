@@ -28,14 +28,14 @@ namespace bee::linux::filewatch {
         void   stop();
         taskid add(const std::string& path);
         bool   remove(taskid id);
-        bool   select(notify& notify, int msec = 1);
+        void   update(int msec = 1);
+        bool   select(notify& notify);
 
     private:
-        void update(int msec);
-        void event_update(inotify_event* event);
-        void add_dir(const fs::path& path);
-        void del_dir(const fs::path& path);
-        void del_dir(int desc);
+        void    event_update(inotify_event* event);
+        void    add_dir(const fs::path& path);
+        void    del_dir(const fs::path& path);
+        void    del_dir(int desc);
 
     private:
         static const unsigned int inotify_buf_size = (10 * ((sizeof(struct inotify_event)) + 255 + 1));

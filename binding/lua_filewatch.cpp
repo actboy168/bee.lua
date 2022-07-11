@@ -24,6 +24,7 @@ namespace bee::lua_filewatch {
     static int select(lua_State* L) {
         filewatch::watch& self = to(L);
         filewatch::notify notify;
+        self.update();
         if (!self.select(notify)) {
             return 0;
         }

@@ -19,7 +19,6 @@ namespace bee::win::filewatch {
     };
 
     class watch {
-        friend class task;
     public:
         watch();
         ~watch();
@@ -27,7 +26,11 @@ namespace bee::win::filewatch {
         void   stop();
         taskid add(const std::wstring& path);
         bool   remove(taskid id);
+        void   update();
         bool   select(notify& notify);
+
+    private:
+        bool   event_update(task& task);
 
     private:
         std::queue<notify>                      m_notify;

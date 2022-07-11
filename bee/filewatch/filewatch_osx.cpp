@@ -1,9 +1,8 @@
 #include <bee/filewatch/filewatch_osx.h>
-#include <bee/format.h>
 #include <bee/utility/unreachable.h>
 
 namespace bee::osx::filewatch {
-    static void watch_event_cb(ConstFSEventStreamRef streamRef,
+    static void event_cb(ConstFSEventStreamRef streamRef,
         void* info,
         size_t numEvents,
         void* eventPaths,
@@ -13,7 +12,7 @@ namespace bee::osx::filewatch {
         (void)streamRef;
         (void)eventIds;
         watch* self = (watch*)info;
-        self->event_cb((const char**)eventPaths, eventFlags, numEvents);
+        self->event_update((const char**)eventPaths, eventFlags, numEvents);
     }
 
     watch::watch() 
@@ -36,7 +35,7 @@ namespace bee::osx::filewatch {
 
         FSEventStreamRef ref = 
             FSEventStreamCreate(NULL,
-                &watch_event_cb,
+                &event_cb,
                 &ctx,
                 cf_paths,
                 kFSEventStreamEventIdSinceNow,
@@ -103,6 +102,9 @@ namespace bee::osx::filewatch {
         CFRelease(cf_paths);
     }
 
+    void watch::update() {
+    }
+
     bool watch::select(notify& n) {
         if (m_notify.empty()) {
             return false;
@@ -112,7 +114,7 @@ namespace bee::osx::filewatch {
         return true;
     }
 
-    void watch::event_cb(const char* paths[], const FSEventStreamEventFlags flags[], size_t n) {
+    void watch::event_update(const char* paths[], const FSEventStreamEventFlags flags[], size_t n) {
         for (size_t i = 0; i < n; ++i) {
             if (flags[i] & (
                 kFSEventStreamEventFlagItemCreated |

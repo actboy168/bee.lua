@@ -1,6 +1,5 @@
 #include <bee/filewatch/filewatch_win.h>
 #include <bee/utility/unicode_win.h>
-#include <bee/format.h>
 #include <bee/error.h>
 #include <bee/utility/unreachable.h>
 #include <array>
@@ -18,28 +17,33 @@ namespace bee::win::filewatch {
         task(watch* watch, taskid id);
         ~task();
 
+        enum class result {
+            success,
+            wait,
+            failed,
+            zero,
+        };
+
         bool   open(const std::wstring& path);
         bool   start();
         void   cancel();
         taskid getid();
-        void   push_notify(notifytype type, std::wstring&& message);
-        bool   event_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered);
-        bool   update();
+        result try_read();
+        const fs::path& path() const;
+        const uint8_t* data() const;
 
     private:
-        watch*                        m_watch;
         taskid                        m_id;
         fs::path                      m_path;
         HANDLE                        m_directory;
         std::array<uint8_t, kBufSize> m_buffer;
-        std::array<uint8_t, kBufSize> m_bakbuffer;
     };
 
     task::task(watch* watch, taskid id)
-        : m_watch(watch)
-        , m_id(id)
+        : m_id(id)
         , m_path()
         , m_directory(INVALID_HANDLE_VALUE)
+        , m_buffer()
     {
         memset((OVERLAPPED*)this, 0, sizeof(OVERLAPPED));
         hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
@@ -110,61 +114,33 @@ namespace bee::win::filewatch {
         return true;
     }
 
-    bool task::update() {
-        DWORD bytes_returned;
-        bool ok = GetOverlappedResult(m_directory, this, &bytes_returned, FALSE);
+    task::result task::try_read() {
+        DWORD dwNumberOfBytesTransfered;
+        bool ok = GetOverlappedResult(m_directory, this, &dwNumberOfBytesTransfered, FALSE);
+        DWORD dwErrorCode = ::GetLastError();
         if (!ok) {
-            if (::GetLastError() == ERROR_IO_INCOMPLETE) {
-                return true;
+            if (dwErrorCode == ERROR_IO_INCOMPLETE) {
+                return result::wait;
             }
         }
-        return event_cb(::GetLastError(), bytes_returned);
-    }
-
-    bool task::event_cb(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered) {
         if (dwErrorCode != 0) {
             cancel();
-            return false;
+            return result::failed;
         }
         if (!dwNumberOfBytesTransfered) {
-            return true;
+            return result::zero;
         }
         assert(dwNumberOfBytesTransfered >= offsetof(FILE_NOTIFY_INFORMATION, FileName) + sizeof(WCHAR));
-        assert(dwNumberOfBytesTransfered <= m_bakbuffer.size());
-        memcpy(&m_bakbuffer[0], &m_buffer[0], dwNumberOfBytesTransfered);
-        start();
-
-        uint8_t* data = m_bakbuffer.data();
-        for (;;) {
-            FILE_NOTIFY_INFORMATION& fni = (FILE_NOTIFY_INFORMATION&)*data;
-            std::wstring path(fni.FileName, fni.FileNameLength / sizeof(wchar_t));
-            switch (fni.Action) {
-            case FILE_ACTION_MODIFIED:
-                push_notify(notifytype::Modify, (m_path / path).wstring());
-                break;
-            case FILE_ACTION_ADDED:
-            case FILE_ACTION_REMOVED:
-            case FILE_ACTION_RENAMED_OLD_NAME:
-            case FILE_ACTION_RENAMED_NEW_NAME:
-                push_notify(notifytype::Rename, (m_path / path).wstring());
-                break;
-            default:
-                assert(false);
-                break;
-            }
-            if (!fni.NextEntryOffset) {
-                break;
-            }
-            data += fni.NextEntryOffset;
-        }
-        return true;
+        assert(dwNumberOfBytesTransfered <= m_buffer.size());
+        return result::success;
     }
 
-    void task::push_notify(notifytype type, std::wstring&& message) {
-        m_watch->m_notify.push({
-            type,
-            std::forward<std::wstring>(message),
-        });
+    const fs::path& task::path() const {
+        return m_path;
+    }
+
+    const uint8_t* task::data() const {
+        return m_buffer.data();
     }
 
     watch::watch()
@@ -206,15 +182,64 @@ namespace bee::win::filewatch {
         return true;
     }
 
-    bool watch::select(notify& n) {
+    bool watch::event_update(task& task) {
+        switch (task.try_read()) {
+        case task::result::wait:
+            return true;
+        case task::result::failed:
+            task.cancel();
+            return false;
+        case task::result::zero:
+            task.start();
+            return true;
+        case task::result::success:
+            break;
+        }
+        const uint8_t* data = task.data();
+        for (;;) {
+            FILE_NOTIFY_INFORMATION& fni = (FILE_NOTIFY_INFORMATION&)*data;
+            std::wstring path(fni.FileName, fni.FileNameLength / sizeof(wchar_t));
+            switch (fni.Action) {
+            case FILE_ACTION_MODIFIED:
+                m_notify.push({
+                    notifytype::Modify,
+                    (task.path() / path).wstring(),
+                });
+                break;
+            case FILE_ACTION_ADDED:
+            case FILE_ACTION_REMOVED:
+            case FILE_ACTION_RENAMED_OLD_NAME:
+            case FILE_ACTION_RENAMED_NEW_NAME:
+                m_notify.push({
+                    notifytype::Rename,
+                    (task.path() / path).wstring(),
+                });
+                break;
+            default:
+                assert(false);
+                break;
+            }
+            if (!fni.NextEntryOffset) {
+                break;
+            }
+            data += fni.NextEntryOffset;
+        }
+        task.start();
+        return true;
+    }
+
+    void watch::update() {
         for (auto iter = m_tasks.begin(); iter != m_tasks.end();) {
-            if (iter->second->update()) {
+            if (event_update(*iter->second)) {
                 ++iter;
             }
             else {
                 iter = m_tasks.erase(iter);
             }
         }
+    }
+
+    bool watch::select(notify& n) {
         if (m_notify.empty()) {
             return false;
         }
