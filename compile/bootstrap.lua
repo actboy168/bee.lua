@@ -54,6 +54,12 @@ lm:executable (BOOTSTRAP) {
     linux = {
         crt = "static",
     },
+    netbsd = {
+        crt = "static",
+    },
+    freebsd = {
+        crt = "static",
+    },
 }
 
 local exe = lm.os == 'windows' and ".exe" or ""
