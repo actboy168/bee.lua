@@ -151,7 +151,6 @@ namespace bee::win::filewatch {
 
     watch::~watch() {
         stop();
-        assert(m_tasks.empty());
     }
 
     void watch::stop() {
@@ -161,6 +160,7 @@ namespace bee::win::filewatch {
         for (auto& it : m_tasks) {
             it.second->cancel();
         }
+        m_tasks.clear();
     }
 
     taskid watch::add(const std::wstring& path) {
