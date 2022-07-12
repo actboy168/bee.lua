@@ -2,6 +2,16 @@
 #include <bee/utility/unreachable.h>
 
 namespace bee::filewatch {
+    class task : public std::string {
+    public:
+        task(std::string && s)
+            : std::string(std::move(s))
+        {}
+        task(std::string const& s)
+            : std::string(s)
+        {}
+    };
+
     static void event_cb(ConstFSEventStreamRef streamRef,
         void* info,
         size_t numEvents,
@@ -69,7 +79,8 @@ namespace bee::filewatch {
 
     taskid watch::add(const std::string& path) {
         taskid id = ++m_gentask;
-        m_tasks.insert(std::make_pair(id, path));
+        auto t = std::make_unique<task>(path);
+        m_tasks.emplace(std::make_pair(id, std::move(t)));
         update_stream();
         return id;
     }
@@ -87,8 +98,8 @@ namespace bee::filewatch {
         }
         std::unique_ptr<CFStringRef[]> paths(new CFStringRef[m_tasks.size()]);
         size_t i = 0;
-        for (auto task : m_tasks) {
-            paths[i] = CFStringCreateWithCString(NULL, task.second.c_str(), kCFStringEncodingUTF8);
+        for (auto& [id, t] : m_tasks) {
+            paths[i] = CFStringCreateWithCString(NULL, t->c_str(), kCFStringEncodingUTF8);
             if (paths[i] == NULL) {
                 while (i != 0) {
                     CFRelease(paths[--i]);

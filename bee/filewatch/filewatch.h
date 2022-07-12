@@ -49,10 +49,12 @@ namespace bee::filewatch {
 #if defined(_WIN32)
         bool   event_update(task& task);
 #elif defined(__APPLE__)
-        void   event_update(const char* paths[], const FSEventStreamEventFlags flags[], size_t n);
         bool   create_stream(CFArrayRef cf_paths);
         void   destroy_stream();
         void   update_stream();
+    public:
+        void   event_update(const char* paths[], const FSEventStreamEventFlags flags[], size_t n);
+    private:
 #elif defined(__linux__)
         void   event_update(inotify_event* event);
         void   add_dir(const fs::path& path);
