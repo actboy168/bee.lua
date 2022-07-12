@@ -1,4 +1,4 @@
-#include <bee/filewatch/filewatch_win.h>
+#include <bee/filewatch/filewatch.h>
 #include <bee/utility/unicode_win.h>
 #include <bee/error.h>
 #include <bee/utility/unreachable.h>
@@ -10,7 +10,7 @@
 
 namespace fs = std::filesystem;
 
-namespace bee::win::filewatch {
+namespace bee::filewatch {
     class task : public OVERLAPPED {
         static const size_t kBufSize = 16 * 1024;
     public:
@@ -202,7 +202,7 @@ namespace bee::win::filewatch {
             switch (fni.Action) {
             case FILE_ACTION_MODIFIED:
                 m_notify.push({
-                    notifytype::Modify,
+                    notify_type::Modify,
                     (task.path() / path).wstring(),
                 });
                 break;
@@ -211,7 +211,7 @@ namespace bee::win::filewatch {
             case FILE_ACTION_RENAMED_OLD_NAME:
             case FILE_ACTION_RENAMED_NEW_NAME:
                 m_notify.push({
-                    notifytype::Rename,
+                    notify_type::Rename,
                     (task.path() / path).wstring(),
                 });
                 break;

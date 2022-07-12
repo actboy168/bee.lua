@@ -29,10 +29,10 @@ namespace bee::lua_filewatch {
             return 0;
         }
         switch (notify.type) {
-        case filewatch::notifytype::Modify:
+        case filewatch::notify_type::Modify:
             lua_pushstring(L, "modify");
             break;
-        case filewatch::notifytype::Rename:
+        case filewatch::notify_type::Rename:
             lua_pushstring(L, "rename");
             break;
         default:

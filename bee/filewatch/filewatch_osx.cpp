@@ -1,7 +1,7 @@
-#include <bee/filewatch/filewatch_osx.h>
+#include <bee/filewatch/filewatch.h>
 #include <bee/utility/unreachable.h>
 
-namespace bee::osx::filewatch {
+namespace bee::filewatch {
     static void event_cb(ConstFSEventStreamRef streamRef,
         void* info,
         size_t numEvents,
@@ -15,9 +15,11 @@ namespace bee::osx::filewatch {
         self->event_update((const char**)eventPaths, eventFlags, numEvents);
     }
 
-    watch::watch() 
-        : m_stream(NULL)
+    watch::watch()
+        : m_notify()
         , m_gentask(0)
+        , m_tasks()
+        , m_stream(NULL)
     { }
     watch::~watch() {
         stop();
@@ -122,7 +124,7 @@ namespace bee::osx::filewatch {
                 kFSEventStreamEventFlagItemRenamed
             )) {
                 m_notify.push({
-                    notifytype::Rename, paths[i]
+                    notify_type::Rename, paths[i]
                 });
             }
             else if (flags[i] & (
@@ -133,7 +135,7 @@ namespace bee::osx::filewatch {
                 kFSEventStreamEventFlagItemXattrMod
             )) {
                 m_notify.push({
-                    notifytype::Modify, paths[i]
+                    notify_type::Modify, paths[i]
                 });
             }
         }

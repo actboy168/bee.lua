@@ -1,4 +1,4 @@
-#include <bee/filewatch/filewatch_linux.h>
+#include <bee/filewatch/filewatch.h>
 #include <bee/error.h>
 #include <bee/utility/unreachable.h>
 #include <assert.h>
@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <sys/select.h>
 
-namespace bee::linux::filewatch {
+namespace bee::filewatch {
     class task {
     public:
         taskid      id;
@@ -103,10 +103,11 @@ namespace bee::linux::filewatch {
         return true;
     }
 
-    void watch::update(int msec) {
+    void watch::update() {
         fd_set set;
         FD_ZERO(&set);
         FD_SET(m_inotify_fd, &set);
+        int msec = 1;
         struct timeval timeout, *timeop = &timeout;
         if (msec < 0) {
             timeop = NULL;
@@ -142,12 +143,12 @@ namespace bee::linux::filewatch {
         }
         if (event->mask & (IN_CREATE | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO)) {
             m_notify.push({
-                notifytype::Rename, filename
+                notify_type::Rename, filename
             });
         }
         else if (event->mask & (IN_MOVE_SELF | IN_ATTRIB | IN_CLOSE_WRITE | IN_MODIFY)) {
             m_notify.push({
-                notifytype::Modify, filename
+                notify_type::Modify, filename
             });
         }
 
