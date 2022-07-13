@@ -2,13 +2,13 @@
 #include <bee/utility/unreachable.h>
 
 namespace bee::filewatch {
-    class task : public std::string {
+    class task : public fs::path {
     public:
-        task(std::string && s)
-            : std::string(std::move(s))
+        task(fs::path && s)
+            : fs::path(std::move(s))
         {}
-        task(std::string const& s)
-            : std::string(s)
+        task(fs::path const& s)
+            : fs::path(s)
         {}
     };
 
@@ -77,9 +77,9 @@ namespace bee::filewatch {
         m_stream = NULL;
     }
 
-    taskid watch::add(const std::string& path) {
+    taskid watch::add(const fs::path& path) {
         taskid id = ++m_gentask;
-        auto t = std::make_unique<task>(path);
+        auto t = std::make_unique<task>(path.lexically_normal());
         m_tasks.emplace(std::make_pair(id, std::move(t)));
         update_stream();
         return id;
@@ -118,15 +118,6 @@ namespace bee::filewatch {
     void watch::update() {
     }
 
-    bool watch::select(notify& n) {
-        if (m_notify.empty()) {
-            return false;
-        }
-        n = m_notify.front();
-        m_notify.pop();
-        return true;
-    }
-
     void watch::event_update(const char* paths[], const FSEventStreamEventFlags flags[], size_t n) {
         for (size_t i = 0; i < n; ++i) {
             if (flags[i] & (
@@ -134,9 +125,7 @@ namespace bee::filewatch {
                 kFSEventStreamEventFlagItemRemoved |
                 kFSEventStreamEventFlagItemRenamed
             )) {
-                m_notify.push({
-                    notify_type::Rename, paths[i]
-                });
+                m_notify.emplace(notify::flag::rename, paths[i]);
             }
             else if (flags[i] & (
                 kFSEventStreamEventFlagItemFinderInfoMod |
@@ -145,10 +134,17 @@ namespace bee::filewatch {
                 kFSEventStreamEventFlagItemChangeOwner |
                 kFSEventStreamEventFlagItemXattrMod
             )) {
-                m_notify.push({
-                    notify_type::Modify, paths[i]
-                });
+                m_notify.emplace(notify::flag::modify, paths[i]);
             }
         }
+    }
+
+    std::optional<notify> watch::select() {
+        if (m_notify.empty()) {
+            return std::nullopt;
+        }
+        auto n = m_notify.front();
+        m_notify.pop();
+        return std::move(n);
     }
 }

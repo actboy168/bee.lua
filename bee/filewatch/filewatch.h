@@ -1,37 +1,35 @@
 #pragma once
 
-#include <string>
 #include <map>
 #include <memory>
+#include <optional>
 #include <queue>
+#include <bee/filesystem.h>
 
 #if defined(_WIN32)
 #elif defined(__APPLE__)
 #   include <CoreServices/CoreServices.h>
 #elif defined(__linux__)
 #   include <sys/inotify.h>
-#   include <bee/filesystem.h>
 #else
 #   error unsupport platform
 #endif
 
 namespace bee::filewatch {
     class task;
-    
-#if defined(_WIN32)
-    using string_type = std::wstring;
-#else
-    using string_type = std::string;
-#endif
 
     typedef int taskid;
-    enum class notify_type {
-        Modify,
-        Rename,
-    };
     struct notify {
-        notify_type   type;
-        string_type path;
+        enum class flag {
+            modify,
+            rename,
+        };
+        flag     flags;
+        fs::path path;
+        notify(flag const& flags, fs::path const& path)
+            : flags(flags)
+            , path(path)
+        { }
     };
     
     class watch {
@@ -40,10 +38,10 @@ namespace bee::filewatch {
         ~watch();
 
         void   stop();
-        taskid add(const string_type& path);
+        taskid add(const fs::path& path);
         bool   remove(taskid id);
         void   update();
-        bool   select(notify& notify);
+        std::optional<notify> select();
 
     private:
 #if defined(_WIN32)

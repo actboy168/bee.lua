@@ -23,22 +23,22 @@ namespace bee::lua_filewatch {
 
     static int select(lua_State* L) {
         filewatch::watch& self = to(L);
-        filewatch::notify notify;
         self.update();
-        if (!self.select(notify)) {
+        auto notify = self.select();
+        if (!notify) {
             return 0;
         }
-        switch (notify.type) {
-        case filewatch::notify_type::Modify:
+        switch (notify->flags) {
+        case filewatch::notify::flag::modify:
             lua_pushstring(L, "modify");
             break;
-        case filewatch::notify_type::Rename:
+        case filewatch::notify::flag::rename:
             lua_pushstring(L, "rename");
             break;
         default:
             unreachable();
         }
-        lua::push_string(L, notify.path);
+        lua::push_string(L, notify->path);
         return 2;
     }
 

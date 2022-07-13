@@ -78,9 +78,9 @@ namespace bee::filewatch {
         }
     }
 
-    taskid watch::add(const std::string& path) {
+    taskid watch::add(const fs::path& path) {
         taskid id = ++m_gentask;
-        add_dir(path);
+        add_dir(path.lexically_normal());
         m_tasks.emplace(std::make_pair(id, std::make_unique<task>(id, path)));
         return id;
     }
@@ -91,15 +91,6 @@ namespace bee::filewatch {
             del_dir(it->second->path);
             m_tasks.erase(it);
         }
-        return true;
-    }
-
-    bool   watch::select(notify& n) {
-        if (m_notify.empty()) {
-            return false;
-        }
-        n = m_notify.front();
-        m_notify.pop();
         return true;
     }
 
@@ -142,14 +133,10 @@ namespace bee::filewatch {
             filename += event->name;
         }
         if (event->mask & (IN_CREATE | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO)) {
-            m_notify.push({
-                notify_type::Rename, filename
-            });
+            m_notify.emplace(notify::flag::rename, filename);
         }
         else if (event->mask & (IN_MOVE_SELF | IN_ATTRIB | IN_CLOSE_WRITE | IN_MODIFY)) {
-            m_notify.push({
-                notify_type::Modify, filename
-            });
+            m_notify.emplace(notify::flag::modify, filename);
         }
 
         if (event->mask & (IN_IGNORED | IN_DELETE_SELF)) {
@@ -161,5 +148,14 @@ namespace bee::filewatch {
         if ((event->mask & IN_ISDIR) && (event->mask & IN_CREATE)) {
             add_dir(filename);
         }
+    }
+
+    std::optional<notify> watch::select() {
+        if (m_notify.empty()) {
+            return std::nullopt;
+        }
+        auto n = m_notify.front();
+        m_notify.pop();
+        return std::move(n);
     }
 }

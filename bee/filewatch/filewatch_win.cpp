@@ -1,14 +1,9 @@
 #include <bee/filewatch/filewatch.h>
-#include <bee/utility/unicode_win.h>
 #include <bee/error.h>
 #include <bee/utility/unreachable.h>
 #include <array>
-#include <functional>
 #include <assert.h>
 #include <Windows.h>
-#include <filesystem>
-
-namespace fs = std::filesystem;
 
 namespace bee::filewatch {
     class task : public OVERLAPPED {
@@ -24,7 +19,7 @@ namespace bee::filewatch {
             zero,
         };
 
-        bool   open(const std::wstring& path);
+        bool   open(const fs::path& path);
         bool   start();
         void   cancel();
         taskid getid();
@@ -53,17 +48,11 @@ namespace bee::filewatch {
         assert(m_directory == INVALID_HANDLE_VALUE);
     }
 
-    bool task::open(const std::wstring& path) {
+    bool task::open(const fs::path& path) {
         if (m_directory != INVALID_HANDLE_VALUE) {
             return true;
         }
-        
-        std::error_code ec;
-        m_path = fs::absolute(path, ec);
-        if (ec) {
-            return false;
-        }
-
+        m_path = path;
         m_directory = ::CreateFileW(m_path.c_str(),
             FILE_LIST_DIRECTORY,
             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
@@ -163,10 +152,10 @@ namespace bee::filewatch {
         m_tasks.clear();
     }
 
-    taskid watch::add(const std::wstring& path) {
+    taskid watch::add(const fs::path& path) {
         taskid id = ++m_gentask;
         auto t = std::make_unique<task>(this, id);
-        if (t->open(path)) {
+        if (t->open(path.lexically_normal())) {
             if (t->start()) {
                 m_tasks.emplace(std::make_pair(id, std::move(t)));
             }
@@ -201,19 +190,13 @@ namespace bee::filewatch {
             std::wstring path(fni.FileName, fni.FileNameLength / sizeof(wchar_t));
             switch (fni.Action) {
             case FILE_ACTION_MODIFIED:
-                m_notify.push({
-                    notify_type::Modify,
-                    (task.path() / path).wstring(),
-                });
+                m_notify.emplace(notify::flag::modify, task.path() / path);
                 break;
             case FILE_ACTION_ADDED:
             case FILE_ACTION_REMOVED:
             case FILE_ACTION_RENAMED_OLD_NAME:
             case FILE_ACTION_RENAMED_NEW_NAME:
-                m_notify.push({
-                    notify_type::Rename,
-                    (task.path() / path).wstring(),
-                });
+                m_notify.emplace(notify::flag::rename, task.path() / path);
                 break;
             default:
                 assert(false);
@@ -239,12 +222,12 @@ namespace bee::filewatch {
         }
     }
 
-    bool watch::select(notify& n) {
+    std::optional<notify> watch::select() {
         if (m_notify.empty()) {
-            return false;
+            return std::nullopt;
         }
-        n = m_notify.front();
+        auto n = m_notify.front();
         m_notify.pop();
-        return true;
+        return std::move(n);
     }
 }
