@@ -1,8 +1,9 @@
 #include <bee/lua/binding.h>
-#include <time.h>
 
 #if defined(_WIN32)
-#include <Windows.h>
+#   include <Windows.h>
+#else
+#   include <time.h>
 #endif
 
 namespace bee::lua_time {
