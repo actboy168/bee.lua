@@ -37,7 +37,7 @@ namespace bee::net {
 
     private:
         endpoint(size_t n);
-        std::unique_ptr<std::byte> m_data;
+        std::unique_ptr<std::byte[]> m_data;
         size_t m_size = 0;
     };
 }
