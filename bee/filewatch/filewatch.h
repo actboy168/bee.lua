@@ -11,6 +11,8 @@
 #   include <CoreServices/CoreServices.h>
 #elif defined(__linux__)
 #   include <sys/inotify.h>
+#elif defined(__FreeBSD__)
+#   include <sys/inotify.h>
 #else
 #   error unsupport platform
 #endif
@@ -58,6 +60,11 @@ namespace bee::filewatch {
         void   add_dir(const fs::path& path);
         void   del_dir(const fs::path& path);
         void   del_dir(int desc);
+#elif defined(__FreeBSD__)
+        void   event_update(inotify_event* event);
+        void   add_dir(const fs::path& path);
+        void   del_dir(const fs::path& path);
+        void   del_dir(int desc);
 #endif
 
     private:
@@ -69,6 +76,12 @@ namespace bee::filewatch {
         FSEventStreamRef                        m_stream;
         dispatch_queue_t                        m_fsevent_queue;
 #elif defined(__linux__)
+        static const unsigned int inotify_buf_size = (10 * ((sizeof(struct inotify_event)) + 255 + 1));
+        std::map<int, fs::path>                 m_fd_path;
+        std::map<fs::path, int>                 m_path_fd;
+        int                                     m_inotify_fd;
+        char                                    m_inotify_buf[inotify_buf_size];
+#elif defined(__FreeBSD__)
         static const unsigned int inotify_buf_size = (10 * ((sizeof(struct inotify_event)) + 255 + 1));
         std::map<int, fs::path>                 m_fd_path;
         std::map<fs::path, int>                 m_path_fd;

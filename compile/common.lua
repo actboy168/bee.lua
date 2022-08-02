@@ -148,8 +148,8 @@ lm:lua_source "source_bee" {
     freebsd = {
         sources = {
             "!binding/lua_unicode.cpp",
-            "!binding/lua_filewatch.cpp",
         },
+        links = "inotify",
         ldflags = "-pthread"
     },
 }
