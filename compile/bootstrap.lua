@@ -73,9 +73,10 @@ lm:copy "copy_script" {
 if not lm.notest then
     local tests = {}
     local fs = require "bee.filesystem"
-    for file in fs.pairs(lm.workdir .. "/../test", "r") do
+    local rootdir = fs.path(lm.workdir) / ".."
+    for file in fs.pairs(rootdir / "test", "r") do
         if file:equal_extension ".lua" then
-            tests[#tests+1] = file:lexically_normal():string()
+            tests[#tests+1] = fs.relative(file, rootdir):lexically_normal():string()
         end
     end
     table.sort(tests)
