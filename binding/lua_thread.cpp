@@ -290,9 +290,11 @@ namespace bee::lua_thread {
         thread_args* args = new thread_args { std::move(source), id, params };
         thread_handle handle = thread_create(thread_main, args);
         if (!handle) {
-            auto error = make_syserror("thread_create");
-            delete args;
-            lua::push_errormesg(L, "thread", error);
+            {
+                auto error = make_syserror("thread_create");
+                delete args;
+                lua::push_errormesg(L, "thread", error);
+            }
             return lua_error(L);
         }
         lua_pushlightuserdata(L, handle);

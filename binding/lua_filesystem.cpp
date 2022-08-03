@@ -2,6 +2,7 @@
 #include <bee/error.h>
 #include <bee/filesystem.h>
 #include <bee/lua/file.h>
+#include <bee/format.h>
 #include <bee/utility/file_handle.h>
 #include <bee/utility/path_helper.h>
 #include <utility>
@@ -10,43 +11,52 @@ namespace bee::lua_filesystem {
     static int pusherror(
         lua_State* L,
         const char* op,
-        const std::error_code& ec
+        std::error_code ec
     ) {
-        return luaL_error(L,
-            "%s: %s",
-            op,
-            error_message(ec).c_str()
-        );
+        {
+            auto errmsg = std::format("{}: {}",
+                op,
+                error_message(ec)
+            );
+            lua_pushlstring(L, errmsg.data(), errmsg.size());
+        }
+        return lua_error(L);
     }
 
     static int pusherror(
         lua_State* L,
         const char* op,
-        const std::error_code& ec,
+        std::error_code ec,
         const fs::path& path1
     ) {
-        return luaL_error(L,
-            "%s: %s: \"%s\"",
-            op,
-            error_message(ec).c_str(),
-            path1.generic_u8string().c_str()
-        );
+        {
+            auto errmsg = std::format("{}: {}: \"{}\"",
+                op,
+                error_message(ec),
+                path1.generic_u8string()
+            );
+            lua_pushlstring(L, errmsg.data(), errmsg.size());
+        }
+        return lua_error(L);
     }
 
     static int pusherror(
         lua_State* L,
         const char* op,
-        const std::error_code& ec,
+        std::error_code ec,
         const fs::path& path1,
         const fs::path& path2
     ) {
-        return luaL_error(L,
-            "%s: %s: \"%s\", \"%s\"",
-            op,
-            error_message(ec).c_str(),
-            path1.generic_u8string().c_str(),
-            path2.generic_u8string().c_str()
-        );
+        {
+            auto errmsg = std::format("{}: {}: \"{}\", \"{}\"",
+                op,
+                error_message(ec),
+                path1.generic_u8string(),
+                path2.generic_u8string()
+            );
+            lua_pushlstring(L, errmsg.data(), errmsg.size());
+        }
+        return lua_error(L);
     }
 
     template <typename T>
