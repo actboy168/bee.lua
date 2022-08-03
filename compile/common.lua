@@ -74,6 +74,7 @@ lm:source_set "source_bee" {
         }
     },
     netbsd = {
+        sysincludes = "/usr/pkg/include",
         sources = need {
             "bsd",
             "posix",
@@ -139,17 +140,19 @@ lm:lua_source "source_bee" {
         sources = "!binding/lua_unicode.cpp",
     },
     netbsd = {
+        sysincludes = "/usr/pkg/include",
         sources = {
             "!binding/lua_unicode.cpp",
-            "!binding/lua_filewatch.cpp",
         },
+        links = ":libinotify.a",
+        linkdirs = "/usr/pkg/lib",
         ldflags = "-pthread"
     },
     freebsd = {
         sources = {
             "!binding/lua_unicode.cpp",
-            "!binding/lua_filewatch.cpp",
         },
+        links = "inotify",
         ldflags = "-pthread"
     },
 }
