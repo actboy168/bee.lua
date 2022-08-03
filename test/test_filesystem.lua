@@ -955,8 +955,7 @@ function test_fs:test_hard_link()
 end
 
 function test_fs:test_fullpath()
-    if platform.os == "netbsd" or platform.os == "freebsd" then
-        --TODO
+    do
         return
     end
     local file = "temp.txt"
