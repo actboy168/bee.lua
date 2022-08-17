@@ -407,8 +407,20 @@ namespace bee::lua_socket {
 #define EXFDS_UPDATE(wfds)
 #endif
     static int select(lua_State* L) {
-        bool   read_finish = lua_type(L, 1) != LUA_TTABLE;
-        bool   write_finish = lua_type(L, 2) != LUA_TTABLE;
+        bool read_finish, write_finish;
+        if (lua_isnoneornil(L, 1))
+            read_finish = true;
+        else if (lua_type(L, 1) == LUA_TTABLE)
+            read_finish = false;
+        else
+            luaL_typeerror(L, 1, lua_typename(L, LUA_TTABLE));
+        if (lua_isnoneornil(L, 2))
+            write_finish = true;
+        else if (lua_type(L, 2) == LUA_TTABLE)
+            write_finish = false;
+        else
+            luaL_typeerror(L, 2, lua_typename(L, LUA_TTABLE));
+
         int    rmax = read_finish ? 0 : (int)luaL_len(L, 1);
         int    wmax = write_finish ? 0 : (int)luaL_len(L, 2);
         double timeo = luaL_optnumber(L, 3, -1);
