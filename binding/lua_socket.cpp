@@ -407,7 +407,7 @@ namespace bee::lua_socket {
 #define EXFDS_UPDATE(wfds)
 #endif
     static int select(lua_State* L) {
-        bool read_finish, write_finish;
+        bool read_finish = true, write_finish = true;
         if (lua_isnoneornil(L, 1))
             read_finish = true;
         else if (lua_type(L, 1) == LUA_TTABLE)
