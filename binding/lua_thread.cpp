@@ -3,6 +3,7 @@
 #include <bee/thread/semaphore.h>
 #include <bee/thread/simplethread.h>
 #include <bee/thread/spinlock.h>
+#include <bee/thread/setname.h>
 #include <bee/error.h>
 #include <atomic>
 #include <functional>
@@ -320,6 +321,11 @@ namespace bee::lua_thread {
         return 0;
     }
 
+    static int lsetname(lua_State* L) {
+        thread_setname(luaL_checkstring(L, 1));
+        return 0;
+    }
+
     static void init_threadid(lua_State* L) {
         if (lua_rawgetp(L, LUA_REGISTRYINDEX, &THREADID) != LUA_TNIL) {
             return;
@@ -339,6 +345,7 @@ namespace bee::lua_thread {
             {"channel", lchannel},
             {"reset", lreset},
             {"wait", lwait},
+            {"setname", lsetname},
             {"preload_module", ::bee::lua::preload_module},
             {NULL, NULL},
         };
