@@ -17,6 +17,14 @@ lm.builddir = ("build/%s"):format(plat)
 
 lm.warnings = "error"
 
+if lm.sanitize then
+    lm.mode = "debug"
+    lm.flags = "-fsanitize=address"
+    lm.msvc = {
+        defines = "_DISABLE_STRING_ANNOTATION"
+    }
+end
+
 lm.windows = {
     defines = "_WIN32_WINNT=0x0601",
 }
