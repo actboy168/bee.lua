@@ -179,8 +179,7 @@ namespace bee::filewatch {
             task.cancel();
             return false;
         case task::result::zero:
-            task.start();
-            return true;
+            return task.start();
         case task::result::success:
             break;
         }
@@ -207,8 +206,7 @@ namespace bee::filewatch {
             }
             data += fni.NextEntryOffset;
         }
-        task.start();
-        return true;
+        return task.start();
     }
 
     void watch::update() {
