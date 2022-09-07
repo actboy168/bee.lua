@@ -145,26 +145,6 @@ namespace bee::lua_thread {
         void* data = nullptr;
     };
 
-    static int lchannel_call(lua_State* L) {
-        boxchannel& bc = *(boxchannel*)getObject(L, 1, "channel");
-        struct rpc* r = (struct rpc*)lua_newuserdatauv(L, sizeof(*r), 0);
-        new (r) rpc;
-        lua_pushlightuserdata(L, r);
-        lua_rotate(L, 2, 2);
-        void * buffer = seri_pack(L, 2, NULL);
-        bc->push(buffer);
-        r->trigger.acquire();
-        return seri_unpackptr(L, r->data);
-    }
-
-    static int lchannel_ret(lua_State* L) {
-        luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
-        struct rpc *r = (struct rpc *)lua_touserdata(L, 2);
-        r->data = seri_pack(L, 2, NULL);
-        r->trigger.release();
-        return 0;
-    }
-
     static int lchannel_gc(lua_State* L) {
         boxchannel* bc = (boxchannel*)getObject(L, 1, "channel");
         bc->~boxchannel();
@@ -193,8 +173,6 @@ namespace bee::lua_thread {
                 {"push", lchannel_push},
                 {"pop", lchannel_pop},
                 {"bpop", lchannel_bpop},
-                {"call", lchannel_call},
-                {"ret", lchannel_ret},
                 {"__gc", lchannel_gc},
                 {NULL, NULL},
             };
@@ -326,6 +304,29 @@ namespace bee::lua_thread {
         return 0;
     }
 
+    static int lrpc_create(lua_State* L) {
+        struct rpc* r = (struct rpc*)lua_newuserdatauv(L, sizeof(*r), 0);
+        new (r) rpc;
+        lua_pushlightuserdata(L, r);
+        lua_rotate(L, 1, 1);
+        return 2;
+    }
+
+    static int lrpc_wait(lua_State* L) {
+        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+        struct rpc *r = (struct rpc *)lua_touserdata(L, 1);
+        r->trigger.acquire();
+        return seri_unpackptr(L, r->data);
+    }
+
+    static int lrpc_return(lua_State* L) {
+        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+        struct rpc *r = (struct rpc *)lua_touserdata(L, 1);
+        r->data = seri_pack(L, 1, NULL);
+        r->trigger.release();
+        return 0;
+    }
+
     static void init_threadid(lua_State* L) {
         if (lua_rawgetp(L, LUA_REGISTRYINDEX, &THREADID) != LUA_TNIL) {
             return;
@@ -346,6 +347,9 @@ namespace bee::lua_thread {
             {"reset", lreset},
             {"wait", lwait},
             {"setname", lsetname},
+            {"rpc_create", lrpc_create},
+            {"rpc_wait", lrpc_wait},
+            {"rpc_return", lrpc_return},
             {"preload_module", ::bee::lua::preload_module},
             {NULL, NULL},
         };
