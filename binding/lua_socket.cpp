@@ -380,6 +380,21 @@ namespace bee::lua_socket {
         pushfd(L, self.fd, self.protocol, self.type);
         return 1;
     }
+    static int fd(lua_State* L) {
+        static const char *const protocol_opts[] = {
+            "tcp", "udp", "unix", "tcp6", "udp6",
+            NULL
+        };
+        static const char *const type_opts[] = {
+            "unknown", "connect", "listen", "accept",
+            NULL
+        };
+        socket::fd_t fd = (socket::fd_t)lua_touserdata(L, 1);
+        socket::protocol protocol = (socket::protocol)luaL_checkoption(L, 2, NULL, protocol_opts);
+        luafd::tag type = (luafd::tag)luaL_checkoption(L, 3, "unknown", type_opts);
+        pushfd(L, fd, protocol, type);
+        return 1;
+    }
     static int __call(lua_State* L) {
         return create(L, 2);
     }
@@ -522,6 +537,7 @@ namespace bee::lua_socket {
             {"select", select},
             {"dump", dump},
             {"undump", undump},
+            {"fd", fd},
 #if defined _WIN32
             {"simulationUDS", simulationUDS},
 #endif
