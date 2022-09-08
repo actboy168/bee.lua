@@ -307,15 +307,20 @@ function test_thread:test_rpc()
             return "ok"
         end
         local function dispatch(context, what, ...)
-            c:ret(context, cmd[what](...))
+            thread.rpc_return(context, cmd[what](...))
             return not quit
         end
         while dispatch(c:bpop()) do
         end
     ]]
     local c = thread.channel "test"
-    lt.assertEquals(c:call("add", 1, 2) , 3)
-    lt.assertEquals(c:call("exit") ,"ok")
+    local function call(...)
+        local r, _ = thread.rpc_create()
+        c:push(r, ...)
+        return thread.rpc_wait(r)
+    end
+    lt.assertEquals(call("add", 1, 2) , 3)
+    lt.assertEquals(call("exit") ,"ok")
     thread.wait(thd)
     assertNotThreadError()
     thread.reset()
