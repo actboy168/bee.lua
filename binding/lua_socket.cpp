@@ -389,7 +389,7 @@ namespace bee::lua_socket {
             "unknown", "connect", "listen", "accept",
             NULL
         };
-        socket::fd_t fd = (socket::fd_t)lua_touserdata(L, 1);
+        socket::fd_t fd = (socket::fd_t)(intptr_t)lua_touserdata(L, 1);
         socket::protocol protocol = (socket::protocol)luaL_checkoption(L, 2, NULL, protocol_opts);
         luafd::tag type = (luafd::tag)luaL_checkoption(L, 3, "unknown", type_opts);
         pushfd(L, fd, protocol, type);
