@@ -30,6 +30,11 @@ lm:source_set "source_bootstrap" {
         ldflags = "-Wl,-E",
         links = "m",
     },
+    openbsd = {
+        defines = "LUA_USE_LINUX",
+        ldflags = "-Wl,-E",
+        links = "m",
+    },
     android = {
         defines = "LUA_USE_LINUX",
         ldflags = "-Wl,-E",
@@ -58,6 +63,9 @@ lm:executable (BOOTSTRAP) {
         crt = "static",
     },
     freebsd = {
+        crt = "static",
+    },
+    openbsd = {
         crt = "static",
     },
 }

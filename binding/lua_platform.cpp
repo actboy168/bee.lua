@@ -37,6 +37,9 @@ namespace bee::lua_platform {
 #elif defined(__FreeBSD__)
 		lua_pushstring(L, "FreeBSD");
 		lua_pushstring(L, "freebsd");
+#elif defined(__OpenBSD__)
+		lua_pushstring(L, "OpenBSD");
+		lua_pushstring(L, "openbsd");
 #elif defined(__ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__)
 		lua_pushstring(L, "iOS");
 		lua_pushstring(L, "ios");

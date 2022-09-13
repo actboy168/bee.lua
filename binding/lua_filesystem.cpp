@@ -848,7 +848,7 @@ namespace bee::lua_filesystem {
     }
 
     static int fullpath(lua_State* L) {
-#if defined(__NetBSD__) || defined(__FreeBSD__)
+#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
         return luaL_error(L, "unimplemented");
 #endif
         path_ptr path = getpathptr(L, 1);

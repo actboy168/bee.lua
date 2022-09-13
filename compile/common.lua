@@ -85,6 +85,12 @@ lm:source_set "source_bee" {
             "bsd",
             "posix",
         }
+    },
+    openbsd = {
+        sources = need {
+            "bsd",
+            "posix",
+        }
     }
 }
 
@@ -155,6 +161,15 @@ lm:lua_source "source_bee" {
         links = "inotify",
         ldflags = "-pthread"
     },
+    openbsd = {
+        sysincludes = "/usr/local/include/inotify",
+        sources = {
+            "!binding/lua_unicode.cpp",
+        },
+        links = ":libinotify.a",
+        linkdirs = "/usr/local/lib/inotify",
+        ldflags = "-pthread"
+    },
 }
 
 lm:source_set 'source_lua' {
@@ -180,6 +195,10 @@ lm:source_set 'source_lua' {
         visibility = "default",
     },
     freebsd = {
+        defines = "LUA_USE_LINUX",
+        visibility = "default",
+    },
+    openbsd = {
         defines = "LUA_USE_LINUX",
         visibility = "default",
     },
