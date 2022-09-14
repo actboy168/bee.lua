@@ -107,6 +107,7 @@ void pushprogdir(lua_State *L) {
 #include <sys/sysctl.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
 
 void pushprogdir(lua_State *L) {
     int name[] = { CTL_KERN, KERN_PROC_ARGS, getpid(), KERN_PROC_ARGV };
