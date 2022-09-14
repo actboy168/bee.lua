@@ -87,6 +87,7 @@ lm:source_set "source_bee" {
         }
     },
     openbsd = {
+        sysincludes = "/usr/local/include/inotify",
         sources = need {
             "bsd",
             "posix",
@@ -146,7 +147,6 @@ lm:lua_source "source_bee" {
         sources = "!binding/lua_unicode.cpp",
     },
     netbsd = {
-        sysincludes = "/usr/pkg/include",
         sources = {
             "!binding/lua_unicode.cpp",
         },
@@ -162,7 +162,6 @@ lm:lua_source "source_bee" {
         ldflags = "-pthread"
     },
     openbsd = {
-        sysincludes = "/usr/local/include/inotify",
         sources = {
             "!binding/lua_unicode.cpp",
         },

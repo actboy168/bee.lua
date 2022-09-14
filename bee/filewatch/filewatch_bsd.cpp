@@ -5,6 +5,7 @@
 #include <functional>
 #include <unistd.h>
 #include <sys/select.h>
+#include <sys/inotify.h>
 
 namespace bee::filewatch {
     class task {
@@ -111,18 +112,21 @@ namespace bee::filewatch {
         if (rv == 0 || rv == -1) {
             return;
         }
-        ssize_t n = read(m_inotify_fd, m_inotify_buf, inotify_buf_size);
+        constexpr size_t sz = (10 * ((sizeof(struct inotify_event)) + 255 + 1));
+        char buf[sz];
+        ssize_t n = read(m_inotify_fd, buf, sz);
         if (n == 0 || n == -1) {
             return;
         }
-        for (char *p = m_inotify_buf; p < m_inotify_buf + n;) {
+        for (char *p = buf; p < buf + n;) {
             struct inotify_event *event = reinterpret_cast<struct inotify_event *> (p);
             event_update(event);
             p += (sizeof(struct inotify_event)) + event->len;
         }
     }
 
-    void watch::event_update(inotify_event* event) {
+    void watch::event_update(void* e) {
+        inotify_event* event = (inotify_event*)e;
         if (event->mask & IN_Q_OVERFLOW) {
             // TODO?
         }

@@ -10,7 +10,6 @@
 #elif defined(__APPLE__)
 #   include <CoreServices/CoreServices.h>
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-#   include <sys/inotify.h>
 #else
 #   error unsupport platform
 #endif
@@ -54,7 +53,7 @@ namespace bee::filewatch {
         void   event_update(const char* paths[], const FSEventStreamEventFlags flags[], size_t n);
     private:
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-        void   event_update(inotify_event* event);
+        void   event_update(void* event);
         void   add_dir(const fs::path& path);
         void   del_dir(const fs::path& path);
         void   del_dir(int desc);
@@ -69,11 +68,9 @@ namespace bee::filewatch {
         FSEventStreamRef                        m_stream;
         dispatch_queue_t                        m_fsevent_queue;
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-        static const unsigned int inotify_buf_size = (10 * ((sizeof(struct inotify_event)) + 255 + 1));
         std::map<int, fs::path>                 m_fd_path;
         std::map<fs::path, int>                 m_path_fd;
         int                                     m_inotify_fd;
-        char                                    m_inotify_buf[inotify_buf_size];
 #endif
     };
 }
