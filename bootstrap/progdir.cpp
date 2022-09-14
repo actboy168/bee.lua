@@ -102,6 +102,39 @@ void pushprogdir(lua_State *L) {
     }
 }
 
+#elif defined(__OpenBSD__)
+
+#include <sys/sysctl.h>
+#include <unistd.h>
+#include <string.h>
+
+void pushprogdir(lua_State *L) {
+    int name[] = { CTL_KERN, KERN_PROC_ARGS, getpid(), KERN_PROC_ARGV };
+    size_t argc;
+    if (sysctl(name, 4, NULL, &argc, NULL, 0) < 0) {
+        luaL_error(L, "unable to get progdir");
+        return;
+    }
+    const char** argv = (const char**)malloc(argc);
+    if (!argv) {
+        luaL_error(L, "unable to get progdir");
+        return;
+    }
+    if (sysctl(name, 4, argv, &argc, NULL, 0) < 0) {
+        luaL_error(L, "unable to get progdir");
+        return;
+    }
+    const char* linkname = argv[0];
+    const char* lb = strrchr(linkname, '/');
+    if (lb) {
+        lua_pushlstring(L, linkname, lb - linkname + 1);
+    }
+    else {
+        lua_pushstring(L, linkname);
+    }
+    free(argv);
+}
+
 #else
 void pushprogdir(lua_State *L) {
     luaL_error(L, "unable to get progdir");
