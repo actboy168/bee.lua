@@ -313,7 +313,7 @@ namespace bee::lua_filesystem {
         static void push(lua_State* L, fs::file_status&& status);
 
         static fs::file_status& to(lua_State* L, int idx) {
-            return *(fs::file_status*)lua_touserdata(L, idx);
+            return *(fs::file_status*)luaL_checkudata(L, idx, "bee::file_status");;
         }
 
         static const char* filetypename(fs::file_type type) {
