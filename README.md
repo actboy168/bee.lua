@@ -7,7 +7,9 @@ Lua runtime and toolset
 ## Build
 
 * install [luamake](https://github.com/actboy168/luamake)
-* `> luamake`
+*
+  + `> luamake` (all in one)
+  + `> luamake -EXE lua` (with `bee.dll`)
 
 ## Lua patch
 
