@@ -2,6 +2,7 @@
 #include <bee/utility/unreachable.h>
 #include <fcntl.h>
 #include <io.h>
+#include <vector>
 
 namespace bee {
     static FILE* handletofile(HANDLE h, int flags, const char* mode) {
