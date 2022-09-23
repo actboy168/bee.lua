@@ -113,6 +113,10 @@ namespace bee::filewatch {
             }
         }
         if (dwErrorCode != 0) {
+            if (dwErrorCode == ERROR_NOTIFY_ENUM_DIR) {
+                // TODO notify overflow
+                return result::zero;
+            }
             cancel();
             return result::failed;
         }
