@@ -10,7 +10,7 @@ namespace bee::lua_filewatch {
     static int add(lua_State* L) {
         filewatch::watch& self = to(L);
         auto            path = lua::to_string(L, 1);
-        filewatch::taskid id = self.add(path);
+        filewatch::taskid id = self.add(fs::absolute(path).lexically_normal());
         lua_pushinteger(L, id);
         return 1;
     }

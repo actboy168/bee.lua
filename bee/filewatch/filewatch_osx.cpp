@@ -79,7 +79,7 @@ namespace bee::filewatch {
 
     taskid watch::add(const fs::path& path) {
         taskid id = ++m_gentask;
-        auto t = std::make_unique<task>(path.lexically_normal());
+        auto t = std::make_unique<task>(path);
         m_tasks.emplace(std::make_pair(id, std::move(t)));
         update_stream();
         return id;
