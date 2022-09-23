@@ -131,10 +131,9 @@ namespace bee::filewatch {
             // TODO?
         }
 
-        std::string filename = m_fd_path[event->wd];
+        auto filename = m_fd_path[event->wd];
         if (event->len > 1) {
-            filename += "/";
-            filename += event->name;
+            filename /= event->name;
         }
         if (event->mask & (IN_CREATE | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO)) {
             m_notify.emplace(notify::flag::rename, filename);
