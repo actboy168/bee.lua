@@ -9,8 +9,15 @@ namespace bee::lua_filewatch {
     }
     static int add(lua_State* L) {
         filewatch::watch& self = to(L);
-        auto            path = lua::to_string(L, 1);
-        filewatch::taskid id = self.add(fs::absolute(path).lexically_normal());
+        auto path = lua::to_string(L, 1);
+        std::error_code ec;
+        fs::path abspath = fs::absolute(path, ec);
+        if (ec) {
+            lua::push_errormesg(L, "fs::absolute", ec);
+            lua_error(L);
+            return 0;
+        }
+        filewatch::taskid id = self.add(abspath.lexically_normal());
         lua_pushinteger(L, id);
         return 1;
     }
