@@ -1,11 +1,9 @@
 local lm = require 'luamake'
 
-local isWindows = lm.os == 'windows'
-
 lm.cxx = 'c++17'
 
 local plat = (function ()
-    if isWindows then
+    if lm.os == 'windows' then
         if lm.compiler == "gcc" then
             return "mingw"
         end
@@ -20,6 +18,7 @@ lm.warnings = "error"
 if lm.sanitize then
     lm.mode = "debug"
     lm.flags = "-fsanitize=address"
+    lm.ldflags = "-fsanitize=address"
     lm.msvc = {
         defines = "_DISABLE_STRING_ANNOTATION"
     }
