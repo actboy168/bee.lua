@@ -81,6 +81,9 @@ namespace bee::path_helper {
 #if defined(__FreeBSD__)
 #   include <sys/param.h>
 #   include <sys/sysctl.h>
+#elif defined(__OpenBSD__)
+#   include <sys/sysctl.h>
+#   include <unistd.h>
 #endif
 
 namespace bee::path_helper {
@@ -94,6 +97,20 @@ namespace bee::path_helper {
             return unexpected<std::string>(make_syserror("exe_path").what());
         }
         return fs::path(exe, exe+length-1);
+#elif defined(__OpenBSD__)
+        int name[] = { CTL_KERN, KERN_PROC_ARGS, getpid(), KERN_PROC_ARGV };
+        size_t argc;
+        if (sysctl(name, 4, NULL, &argc, NULL, 0) < 0) {
+            return unexpected<std::string>(make_syserror("exe_path").what());
+        }
+        const char** argv = (const char**)malloc(argc);
+        if (!argv) {
+            return unexpected<std::string>(make_syserror("exe_path").what());
+        }
+        if (sysctl(name, 4, argv, &argc, NULL, 0) < 0) {
+            return unexpected<std::string>(make_syserror("exe_path").what());
+        }
+        return fs::path(argv[0]);
 #else
         std::error_code ec;
         auto res = fs::read_symlink("/proc/self/exe", ec);
