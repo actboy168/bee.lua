@@ -63,7 +63,7 @@ namespace bee::lua_thread {
     private:
         std::queue<value_type> queue;
         spinlock mutex;
-        binary_semaphore sem;
+        binary_semaphore sem = binary_semaphore(0);
     };
 
     class channelmgr {
@@ -154,7 +154,7 @@ namespace bee::lua_thread {
     }
 
     struct rpc {
-        binary_semaphore trigger;
+        binary_semaphore trigger = binary_semaphore(0);
         void* data = nullptr;
     };
 

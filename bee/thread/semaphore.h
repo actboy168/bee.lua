@@ -1,11 +1,26 @@
 #pragma once
 
+#if defined(__cpp_lib_semaphore)
+
+#include <semaphore>
+
+namespace bee {
+    using std::binary_semaphore;
+}
+
+#else
+
 #include <mutex>
 #include <condition_variable>
 
 namespace bee {
     class binary_semaphore {
     public:
+        binary_semaphore(std::ptrdiff_t desired) {
+            if (desired != 0) {
+                acquire();
+            }
+        }
         void release() {
             std::unique_lock<std::mutex> lk(mutex);
             if (ok) {
@@ -44,3 +59,5 @@ namespace bee {
         bool ok = false;
     };
 }
+
+#endif
