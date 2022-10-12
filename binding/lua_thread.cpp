@@ -1,5 +1,4 @@
 #include <bee/lua/binding.h>
-#include <bee/thread/lockqueue.h>
 #include <bee/thread/semaphore.h>
 #include <bee/thread/simplethread.h>
 #include <bee/thread/spinlock.h>
@@ -8,6 +7,7 @@
 #include <atomic>
 #include <functional>
 #include <map>
+#include <mutex>
 #include <queue>
 #include <string>
 
@@ -16,40 +16,53 @@ extern "C" {
 }
 
 namespace bee::lua_thread {
-    class channel : public lockqueue<void*> {
+    class channel {
     public:
-        typedef lockqueue<void*> mybase;
+        typedef void* value_type;
 
-        void push(void* data) {
-            mybase::push(data);
+        void push(value_type data) {
+            do {
+                std::unique_lock<spinlock> lk(mutex);
+                queue.push(data);
+            } while (0);
             sem.release();
         }
-        void blocked_pop(void*& data) {
+        bool pop(value_type& data) {
+            std::unique_lock<spinlock> lk(mutex);
+            if (queue.empty()) {
+                return false;
+            }
+            data = queue.front();
+            queue.pop();
+            return true;
+        }
+        void blocked_pop(value_type& data) {
             for (;;) {
-                if (mybase::pop(data)) {
+                if (pop(data)) {
                     return;
                 }
                 sem.acquire();
             }
         }
         template <class Rep, class Period>
-        bool timed_pop(void*& data, const std::chrono::duration<Rep, Period>& timeout) {
+        bool timed_pop(value_type& data, const std::chrono::duration<Rep, Period>& timeout) {
             auto now = std::chrono::steady_clock::now();
-            if (mybase::pop(data)) {
+            if (pop(data)) {
                 return true;
             }
             if (!sem.try_acquire_for(timeout)) {
                 return false;
             }
-            while (!mybase::pop(data)) {
+            while (!pop(data)) {
                 if (!sem.try_acquire_until(now + timeout)) {
                     return false;
                 }
             }
             return true;
         }
-
     private:
+        std::queue<value_type> queue;
+        spinlock mutex;
         binary_semaphore sem;
     };
 
