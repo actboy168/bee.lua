@@ -64,7 +64,7 @@ namespace bee::lua_time {
     static int lcounter(lua_State* L) {
         uint64_t freq = lua_tointeger(L, lua_upvalueindex(1));
         uint64_t ti = time_counter();
-        lua_pushnumber(L, (double)ti / freq);
+        lua_pushnumber(L, (double)ti * 1000 / freq);
         return 1;
     }
 
