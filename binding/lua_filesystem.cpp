@@ -841,6 +841,7 @@ namespace bee::lua_filesystem {
         if (!f) {
             lua_pushnil(L);
             lua::push_errormesg(L, "filelock", make_crterror());
+            fd.close();
             return 2;
         }
         lua::newfile(L, f);
@@ -857,6 +858,7 @@ namespace bee::lua_filesystem {
             return pusherror(L, "fullpath", make_syserror().code()); 
         }
         auto fullpath = fd.path();
+        fd.close();
         if (!fullpath) {
             return pusherror(L, "fullpath", make_syserror().code()); 
         }

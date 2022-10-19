@@ -21,6 +21,10 @@ local function isAndroid()
     return platform.OS == 'Android'
 end
 
+local function isBSD()
+    return platform.os:match "bsd$"
+end
+
 local function supportedSymlink()
     if platform.OS ~= "Windows" then
         return true
@@ -955,7 +959,7 @@ function test_fs:test_hard_link()
 end
 
 function test_fs:test_fullpath()
-    do
+    if isBSD() then
         return
     end
     local file = "temp.txt"

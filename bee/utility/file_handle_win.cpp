@@ -66,6 +66,13 @@ namespace bee {
         return {h};
     }
 
+    void file_handle::close() {
+        if (valid()) {
+            CloseHandle(h);
+            h = file_handle{}.h;
+        }
+    }
+
     std::optional<fs::path> file_handle::path() const {
         if (!valid()) {
             return std::nullopt;

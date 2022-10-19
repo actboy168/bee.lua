@@ -30,6 +30,7 @@ namespace bee {
         bool operator!=(const file_handle& other) const;
         FILE* to_file(mode mode) const;
         std::optional<fs::path> path() const;
+        void close();
         static file_handle from_file(FILE* f);
         static file_handle dup(FILE* f);
         static file_handle lock(const fs::path& filename);
