@@ -26,7 +26,7 @@ namespace bee {
 
     void file_handle::close() {
         if (valid()) {
-            close(h);
+            ::close(h);
             h = file_handle{}.h;
         }
     }
