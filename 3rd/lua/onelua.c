@@ -93,7 +93,7 @@
 #include "lstrlib.c"
 #include "ltablib.c"
 #include "lutf8lib.c"
-#include "linit.c"
+//#include "linit.c"
 #endif
 
 /* lua */

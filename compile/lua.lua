@@ -19,7 +19,10 @@ if lm.os == "windows" then
         sources = "3rd/lua/utf8_crt.c",
     }
     lm:shared_library 'lua54' {
-        sources = "3rd/lua/onelua.c",
+        sources = {
+            "3rd/lua/onelua.c",
+            "3rd/lua/linit.c",
+        },
         defines = {
             "MAKE_LIB",
             "LUA_BUILD_AS_DLL",
