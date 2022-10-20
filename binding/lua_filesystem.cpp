@@ -7,6 +7,10 @@
 #include <bee/utility/path_helper.h>
 #include <utility>
 
+#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
+#define BEE_DISABLE_FULLPATH
+#endif
+
 namespace bee::lua_filesystem {
 #if defined(__cpp_lib_char8_t)
     static std::string_view tostrview(std::u8string const& u8str) {
@@ -848,10 +852,8 @@ namespace bee::lua_filesystem {
         return 1;
     }
 
+#if !defined(BEE_DISABLE_FULLPATH)
     static int fullpath(lua_State* L) {
-#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
-        return luaL_error(L, "unimplemented");
-#endif
         path_ptr path = getpathptr(L, 1);
         file_handle fd = file_handle::open_link(path);
         if (!fd) {
@@ -865,6 +867,7 @@ namespace bee::lua_filesystem {
         path::push(L, *fullpath);
         return 1;
     }
+#endif
 
     static int luaopen(lua_State* L) {
         static luaL_Reg lib[] = {
@@ -896,7 +899,9 @@ namespace bee::lua_filesystem {
             {"dll_path", dll_path},
             {"appdata_path", appdata_path},
             {"filelock", filelock},
+#if !defined(BEE_DISABLE_FULLPATH)
             {"fullpath", fullpath},
+#endif
             {NULL, NULL},
         };
         lua_newtable(L);
