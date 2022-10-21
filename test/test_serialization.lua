@@ -48,10 +48,22 @@ function test_seri:test_err_3()
 end
 
 function test_seri:test_ref()
+    local N <const> = 10
     local t = {}
-    t.a = t
+    for i = 1, N do
+        t[i] = {}
+    end
+    for i = 1, N do
+        for j = 1, N do
+            t[i][j] = t[j]
+        end
+    end
     local newt = seri.unpack(seri.pack(t))
-    lt.assertEquals(newt, newt.a)
+    for i = 1, N do
+        for j = 1, N do
+            lt.assertEquals(newt[i][j], newt[j])
+        end
+    end
 end
 
 function test_seri:test_lightuserdata()
