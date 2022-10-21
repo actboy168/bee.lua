@@ -36,6 +36,16 @@ if lm.os == "windows" then
             lm.EXE_RESOURCE,
         }
     }
+    lm:executable 'luac' {
+        sources = {
+            "3rd/lua/onelua.c",
+            "3rd/lua/utf8_crt.c",
+            lm.EXE_RESOURCE,
+        },
+        defines = {
+            "MAKE_LUAC",
+        }
+    }
     return
 end
 

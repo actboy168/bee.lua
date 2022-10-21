@@ -9,10 +9,8 @@ extern "C" {
 }
 #endif
 
-#if !defined(lua_c) && !defined(luac_c)
-#if !defined(lundump_c)
-#include <Windows.h>
-#endif
+#if defined(lua_c) || defined(luac_c)
+#else
 #if defined fopen
 #undef fopen
 #endif
@@ -45,10 +43,13 @@ extern "C" {
 #define rename(...) utf8_rename(__VA_ARGS__)
 #define getenv(...) utf8_getenv(__VA_ARGS__)
 #define tmpnam(...) utf8_tmpnam(__VA_ARGS__)
-#define LoadLibraryExA(...) utf8_LoadLibraryExA(__VA_ARGS__)
-#define GetModuleFileNameA(...) utf8_GetModuleFileNameA(__VA_ARGS__)
-#define FormatMessageA(...) utf8_FormatMessageA(__VA_ARGS__)
 
+#if defined(loadlib_c)
+#   include <Windows.h>
+#   define LoadLibraryExA(...) utf8_LoadLibraryExA(__VA_ARGS__)
+#   define GetModuleFileNameA(...) utf8_GetModuleFileNameA(__VA_ARGS__)
+#   define FormatMessageA(...) utf8_FormatMessageA(__VA_ARGS__)
+#endif
 #endif
 
 #define lua_writestring(s,l)      utf8_ConsoleWrite(s,(int)l)

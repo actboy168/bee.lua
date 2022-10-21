@@ -5,7 +5,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <wchar.h>
 
 FILE* __cdecl utf8_fopen(const char * filename, const char * mode);
 FILE* __cdecl utf8_freopen(char const* filename, char const* mode, FILE* stream);
@@ -29,9 +28,6 @@ unsigned long __stdcall utf8_FormatMessageA(
 void utf8_ConsoleWrite(const char* msg, int sz);
 void utf8_ConsoleNewLine();
 void utf8_ConsoleError(const char* fmt, const char* param);
-
-wchar_t* u2w(const char *str);
-char* w2u(const wchar_t *str);
 
 #endif
 

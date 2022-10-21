@@ -2,9 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
-#if defined(_WIN32)
-#include "utf8_prefix.h"
-#endif
 #include <lua.hpp>
 #include <bee/lua/binding.h>
 
@@ -205,6 +202,9 @@ int main(int argc, char **argv) {
 
 #include <Windows.h>
 #include <wchar.h>
+
+extern "C" wchar_t* u2w(const char *str);
+extern "C" char* w2u(const wchar_t *str);
 
 void enable_vtmode_(HANDLE h) {
     if (h == INVALID_HANDLE_VALUE) {

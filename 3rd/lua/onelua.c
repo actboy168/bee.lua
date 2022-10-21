@@ -103,5 +103,5 @@
 
 /* luac */
 #ifdef MAKE_LUAC
-#include "luac.c"
+#include "utf8_luac.c"
 #endif
