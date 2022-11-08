@@ -72,8 +72,8 @@ namespace bee::net::socket {
 	}
 
 	static bool read_tcp_port(const endpoint& ep, int& tcpport) {
-		auto[path, type] = ep.info(); 
-        if (type != 0) {
+		auto[path, type] = ep.info();
+        if (type != (uint16_t)un_format::pathname) {
             return false;
         }
 		auto unixpath = file_read(path);
@@ -89,7 +89,7 @@ namespace bee::net::socket {
 		return true;
 	}
 
-	static bool write_tcp_port(const endpoint& ep, fd_t s) {
+	static bool write_tcp_port(const std::string& path, fd_t s) {
 		endpoint newep = endpoint::from_empty();
 		if (!socket::getsockname(s, newep)) {
 			return false;
@@ -102,10 +102,6 @@ namespace bee::net::socket {
 		else {
 			p[0] = '\0';
 		}
-		auto[path, type] = ep.info();
-        if (type != 0) {
-            return true;
-        }
 		return file_write(path, portstr.data());
 	}
 
@@ -169,11 +165,15 @@ namespace bee::net::socket {
 		if (ok != status::success) {
 			return ok;
 		}
-		if (!write_tcp_port(ep, s)) {
+		auto[path, type] = ep.info();
+        if (type != (uint16_t)un_format::pathname) {
+			::WSASetLastError(WSAENETDOWN);
+            return status::failed;
+        }
+		if (!write_tcp_port(path, s)) {
 			::WSASetLastError(WSAENETDOWN);
             return status::failed;
 		}
-        auto[path, type] = ep.info();
         state::store<std::string>(s, "path", path);
         return status::success;
     }
@@ -590,7 +590,7 @@ namespace bee::net::socket {
             return false;
         }
         auto[path, type] = ep.info();
-        if (path.size() == 0 || type != 0) {
+        if (type != (uint16_t)un_format::pathname) {
             return false;
         }
 #if defined _WIN32

@@ -16,6 +16,12 @@ namespace bee::net {
     typedef int socklen_t;
 #endif
 
+    enum class un_format: uint16_t {
+        pathname = 0,
+        abstract,
+        unnamed,
+    };
+
     struct endpoint_info {
         std::string ip;
         uint16_t port;

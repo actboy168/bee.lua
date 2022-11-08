@@ -179,13 +179,13 @@ namespace bee::net {
             const char* path = ((struct sockaddr_un*)sa)->sun_path;
             int len = addrlen() - offsetof(struct sockaddr_un, sun_path) - 1;
             if (len > 0 && path[0] != 0) {
-                return { std::string(path, len), 0 };
+                return { std::string(path, len), (uint16_t)un_format::pathname };
             }
             else if (len > 1) {
-                return { std::string(path + 1, len - 1), 1 };
+                return { std::string(path + 1, len - 1), (uint16_t)un_format::abstract };
             }
             else {
-                return { std::string(), 1 };
+                return { std::string(), (uint16_t)un_format::unnamed };
             }
         }
         return { "", 0 };
