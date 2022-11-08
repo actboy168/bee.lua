@@ -605,20 +605,55 @@ namespace bee::net::socket {
     }
 #endif
 
+#if defined(_WIN32)
+    bool unnamed_unix_bind(fd_t s) {
+        char tmpdir[MAX_PATH];
+        int bind_try = 0;
+        for (;;) {
+            switch (bind_try++) {
+            case 0:
+                GetTempPath(MAX_PATH, tmpdir);
+                break;
+            case 1: {
+                UINT n = GetWindowsDirectory(tmpdir, MAX_PATH);
+                snprintf(tmpdir + n, MAX_PATH - n, "\\Temp\\");
+                break;
+            }
+            case 2:
+                snprintf(tmpdir, MAX_PATH, "C:\\Temp\\");
+                break;
+            case 3:
+                tmpdir[0] = '.';
+                tmpdir[1] = '\0';
+                break;
+            case 4:
+                ::WSASetLastError(WSAEFAULT);
+                return false;
+            }
+            char tmpname[MAX_PATH];
+            if (0 == GetTempFileNameA(tmpdir, "bee", 1, tmpname)) {
+                continue;
+            }
+            auto ep = endpoint::from_unixpath(tmpname);
+            if (ep.valid() && status::success == socket::bind(s, ep)) {
+                return true;
+            }
+        }
+        ::WSASetLastError(WSAEFAULT);
+        return false;
+    }
+#endif
+
     bool pair(fd_t sv[2]) {
 #if defined(_WIN32)
         fd_t sfd = retired_fd;
         fd_t cfd = retired_fd;
         auto cep = endpoint::from_empty();
-        auto sep = endpoint::from_hostname("127.0.0.1", 0);
-        if (!sep.valid()) {
-            goto failed;
-        }
-        sfd = open(protocol::tcp);
+        sfd = open(protocol::uds);
         if (sfd == retired_fd) {
             goto failed;
         }
-        if (status::success != socket::bind(sfd, sep)) {
+        if (!unnamed_unix_bind(sfd)) {
             goto failed;
         }
         if (status::success != socket::listen(sfd, 5)) {
@@ -627,14 +662,14 @@ namespace bee::net::socket {
         if (!getsockname(sfd, cep)) {
             goto failed;
         }
-        cfd = open(protocol::tcp);
+        cfd = open(protocol::uds);
         if (cfd == retired_fd) {
             goto failed;
         }
         if (status::failed == connect(cfd, cep)) {
             goto failed;
         }
-
+        socket::unlink(sfd);
         fd_set readfds, writefds, exceptfds;
         FD_ZERO(&readfds);
         FD_ZERO(&writefds);
