@@ -17,6 +17,50 @@ local function file_exists(filename)
     return errno ~= 2
 end
 
+local function syncSend(fd, data)
+    while true do
+        local _, wr = socket.select(nil, {fd})
+        if not wr or wr[1] ~= fd then
+            break
+        end
+        local n = fd:send(data)
+        if not n then
+            return n, data
+        else
+            data = data:sub(n + 1)
+            if data == '' then
+                return true
+            end
+        end
+    end
+end
+
+local function syncRecv(fd, n)
+    local res = ''
+    while true do
+        local rd = socket.select({fd}, nil)
+        if not rd or rd[1] ~= fd then
+            break
+        end
+        local data = fd:recv(n)
+        if data == nil then
+            return nil, n
+        elseif data == false then
+        else
+            n = n - #data
+            res = res .. data
+            if n <= 0 then
+                return res
+            end
+        end
+    end
+end
+
+local function syncEcho(from, to, msg)
+    lt.assertEquals(syncSend(from, msg), true)
+    lt.assertEquals(syncRecv(to, #msg), msg)
+end
+
 local test_socket = lt.test "socket"
 
 local TestUnixSock = 'test.unixsock'
@@ -138,6 +182,7 @@ function test_socket:test_pair()
     local server, client = assert(socket.pair())
     lt.assertIsUserdata(server)
     lt.assertIsUserdata(client)
+    syncEcho(server, client, "ok")
     client:close()
     server:close()
 end
@@ -223,51 +268,11 @@ local function createUnixEchoTest(name, f)
     lt.assertEquals(file_exists(TestUnixSock), false)
 end
 
-local function syncSend(fd, data)
-    while true do
-        local _, wr = socket.select(nil, {fd})
-        if not wr or wr[1] ~= fd then
-            break
-        end
-        local n = fd:send(data)
-        if not n then
-            return n, data
-        else
-            data = data:sub(n + 1)
-            if data == '' then
-                return true
-            end
-        end
-    end
-end
-
-local function syncRecv(fd, n)
-    local res = ''
-    while true do
-        local rd = socket.select({fd}, nil)
-        if not rd or rd[1] ~= fd then
-            break
-        end
-        local data = fd:recv(n)
-        if data == nil then
-            return nil, n
-        elseif data == false then
-        else
-            n = n - #data
-            res = res .. data
-            if n <= 0 then
-                return res
-            end
-        end
-    end
-end
-
 local function testEcho1()
 end
 
 local function testEcho2(session)
-    lt.assertEquals(syncSend(session, "ok"), true)
-    lt.assertEquals(syncRecv(session, 2), "ok")
+    syncEcho(session, session, "ok")
 
     lt.assertEquals(syncSend(session, "ok(1)"), true)
     lt.assertEquals(syncSend(session, "ok(2)"), true)
@@ -287,8 +292,7 @@ local function testEcho3(session)
         t[#t+1] = tostring(math.random(1, 100000))
     end
     local s = table.concat(t, ",")
-    lt.assertEquals(syncSend(session, s), true)
-    lt.assertEquals(syncRecv(session, #s), s)
+    syncEcho(session, session, s)
 end
 
 function test_socket:test_tcp_echo_1()
