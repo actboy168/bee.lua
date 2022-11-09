@@ -66,6 +66,8 @@ namespace bee::lua_thread {
         binary_semaphore sem = binary_semaphore(0);
     };
 
+    using boxchannel = std::shared_ptr<channel>;
+
     class channelmgr {
     public:
         channelmgr() {
@@ -92,7 +94,7 @@ namespace bee::lua_thread {
                 channels.clear();
             }
         }
-        std::shared_ptr<channel> query(const std::string& name) {
+        boxchannel query(const std::string& name) {
             std::unique_lock<spinlock> lk(mutex);
             auto                       it = channels.find(name);
             if (it != channels.end()) {
@@ -102,11 +104,10 @@ namespace bee::lua_thread {
         }
 
     private:
-        std::map<std::string, std::shared_ptr<channel>> channels;
+        std::map<std::string, boxchannel> channels;
         spinlock                                        mutex;
     };
 
-    using boxchannel = std::shared_ptr<channel>;
 
     static channelmgr       g_channel;
     static std::atomic<int> g_thread_id = -1;
@@ -173,8 +174,8 @@ namespace bee::lua_thread {
     }
 
     static int lchannel(lua_State* L) {
-        std::string              name = checkstring(L, 1);
-        std::shared_ptr<channel> c = g_channel.query(name);
+        std::string name = checkstring(L, 1);
+        boxchannel c = g_channel.query(name);
         if (!c) {
             return luaL_error(L, "Can't query channel '%s'", name.c_str());
         }
@@ -261,7 +262,7 @@ namespace bee::lua_thread {
         lua_pushcfunction(L, thread_luamain);
         lua_pushlightuserdata(L, ud);
         if (lua_pcall(L, 1, 0, 1) != LUA_OK) {
-            std::shared_ptr<channel> errlog = g_channel.query("errlog");
+            boxchannel errlog = g_channel.query("errlog");
             if (errlog) {
                 size_t      sz;
                 const char* str = lua_tolstring(L, -1, &sz);
