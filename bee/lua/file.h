@@ -15,6 +15,12 @@ namespace bee::lua {
 #define l_unlockfile(f)		((void)0)
 #endif
 
+#define luabuf_addchar(B,c) \
+  ((void)((B)->n < (B)->size || luaL_prepbuffsize((B), 1)), \
+   ((B)->b[(B)->n++] = (c)))
+#define luabuf_addsize(B,s)	((B)->n += (s))
+#define luabuf_buffsub(B,s)	((B)->n -= (s))
+
     inline luaL_Stream* tolstream(lua_State* L) {
         return (luaL_Stream*)getObject(L, 1, "file");
     }
@@ -39,9 +45,9 @@ namespace bee::lua {
         luaL_Buffer b;
         luaL_buffinit(L, &b);
         do {
-            char *p = luaL_prepbuffer(&b);
+            char *p = luaL_prepbuffsize(&b, LUAL_BUFFERSIZE);
             nr = fread(p, sizeof(char), LUAL_BUFFERSIZE, f);
-            luaL_addsize(&b, nr);
+            luabuf_addsize(&b, nr);
         } while (nr == LUAL_BUFFERSIZE);
         luaL_pushresult(&b);
     }
@@ -52,7 +58,7 @@ namespace bee::lua {
         luaL_buffinit(L, &b);
         p = luaL_prepbuffsize(&b, n);
         nr = fread(p, sizeof(char), n, f);
-        luaL_addsize(&b, nr);
+        luabuf_addsize(&b, nr);
         luaL_pushresult(&b);
         return (nr > 0);
     }
@@ -61,16 +67,16 @@ namespace bee::lua {
         int c;
         luaL_buffinit(L, &b);
         do {
-            char *buff = luaL_prepbuffer(&b);
+            char *buff = luaL_prepbuffsize(&b, LUAL_BUFFERSIZE);
             int i = 0;
             l_lockfile(f);
             while (i < LUAL_BUFFERSIZE && (c = l_getc(f)) != EOF && c != '\n')
             buff[i++] = (char)c;
             l_unlockfile(f);
-            luaL_addsize(&b, i);
+            luabuf_addsize(&b, i);
         } while (c != EOF && c != '\n');
         if (!chop && c == '\n')
-            luaL_addchar(&b, (char)c);
+            luabuf_addchar(&b, (char)c);
         luaL_pushresult(&b);
         return (c == '\n' || lua_rawlen(L, -1) > 0);
     }
@@ -95,7 +101,7 @@ namespace bee::lua {
             return luaL_fileresult(L, 0, NULL);
         if (!success) {
             lua_pop(L, 1);
-            luaL_pushfail(L);
+            lua_pushnil(L);
         }
         return 1;
     }
@@ -129,7 +135,7 @@ namespace bee::lua {
             return luaL_fileresult(L, 0, NULL);
         if (!success) {
             lua_pop(L, 1);
-            luaL_pushfail(L);
+            lua_pushnil(L);
         }
         return 1;
     }
@@ -229,7 +235,7 @@ namespace bee::lua {
                 {NULL, NULL}
             };
             luaL_setfuncs(L, metameth, 0);
-            luaL_newlibtable(L, meth);
+            lua_createtable(L, 0, sizeof(meth)/sizeof(meth[0]) - 1);
             luaL_setfuncs(L, meth, 0);
             lua_setfield(L, -2, "__index"); 
         }
