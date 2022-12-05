@@ -9,7 +9,7 @@ namespace bee::filewatch {
     class task : public OVERLAPPED {
         static const size_t kBufSize = 16 * 1024;
     public:
-        task(watch* watch, taskid id);
+        task(watch* watch);
         ~task();
 
         enum class result {
@@ -22,21 +22,18 @@ namespace bee::filewatch {
         bool   open(const fs::path& path);
         bool   start();
         void   cancel();
-        taskid getid();
         result try_read();
         const fs::path& path() const;
         const uint8_t* data() const;
 
     private:
-        taskid                        m_id;
         fs::path                      m_path;
         HANDLE                        m_directory;
         std::array<uint8_t, kBufSize> m_buffer;
     };
 
-    task::task(watch* watch, taskid id)
-        : m_id(id)
-        , m_path()
+    task::task(watch* watch)
+        : m_path()
         , m_directory(INVALID_HANDLE_VALUE)
         , m_buffer()
     {
@@ -72,10 +69,6 @@ namespace bee::filewatch {
             ::CloseHandle(m_directory);
             m_directory = INVALID_HANDLE_VALUE;
         }
-    }
-
-    taskid task::task::getid() {
-        return m_id;
     }
 
     bool task::start() {
@@ -138,7 +131,6 @@ namespace bee::filewatch {
 
     watch::watch()
         : m_notify()
-        , m_gentask(0)
         , m_tasks()
     { }
 
@@ -151,28 +143,18 @@ namespace bee::filewatch {
             return;
         }
         for (auto& it : m_tasks) {
-            it.second->cancel();
+            it->cancel();
         }
         m_tasks.clear();
     }
 
-    taskid watch::add(const fs::path& path) {
-        taskid id = ++m_gentask;
-        auto t = std::make_unique<task>(this, id);
+    void watch::add(const fs::path& path) {
+        auto t = std::make_unique<task>(this);
         if (t->open(path)) {
             if (t->start()) {
-                m_tasks.emplace(std::make_pair(id, std::move(t)));
+                m_tasks.emplace(std::move(t));
             }
         }
-        return id;
-    }
-
-    bool watch::remove(taskid id) {
-        auto it = m_tasks.find(id);
-        if (it != m_tasks.end()) {
-            it->second->cancel();
-        }
-        return true;
     }
 
     bool watch::event_update(task& task) {
@@ -215,7 +197,7 @@ namespace bee::filewatch {
 
     void watch::update() {
         for (auto iter = m_tasks.begin(); iter != m_tasks.end();) {
-            if (event_update(*iter->second)) {
+            if (event_update(**iter)) {
                 ++iter;
             }
             else {

@@ -2,16 +2,6 @@
 #include <bee/utility/unreachable.h>
 
 namespace bee::filewatch {
-    class task : public fs::path {
-    public:
-        task(fs::path && s)
-            : fs::path(std::move(s))
-        {}
-        task(fs::path const& s)
-            : fs::path(s)
-        {}
-    };
-
     static void event_cb(ConstFSEventStreamRef streamRef,
         void* info,
         size_t numEvents,
@@ -27,8 +17,7 @@ namespace bee::filewatch {
 
     watch::watch()
         : m_notify()
-        , m_gentask(0)
-        , m_tasks()
+        , m_paths()
         , m_stream(NULL)
     { }
     watch::~watch() {
@@ -36,7 +25,7 @@ namespace bee::filewatch {
     }
     void watch::stop() {
         destroy_stream();
-        m_tasks.clear();
+        m_paths.clear();
     }
 
     bool watch::create_stream(CFArrayRef cf_paths) {
@@ -77,29 +66,20 @@ namespace bee::filewatch {
         m_stream = NULL;
     }
 
-    taskid watch::add(const fs::path& path) {
-        taskid id = ++m_gentask;
-        auto t = std::make_unique<task>(path);
-        m_tasks.emplace(std::make_pair(id, std::move(t)));
+    void watch::add(const fs::path& path) {
+        m_paths.emplace(path);
         update_stream();
-        return id;
-    }
-
-    bool watch::remove(taskid id) {
-        m_tasks.erase(id);
-        update_stream();
-        return true;
     }
 
     void watch::update_stream() {
         destroy_stream();
-        if (m_tasks.empty()) {
+        if (m_paths.empty()) {
             return;
         }
-        std::unique_ptr<CFStringRef[]> paths(new CFStringRef[m_tasks.size()]);
+        std::unique_ptr<CFStringRef[]> paths(new CFStringRef[m_paths.size()]);
         size_t i = 0;
-        for (auto& [id, t] : m_tasks) {
-            paths[i] = CFStringCreateWithCString(NULL, t->c_str(), kCFStringEncodingUTF8);
+        for (auto& path : m_paths) {
+            paths[i] = CFStringCreateWithCString(NULL, path.c_str(), kCFStringEncodingUTF8);
             if (paths[i] == NULL) {
                 while (i != 0) {
                     CFRelease(paths[--i]);
@@ -108,7 +88,7 @@ namespace bee::filewatch {
             }
             i++;
         }
-        CFArrayRef cf_paths = CFArrayCreate(NULL, (const void **)&paths[0], m_tasks.size(), NULL);
+        CFArrayRef cf_paths = CFArrayCreate(NULL, (const void **)&paths[0], m_paths.size(), NULL);
         if (create_stream(cf_paths)) {
             return;
         }

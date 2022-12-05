@@ -1,15 +1,17 @@
 #pragma once
 
-#include <map>
-#include <memory>
 #include <optional>
 #include <queue>
 #include <bee/filesystem.h>
 
 #if defined(_WIN32)
+#include <memory>
+#include <set>
 #elif defined(__APPLE__)
+#include <set>
 #   include <CoreServices/CoreServices.h>
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+#include <map>
 #else
 #   error unsupport platform
 #endif
@@ -17,7 +19,6 @@
 namespace bee::filewatch {
     class task;
 
-    typedef int taskid;
     struct notify {
         enum class flag {
             modify,
@@ -37,8 +38,7 @@ namespace bee::filewatch {
         ~watch();
 
         void   stop();
-        taskid add(const fs::path& path);
-        bool   remove(taskid id);
+        void   add(const fs::path& path);
         void   update();
         std::optional<notify> select();
 
@@ -54,22 +54,18 @@ namespace bee::filewatch {
     private:
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
         void   event_update(void* event);
-        void   add_dir(const fs::path& path);
-        void   del_dir(const fs::path& path);
-        void   del_desc(int desc);
 #endif
 
     private:
         std::queue<notify>                      m_notify;
-        taskid                                  m_gentask;
-        std::map<taskid, std::unique_ptr<task>> m_tasks;
 #if defined(_WIN32)
+        std::set<std::unique_ptr<task>>         m_tasks;
 #elif defined(__APPLE__)
+        std::set<fs::path>                      m_paths;
         FSEventStreamRef                        m_stream;
         dispatch_queue_t                        m_fsevent_queue;
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
         std::map<int, fs::path>                 m_fd_path;
-        std::map<fs::path, int>                 m_path_fd;
         int                                     m_inotify_fd;
 #endif
     };

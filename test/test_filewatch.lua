@@ -1,5 +1,5 @@
 local lt = require 'ltest'
-local fw = require 'bee.filewatch'
+local filewatch = require 'bee.filewatch'
 local fs = require 'bee.filesystem'
 local thread = require 'bee.thread'
 
@@ -15,15 +15,11 @@ end
 
 local function test(f)
     local root = fs.absolute('./temp/'):lexically_normal()
-
     pcall(fs.remove_all, root)
     fs.create_directories(root)
-    local id = fw.add(root:string())
-    lt.assertIsNumber(id)
-
-    f(root)
-
-    fw.remove(id)
+    local fw = filewatch.create()
+    fw:add(root:string())
+    f(fw, root)
     pcall(fs.remove_all, root)
 end
 
@@ -33,7 +29,7 @@ function test_fw:test_1()
 end
 
 function test_fw:test_2()
-    test(function(root)
+    test(function(fw, root)
         fs.create_directories(root / 'test1')
         create_file(root / 'test1.txt')
         fs.rename(root / 'test1.txt', root / 'test2.txt')
@@ -42,7 +38,7 @@ function test_fw:test_2()
         local list = {}
         local n = 100
         while true do
-            local w, v = fw.select()
+            local w, v = fw:select()
             if w then
                 n = 100
                 if type(v) == 'userdata' or type(v) == 'table' then

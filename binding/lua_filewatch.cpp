@@ -4,12 +4,12 @@
 #include <bee/utility/unreachable.h>
 
 namespace bee::lua_filewatch {
-    static filewatch::watch& to(lua_State* L) {
-        return *(filewatch::watch*)lua_touserdata(L, lua_upvalueindex(1));
+    static filewatch::watch& to(lua_State* L, int idx) {
+        return *(filewatch::watch*)getObject(L, idx, "filewatch");
     }
     static int add(lua_State* L) {
-        filewatch::watch& self = to(L);
-        auto path = lua::to_string(L, 1);
+        filewatch::watch& self = to(L, 1);
+        auto path = lua::to_string(L, 2);
         std::error_code ec;
         fs::path abspath = fs::absolute(path, ec);
         if (ec) {
@@ -17,19 +17,12 @@ namespace bee::lua_filewatch {
             lua_error(L);
             return 0;
         }
-        filewatch::taskid id = self.add(abspath.lexically_normal());
-        lua_pushinteger(L, id);
-        return 1;
-    }
-
-    static int remove(lua_State* L) {
-        filewatch::watch& self = to(L);
-        self.remove((filewatch::taskid)luaL_checkinteger(L, 1));
+        self.add(abspath.lexically_normal());
         return 0;
     }
 
     static int select(lua_State* L) {
-        filewatch::watch& self = to(L);
+        filewatch::watch& self = to(L, 1);
         self.update();
         auto notify = self.select();
         if (!notify) {
@@ -50,34 +43,43 @@ namespace bee::lua_filewatch {
     }
 
     static int toclose(lua_State* L) {
-        filewatch::watch& self = to(L);
+        filewatch::watch& self = to(L, 1);
         self.stop();
         return 0;
     }
 
     static int gc(lua_State* L) {
-        filewatch::watch& self = to(L);
+        filewatch::watch& self = to(L, 1);
         self.~watch();
         return 0;
     }
 
-    static int luaopen(lua_State* L) {
-        filewatch::watch* fw = (filewatch::watch*)lua_newuserdatauv(L, sizeof(filewatch::watch), 0);
-        new (fw) filewatch::watch;
-
-        static luaL_Reg lib[] = {
-            {"add", add},
-            {"remove", remove},
-            {"select", select},
-            {"__close", toclose},
-            {"__gc", gc},
-            {NULL, NULL}};
-        lua_newtable(L);
-        lua_pushvalue(L, -2);
-        luaL_setfuncs(L, lib, 1);
-        lua_pushvalue(L, -1);
-        lua_setfield(L, -2, "__index");
+    static int create(lua_State* L) {
+        void* storage = lua_newuserdatauv(L, sizeof(filewatch::watch), 0);
+        if (newObject(L, "filewatch")) {
+            static luaL_Reg mt[] = {
+                {"add", add},
+                {"select", select},
+                {"__close", toclose},
+                {"__gc", gc},
+                {NULL, NULL}
+            };
+            luaL_setfuncs(L, mt, 0);
+            lua_pushvalue(L, -1);
+            lua_setfield(L, -2, "__index");
+        }
         lua_setmetatable(L, -2);
+        new (storage) filewatch::watch;
+        return 1;
+    }
+
+    static int luaopen(lua_State* L) {
+        static luaL_Reg lib[] = {
+            {"create", create},
+            {NULL, NULL}
+        };
+        lua_newtable(L);
+        luaL_setfuncs(L, lib, 0);
         return 1;
     }
 }
