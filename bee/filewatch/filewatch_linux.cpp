@@ -35,9 +35,17 @@ namespace bee::filewatch {
             }
         }
     }
-    void watch::del_dir(const fs::path& path)  {
-        int desc = m_path_fd[path];
+    void watch::del_dir(const fs::path& path) {
+        auto it = m_path_fd.find(path);
+        if (it == m_path_fd.end()) {
+            return;
+        }
+        int desc = it->second;
         inotify_rm_watch(m_inotify_fd, desc);
+        //del_desc(desc);
+        m_path_fd.erase(it);
+        m_fd_path.erase(desc);
+
         std::error_code ec;
         fs::directory_iterator iter {path, fs::directory_options::skip_permission_denied, ec };
         fs::directory_iterator end {};
@@ -147,7 +155,6 @@ namespace bee::filewatch {
         }
         if (event->mask & IN_MOVE_SELF) {
             del_dir(filename);
-            del_desc(event->wd);
         }
         if ((event->mask & IN_ISDIR) && (event->mask & IN_CREATE)) {
             add_dir(filename);
