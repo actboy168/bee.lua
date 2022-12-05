@@ -56,7 +56,7 @@ namespace bee::filewatch {
         void   event_update(void* event);
         void   add_dir(const fs::path& path);
         void   del_dir(const fs::path& path);
-        void   del_dir(int desc);
+        void   del_desc(int desc);
 #endif
 
     private:

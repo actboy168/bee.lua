@@ -49,7 +49,7 @@ namespace bee::filewatch {
             }
         }
     }
-    void watch::del_dir(int desc)  {
+    void watch::del_desc(int desc)  {
         m_path_fd.erase(m_fd_path[desc]);
         m_fd_path.erase(desc);
     }
@@ -143,10 +143,11 @@ namespace bee::filewatch {
         }
 
         if (event->mask & (IN_IGNORED | IN_DELETE_SELF)) {
-            del_dir(event->wd);
+            del_desc(event->wd);
         }
         if (event->mask & IN_MOVE_SELF) {
             del_dir(filename);
+            del_desc(event->wd);
         }
         if ((event->mask & IN_ISDIR) && (event->mask & IN_CREATE)) {
             add_dir(filename);
