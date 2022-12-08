@@ -957,34 +957,3 @@ function test_fs:test_hard_link()
     lt.assertEquals(read_file(target), content)
     test_remove(target, link)
 end
-
-function test_fs:test_fullpath()
-    if isBSD() then
-        return
-    end
-    local file = "temp.txt"
-    do
-        fs.remove_all(file)
-        lt.assertError(fs.fullpath, file)
-        create_file(file)
-        lt.assertEquals(fs.fullpath(file), fs.absolute(file))
-    end
-
-    if supportedSymlink() then
-        local link = "temp.symlink"
-        fs.remove_all(link)
-        fs.create_symlink(file, link)
-        lt.assertEquals(fs.fullpath(link), fs.absolute(link))
-        fs.remove_all(link)
-    end
-
-    if supportedHardlink() then
-        local link = "temp.hardlink"
-        fs.remove_all(link)
-        fs.create_hard_link(file, link)
-        lt.assertEquals(fs.fullpath(link), fs.absolute(link))
-        fs.remove_all(link)
-    end
-
-    fs.remove_all(file)
-end
