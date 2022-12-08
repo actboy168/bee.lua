@@ -23,6 +23,7 @@ namespace bee::filewatch {
 
     void   watch::stop() {
         for (auto& [desc, _] : m_fd_path) {
+            (void)_;
             inotify_rm_watch(m_inotify_fd, desc);
         }
         m_fd_path.clear();
