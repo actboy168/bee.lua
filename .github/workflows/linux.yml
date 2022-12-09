@@ -6,12 +6,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2019, windows-2022, macos-11, macos-12, ubuntu-18.04, ubuntu-20.04, ubuntu-22.04]
+        os: [ ubuntu-18.04, ubuntu-20.04, ubuntu-22.04 ]
     steps:
     - uses: actions/checkout@v3
       with:
         submodules : recursive
     - uses: actboy168/setup-luamake@master
     - run: luamake
-    - if: runner.os == 'Linux'
-      run: luamake lua test/glibc-version.lua
+    - run: luamake lua test/glibc-version.lua
