@@ -1,16 +1,28 @@
-name: build
+name: macos
 on: push
 jobs:
-  compile:
+  compile_x86_64:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ macos-11, macos-12 ]
-        arch: [ "x86_64", "arm64" ]
     steps:
     - uses: actions/checkout@v3
       with:
         submodules : recursive
     - uses: actboy168/setup-luamake@master
-    - run: luamake -arch ${{ matrix.arch }}
+    - run: luamake -arch x86_64
+  compile_arm64:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-11, macos-12 ]
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules : recursive
+    - uses: actboy168/setup-luamake@master
+    # see actions/runner-images#2187
+    - run: luamake -arch arm64 -notest

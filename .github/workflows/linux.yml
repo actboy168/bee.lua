@@ -1,4 +1,4 @@
-name: build
+name: linux
 on: push
 jobs:
   compile:
