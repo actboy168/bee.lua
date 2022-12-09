@@ -1,0 +1,44 @@
+on: push
+jobs:
+  windows-x86:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules : recursive
+    - uses: actboy168/setup-luamake@master
+    - run: luamake -arch x86
+  windows-x64:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules : recursive
+    - uses: actboy168/setup-luamake@master
+    - run: luamake -arch x86_64
+  macos-x64:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules : recursive
+    - uses: actboy168/setup-luamake@master
+    - run: luamake -arch x86_64
+  macos-arm64:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules : recursive
+    - uses: actboy168/setup-luamake@master
+    # see actions/runner-images#2187
+    - run: luamake -arch arm64 -notest
+  linux-x64:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules : recursive
+    - uses: actboy168/setup-luamake@master
+    - run: luamake
+    - run: luamake lua test/glibc-version.lua
