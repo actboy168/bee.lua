@@ -17,6 +17,29 @@ jobs:
         submodules : recursive
     - uses: actboy168/setup-luamake@master
     - run: luamake -arch x86_64
+  windows-mingw:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        path: luamake
+        repository: actboy168/luamake
+        submodules : recursive
+    - uses: actions/checkout@v3
+      with:
+        path: bee.lua
+    - uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-ninja
+    - shell: msys2 {0}
+      working-directory: luamake
+      run: ./compile/build.sh notest
+    - shell: msys2 {0}
+      working-directory: bee.lua
+      run: ./../luamake/luamake
   macos-x64:
     runs-on: macos-latest
     steps:
@@ -65,7 +88,7 @@ jobs:
             apt-get install -q -y make gcc g++ ninja-build
           run: |
             cd /actboy168/luamake
-            ./compile/build.sh
+            ./compile/build.sh notest
             cd /actboy168/bee.lua
             /actboy168/luamake/luamake
   linux-arm:
@@ -90,6 +113,6 @@ jobs:
             apt-get install -q -y make gcc g++ ninja-build
           run: |
             cd /actboy168/luamake
-            ./compile/build.sh
+            ./compile/build.sh notest
             cd /actboy168/bee.lua
             /actboy168/luamake/luamake
