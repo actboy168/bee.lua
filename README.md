@@ -2,7 +2,7 @@
 
 Lua runtime and toolset
 
-[![Build Status](https://github.com/actboy168/bee.lua/workflows/build/badge.svg)](https://github.com/actboy168/bee.lua/actions?workflow=build)
+[![test](https://github.com/actboy168/bee.lua/actions/workflows/test.yml/badge.svg)](https://github.com/actboy168/bee.lua/actions/workflows/test.yml)
 
 ## Build
 
