@@ -85,7 +85,7 @@ jobs:
             --volume "${PWD}:/actboy168"
           install: |
             apt-get update -q -y
-            apt-get install -q -y make gcc g++ ninja-build
+            apt-get install -q -y gcc g++ ninja-build
           run: |
             cd /actboy168/luamake
             ./compile/build.sh notest
@@ -110,7 +110,7 @@ jobs:
             --volume "${PWD}:/actboy168"
           install: |
             apt-get update -q -y
-            apt-get install -q -y make gcc g++ ninja-build
+            apt-get install -q -y gcc g++ ninja-build
           run: |
             cd /actboy168/luamake
             ./compile/build.sh notest
