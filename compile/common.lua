@@ -3,7 +3,7 @@ local lm = require 'luamake'
 lm:lua_source "source_bee" {
     includes = "3rd/lua-seri",
     sources = "3rd/lua-seri/*.c",
-    windows = {
+    msvc = {
         flags = "/wd4244"
     }
 }
