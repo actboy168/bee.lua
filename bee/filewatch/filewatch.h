@@ -39,6 +39,7 @@ namespace bee::filewatch {
 
         void   stop();
         void   add(const fs::path& path);
+        bool   recursive(bool enable);
         void   update();
         std::optional<notify> select();
 
@@ -58,6 +59,7 @@ namespace bee::filewatch {
 
     private:
         std::queue<notify>                      m_notify;
+        bool                                    m_recursive = true;
 #if defined(_WIN32)
         std::set<std::unique_ptr<task>>         m_tasks;
 #elif defined(__APPLE__)

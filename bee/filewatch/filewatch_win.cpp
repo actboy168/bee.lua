@@ -20,7 +20,7 @@ namespace bee::filewatch {
         };
 
         bool   open(const fs::path& path);
-        bool   start();
+        bool   start(bool recursive);
         void   cancel();
         result try_read();
         const fs::path& path() const;
@@ -71,7 +71,7 @@ namespace bee::filewatch {
         }
     }
 
-    bool task::start() {
+    bool task::start(bool recursive) {
         if (m_directory == INVALID_HANDLE_VALUE) {
             return false;
         }
@@ -82,7 +82,7 @@ namespace bee::filewatch {
             m_directory,
             &m_buffer[0],
             static_cast<DWORD>(m_buffer.size()),
-            TRUE,
+            recursive,
             FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME |
             FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_CREATION,
             NULL,
@@ -151,10 +151,15 @@ namespace bee::filewatch {
     void watch::add(const fs::path& path) {
         auto t = std::make_unique<task>(this);
         if (t->open(path)) {
-            if (t->start()) {
+            if (t->start(m_recursive)) {
                 m_tasks.emplace(std::move(t));
             }
         }
+    }
+
+    bool watch::recursive(bool enable) {
+        m_recursive = enable;
+        return true;
     }
 
     bool watch::event_update(task& task) {
@@ -165,7 +170,7 @@ namespace bee::filewatch {
             task.cancel();
             return false;
         case task::result::zero:
-            return task.start();
+            return task.start(m_recursive);
         case task::result::success:
             break;
         }
@@ -192,7 +197,7 @@ namespace bee::filewatch {
             }
             data += fni.NextEntryOffset;
         }
-        return task.start();
+        return task.start(m_recursive);
     }
 
     void watch::update() {

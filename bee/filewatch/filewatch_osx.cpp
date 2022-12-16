@@ -71,6 +71,13 @@ namespace bee::filewatch {
         update_stream();
     }
 
+    bool watch::recursive(bool enable) {
+        if (!enable) {
+            return false;
+        }
+        return true;
+    }
+
     void watch::update_stream() {
         destroy_stream();
         if (m_paths.empty()) {

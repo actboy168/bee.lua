@@ -38,6 +38,9 @@ namespace bee::filewatch {
         if (desc != -1) {
             m_fd_path.emplace(std::make_pair(desc, path));
         }
+        if (!m_recursive) {
+            return;
+        }
         std::error_code ec;
         fs::directory_iterator iter {path, fs::directory_options::skip_permission_denied, ec };
         fs::directory_iterator end {};
@@ -48,6 +51,11 @@ namespace bee::filewatch {
                 add(p);
             }
         }
+    }
+
+    bool watch::recursive(bool enable) {
+        m_recursive = enable;
+        return true;
     }
 
     void watch::update() {
@@ -96,7 +104,7 @@ namespace bee::filewatch {
             inotify_rm_watch(m_inotify_fd, event->wd);
             m_fd_path.erase(event->wd);
         }
-        if ((event->mask & IN_ISDIR) && (event->mask & IN_CREATE)) {
+        if (m_recursive && (event->mask & IN_ISDIR) && (event->mask & IN_CREATE)) {
             add(filename);
         }
     }

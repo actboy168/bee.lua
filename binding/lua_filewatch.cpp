@@ -7,6 +7,7 @@ namespace bee::lua_filewatch {
     static filewatch::watch& to(lua_State* L, int idx) {
         return *(filewatch::watch*)getObject(L, idx, "filewatch");
     }
+
     static int add(lua_State* L) {
         filewatch::watch& self = to(L, 1);
         auto path = lua::to_string(L, 2);
@@ -19,6 +20,17 @@ namespace bee::lua_filewatch {
         }
         self.add(abspath.lexically_normal());
         return 0;
+    }
+
+    static int recursive(lua_State* L) {
+        filewatch::watch& self = to(L, 1);
+        bool enable = lua_toboolean(L, 2);
+        if (!self.recursive(enable)) {
+            lua_pushboolean(L, 0);
+            return 0;
+        }
+        lua_pushboolean(L, 1);
+        return 1;
     }
 
     static int select(lua_State* L) {
@@ -59,6 +71,7 @@ namespace bee::lua_filewatch {
         if (newObject(L, "filewatch")) {
             static luaL_Reg mt[] = {
                 {"add", add},
+                {"recursive", recursive},
                 {"select", select},
                 {"__close", toclose},
                 {"__gc", gc},
