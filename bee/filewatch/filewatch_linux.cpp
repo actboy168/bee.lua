@@ -50,16 +50,8 @@ namespace bee::filewatch {
         fd_set set;
         FD_ZERO(&set);
         FD_SET(m_inotify_fd, &set);
-        int msec = 1;
-        struct timeval timeout, *timeop = &timeout;
-        if (msec < 0) {
-            timeop = NULL;
-        }
-        else {
-            timeout.tv_sec = (long)msec / 1000;
-            timeout.tv_usec = (long)(msec % 1000 * 1000);
-        }
-        int rv = ::select(m_inotify_fd + 1, &set, nullptr, nullptr, timeop);
+        struct timeval timeout = {0, 0};
+        int rv = ::select(m_inotify_fd + 1, &set, nullptr, nullptr, &timeout);
         if (rv == 0 || rv == -1) {
             return;
         }
