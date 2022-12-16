@@ -18,15 +18,19 @@ namespace bee::filewatch {
 
     watch::~watch() {
         stop();
-        close(m_inotify_fd);
     }
 
     void   watch::stop() {
+        if (m_inotify_fd == -1) {
+            return;
+        }
         for (auto& [desc, _] : m_fd_path) {
             (void)_;
             inotify_rm_watch(m_inotify_fd, desc);
         }
         m_fd_path.clear();
+        close(m_inotify_fd);
+        m_inotify_fd = -1;
     }
 
     void watch::add(const fs::path& path) {
