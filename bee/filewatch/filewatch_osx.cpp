@@ -72,6 +72,7 @@ namespace bee::filewatch {
     }
 
     bool watch::recursive(bool enable) {
+        (void)m_recursive;
         if (!enable) {
             return false;
         }
