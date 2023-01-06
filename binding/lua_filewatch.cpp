@@ -50,7 +50,7 @@ namespace bee::lua_filewatch {
         default:
             unreachable();
         }
-        lua::push_string(L, notify->path);
+        lua_pushlstring(L, notify->path.data(), notify->path.size());
         return 2;
     }
 
