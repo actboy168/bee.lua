@@ -2,7 +2,7 @@
 
 #include <optional>
 #include <queue>
-#include <bee/filesystem.h>
+#include <string>
 
 #if defined(_WIN32)
 #include <memory>
@@ -34,11 +34,16 @@ namespace bee::filewatch {
     
     class watch {
     public:
+#if defined(_WIN32)
+        using string_type = std::wstring;
+#else
+        using string_type = std::string;
+#endif
         watch();
         ~watch();
 
         void   stop();
-        void   add(const fs::path& path);
+        void   add(const string_type& path);
         bool   recursive(bool enable);
         void   update();
         std::optional<notify> select();
@@ -67,7 +72,7 @@ namespace bee::filewatch {
         FSEventStreamRef                        m_stream;
         dispatch_queue_t                        m_fsevent_queue;
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-        std::map<int, fs::path>                 m_fd_path;
+        std::map<int, std::string>              m_fd_path;
         int                                     m_inotify_fd;
 #endif
     };

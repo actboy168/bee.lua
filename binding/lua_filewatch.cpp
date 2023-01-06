@@ -2,6 +2,7 @@
 #include <bee/filewatch.h>
 #include <bee/lua/binding.h>
 #include <bee/utility/unreachable.h>
+#include <bee/filesystem.h>
 
 namespace bee::lua_filewatch {
     static filewatch::watch& to(lua_State* L, int idx) {
@@ -18,7 +19,7 @@ namespace bee::lua_filewatch {
             lua_error(L);
             return 0;
         }
-        self.add(abspath.lexically_normal());
+        self.add(abspath.lexically_normal().string<filewatch::watch::string_type::value_type>());
         return 0;
     }
 

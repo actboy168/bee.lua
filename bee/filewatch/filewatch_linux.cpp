@@ -1,6 +1,7 @@
 #include <bee/filewatch/filewatch.h>
 #include <bee/error.h>
 #include <bee/utility/unreachable.h>
+#include <bee/filesystem.h>
 #include <assert.h>
 #include <functional>
 #include <unistd.h>
@@ -33,7 +34,7 @@ namespace bee::filewatch {
         m_inotify_fd = -1;
     }
 
-    void watch::add(const fs::path& path) {
+    void watch::add(const string_type& path) {
         int desc = inotify_add_watch(m_inotify_fd, path.c_str(), IN_ALL_EVENTS);
         if (desc != -1) {
             m_fd_path.emplace(std::make_pair(desc, path));
@@ -88,13 +89,14 @@ namespace bee::filewatch {
 
         auto filename = m_fd_path[event->wd];
         if (event->len > 1) {
-            filename /= std::string(event->name);
+            filename += "/";
+            filename += std::string(event->name);
         }
         if (event->mask & (IN_CREATE | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO)) {
-            m_notify.emplace(notify::flag::rename, filename.generic_u8string());
+            m_notify.emplace(notify::flag::rename, filename);
         }
         else if (event->mask & (IN_MOVE_SELF | IN_ATTRIB | IN_CLOSE_WRITE | IN_MODIFY)) {
-            m_notify.emplace(notify::flag::modify, filename.generic_u8string());
+            m_notify.emplace(notify::flag::modify, filename);
         }
 
         if (event->mask & (IN_IGNORED | IN_DELETE_SELF)) {

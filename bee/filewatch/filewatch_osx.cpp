@@ -66,8 +66,8 @@ namespace bee::filewatch {
         m_stream = NULL;
     }
 
-    void watch::add(const fs::path& path) {
-        m_paths.emplace(path.generic_u8string());
+    void watch::add(const string_type& path) {
+        m_paths.emplace(path);
         update_stream();
     }
 

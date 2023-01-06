@@ -1,6 +1,7 @@
 #include <bee/filewatch/filewatch.h>
 #include <bee/error.h>
 #include <bee/utility/unreachable.h>
+#include <bee/utility/unicode_win.h>
 #include <array>
 #include <assert.h>
 #include <Windows.h>
@@ -19,15 +20,15 @@ namespace bee::filewatch {
             zero,
         };
 
-        bool   open(const fs::path& path);
+        bool   open(const std::wstring& path);
         bool   start(bool recursive);
         void   cancel();
         result try_read();
-        const fs::path& path() const;
+        const std::wstring& path() const;
         const uint8_t* data() const;
 
     private:
-        fs::path                      m_path;
+        std::wstring                  m_path;
         HANDLE                        m_directory;
         std::array<uint8_t, kBufSize> m_buffer;
     };
@@ -45,7 +46,7 @@ namespace bee::filewatch {
         assert(m_directory == INVALID_HANDLE_VALUE);
     }
 
-    bool task::open(const fs::path& path) {
+    bool task::open(const std::wstring& path) {
         if (m_directory != INVALID_HANDLE_VALUE) {
             return true;
         }
@@ -121,7 +122,7 @@ namespace bee::filewatch {
         return result::success;
     }
 
-    const fs::path& task::path() const {
+    const std::wstring& task::path() const {
         return m_path;
     }
 
@@ -148,7 +149,7 @@ namespace bee::filewatch {
         m_tasks.clear();
     }
 
-    void watch::add(const fs::path& path) {
+    void watch::add(const string_type& path) {
         auto t = std::make_unique<task>(this);
         if (t->open(path)) {
             if (t->start(m_recursive)) {
@@ -178,18 +179,19 @@ namespace bee::filewatch {
         for (;;) {
             FILE_NOTIFY_INFORMATION& fni = (FILE_NOTIFY_INFORMATION&)*data;
             std::wstring path(fni.FileName, fni.FileNameLength / sizeof(wchar_t));
+            path = task.path() + L"/" + path;
             switch (fni.Action) {
             case FILE_ACTION_MODIFIED:
-                m_notify.emplace(notify::flag::modify, (task.path() / path).generic_u8string());
+                m_notify.emplace(notify::flag::modify, w2u(path));
                 break;
             case FILE_ACTION_ADDED:
             case FILE_ACTION_REMOVED:
             case FILE_ACTION_RENAMED_OLD_NAME:
             case FILE_ACTION_RENAMED_NEW_NAME:
-                m_notify.emplace(notify::flag::rename, (task.path() / path).generic_u8string());
+                m_notify.emplace(notify::flag::rename, w2u(path));
                 break;
             default:
-                assert(false);
+                unreachable();
                 break;
             }
             if (!fni.NextEntryOffset) {
