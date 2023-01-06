@@ -24,9 +24,9 @@ namespace bee::filewatch {
             modify,
             rename,
         };
-        flag     flags;
-        fs::path path;
-        notify(flag const& flags, fs::path const& path)
+        flag        flags;
+        std::string path;
+        notify(flag const& flags, std::string const& path)
             : flags(flags)
             , path(path)
         { }
@@ -63,7 +63,7 @@ namespace bee::filewatch {
 #if defined(_WIN32)
         std::set<std::unique_ptr<task>>         m_tasks;
 #elif defined(__APPLE__)
-        std::set<fs::path>                      m_paths;
+        std::set<std::string>                   m_paths;
         FSEventStreamRef                        m_stream;
         dispatch_queue_t                        m_fsevent_queue;
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)

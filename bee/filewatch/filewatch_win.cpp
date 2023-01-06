@@ -180,13 +180,13 @@ namespace bee::filewatch {
             std::wstring path(fni.FileName, fni.FileNameLength / sizeof(wchar_t));
             switch (fni.Action) {
             case FILE_ACTION_MODIFIED:
-                m_notify.emplace(notify::flag::modify, task.path() / path);
+                m_notify.emplace(notify::flag::modify, (task.path() / path).generic_u8string());
                 break;
             case FILE_ACTION_ADDED:
             case FILE_ACTION_REMOVED:
             case FILE_ACTION_RENAMED_OLD_NAME:
             case FILE_ACTION_RENAMED_NEW_NAME:
-                m_notify.emplace(notify::flag::rename, task.path() / path);
+                m_notify.emplace(notify::flag::rename, (task.path() / path).generic_u8string());
                 break;
             default:
                 assert(false);

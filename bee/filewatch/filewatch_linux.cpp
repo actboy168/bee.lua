@@ -91,10 +91,10 @@ namespace bee::filewatch {
             filename /= std::string(event->name);
         }
         if (event->mask & (IN_CREATE | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO)) {
-            m_notify.emplace(notify::flag::rename, filename);
+            m_notify.emplace(notify::flag::rename, filename.generic_u8string());
         }
         else if (event->mask & (IN_MOVE_SELF | IN_ATTRIB | IN_CLOSE_WRITE | IN_MODIFY)) {
-            m_notify.emplace(notify::flag::modify, filename);
+            m_notify.emplace(notify::flag::modify, filename.generic_u8string());
         }
 
         if (event->mask & (IN_IGNORED | IN_DELETE_SELF)) {
