@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
   <Type Name="lua_State">
-    <DisplayString>[thread top=]{top-(ci->func+1)}</DisplayString>
+    <DisplayString>[thread top=]{top.p-(ci->func.p+1)}</DisplayString>
     <Expand>
-      <Item Name="[stack top]">top-(ci->func+1)</Item>
-      <Item Name="[call]" Condition="ci->func->val.tt_!=0">ci->func</Item>
+      <Item Name="[stack top]">top.p-(ci->func.p+1)</Item>
+      <Item Name="[call]" Condition="ci->func.p->val.tt_!=0">ci->func.p</Item>
       <Item Name="[callinfo]">"------------------------------------"</Item>
       <LinkedListItems>
         <HeadPointer>ci</HeadPointer>
@@ -14,9 +14,9 @@
     </Expand>
   </Type>
   <Type Name="CallInfo">
-    <DisplayString Condition="(func->val.tt_) == 0x46">{((char *)((GCUnion *)(func->val.value_.gc))->cl.l.p->source)+8+sizeof(double)*2}</DisplayString>
-    <DisplayString Condition="(func->val.tt_) == 0x16">{func->val.value_.f}</DisplayString>
-    <DisplayString Condition="(func->val.tt_) == 0x66">{((GCUnion *)(func->val.value_.gc))->cl.c.f}</DisplayString>
+    <DisplayString Condition="(func.p->val.tt_) == 0x46">{((char *)((GCUnion *)(func.p->val.value_.gc))->cl.l.p->source)+8+sizeof(double)*2}</DisplayString>
+    <DisplayString Condition="(func.p->val.tt_) == 0x16">{func.p->val.value_.f}</DisplayString>
+    <DisplayString Condition="(func.p->val.tt_) == 0x66">{((GCUnion *)(func.p->val.value_.gc))->cl.c.f}</DisplayString>
     <Expand>
       <ExpandedItem>func</ExpandedItem>
     </Expand>
