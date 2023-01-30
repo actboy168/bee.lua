@@ -14,6 +14,7 @@ end)()
 lm.builddir = ("build/%s"):format(plat)
 
 lm.warnings = "error"
+lm.rtti = "off"
 
 if lm.sanitize then
     lm.mode = "debug"
