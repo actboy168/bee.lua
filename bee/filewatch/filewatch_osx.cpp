@@ -72,10 +72,7 @@ namespace bee::filewatch {
     }
 
     bool watch::recursive(bool enable) {
-        (void)m_recursive;
-        if (!enable) {
-            return false;
-        }
+        m_recursive = enable;
         return true;
     }
 
@@ -108,12 +105,16 @@ namespace bee::filewatch {
 
     void watch::event_update(const char* paths[], const FSEventStreamEventFlags flags[], size_t n) {
         for (size_t i = 0; i < n; ++i) {
+            const char* path = paths[i];
+            if (!m_recursive && path[0] != '\0' && strchr(path + 1, '/') != NULL) {
+                continue;
+            }
             if (flags[i] & (
                 kFSEventStreamEventFlagItemCreated |
                 kFSEventStreamEventFlagItemRemoved |
                 kFSEventStreamEventFlagItemRenamed
             )) {
-                m_notify.emplace(notify::flag::rename, paths[i]);
+                m_notify.emplace(notify::flag::rename, path);
             }
             else if (flags[i] & (
                 kFSEventStreamEventFlagItemFinderInfoMod |
@@ -122,7 +123,7 @@ namespace bee::filewatch {
                 kFSEventStreamEventFlagItemChangeOwner |
                 kFSEventStreamEventFlagItemXattrMod
             )) {
-                m_notify.emplace(notify::flag::modify, paths[i]);
+                m_notify.emplace(notify::flag::modify, path);
             }
         }
     }
