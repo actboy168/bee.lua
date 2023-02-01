@@ -1627,10 +1627,14 @@ inline file_status status_ex(const path& p, std::error_code& ec, file_status* sl
         if (fs.type() == file_type::symlink) {
             result = ::stat(p.c_str(), &st);
             if (result == 0) {
-                if (sls) {
-                    *sls = fs;
-                }
                 fs = detail::file_status_from_st_mode(st.st_mode);
+            }
+            else {
+                ec = std::error_code(errno, std::system_category());
+                if (detail::is_not_found_error(ec)) {
+                    return file_status(file_type::not_found, perms::unknown);
+                }
+                return file_status(file_type::none);
             }
         }
         if (sz) {
