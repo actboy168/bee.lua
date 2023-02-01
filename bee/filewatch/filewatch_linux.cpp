@@ -5,8 +5,13 @@
 #include <assert.h>
 #include <functional>
 #include <unistd.h>
-#include <sys/select.h>
 #include <sys/inotify.h>
+
+#if defined(BEE_FILEWATCH_USE_SELECT)
+#include <sys/select.h>
+#else
+#include <poll.h>
+#endif
 
 namespace bee::filewatch {
     watch::watch()
@@ -66,6 +71,8 @@ namespace bee::filewatch {
         if (m_inotify_fd == -1) {
             return;
         }
+
+#if defined(BEE_FILEWATCH_USE_SELECT)
         fd_set set;
         FD_ZERO(&set);
         FD_SET(m_inotify_fd, &set);
@@ -74,6 +81,15 @@ namespace bee::filewatch {
         if (rv == 0 || rv == -1) {
             return;
         }
+#else
+        struct pollfd pfd_read;
+        pfd_read.fd = m_inotify_fd;
+        pfd_read.events = POLLIN;
+        if (poll(&pfd_read, 1, 0) != 1) {
+            return;
+        }
+#endif
+
         char buf[4096];
         ssize_t n = read(m_inotify_fd, buf, sizeof buf);
         if (n == 0 || n == -1) {
