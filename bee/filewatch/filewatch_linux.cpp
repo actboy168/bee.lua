@@ -79,8 +79,10 @@ namespace bee::filewatch {
         if (n == 0 || n == -1) {
             return;
         }
-        for (char *p = buf; p < buf + n; p += (sizeof(struct inotify_event)) + event->len) {
-            event_update((struct inotify_event *)event);
+        for (char *p = buf; p < buf + n; ) {
+            auto event = (struct inotify_event *)p;
+            event_update(event);
+            p += sizeof(*event) + event->len;
         }
     }
 
