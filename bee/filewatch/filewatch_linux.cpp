@@ -12,7 +12,7 @@ namespace bee::filewatch {
     watch::watch()
         : m_notify()
         , m_fd_path()
-        , m_inotify_fd(inotify_init())
+        , m_inotify_fd(inotify_init1(IN_NONBLOCK | IN_CLOEXEC))
     {
         assert(m_inotify_fd != -1);
     }
@@ -35,6 +35,9 @@ namespace bee::filewatch {
     }
 
     void watch::add(const string_type& path) {
+        if (m_inotify_fd == -1) {
+            return;
+        }
         int desc = inotify_add_watch(m_inotify_fd, path.c_str(), IN_ALL_EVENTS);
         if (desc != -1) {
             m_fd_path.emplace(std::make_pair(desc, path));
@@ -60,6 +63,9 @@ namespace bee::filewatch {
     }
 
     void watch::update() {
+        if (m_inotify_fd == -1) {
+            return;
+        }
         fd_set set;
         FD_ZERO(&set);
         FD_SET(m_inotify_fd, &set);
@@ -68,16 +74,13 @@ namespace bee::filewatch {
         if (rv == 0 || rv == -1) {
             return;
         }
-        constexpr size_t sz = (10 * ((sizeof(struct inotify_event)) + 255 + 1));
-        char buf[sz];
-        ssize_t n = read(m_inotify_fd, buf, sz);
+        char buf[4096];
+        ssize_t n = read(m_inotify_fd, buf, sizeof buf);
         if (n == 0 || n == -1) {
             return;
         }
-        for (char *p = buf; p < buf + n;) {
-            struct inotify_event *event = reinterpret_cast<struct inotify_event *> (p);
-            event_update(event);
-            p += (sizeof(struct inotify_event)) + event->len;
+        for (char *p = buf; p < buf + n; p += (sizeof(struct inotify_event)) + event->len) {
+            event_update((struct inotify_event *)event);
         }
     }
 
