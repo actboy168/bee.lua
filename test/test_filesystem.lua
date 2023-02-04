@@ -21,10 +21,6 @@ local function isAndroid()
     return platform.OS == 'Android'
 end
 
-local function isBSD()
-    return platform.os:match "bsd$"
-end
-
 local function supportedSymlink()
     if platform.OS ~= "Windows" then
         return true
