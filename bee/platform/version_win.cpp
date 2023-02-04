@@ -150,7 +150,8 @@ namespace bee::platform {
 
 	static version get_module_version(const wchar_t* module_path, const wchar_t* key, const wchar_t pred) {
 		std::vector<std::wstring_view> vers;
-		std::wstring_view verstr = module_version_info(module_path)[key];
+		module_version_info info(module_path);
+		std::wstring_view verstr = info[key];
 		split(vers, verstr, pred);
 		return {
 			(vers.size() > 0) ? toint(vers[0]) : 0,
