@@ -402,6 +402,88 @@ namespace bee::lua_filesystem {
         }
     }
 
+    namespace directory_entry {
+        static fs::directory_entry& to(lua_State* L, int idx) {
+            return *(fs::directory_entry*)luaL_checkudata(L, idx, "bee::directory_entry");;
+        }
+
+        static int path(lua_State* L) {
+            auto const& entry = to(L, 1);
+            path::push(L, entry.path());
+            return 1;
+        }
+
+        static int status(lua_State* L) {
+            auto const& entry = to(L, 1);
+            file_status::push(L, entry.status());
+            return 1;
+        }
+
+        static int symlink_status(lua_State* L) {
+            auto const& entry = to(L, 1);
+            file_status::push(L, entry.symlink_status());
+            return 1;
+        }
+
+        static int type(lua_State* L) {
+            auto const& entry = to(L, 1);
+            lua_pushstring(L, file_status::filetypename(entry.status().type()));
+            return 1;
+        }
+
+        static int exists(lua_State* L) {
+            auto const& entry = to(L, 1);
+            lua_pushboolean(L, entry.exists());
+            return 1;
+        }
+
+        static int is_directory(lua_State* L) {
+            auto const& entry = to(L, 1);
+            lua_pushboolean(L, entry.is_directory());
+            return 1;
+        }
+
+        static int is_regular_file(lua_State* L) {
+            auto const& entry = to(L, 1);
+            lua_pushboolean(L, entry.is_regular_file());
+            return 1;
+        }
+
+        static int destructor(lua_State* L) {
+            auto const& entry = to(L, 1);
+            entry.~directory_entry();
+            return 0;
+        }
+
+        static void* newudata(lua_State* L) {
+            void* storage = lua_newuserdatauv(L, sizeof(fs::directory_entry), 0);
+            if (newObject(L, "directory_entry")) {
+                static luaL_Reg mt[] = {
+                    {"path", path},
+                    {"status", status},
+                    {"symlink_status", symlink_status},
+                    {"type", type},
+                    {"exists", exists},
+                    {"is_directory", is_directory},
+                    {"is_regular_file", is_regular_file},
+                    {"__gc", destructor},
+                    {"__tostring", path},
+                    {"__debugger_tostring", path},
+                    {NULL, NULL},
+                };
+                luaL_setfuncs(L, mt, 0);
+                lua_pushvalue(L, -1);
+                lua_setfield(L, -2, "__index");
+            }
+            lua_setmetatable(L, -2);
+            return storage;
+        }
+        static void push(lua_State* L, fs::directory_entry const& entry) {
+            void* storage = newudata(L);
+            new (storage) fs::directory_entry(entry);
+        }
+    }
+
     static int status(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
@@ -744,9 +826,9 @@ namespace bee::lua_filesystem {
                 lua_pushnil(L);
                 return 1;
             }
-            std::error_code ec;
             path::push(L, self.cur->path());
-            file_status::push(L, self.cur->status(ec));
+            directory_entry::push(L, *self.cur);
+            std::error_code ec;
             self.cur.increment(ec);
             if (ec) {
                 return pusherror(L, "directory_iterator::operator++", ec); 
