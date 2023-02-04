@@ -19,7 +19,12 @@ lm.rtti = "off"
 if lm.sanitize then
     lm.mode = "debug"
     lm.flags = "-fsanitize=address"
-    lm.ldflags = "-fsanitize=address"
+    lm.gcc = {
+        ldflags = "-fsanitize=address"
+    }
+    lm.clang = {
+        ldflags = "-fsanitize=address"
+    }
     lm.msvc = {
         defines = "_DISABLE_STRING_ANNOTATION"
     }
