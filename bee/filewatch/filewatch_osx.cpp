@@ -83,6 +83,10 @@ namespace bee::filewatch {
         return false;
     }
 
+    bool watch::set_filter(filter f) {
+        return false;
+    }
+
     void watch::update_stream() {
         destroy_stream();
         if (m_paths.empty()) {

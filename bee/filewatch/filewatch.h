@@ -3,6 +3,7 @@
 #include <optional>
 #include <queue>
 #include <string>
+#include <functional>
 
 #if defined(_WIN32)
 #include <memory>
@@ -15,6 +16,8 @@
 #else
 #   error unsupport platform
 #endif
+
+struct lua_State;
 
 namespace bee::filewatch {
     class task;
@@ -44,7 +47,9 @@ namespace bee::filewatch {
 #else
         using string_type = std::string;
 #endif
+        using filter = std::function<bool(const char*)>;
         static const char* type();
+        static inline filter DefaultFilter = [](const char*) { return true; };
 
         watch();
         ~watch();
@@ -53,6 +58,7 @@ namespace bee::filewatch {
         void   add(const string_type& path);
         void   set_recursive(bool enable);
         bool   set_follow_symlinks(bool enable);
+        bool   set_filter(filter f = DefaultFilter);
         void   update();
         std::optional<notify> select();
 
@@ -83,6 +89,7 @@ namespace bee::filewatch {
         std::map<int, std::string>              m_fd_path;
         int                                     m_inotify_fd;
         bool                                    m_follow_symlinks = false;
+        filter                                  m_filter = DefaultFilter;
 #endif
     };
 }

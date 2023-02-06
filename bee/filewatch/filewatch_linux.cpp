@@ -44,6 +44,12 @@ namespace bee::filewatch {
     }
 
     void watch::add(const string_type& str) {
+        if (m_inotify_fd == -1) {
+            return;
+        }
+        if (!m_filter(str.c_str())) {
+            return;
+        }
         fs::path path = str;
         if (m_follow_symlinks) {
             std::error_code ec;
@@ -51,9 +57,6 @@ namespace bee::filewatch {
             if (ec) {
                 return;
             }
-        }
-        if (m_inotify_fd == -1) {
-            return;
         }
         int desc = inotify_add_watch(m_inotify_fd, path.c_str(), IN_ALL_EVENTS);
         if (desc != -1) {
@@ -78,6 +81,11 @@ namespace bee::filewatch {
 
     bool watch::set_follow_symlinks(bool enable) {
         m_follow_symlinks = enable;
+        return true;
+    }
+
+    bool watch::set_filter(filter f) {
+        m_filter = f;
         return true;
     }
 

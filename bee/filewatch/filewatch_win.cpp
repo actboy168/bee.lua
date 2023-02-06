@@ -170,6 +170,10 @@ namespace bee::filewatch {
         return false;
     }
 
+    bool watch::set_filter(filter f) {
+        return false;
+    }
+
     bool watch::event_update(task& task) {
         switch (task.try_read()) {
         case task::result::wait:
