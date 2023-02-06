@@ -43,13 +43,21 @@ namespace bee::filewatch {
         m_inotify_fd = -1;
     }
 
-    void watch::add(const string_type& path) {
+    void watch::add(const string_type& str) {
+        fs::path path = str;
+        if (m_follow_symlinks) {
+            std::error_code ec;
+            path = fs::canonical(path, ec);
+            if (ec) {
+                return;
+            }
+        }
         if (m_inotify_fd == -1) {
             return;
         }
         int desc = inotify_add_watch(m_inotify_fd, path.c_str(), IN_ALL_EVENTS);
         if (desc != -1) {
-            m_fd_path.emplace(std::make_pair(desc, path));
+            m_fd_path.emplace(std::make_pair(desc, path.string()));
         }
         if (!m_recursive) {
             return;
