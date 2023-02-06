@@ -58,16 +58,8 @@ namespace bee::filewatch {
         fs::directory_iterator iter {path, fs::directory_options::skip_permission_denied, ec };
         fs::directory_iterator end {};
         for (; !ec && iter != end; iter.increment(ec)) {
-            auto const& p = iter->path();
-            if (m_follow_symlinks) {
-                if (fs::is_directory(iter->status())) {
-                    add(p);
-                }
-            }
-            else {
-                if (fs::is_directory(iter->symlink_status())) {
-                    add(p);
-                }
+            if (fs::is_directory(m_follow_symlinks? iter->status(): iter->symlink_status())) {
+                add(iter->path());
             }
         }
     }
@@ -77,7 +69,7 @@ namespace bee::filewatch {
     }
 
     bool watch::set_follow_symlinks(bool enable) {
-        m_follow_symlinks = follow_symlinks;
+        m_follow_symlinks = enable;
         return true;
     }
 
