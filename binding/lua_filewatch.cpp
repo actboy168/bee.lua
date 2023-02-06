@@ -23,14 +23,19 @@ namespace bee::lua_filewatch {
         return 0;
     }
 
-    static int recursive(lua_State* L) {
+    static int set_recursive(lua_State* L) {
         filewatch::watch& self = to(L, 1);
         bool enable = lua_toboolean(L, 2);
-        if (!self.recursive(enable)) {
-            lua_pushboolean(L, 0);
-            return 0;
-        }
+        self.set_recursive(enable);
         lua_pushboolean(L, 1);
+        return 1;
+    }
+
+    static int set_follow_symlinks(lua_State* L) {
+        filewatch::watch& self = to(L, 1);
+        bool enable = lua_toboolean(L, 2);
+        bool ok = self.set_follow_symlinks(enable);
+        lua_pushboolean(L, ok);
         return 1;
     }
 
@@ -72,7 +77,8 @@ namespace bee::lua_filewatch {
         if (newObject(L, "filewatch")) {
             static luaL_Reg mt[] = {
                 {"add", add},
-                {"recursive", recursive},
+                {"set_recursive", set_recursive},
+                {"set_follow_symlinks", set_follow_symlinks},
                 {"select", select},
                 {"__close", toclose},
                 {"__gc", gc},
@@ -90,10 +96,13 @@ namespace bee::lua_filewatch {
     static int luaopen(lua_State* L) {
         static luaL_Reg lib[] = {
             {"create", create},
+            {"type", NULL},
             {NULL, NULL}
         };
         lua_newtable(L);
         luaL_setfuncs(L, lib, 0);
+        lua_pushstring(L, filewatch::watch::type());
+        lua_setfield(L, -2, "type");
         return 1;
     }
 }

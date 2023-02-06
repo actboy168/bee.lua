@@ -2,6 +2,10 @@
 #include <bee/utility/unreachable.h>
 
 namespace bee::filewatch {
+    const char* watch::type() {
+        return "fsevent";
+    }
+
     static void event_cb(ConstFSEventStreamRef streamRef,
         void* info,
         size_t numEvents,
@@ -71,9 +75,12 @@ namespace bee::filewatch {
         update_stream();
     }
 
-    bool watch::recursive(bool enable) {
+    void watch::set_recursive(bool enable) {
         m_recursive = enable;
-        return true;
+    }
+
+    bool watch::set_follow_symlinks(bool enable) {
+        return false;
     }
 
     void watch::update_stream() {

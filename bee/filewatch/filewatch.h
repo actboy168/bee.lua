@@ -32,6 +32,11 @@ namespace bee::filewatch {
         { }
     };
     
+    class basic_watch {
+    public:
+    private:
+    };
+
     class watch {
     public:
 #if defined(_WIN32)
@@ -39,12 +44,15 @@ namespace bee::filewatch {
 #else
         using string_type = std::string;
 #endif
+        static const char* type();
+
         watch();
         ~watch();
 
         void   stop();
         void   add(const string_type& path);
-        bool   recursive(bool enable);
+        void   set_recursive(bool enable);
+        bool   set_follow_symlinks(bool enable);
         void   update();
         std::optional<notify> select();
 
@@ -74,6 +82,7 @@ namespace bee::filewatch {
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
         std::map<int, std::string>              m_fd_path;
         int                                     m_inotify_fd;
+        bool                                    m_follow_symlinks = false;
 #endif
     };
 }

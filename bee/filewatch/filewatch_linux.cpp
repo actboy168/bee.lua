@@ -14,6 +14,10 @@
 #endif
 
 namespace bee::filewatch {
+    const char* watch::type() {
+        return "inotify";
+    }
+
     watch::watch()
         : m_notify()
         , m_fd_path()
@@ -55,15 +59,25 @@ namespace bee::filewatch {
         fs::directory_iterator end {};
         for (; !ec && iter != end; iter.increment(ec)) {
             auto const& p = iter->path();
-            std::error_code _;
-            if (fs::is_directory(fs::symlink_status(p, _))) {
-                add(p);
+            if (m_follow_symlinks) {
+                if (fs::is_directory(iter->status())) {
+                    add(p);
+                }
+            }
+            else {
+                if (fs::is_directory(iter->symlink_status())) {
+                    add(p);
+                }
             }
         }
     }
 
-    bool watch::recursive(bool enable) {
+    void watch::set_recursive(bool enable) {
         m_recursive = enable;
+    }
+
+    bool watch::set_follow_symlinks(bool enable) {
+        m_follow_symlinks = follow_symlinks;
         return true;
     }
 

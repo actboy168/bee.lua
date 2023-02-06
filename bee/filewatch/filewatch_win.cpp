@@ -7,6 +7,10 @@
 #include <Windows.h>
 
 namespace bee::filewatch {
+    const char* watch::type() {
+        return "windows";
+    }
+
     class task : public OVERLAPPED {
         static const size_t kBufSize = 16 * 1024;
     public:
@@ -158,9 +162,12 @@ namespace bee::filewatch {
         }
     }
 
-    bool watch::recursive(bool enable) {
+    void watch::set_recursive(bool enable) {
         m_recursive = enable;
-        return true;
+    }
+
+    bool watch::set_follow_symlinks(bool enable) {
+        return false;
     }
 
     bool watch::event_update(task& task) {
