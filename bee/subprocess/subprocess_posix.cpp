@@ -183,7 +183,7 @@ namespace bee::subprocess {
 #define USE_POSIX_SPAWN 1
 #endif
 
-    bool spawn::fork_exec(args_t& args, const char* cwd) {
+    bool spawn::fork_exec(char** arguments, const char* cwd) {
         pid_t pid = fork();
         if (pid == -1) {
             return false;
@@ -208,7 +208,7 @@ namespace bee::subprocess {
             //if (suspended_) {
             //    ::kill(getpid(), SIGSTOP);
             //}
-            execvp(args[0], args.data());
+            execvp(arguments[0], arguments);
             _exit(127);
         }
         pid_ = pid;
@@ -220,13 +220,8 @@ namespace bee::subprocess {
         return true;
     }
 
-    bool spawn::exec(args_t& args, const char* cwd) {
-        if (args.size() == 0) {
-            return false;
-        }
-        args.push(nullptr);
+    bool spawn::exec(char** arguments, const char* cwd) {
 #if defined(USE_POSIX_SPAWN)
-        char** arguments = args.data();
         if (cwd) {
             posix_spawn_file_actions_addchdir_np(&spawnfile_, cwd);
         }
@@ -249,8 +244,16 @@ namespace bee::subprocess {
         }
         return true;
 #else
-        return fork_exec(args, cwd);
+        return fork_exec(arguments, cwd);
 #endif
+    }
+
+    bool spawn::exec(args_t& args, const char* cwd) {
+        if (args.size() == 0) {
+            return false;
+        }
+        args.push(nullptr);
+        return exec(args.data(), cwd);
     }
 
     process::process(spawn& spawn)

@@ -62,8 +62,9 @@ namespace bee::subprocess {
         void redirect(stdio type, file_handle f);
         void env(environment&& env);
         bool exec(args_t& args, const char* cwd);
+        bool exec(char** arguments, const char* cwd);
     private:
-        bool fork_exec(args_t& args, const char* cwd);
+        bool fork_exec(char** arguments, const char* cwd);
     private:
         environment                        env_ = nullptr;
         int                                fds_[3];
