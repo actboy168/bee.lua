@@ -380,7 +380,7 @@ namespace bee::net::socket {
             int rc = setsockopt(s, IPPROTO_TCP, TCP_KEEPINTVL, &keepalive_intvl, sizeof (int));
             net_assert_success(rc);
         }
-#elif defined(__apple__)
+#elif defined(__APPLE__)
         (void)keepalive_cnt;
         (void)keepalive_intvl;
         int rc = setsockopt(s, SOL_SOCKET, SO_KEEPALIVE, (char*) &keepalive, sizeof (int));
