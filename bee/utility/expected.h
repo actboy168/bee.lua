@@ -1,5 +1,10 @@
 #pragma once
 
+
+#if defined(__cpp_lib_expected)
+#include <expected>
+#else
+
 #include <utility>
 
 namespace bee {
@@ -151,3 +156,10 @@ namespace bee {
         };
     };
 }
+
+namespace std {
+    using bee::expected;
+    using bee::unexpected;
+}
+
+#endif

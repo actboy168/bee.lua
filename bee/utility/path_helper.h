@@ -4,7 +4,7 @@
 #include <bee/utility/expected.h>
 
 namespace bee::path_helper {
-    using path_expected = expected<fs::path, std::string>;
+    using path_expected = std::expected<fs::path, std::string>;
     path_expected dll_path(void* module_handle);
     path_expected exe_path();
     path_expected dll_path();

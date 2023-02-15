@@ -15,7 +15,7 @@ namespace bee::path_helper {
         wchar_t buffer[MAX_PATH];
         DWORD path_len = ::GetModuleFileNameW((HMODULE)module_handle, buffer, _countof(buffer));
         if (path_len == 0) {
-            return unexpected<std::string>(make_syserror("GetModuleFileNameW").what());
+            return std::unexpected<std::string>(make_syserror("GetModuleFileNameW").what());
         }
         if (path_len < _countof(buffer)) {
             return fs::path(buffer, buffer + path_len);
@@ -24,13 +24,13 @@ namespace bee::path_helper {
             std::vector<wchar_t> buf(buf_len);
             path_len = ::GetModuleFileNameW((HMODULE)module_handle, buf.data(), buf_len);
             if (path_len == 0) {
-                return unexpected<std::string>(make_syserror("GetModuleFileNameW").what());
+                return std::unexpected<std::string>(make_syserror("GetModuleFileNameW").what());
             }
             if (path_len < _countof(buffer)) {
                 return fs::path(buf.data(), buf.data() + path_len);
             }
         }
-        return unexpected<std::string>("::GetModuleFileNameW return too long.");
+        return std::unexpected<std::string>("::GetModuleFileNameW return too long.");
     }
 
     path_expected exe_path() {
@@ -48,7 +48,7 @@ namespace bee::path_helper {
             CoTaskMemFree(path);
             return res;
         }
-        return unexpected<std::string>("::SHGetKnownFolderPath failed.");
+        return std::unexpected<std::string>("::SHGetKnownFolderPath failed.");
     }
 }
 
@@ -63,12 +63,12 @@ namespace bee::path_helper {
         uint32_t path_len = 0;
         _NSGetExecutablePath(0, &path_len);
         if (path_len <= 1) {
-            return unexpected<std::string>("_NSGetExecutablePath failed.");
+            return std::unexpected<std::string>("_NSGetExecutablePath failed.");
         }
         std::vector<char> buf(path_len);
         int rv = _NSGetExecutablePath(buf.data(), &path_len);
         if (rv != 0) {
-            return unexpected<std::string>("_NSGetExecutablePath failed.");
+            return std::unexpected<std::string>("_NSGetExecutablePath failed.");
         }
         return fs::path(buf.data(), buf.data() + path_len - 1);
     }
@@ -94,28 +94,28 @@ namespace bee::path_helper {
         size_t length = 1024;
         int error = sysctl(name, 4, exe, &length, NULL, 0);
         if (error < 0 || length <= 1) {
-            return unexpected<std::string>(make_syserror("exe_path").what());
+            return std::unexpected<std::string>(make_syserror("exe_path").what());
         }
         return fs::path(exe, exe+length-1);
 #elif defined(__OpenBSD__)
         int name[] = { CTL_KERN, KERN_PROC_ARGS, getpid(), KERN_PROC_ARGV };
         size_t argc;
         if (sysctl(name, 4, NULL, &argc, NULL, 0) < 0) {
-            return unexpected<std::string>(make_syserror("exe_path").what());
+            return std::unexpected<std::string>(make_syserror("exe_path").what());
         }
         const char** argv = (const char**)malloc(argc);
         if (!argv) {
-            return unexpected<std::string>(make_syserror("exe_path").what());
+            return std::unexpected<std::string>(make_syserror("exe_path").what());
         }
         if (sysctl(name, 4, argv, &argc, NULL, 0) < 0) {
-            return unexpected<std::string>(make_syserror("exe_path").what());
+            return std::unexpected<std::string>(make_syserror("exe_path").what());
         }
         return fs::path(argv[0]);
 #else
         std::error_code ec;
         auto res = fs::read_symlink("/proc/self/exe", ec);
         if (ec) {
-            return unexpected<std::string>(make_syserror("exe_path").what());
+            return std::unexpected<std::string>(make_syserror("exe_path").what());
         }
         return res;
 #endif
@@ -128,7 +128,7 @@ namespace bee::path_helper {
         if (const char* env = getenv("HOME")) {
             return fs::path(env) / ".local" / "share";
         }
-        return unexpected<std::string>("neither XDG_DATA_HOME nor HOME environment is set");
+        return std::unexpected<std::string>("neither XDG_DATA_HOME nor HOME environment is set");
     }
 }
 
@@ -138,7 +138,7 @@ namespace bee::path_helper {
 
 namespace bee::path_helper {
     path_expected dll_path(void* module_handle) {
-        return unexpected<std::string>("disable dl.");
+        return std::unexpected<std::string>("disable dl.");
     }
     path_expected dll_path() {
         return dll_path(nullptr);
@@ -157,7 +157,7 @@ namespace bee::path_helper {
         if (0 != ret && dl_info.dli_fname != NULL) {
             return fs::absolute(dl_info.dli_fname).lexically_normal();
         }
-        return unexpected<std::string>("::dladdr failed.");
+        return std::unexpected<std::string>("::dladdr failed.");
     }
 
     path_expected dll_path() {

@@ -10,6 +10,6 @@ namespace bee::path_helper {
         if ([array count] > 0) {
             return fs::path([[array objectAtIndex:0] fileSystemRepresentation]);
         }
-        return unexpected<std::string>("NSSearchPathForDirectoriesInDomains failed.");
+        return std::unexpected<std::string>("NSSearchPathForDirectoriesInDomains failed.");
     }
 }
