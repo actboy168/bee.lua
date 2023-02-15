@@ -1,5 +1,5 @@
 #include <bee/filewatch/filewatch.h>
-#include <bee/utility/unreachable.h>
+#include <bee/nonstd/unreachable.h>
 
 namespace bee::filewatch {
     const char* watch::type() {

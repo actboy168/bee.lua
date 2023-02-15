@@ -26,7 +26,7 @@
 #include <bee/net/socket.h>
 #include <bee/net/endpoint.h>
 #include <bee/error.h>
-#include <bee/utility/unreachable.h>
+#include <bee/nonstd/unreachable.h>
 #include <assert.h>
 
 #if defined(_WIN32)

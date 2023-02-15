@@ -1,5 +1,5 @@
 #include <bee/platform/version.h>
-#include <bee/format.h>
+#include <bee/nonstd/format.h>
 #include <vector>
 #include <charconv>
 #include <memory>

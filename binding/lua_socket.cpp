@@ -7,7 +7,7 @@
 #include <bee/error.h>
 #include <bee/net/endpoint.h>
 #include <bee/net/socket.h>
-#include <bee/utility/unreachable.h>
+#include <bee/nonstd/unreachable.h>
 #include <bee/thread/simplethread.h>
 #include <limits>
 

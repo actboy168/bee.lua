@@ -4,7 +4,7 @@
 #if defined(_WIN32)
 #include <Windows.h>
 #endif
-#include <bee/filesystem.h>
+#include <bee/nonstd/filesystem.h>
 #include <optional>
 
 namespace bee {

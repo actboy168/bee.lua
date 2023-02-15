@@ -1,13 +1,7 @@
 #pragma once
 
 #if defined(__cpp_lib_semaphore)
-
 #include <semaphore>
-
-namespace bee {
-    using std::binary_semaphore;
-}
-
 #else
 
 #include <mutex>
@@ -59,5 +53,7 @@ namespace bee {
         bool ok = false;
     };
 }
-
+namespace std {
+    using bee::binary_semaphore;
+}
 #endif

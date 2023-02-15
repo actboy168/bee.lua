@@ -1,7 +1,7 @@
 #include <bee/subprocess.h>
-#include <bee/format.h>
+#include <bee/nonstd/format.h>
 #include <bee/net/socket.h>
-#include <bee/utility/unreachable.h>
+#include <bee/nonstd/unreachable.h>
 #include <memory.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>

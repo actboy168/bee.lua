@@ -12,7 +12,7 @@
 #       define UNIX_PATH_MAX (sizeof(sockaddr_un::sun_path) / sizeof(sockaddr_un::sun_path[0]))
 #   endif
 #endif
-#include <bee/format.h>
+#include <bee/nonstd/format.h>
 #include <bee/error.h>
 #include <array>
 #if __has_include(<charconv>)
