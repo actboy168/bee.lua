@@ -29,10 +29,10 @@ namespace bee {
     using std::atomic_flag;
 #else
     struct atomic_flag {
-        [[nodiscard]] bool test(std::memory_order order) const noexcept {
+        bool test(std::memory_order order) const noexcept {
             return storage.load(order) != 0;
         }
-        [[nodiscard]] bool test(std::memory_order order) const volatile noexcept {
+        bool test(std::memory_order order) const volatile noexcept {
             return storage.load(order) != 0;
         }
         bool test_and_set(std::memory_order order) noexcept {
