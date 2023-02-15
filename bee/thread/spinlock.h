@@ -47,8 +47,7 @@ namespace bee {
         void clear(std::memory_order order) volatile noexcept {
             storage.store(false, order);
         }
-        constexpr atomic_flag() noexcept = default;
-        std::atomic<bool> storage;
+        std::atomic<bool> storage = {false};
     };
 #endif
     class spinlock {
