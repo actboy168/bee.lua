@@ -3,6 +3,11 @@
 
 #if defined(__cpp_lib_expected)
 #include <expected>
+
+namespace bee {
+    using std::expected;
+    using std::unexpected;
+}
 #else
 
 #include <utility>
@@ -155,11 +160,6 @@ namespace bee {
             error_type unex;
         };
     };
-}
-
-namespace std {
-    using bee::expected;
-    using bee::unexpected;
 }
 
 #endif
