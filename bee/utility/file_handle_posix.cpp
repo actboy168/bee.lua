@@ -12,7 +12,7 @@ namespace bee {
         case mode::write:
             return fdopen(h, "wb");
         default:
-            unreachable();
+            std::unreachable();
         }
     }
 

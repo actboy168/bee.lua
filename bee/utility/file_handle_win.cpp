@@ -20,7 +20,7 @@ namespace bee {
         case mode::write:
             return handletofile(h, _O_WRONLY | _O_BINARY, "wb");
         default:
-            unreachable();
+            std::unreachable();
         }
     }
 

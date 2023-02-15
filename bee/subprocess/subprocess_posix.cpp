@@ -166,7 +166,7 @@ namespace bee::subprocess {
             fds_[2] = h.value();
             break;
         default:
-            unreachable();
+            std::unreachable();
         }
     }
 

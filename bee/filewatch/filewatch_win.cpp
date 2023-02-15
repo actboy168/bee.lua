@@ -202,7 +202,7 @@ namespace bee::filewatch {
                 m_notify.emplace(notify::flag::rename, w2u(path));
                 break;
             default:
-                unreachable();
+                std::unreachable();
                 break;
             }
             if (!fni.NextEntryOffset) {

@@ -97,7 +97,7 @@ namespace bee::lua_filewatch {
             lua_pushstring(L, "rename");
             break;
         default:
-            unreachable();
+            std::unreachable();
         }
         lua_pushlstring(L, notify->path.data(), notify->path.size());
         return 2;

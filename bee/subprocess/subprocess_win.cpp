@@ -338,7 +338,7 @@ namespace bee::subprocess {
             flags_ |= CREATE_NEW_CONSOLE;
             break;
         default:
-            unreachable();
+            std::unreachable();
         }
     }
 
@@ -371,7 +371,7 @@ namespace bee::subprocess {
             si_.hStdError = h.value();
             break;
         default:
-            unreachable();
+            std::unreachable();
         }
     }
 

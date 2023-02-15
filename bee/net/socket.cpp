@@ -280,7 +280,7 @@ namespace bee::net::socket {
 #endif
             return createSocket(PF_UNIX, SOCK_STREAM, 0);
         default:
-            unreachable();
+            std::unreachable();
         }
     }
 
@@ -317,14 +317,14 @@ namespace bee::net::socket {
         case shutdown_flag::both:  return net_success(::shutdown(s, SD_BOTH));
         case shutdown_flag::read:  return net_success(::shutdown(s, SD_RECEIVE));
         case shutdown_flag::write: return net_success(::shutdown(s, SD_SEND));
-        default: unreachable();
+        default: std::unreachable();
         }
 #else
         switch (flag) {
         case shutdown_flag::both:  return net_success(::shutdown(s, SHUT_RDWR));
         case shutdown_flag::read:  return net_success(::shutdown(s, SHUT_RD));
         case shutdown_flag::write: return net_success(::shutdown(s, SHUT_WR));
-        default: unreachable();
+        default: std::unreachable();
         }
 #endif
     }
@@ -347,7 +347,7 @@ namespace bee::net::socket {
             setoption(s, SOL_SOCKET, SO_RCVBUF, value);
             break;
         default:
-            unreachable();
+            std::unreachable();
         }
     }
 

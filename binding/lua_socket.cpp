@@ -86,7 +86,7 @@ namespace bee::lua_socket {
         case socket::status::failed:
             return push_neterror(L, "recv");
         default:
-            unreachable();
+            std::unreachable();
         }
     }
     static int send(lua_State* L) {
@@ -103,7 +103,7 @@ namespace bee::lua_socket {
         case socket::status::failed:
             return push_neterror(L, "send");
         default:
-            unreachable();
+            std::unreachable();
         }
     }
     static int recvfrom(lua_State* L) {
@@ -134,7 +134,7 @@ namespace bee::lua_socket {
         case socket::status::failed:
             return push_neterror(L, "recvfrom");
         default:
-            unreachable();
+            std::unreachable();
         }
     }
     static int sendto(lua_State* L) {
@@ -157,7 +157,7 @@ namespace bee::lua_socket {
         case socket::status::failed:
             return push_neterror(L, "sendto");
         default:
-            unreachable();
+            std::unreachable();
         }
     }
     static bool socket_destroy(luafd& self) {
@@ -287,7 +287,7 @@ namespace bee::lua_socket {
         case socket::status::failed:
             return push_neterror(L, "connect");
         default:
-            unreachable();
+            std::unreachable();
         }
     }
     static int bind(lua_State* L) {
