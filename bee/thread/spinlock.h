@@ -25,25 +25,51 @@
 #endif
 
 namespace bee {
+#if defined(__cpp_lib_atomic_flag_test) //c++20
+    using std::atomic_flag;
+#else
+    struct atomic_flag {
+        [[nodiscard]] bool test(std::memory_order order) const noexcept {
+            return storage.load(order) != 0;
+        }
+        [[nodiscard]] bool test(std::memory_order order) const volatile noexcept {
+            return storage.load(order) != 0;
+        }
+        bool test_and_set(std::memory_order order) noexcept {
+            return storage.exchange(true, order) != 0;
+        }
+        bool test_and_set(std::memory_order order) volatile noexcept {
+            return storage.exchange(true, order) != 0;
+        }
+        void clear(std::memory_order order) noexcept {
+            storage.store(false, order);
+        }
+        void clear(std::memory_order order) volatile noexcept {
+            storage.store(false, order);
+        }
+        constexpr atomic_flag() noexcept = default;
+        std::atomic<bool> storage;
+    };
+#endif
     class spinlock {
     public:
         void lock() {
             for (;;) {
-                if (!l.exchange(true, std::memory_order_acquire)) {
+                if (!l.test_and_set(std::memory_order_acquire)) {
                     return;
                 }
-                while (l.load(std::memory_order_relaxed)) {
+                while (l.test(std::memory_order_relaxed)) {
                     cpu_relax();
                 }
             }
         }
         void unlock() {
-            l.store(false, std::memory_order_release);
+            l.clear(std::memory_order_release);
         }
         bool try_lock() {
-            return !l.load(std::memory_order_relaxed) && !l.exchange(true, std::memory_order_acquire);
+            return !l.test(std::memory_order_relaxed) && !l.test_and_set(std::memory_order_acquire);
         }
     private:
-        std::atomic<bool> l = {0};
+        atomic_flag l;
     };
 }
