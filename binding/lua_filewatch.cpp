@@ -3,25 +3,17 @@
 #include <bee/lua/binding.h>
 #include <bee/nonstd/unreachable.h>
 #include <bee/nonstd/filesystem.h>
-#include <binding/luaref.h>
 
 namespace bee::lua_filewatch {
     static filewatch::watch& to(lua_State* L, int idx) {
         return *(filewatch::watch*)getObject(L, idx, "filewatch");
     }
 
-    static luaref get_refL(lua_State* L) {
+    static lua_State* get_thread(lua_State* L) {
         lua_getiuservalue(L, 1, 1);
-        luaref refL = (luaref)lua_tointeger(L, -1);
+        lua_State* thread = lua_tothread(L, -1);
         lua_pop(L, 1);
-        return refL;
-    }
-
-    static int get_ref(lua_State* L) {
-        lua_getiuservalue(L, 1, 2);
-        int ref = (int)lua_tointeger(L, -1);
-        lua_pop(L, 1);
-        return ref;
+        return thread;
     }
 
     static int add(lua_State* L) {
@@ -61,21 +53,21 @@ namespace bee::lua_filewatch {
             lua_pushboolean(L, ok);
             return 1;
         }
-        luaref refL = get_refL(L);
-        luaref_unref(refL, get_ref(L));
+        lua_State* thread = get_thread(L);
         lua_settop(L, 2);
-        int ref = luaref_ref(refL, L);
-        lua_pushinteger(L, ref);
-        lua_setiuservalue(L, 1, 2);
+        lua_xmove(L, thread, 1);
+        if (lua_gettop(thread) > 1) {
+            lua_replace(thread, 1);
+        }
         bool ok = self.set_filter([=](const char* path){
-            luaref_get(refL, L, ref);
-            lua_pushstring(L, path);
-            if (LUA_OK != lua_pcall(L, 1, 1, 0)) {
-                lua_pop(L, 1);
+            lua_pushvalue(thread, 1);
+            lua_pushstring(thread, path);
+            if (LUA_OK != lua_pcall(thread, 1, 1, 0)) {
+                lua_pop(thread, 1);
                 return true;
             }
-            bool r = lua_toboolean(L, -1);
-            lua_pop(L, 1);
+            bool r = lua_toboolean(thread, -1);
+            lua_pop(thread, 1);
             return r;
         });
         lua_pushboolean(L, ok);
@@ -110,17 +102,13 @@ namespace bee::lua_filewatch {
     }
 
     static int gc(lua_State* L) {
-        luaref refL = get_refL(L);
-        int ref = get_ref(L);
-        luaref_unref(refL, ref);
-        luaref_close(refL);
         filewatch::watch& self = to(L, 1);
         self.~watch();
         return 0;
     }
 
     static int create(lua_State* L) {
-        void* storage = lua_newuserdatauv(L, sizeof(filewatch::watch), 2);
+        void* storage = lua_newuserdatauv(L, sizeof(filewatch::watch), 1);
         if (newObject(L, "filewatch")) {
             static luaL_Reg mt[] = {
                 {"add", add},
@@ -137,11 +125,8 @@ namespace bee::lua_filewatch {
             lua_setfield(L, -2, "__index");
         }
         lua_setmetatable(L, -2);
-        luaref refL = luaref_init(L);
-        lua_pushinteger(L, (uintptr_t)refL);
+        lua_newthread(L);
         lua_setiuservalue(L, -2, 1);
-        lua_pushinteger(L, LUA_NOREF);
-        lua_setiuservalue(L, -2, 2);
         new (storage) filewatch::watch;
         return 1;
     }
