@@ -2,8 +2,8 @@
 #   include <winsock2.h>
 #   include <mswsock.h>
 #   include <mstcpip.h>
-#   include <bee/utility/unicode_win.h>
-#   include <bee/platform/version.h>
+#   include <bee/platform/win/unicode.h>
+#   include <bee/platform/win/version.h>
 #   include <fstream>
 #   include <charconv>
 #   include <limits>

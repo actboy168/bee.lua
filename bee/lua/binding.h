@@ -5,7 +5,7 @@
 #include <string>
 #include <bee/error.h>
 #if defined(_WIN32)
-#include <bee/utility/unicode_win.h>
+#include <bee/platform/win/unicode.h>
 #endif
 
 namespace bee::lua {

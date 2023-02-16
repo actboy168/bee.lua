@@ -1,7 +1,7 @@
 #include <bee/error.h>
 #if defined(_WIN32)
 #include <Windows.h>
-#include <bee/utility/unicode_win.h>
+#include <bee/platform/win/unicode.h>
 #include <sstream>
 #include <Windows.h>
 #else

@@ -1,7 +1,7 @@
 #include <bee/filewatch/filewatch.h>
 #include <bee/error.h>
 #include <bee/nonstd/unreachable.h>
-#include <bee/utility/unicode_win.h>
+#include <bee/platform/win/unicode.h>
 #include <array>
 #include <assert.h>
 #include <Windows.h>

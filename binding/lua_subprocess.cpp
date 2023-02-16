@@ -7,7 +7,7 @@
 #include <optional>
 #include <string.h>
 #if defined(_WIN32)
-#include <bee/utility/unicode_win.h>
+#include <bee/platform/win/unicode.h>
 #else
 #include <unistd.h>
 #endif
