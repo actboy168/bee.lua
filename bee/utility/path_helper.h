@@ -8,6 +8,5 @@ namespace bee::path_helper {
     path_expected dll_path(void* module_handle);
     path_expected exe_path();
     path_expected dll_path();
-    path_expected appdata_path();
     bool equal(fs::path const& lhs, fs::path const& rhs);
 }

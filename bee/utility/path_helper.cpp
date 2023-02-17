@@ -40,16 +40,6 @@ namespace bee::path_helper {
     path_expected dll_path() {
         return dll_path(reinterpret_cast<void*>(&__ImageBase));
     }
-
-    path_expected appdata_path() {
-        wchar_t* path;
-        if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &path))) {
-            fs::path res(path);
-            CoTaskMemFree(path);
-            return res;
-        }
-        return unexpected<std::string>("::SHGetKnownFolderPath failed.");
-    }
 }
 
 #else
@@ -119,16 +109,6 @@ namespace bee::path_helper {
         }
         return res;
 #endif
-    }
-
-    path_expected appdata_path() {
-        if (const char* env = getenv("XDG_DATA_HOME")) {
-            return fs::path(env);
-        }
-        if (const char* env = getenv("HOME")) {
-            return fs::path(env) / ".local" / "share";
-        }
-        return unexpected<std::string>("neither XDG_DATA_HOME nor HOME environment is set");
     }
 }
 

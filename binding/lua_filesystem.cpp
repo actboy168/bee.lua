@@ -906,15 +906,6 @@ namespace bee::lua_filesystem {
         return 1;
     }
 
-    static int appdata_path(lua_State* L) {
-        auto r = path_helper::appdata_path();
-        if (!r) {
-            return luaL_error(L, "%s\n", r.error().c_str());
-        }
-        path::push(L, r.value());
-        return 1;
-    }
-
     static int filelock(lua_State* L) {
         path_ptr self = getpathptr(L, 1);
         file_handle fd = file_handle::lock(self);
@@ -979,7 +970,6 @@ namespace bee::lua_filesystem {
             {"pairs", pairs},
             {"exe_path", exe_path},
             {"dll_path", dll_path},
-            {"appdata_path", appdata_path},
             {"filelock", filelock},
 #if !defined(BEE_DISABLE_FULLPATH)
             {"fullpath", fullpath},

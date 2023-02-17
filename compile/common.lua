@@ -49,7 +49,6 @@ lm:source_set "source_bee" {
     },
     macos = {
         sources = {
-            "bee/**/*.mm",
             need {
                 "osx",
                 "posix",
@@ -58,7 +57,6 @@ lm:source_set "source_bee" {
     },
     ios = {
         sources = {
-            "bee/**/*.mm",
             "!bee/filewatch/**/",
             need {
                 "osx",

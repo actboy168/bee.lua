@@ -793,17 +793,6 @@ end
 --    assertPathEquals(fs.dll_path(), fs.absolute(getdll()))
 --end
 
-function test_fs:test_appdata_path()
-    if platform.OS == 'Windows' then
-        assertPathEquals(fs.appdata_path(), os.getenv "LOCALAPPDATA")
-    elseif platform.OS == 'Linux' then
-        assertPathEquals(fs.appdata_path(), os.getenv "XDG_DATA_HOME" or (os.getenv "HOME" .. "/.local/share"))
-    elseif platform.OS == 'macOS' then
-        --assertPathEquals(fs.appdata_path(), os.getenv "HOME" .. "/Library/Caches")
-    end
-end
-
-
 function test_fs:test_filelock_1()
     local lock = fs.path("temp.lock")
     local f1 = lt.assertIsUserdata(fs.filelock(lock))
