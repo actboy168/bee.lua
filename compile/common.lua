@@ -9,10 +9,9 @@ lm:lua_source "source_bee" {
 }
 
 lm:source_set "source_bee" {
-    includes = "bee/nonstd/3rd/fmt/include",
     sources = {
-        "bee/nonstd/3rd/fmt/src/format.cc",
-        "bee/nonstd/3rd/fmt/src/os.cc",
+        "bee/nonstd/3rd/format.cc",
+        "bee/nonstd/3rd/os.cc",
     }
 }
 
