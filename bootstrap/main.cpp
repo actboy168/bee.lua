@@ -3,7 +3,7 @@
 #include <string.h>
 #include <signal.h>
 #include <lua.hpp>
-#include <bee/lua/binding.h>
+#include <binding/binding.h>
 
 #if !defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004

@@ -1,7 +1,7 @@
-#include <bee/lua/binding.h>
+#include <binding/binding.h>
+#include <binding/file.h>
 #include <bee/error.h>
 #include <bee/nonstd/filesystem.h>
-#include <bee/lua/file.h>
 #include <bee/nonstd/format.h>
 #include <bee/utility/file_handle.h>
 #include <bee/utility/path_helper.h>

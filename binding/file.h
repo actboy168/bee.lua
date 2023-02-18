@@ -1,6 +1,6 @@
 #pragma once
 
-#include <bee/lua/binding.h>
+#include <lua.hpp>
 #include <errno.h>
 #include <string.h>
 

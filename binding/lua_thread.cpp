@@ -1,4 +1,4 @@
-#include <bee/lua/binding.h>
+#include <binding/binding.h>
 #include <bee/nonstd/semaphore.h>
 #include <bee/thread/simplethread.h>
 #include <bee/thread/spinlock.h>

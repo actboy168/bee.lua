@@ -1,4 +1,4 @@
-#include <bee/lua/binding.h>
+#include <binding/binding.h>
 #include <bee/platform/win/unicode.h>
 
 namespace bee::lua_unicode {
