@@ -236,7 +236,7 @@ function test_subprocess:test_peek()
 end
 
 function test_subprocess:test_filemode()
-    if platform.OS == 'Windows' then
+    if platform.os == 'windows' then
         local process = shell:runlua([[
             assert(io.read "a" == "\n")
         ]], { stdin = true, stderr = true })

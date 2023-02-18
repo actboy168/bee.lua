@@ -3,9 +3,14 @@ local fs = require 'bee.filesystem'
 local lt = require 'ltest'
 local shell = require 'shell'
 
+local isWindows = platform.os == 'windows'
+local isMinGW   = isWindows and platform.CRT == 'libstdc++'
+local isAndroid = platform.os == 'android'
+local isMacOS   = platform.os ~= "macos"
+
 local C
 local D
-if platform.OS == 'Windows' then
+if isWindows then
     C = 'c:/'
     D = 'd:/'
 else
@@ -13,16 +18,8 @@ else
     D = '/mnt/d/'
 end
 
-local function isMinGW()
-    return platform.OS == 'Windows' and platform.CRT == 'libstdc++'
-end
-
-local function isAndroid()
-    return platform.OS == 'Android'
-end
-
 local function supportedSymlink()
-    if platform.OS ~= "Windows" then
+    if not isWindows then
         return true
     end
     -- see https://blogs.windows.com/windowsdeveloper/2016/12/02/symlinks-windows-10/
@@ -32,7 +29,7 @@ local function supportedSymlink()
 end
 
 local function supportedHardlink()
-    return not isAndroid()
+    return not isAndroid
 end
 
 local function create_file(filename, content)
@@ -83,7 +80,7 @@ end
 
 function test_fs:test_string()
     lt.assertEquals(fs.path('a/b'):string(), 'a/b')
-    if platform.OS == 'Windows' then
+    if isWindows then
         lt.assertEquals(fs.path('a\\b'):string(), 'a/b')
     end
 end
@@ -94,7 +91,7 @@ function test_fs:test_filename()
     end
     lt.assertEquals(get_filename('a/b'), 'b')
     lt.assertEquals(get_filename('a/b/'), '')
-    if platform.OS == 'Windows' then
+    if isWindows then
         lt.assertEquals(get_filename('a\\b'), 'b')
         lt.assertEquals(get_filename('a\\b\\'), '')
     end
@@ -106,7 +103,7 @@ function test_fs:test_parent_path()
     end
     lt.assertEquals(get_parent_path('a/b/c'), 'a/b')
     lt.assertEquals(get_parent_path('a/b/'), 'a/b')
-    if platform.OS == 'Windows' then
+    if isWindows then
         lt.assertEquals(get_parent_path('a\\b\\c'), 'a/b')
         lt.assertEquals(get_parent_path('a\\b\\'), 'a/b')
     end
@@ -119,7 +116,7 @@ function test_fs:test_stem()
     lt.assertEquals(get_stem('a/b/c.ext'), 'c')
     lt.assertEquals(get_stem('a/b/c'), 'c')
     lt.assertEquals(get_stem('a/b/.ext'), '.ext')
-    if platform.OS == 'Windows' then
+    if isWindows then
         lt.assertEquals(get_stem('a\\b\\c.ext'), 'c')
         lt.assertEquals(get_stem('a\\b\\c'), 'c')
         lt.assertEquals(get_stem('a\\b\\.ext'), '.ext')
@@ -133,7 +130,7 @@ function test_fs:test_extension()
     lt.assertEquals(get_extension('a/b/c.ext'), '.ext')
     lt.assertEquals(get_extension('a/b/c'), '')
     lt.assertEquals(get_extension('a/b/.ext'), '')
-    if platform.OS == 'Windows' then
+    if isWindows then
         lt.assertEquals(get_extension('a\\b\\c.ext'), '.ext')
         lt.assertEquals(get_extension('a\\b\\c'), '')
         lt.assertEquals(get_extension('a\\b\\.ext'), '')
@@ -154,14 +151,14 @@ function test_fs:test_absolute_relative()
         lt.assertEquals(fs.path(path):is_relative(), true)
     end
     assertIsAbsolute(C..'a/b')
-    if not isMinGW() then
+    if not isMinGW then
         -- TODO: mingw bug
         assertIsAbsolute('//a/b')
     end
     assertIsRelative('./a/b')
     assertIsRelative('a/b')
     assertIsRelative('../a/b')
-    if platform.OS == 'Windows' then
+    if isWindows then
         assertIsRelative('/a/b')
     else
         assertIsAbsolute('/a/b')
@@ -174,7 +171,7 @@ function test_fs:test_remove_filename()
     end
     lt.assertEquals(remove_filename('a/b/c'), 'a/b/')
     lt.assertEquals(remove_filename('a/b/'), 'a/b/')
-    if platform.OS == 'Windows' then
+    if isWindows then
         lt.assertEquals(remove_filename('a\\b\\c'), 'a/b/')
         lt.assertEquals(remove_filename('a\\b\\'), 'a/b/')
     end
@@ -187,7 +184,7 @@ function test_fs:test_replace_filename()
     lt.assertEquals(replace_filename('a/b/c.lua', 'd.lua'), 'a/b/d.lua')
     lt.assertEquals(replace_filename('a/b/c', 'd.lua'), 'a/b/d.lua')
     lt.assertEquals(replace_filename('a/b/', 'd.lua'), 'a/b/d.lua')
-    if platform.OS == 'Windows' then
+    if isWindows then
         lt.assertEquals(replace_filename('a\\b\\c.lua', 'd.lua'), 'a/b/d.lua')
         lt.assertEquals(replace_filename('a\\b\\c', 'd.lua'), 'a/b/d.lua')
         lt.assertEquals(replace_filename('a\\b\\', 'd.lua'), 'a/b/d.lua')
@@ -201,7 +198,7 @@ function test_fs:test_replace_extension()
     lt.assertEquals(replace_extension('a/b/c.ext', '.lua'), 'a/b/c.lua')
     lt.assertEquals(replace_extension('a/b/c', '.lua'), 'a/b/c.lua')
     lt.assertEquals(replace_extension('a/b/.ext', '.lua'), 'a/b/.ext.lua')
-    if platform.OS == 'Windows' then
+    if isWindows then
         lt.assertEquals(replace_extension('a\\b\\c.ext', '.lua'), 'a/b/c.lua')
         lt.assertEquals(replace_extension('a\\b\\c', '.lua'), 'a/b/c.lua')
         lt.assertEquals(replace_extension('a\\b\\.ext', '.lua'), 'a/b/.ext.lua')
@@ -266,7 +263,7 @@ function test_fs:test_div()
     eq_div('', 'a/b', 'a/b')
     eq_div(C..'a', D..'b', D..'b')
     eq_div(C..'a/', D..'b', D..'b')
-    if platform.OS == 'Windows' then
+    if isWindows then
         eq_div('a/', '\\b', '/b')
         eq_div('a\\b', 'c', 'a/b/c')
         eq_div('a\\', 'b', 'a/b')
@@ -297,7 +294,7 @@ function test_fs:test_lexically_normal()
     test("./b", "b")
     test("a/b/../", "a/")
     test('a/b/c/../../d', 'a/d')
-    if platform.OS == 'Windows' then
+    if isWindows then
         test("a\\", "a/")
         test("a\\b", "a/b")
         test(".\\b", "b")
@@ -331,7 +328,7 @@ function test_fs:test_relative()
     relative(C..'a/b', C..'a/b/c',  '..')
     relative(C..'a/b/c', C..'a',  'b/c')
     relative(C..'a/d/e', C..'a/b/c',  '../../d/e')
-    if platform.OS == 'Windows' then
+    if isWindows then
         --relative(D..'a/b/c', C..'a',  '')
         relative('a', C..'a/b/c',  '')
         relative(C..'a/b', 'a/b/c',  '')
@@ -352,7 +349,7 @@ function test_fs:test_eq()
     eq('a/./b', 'a/b')
     eq('a/b/../c', 'a/c')
     eq('a/b/../c', 'a/d/../c')
-    if platform.OS == 'Windows' then
+    if isWindows then
         eq('a/B', 'a/b')
         eq('a/b', 'a\\b')
     end
@@ -536,7 +533,7 @@ function test_fs:test_rename()
     fs.remove_all(fs.path('temp2'))
     fs.create_directories(fs.path('temp1'))
     fs.create_directories(fs.path('temp2'))
-    if platform.OS == 'Windows' then
+    if isWindows then
         rename_failed('temp1', 'temp2')
     else
         rename_ok('temp1', 'temp2')
@@ -841,7 +838,7 @@ function test_fs:test_canonical()
     --    lt.assertEquals(fs.canonical(fs.path(a)):string(), fs.absolute(fs.path(b)):string())
     --end
     --create_file "ABCabc.txt"
-    --if platform.OS == 'Windows' and not isMinGW() then
+    --if isWindows and not isMinGW then
     --    test("abcabc.txt", "ABCabc.txt")
     --end
     --test("ABCabc.txt", "ABCabc.txt")
@@ -879,7 +876,7 @@ function test_fs:test_symlink()
         fs.remove_all(target)
         lt.assertEquals(fs.status(target):type(), "not_found")
         lt.assertEquals(fs.symlink_status(target):type(), "not_found")
-        if platform.OS ~= "macOS" then
+        if isMacOS then
             lt.assertEquals(fs.status(link):type(), "not_found")
         end
         lt.assertEquals(fs.symlink_status(link):type(), "symlink")

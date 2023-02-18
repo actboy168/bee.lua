@@ -2,7 +2,7 @@ local platform = require 'bee.platform'
 local subprocess = require 'bee.subprocess'
 local fs = require 'bee.filesystem'
 
-local isWindows = platform.OS == 'Windows'
+local isWindows = platform.os == 'windows'
 local isMingw = os.getenv 'MSYSTEM' ~= nil
 local isWindowsShell = (isWindows) and (not isMingw)
 
@@ -12,7 +12,7 @@ local function runshell(command)
 end
 
 local function isWSL2()
-    if platform.OS ~= "Linux" then
+    if platform.os ~= "linux" then
         return false
     end
     local r = runshell "uname -r"

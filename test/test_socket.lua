@@ -66,7 +66,7 @@ local test_socket = lt.test "socket"
 local TestUnixSock = 'test.unixsock'
 
 function test_socket:setup()
-    if platform.OS == "Windows" then
+    if platform.os == "windows" then
         socket.simulationUDS(self.UDS)
     end
 end
@@ -337,7 +337,7 @@ function test_socket:test_dump()
     server:close()
 end
 
-if platform.OS == "Windows" then
+if platform.os == "windows" then
     local test_socket_1 = lt.test "socket"
     local test_socket_2 = lt.test "socket-uds"
     for _, k in ipairs(test_socket_1) do

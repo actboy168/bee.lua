@@ -20,7 +20,7 @@ local platform = require 'bee.platform'
 local lt = require 'ltest'
 
 if not lt.options.list then
-    print("OS:       ", platform.OS)
+    print("OS:       ", platform.os)
     print("Arch:     ", platform.Arch)
     print("Compiler: ", platform.CompilerVersion)
     print("CRT:      ", platform.CRTVersion)
