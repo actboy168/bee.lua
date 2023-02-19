@@ -15,15 +15,12 @@ namespace bee::lua_socket {
     using namespace bee::net;
     static const int kDefaultBackLog = 5;
     struct luafd {
-        enum class tag {
-            unknown,
-            connect,
-            listen,
-            accept,
-        };
-        socket::fd_t     fd;
-        socket::protocol protocol;
-        tag              type;
+        socket::fd_t fd;
+        bool         unlink;
+        luafd(socket::fd_t fd)
+            : fd(fd)
+            , unlink(false)
+        {}
     };
     static int push_neterror(lua_State* L, const char* msg) {
         auto error = make_neterror(msg);
@@ -31,9 +28,16 @@ namespace bee::lua_socket {
         lua::push_errormesg(L, msg, error);
         return 2;
     }
-    static endpoint read_endpoint(lua_State* L, socket::protocol protocol, int idx) {
+    static endpoint read_endpoint(lua_State* L, int idx) {
         std::string_view ip = lua::to_strview(L, idx);
-        if (protocol != socket::protocol::uds) {
+        if (lua_isnoneornil(L, idx + 1)) {
+            endpoint ep = endpoint::from_unixpath(ip);
+            if (!ep.valid()) {
+                luaL_error(L, "invalid address: %s", ip.data());
+            }
+            return ep;
+        }
+        else {
             int port = (int)luaL_checkinteger(L, idx + 1);
             endpoint ep = endpoint::from_hostname(ip, port);
             if (!ep.valid()) {
@@ -41,11 +45,6 @@ namespace bee::lua_socket {
             }
             return ep;
         }
-        endpoint ep = endpoint::from_unixpath(ip);
-        if (!ep.valid()) {
-            luaL_error(L, "invalid address: %s", ip.data());
-        }
-        return ep;
     }
     static luafd& tofd(lua_State* L, int idx) {
         return *(luafd*)lua_touserdata(L, idx);
@@ -53,14 +52,14 @@ namespace bee::lua_socket {
     static luafd& checkfd(lua_State* L, int idx) {
         return *(luafd*)getObject(L, idx, "socket");
     }
-    static luafd& pushfd(lua_State* L, socket::fd_t fd, socket::protocol protocol, luafd::tag type);
+    static luafd& pushfd(lua_State* L, socket::fd_t fd);
     static int accept(lua_State* L) {
         luafd&       self = checkfd(L, 1);
         socket::fd_t newfd;
         if (socket::status::success != socket::accept(self.fd, newfd)) {
             return push_neterror(L, "accept");
         }
-        pushfd(L, newfd, self.protocol, luafd::tag::accept);
+        pushfd(L, newfd);
         return 1;
     }
     static int recv(lua_State* L) {
@@ -166,7 +165,7 @@ namespace bee::lua_socket {
             return true;
         }
         self.fd = socket::retired_fd;
-        if (self.protocol == socket::protocol::uds && self.type == luafd::tag::listen) {
+        if (self.unlink) {
             socket::unlink(fd);
         }
         return socket::close(fd);
@@ -277,10 +276,7 @@ namespace bee::lua_socket {
     }
     static int connect(lua_State* L) {
         luafd& self = checkfd(L, 1);
-        if (self.protocol != socket::protocol::udp && self.protocol != socket::protocol::udp6) {
-            self.type = luafd::tag::connect;
-        }
-        auto ep = read_endpoint(L, self.protocol, 2);
+        auto ep = read_endpoint(L, 2);
         switch (socket::connect(self.fd, ep)) {
         case socket::status::success:
             lua_pushboolean(L, 1);
@@ -296,12 +292,12 @@ namespace bee::lua_socket {
     }
     static int bind(lua_State* L) {
         luafd& self = checkfd(L, 1);
-        if (self.protocol != socket::protocol::udp && self.protocol != socket::protocol::udp6) {
-            self.type = luafd::tag::listen;
-        }
-        auto ep = read_endpoint(L, self.protocol, 2);
+        auto ep = read_endpoint(L, 2);
         if (socket::status::success != socket::bind(self.fd, ep)) {
             return push_neterror(L, "bind");
+        }
+        if (ep.family() == AF_UNIX) {
+            self.unlink = true;
         }
         lua_pushboolean(L, 1);
         return 1;
@@ -315,9 +311,9 @@ namespace bee::lua_socket {
         lua_pushboolean(L, 1);
         return 1;
     }
-    static luafd& pushfd(lua_State* L, socket::fd_t fd, socket::protocol protocol, luafd::tag type) {
+    static luafd& pushfd(lua_State* L, socket::fd_t fd) {
         luafd* self = (luafd*)lua_newuserdatauv(L, sizeof(luafd), 0);
-        new (self) luafd {fd, protocol, type };
+        new (self) luafd {fd};
         if (newObject(L, "socket")) {
             luaL_Reg mt[] = {
                 {"connect", connect},
@@ -356,7 +352,7 @@ namespace bee::lua_socket {
         if (fd == socket::retired_fd) {
             return push_neterror(L, "socket");
         }
-        pushfd(L, fd, protocol, luafd::tag::unknown);
+        pushfd(L, fd);
         return 1;
     }
     static int pair(lua_State* L) {
@@ -364,8 +360,8 @@ namespace bee::lua_socket {
         if (!socket::pair(sv)) {
             return push_neterror(L, "socketpair");
         }
-        pushfd(L, sv[0], socket::protocol::uds, luafd::tag::accept);
-        pushfd(L, sv[1], socket::protocol::uds, luafd::tag::connect);
+        pushfd(L, sv[0]);
+        pushfd(L, sv[1]);
         return 2;
     }
     static int dump(lua_State* L) {
@@ -380,23 +376,19 @@ namespace bee::lua_socket {
         if (sz != sizeof(luafd)) {
             return luaL_error(L, "invalid string length");
         }
-        luafd& self = *(luafd*)s;
-        pushfd(L, self.fd, self.protocol, self.type);
+        luafd& d = *(luafd*)s;
+        auto& self = pushfd(L, d.fd);
+        self.unlink = d.unlink;
         return 1;
     }
     static int fd(lua_State* L) {
-        static const char *const protocol_opts[] = {
-            "tcp", "udp", "unix", "tcp6", "udp6",
-            NULL
-        };
-        static const char *const type_opts[] = {
-            "unknown", "connect", "listen", "accept",
-            NULL
-        };
+        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+        if (lua_gettop(L) >= 2) {
+            luaL_checktype(L, 2, LUA_TBOOLEAN);
+        }
         socket::fd_t fd = (socket::fd_t)(intptr_t)lua_touserdata(L, 1);
-        socket::protocol protocol = (socket::protocol)luaL_checkoption(L, 2, NULL, protocol_opts);
-        luafd::tag type = (luafd::tag)luaL_checkoption(L, 3, "unknown", type_opts);
-        pushfd(L, fd, protocol, type);
+        auto& self = pushfd(L, fd);
+        self.unlink = lua_toboolean(L, 2);
         return 1;
     }
     static int __call(lua_State* L) {
@@ -498,7 +490,7 @@ namespace bee::lua_socket {
                 luafd& self = checkfd(L, -1);
                 MAXFD_SET(self.fd);
                 FD_SET(self.fd, &writefds);
-                EXFDS_SET(self.type == luafd::tag::connect, self.fd);
+                EXFDS_SET(true, self.fd); //TODO
                 lua_pop(L, 1);
             }
             int ok = ::select(MAXFD_GET(), &readfds, &writefds, EXFDS_GET(), timeop);
