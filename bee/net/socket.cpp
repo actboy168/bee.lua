@@ -35,13 +35,6 @@
 #    define net_success(x) ((x) == 0)
 #endif
 
-#if defined(NDEBUG)
-#define net_assert_success(x) ((void)x)
-#else
-#define net_assert_success(x) assert(net_success(x))
-#endif
-
-
 #if defined(__MINGW32__)
 #define WSA_FLAG_NO_HANDLE_INHERIT 0x80
 #endif
@@ -217,10 +210,10 @@ namespace bee::net::socket {
     }
 
 #if defined(_WIN32)
-    static void no_blocking(fd_t s) {
+    static bool no_blocking(fd_t s) {
         unsigned long nonblock = 1;
         int rc = ioctlsocket(s, FIONBIO, &nonblock);
-        net_assert_success(rc);
+        return net_success(rc);
     }
     static bool no_inherit(fd_t s) {
         DWORD flags = 0;
@@ -229,10 +222,10 @@ namespace bee::net::socket {
         return true;
     }
 #elif defined(__APPLE__)
-    static void no_blocking(fd_t s) {
+    static bool no_blocking(fd_t s) {
         int flags = fcntl(s, F_GETFL, 0);
         int rc = fcntl(s, F_SETFL, flags | O_NONBLOCK);
-        net_assert_success(rc);
+        return net_success(rc);
     }
     static bool no_inherit(fd_t s) {
         int r;
@@ -247,14 +240,23 @@ namespace bee::net::socket {
 #if defined(_WIN32)
         fd_t fd = ::WSASocketW(af, type, protocol, 0, 0, WSA_FLAG_NO_HANDLE_INHERIT);
         if (fd != retired_fd) {
-            no_blocking(fd);
+            if (!no_blocking(fd)) {
+                close(fd);
+                return retired_fd;
+            }
         }
         return fd;
 #elif defined(__APPLE__)
         fd_t fd = ::socket(af, type, protocol);
         if (fd != retired_fd) {
-            no_inherit(fd);
-            no_blocking(fd);
+            if (!no_inherit(fd)) {
+                close(fd);
+                return retired_fd;
+            }
+            if (!no_blocking(fd)) {
+                close(fd);
+                return retired_fd;
+            }
         }
         return fd;
 #else
@@ -330,66 +332,22 @@ namespace bee::net::socket {
     }
 
     template <typename T>
-    static void setoption(fd_t s, int level, int optname, T& v) {
+    static bool setoption(fd_t s, int level, int optname, T& v) {
         const int rc = setsockopt(s, level, optname, (char*)&v, sizeof(T));
-        net_assert_success(rc);
+        return net_success(rc);
     }
 
-    void setoption(fd_t s, option opt, int value) {
+    bool setoption(fd_t s, option opt, int value) {
         switch (opt) {
         case option::reuseaddr:
-            setoption(s, SOL_SOCKET, SO_REUSEADDR, value);
-            break;
+            return setoption(s, SOL_SOCKET, SO_REUSEADDR, value);
         case option::sndbuf:
-            setoption(s, SOL_SOCKET, SO_SNDBUF, value);
-            break;
+            return setoption(s, SOL_SOCKET, SO_SNDBUF, value);
         case option::rcvbuf:
-            setoption(s, SOL_SOCKET, SO_RCVBUF, value);
-            break;
+            return setoption(s, SOL_SOCKET, SO_RCVBUF, value);
         default:
             std::unreachable();
         }
-    }
-
-    void keepalive(fd_t s, int keepalive, int keepalive_cnt, int keepalive_idle, int keepalive_intvl) {
-        // TODO
-        if (keepalive == -1) {
-            return;
-        }
-#if defined(_WIN32)
-        (void)keepalive_cnt;
-        tcp_keepalive keepaliveopts;
-        keepaliveopts.onoff = keepalive;
-        keepaliveopts.keepalivetime = keepalive_idle != -1 ? keepalive_idle * 1000 : 7200000;
-        keepaliveopts.keepaliveinterval = keepalive_intvl != -1 ? keepalive_intvl * 1000 : 1000;
-        DWORD num_bytes_returned;
-        int rc = WSAIoctl(s, SIO_KEEPALIVE_VALS, &keepaliveopts, sizeof(keepaliveopts), NULL, 0, &num_bytes_returned, NULL, NULL);
-        net_assert_success(rc);
-#elif defined(__linux__)
-        int rc = setsockopt(s, SOL_SOCKET, SO_KEEPALIVE, (char*) &keepalive, sizeof (int));
-        net_assert_success(rc);
-        if (keepalive_cnt != -1) {
-            int rc = setsockopt(s, IPPROTO_TCP, TCP_KEEPCNT, &keepalive_cnt, sizeof (int));
-            net_assert_success(rc);
-        }
-        if (keepalive_idle != -1) {
-            int rc = setsockopt(s, IPPROTO_TCP, TCP_KEEPIDLE, &keepalive_idle, sizeof (int));
-            net_assert_success(rc);
-        }
-        if (keepalive_intvl != -1) {
-            int rc = setsockopt(s, IPPROTO_TCP, TCP_KEEPINTVL, &keepalive_intvl, sizeof (int));
-            net_assert_success(rc);
-        }
-#elif defined(__APPLE__)
-        (void)keepalive_cnt;
-        (void)keepalive_intvl;
-        int rc = setsockopt(s, SOL_SOCKET, SO_KEEPALIVE, (char*) &keepalive, sizeof (int));
-        net_assert_success(rc);
-        if (keepalive_idle != -1) {
-            int rc = setsockopt(s, IPPROTO_TCP, TCP_KEEPALIVE, &keepalive_idle, sizeof (int));
-            net_assert_success(rc);
-        }
-#endif
     }
 
     void udp_connect_reset(fd_t s) {
@@ -445,8 +403,14 @@ namespace bee::net::socket {
 #if defined(_WIN32) || defined(__APPLE__)
         fd_t fd = ::accept(s, addr, addrlen);
         if (fd != retired_fd) {
-            no_inherit(fd);
-            no_blocking(fd);
+            if (!no_inherit(fd)) {
+                close(fd);
+                return retired_fd;
+            }
+            if (!no_blocking(fd)) {
+                close(fd);
+                return retired_fd;
+            }
         }
         return fd;
 #else
@@ -563,10 +527,6 @@ namespace bee::net::socket {
         if (!socket::getsockname(s, ep)) {
             return false;
         }
-        return unlink(ep);
-    }
-
-    bool unlink(const endpoint& ep) {
         if (ep.family() != AF_UNIX) {
             return false;
         }
@@ -595,8 +555,16 @@ namespace bee::net::socket {
 #if defined(__APPLE__)
         bool ok = 0 == ::socketpair(PF_UNIX, SOCK_STREAM, 0, sv);
         if (ok) {
-            no_inherit(sv[0]);
-            no_inherit(sv[1]);
+            if (!no_inherit(sv[0])) {
+                close(sv[0]);
+                close(sv[1]);
+                return false;
+            }
+            if (!no_inherit(sv[1])) {
+                close(sv[0]);
+                close(sv[1]);
+                return false;
+            }
         }
         return ok;
 #else
@@ -704,8 +672,16 @@ namespace bee::net::socket {
         if (!blockpair(sv)) {
             return false;
         }
-        no_blocking(sv[0]);
-        no_blocking(sv[1]);
+        if (!no_blocking(sv[0])) {
+            close(sv[0]);
+            close(sv[1]);
+            return false;
+        }
+        if (!no_blocking(sv[1])) {
+            close(sv[0]);
+            close(sv[1]);
+            return false;
+        }
         return true;
 #else
         return 0 == ::socketpair(PF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0, sv);

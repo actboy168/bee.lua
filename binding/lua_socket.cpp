@@ -268,8 +268,12 @@ namespace bee::lua_socket {
         luafd& self = checkfd(L, 1);
         static const char *const opts[] = {"reuseaddr", "sndbuf", "rcvbuf", NULL};
         socket::option opt = (socket::option)luaL_checkoption(L, 2, NULL, opts);
-        socket::setoption(self.fd, opt, (int)luaL_checkinteger(L, 3));
-        return 0;
+        bool ok = socket::setoption(self.fd, opt, (int)luaL_checkinteger(L, 3));
+        if (!ok) {
+            return push_neterror(L, "setsockopt");
+        }
+        lua_pushboolean(L, 1);
+        return 1;
     }
     static int connect(lua_State* L) {
         luafd& self = checkfd(L, 1);
