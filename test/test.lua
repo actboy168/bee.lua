@@ -20,7 +20,12 @@ local platform = require 'bee.platform'
 local lt = require 'ltest'
 
 if not lt.options.list then
-    print("OS:       ", platform.os)
+    if platform.os == "windows" then
+        local v = platform.os_version
+        print("OS:       ", ("%s %d.%d.%d.%d"):format(platform.os, v.major, v.minor, v.revision, v.build))
+    else
+        print("OS:       ", platform.os)
+    end
     print("Arch:     ", platform.Arch)
     print("Compiler: ", platform.CompilerVersion)
     print("CRT:      ", platform.CRTVersion)

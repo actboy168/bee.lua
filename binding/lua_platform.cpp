@@ -18,6 +18,10 @@
 #	endif
 #endif
 
+#if defined(_WIN32)
+#	include <bee/platform/win/version.h>
+#endif
+
 namespace bee::lua_platform {
 	static int luaopen(lua_State* L) {
 		lua_newtable(L);
@@ -149,6 +153,20 @@ namespace bee::lua_platform {
 		lua_pushboolean(L, 1);
 #endif
 		lua_setfield(L, -2, "DEBUG");
+
+#if defined(_WIN32)
+		auto version = bee::platform::get_version();
+		lua_createtable(L, 0, 4);
+		lua_pushinteger(L, version.major);
+		lua_setfield(L, -2, "major");
+		lua_pushinteger(L, version.minor);
+		lua_setfield(L, -2, "minor");
+		lua_pushinteger(L, version.revision);
+		lua_setfield(L, -2, "revision");
+		lua_pushinteger(L, version.build);
+		lua_setfield(L, -2, "build");
+		lua_setfield(L, -2, "os_version");
+#endif
 		return 1;
 	}
 }
