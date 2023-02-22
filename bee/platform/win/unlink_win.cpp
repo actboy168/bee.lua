@@ -1,6 +1,16 @@
 #include <bee/platform/win/unlink.h>
 #include <windows.h>
 
+#if !defined(_M_X64)
+#include <io.h>
+namespace bee::win {
+    bool unlink(const wchar_t* path) {
+        //TODO
+        return ::_wunlink(path);
+    }
+}
+#else
+
 enum {
     FILE_DISPOSITION_DO_NOT_DELETE = 0x00,
     FILE_DISPOSITION_DELETE = 0x01,
@@ -166,3 +176,4 @@ namespace bee::win {
         return false;
     }
 }
+#endif
