@@ -30,15 +30,6 @@ namespace bee::lua {
 #endif
     }
 
-    inline void push_string(lua_State* L, const string_type& str) {
-#if defined(_WIN32) 
-        std::string utf8 = w2u(str);
-        lua_pushlstring(L, utf8.data(), utf8.size());
-#else
-        lua_pushlstring(L, str.data(), str.size());
-#endif
-    }
-
     inline void push_errormesg(lua_State* L, const char* msg, const std::error_code& ec) {
         lua_pushfstring(L, "%s: %s (%d)", msg, error_message(ec).c_str(), ec.value());
     }
