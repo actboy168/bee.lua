@@ -398,24 +398,12 @@ namespace bee::lua_socket {
 #define MAXFD_INIT()
 #define MAXFD_SET(fd)
 #define MAXFD_GET() 0
-#define EXFDS_INIT() fd_set exceptfds
-#define EXFDS_ZERO() FD_ZERO(&exceptfds)
-#define EXFDS_SET(connect, fd) \
-    if (connect)               \
-    FD_SET((fd), &exceptfds)
-#define EXFDS_GET() (&exceptfds)
-#define EXFDS_UPDATE(wfds)                         \
-    for (u_int i = 0; i < exceptfds.fd_count; ++i) \
-    FD_SET(exceptfds.fd_array[i], &(wfds))
+#define EXFDS_GET() (&writefds)
 #else
 #define MAXFD_INIT() int maxfd = 0
 #define MAXFD_SET(fd) maxfd = (std::max)(maxfd, (int)(fd))
 #define MAXFD_GET() (maxfd + 1)
-#define EXFDS_INIT()
-#define EXFDS_ZERO()
-#define EXFDS_SET(connect, fd)
 #define EXFDS_GET() NULL
-#define EXFDS_UPDATE(wfds)
 #endif
     static int select(lua_State* L) {
         bool read_finish = true, write_finish = true;
@@ -462,12 +450,10 @@ namespace bee::lua_socket {
         lua_newtable(L);
         lua_Integer rout = 0, wout = 0;
         fd_set      readfds, writefds;
-        EXFDS_INIT();
         for (int x = 1; !read_finish || !write_finish; x += FD_SETSIZE) {
             MAXFD_INIT();
             FD_ZERO(&readfds);
             FD_ZERO(&writefds);
-            EXFDS_ZERO();
             int r = 0, w = 0;
             for (; !read_finish && r < FD_SETSIZE; ++r) {
                 if (LUA_TNIL == lua_rawgeti(L, 1, x + r)) {
@@ -490,12 +476,10 @@ namespace bee::lua_socket {
                 luafd& self = checkfd(L, -1);
                 MAXFD_SET(self.fd);
                 FD_SET(self.fd, &writefds);
-                EXFDS_SET(true, self.fd); //TODO
                 lua_pop(L, 1);
             }
             int ok = ::select(MAXFD_GET(), &readfds, &writefds, EXFDS_GET(), timeop);
             if (ok > 0) {
-                EXFDS_UPDATE(writefds);
                 for (int i = 0; i < r; ++i) {
                     if (LUA_TUSERDATA == lua_rawgeti(L, 1, x + i) && FD_ISSET(tofd(L, -1).fd, &readfds)) {
                         lua_rawseti(L, 4, ++rout);
