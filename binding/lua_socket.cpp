@@ -14,12 +14,6 @@
 namespace bee::lua_socket {
     using namespace bee::net;
     static const int kDefaultBackLog = 5;
-    struct luafd {
-        socket::fd_t fd;
-        luafd(socket::fd_t fd)
-            : fd(fd)
-        {}
-    };
     static int push_neterror(lua_State* L, const char* msg) {
         auto error = make_neterror(msg);
         lua_pushnil(L);
@@ -44,25 +38,25 @@ namespace bee::lua_socket {
             return ep;
         }
     }
-    static luafd& tofd(lua_State* L, int idx) {
-        return *(luafd*)lua_touserdata(L, idx);
+    static socket::fd_t& tofd(lua_State* L, int idx) {
+        return *(socket::fd_t*)lua_touserdata(L, idx);
     }
-    static luafd& checkfd(lua_State* L, int idx) {
-        return *(luafd*)getObject(L, idx, "socket");
+    static socket::fd_t& checkfd(lua_State* L, int idx) {
+        return *(socket::fd_t*)getObject(L, idx, "socket");
     }
-    static luafd& pushfd(lua_State* L, socket::fd_t fd);
+    static socket::fd_t& pushfd(lua_State* L, socket::fd_t fd);
     static int accept(lua_State* L) {
-        luafd&       self = checkfd(L, 1);
+        socket::fd_t fd = checkfd(L, 1);
         socket::fd_t newfd;
-        if (socket::status::success != socket::accept(self.fd, newfd)) {
+        if (socket::status::success != socket::accept(fd, newfd)) {
             return push_neterror(L, "accept");
         }
         pushfd(L, newfd);
         return 1;
     }
     static int recv(lua_State* L) {
-        luafd&      self = checkfd(L, 1);
-        lua_Integer len = luaL_optinteger(L, 2, LUAL_BUFFERSIZE);
+        socket::fd_t fd  = checkfd(L, 1);
+        lua_Integer  len = luaL_optinteger(L, 2, LUAL_BUFFERSIZE);
         if (len > (std::numeric_limits<int>::max)()) {
             return luaL_argerror(L, 2, "invalid number");
         }
@@ -70,7 +64,7 @@ namespace bee::lua_socket {
         luaL_buffinit(L, &b);
         char* buf = luaL_prepbuffsize(&b, (size_t)len);
         int   rc;
-        switch (socket::recv(self.fd, rc, buf, (int)len)) {
+        switch (socket::recv(fd, rc, buf, (int)len)) {
         case socket::status::close:
             lua_pushnil(L);
             return 1;
@@ -87,10 +81,10 @@ namespace bee::lua_socket {
         }
     }
     static int send(lua_State* L) {
-        luafd&      self = checkfd(L, 1);
+        socket::fd_t     fd  = checkfd(L, 1);
         std::string_view buf = lua::to_strview(L, 2);
         int         rc;
-        switch (socket::send(self.fd, rc, (const char*)buf.data(), (int)buf.size())) {
+        switch (socket::send(fd, rc, (const char*)buf.data(), (int)buf.size())) {
         case socket::status::wait:
             lua_pushboolean(L, 0);
             return 1;
@@ -104,8 +98,8 @@ namespace bee::lua_socket {
         }
     }
     static int recvfrom(lua_State* L) {
-        luafd&      self = checkfd(L, 1);
-        lua_Integer len = luaL_optinteger(L, 2, LUAL_BUFFERSIZE);
+        socket::fd_t fd  = checkfd(L, 1);
+        lua_Integer  len = luaL_optinteger(L, 2, LUAL_BUFFERSIZE);
         if (len > (std::numeric_limits<int>::max)()) {
             return luaL_argerror(L, 2, "invalid number");
         }
@@ -114,7 +108,7 @@ namespace bee::lua_socket {
         luaL_buffinit(L, &b);
         char* buf = luaL_prepbuffsize(&b, (size_t)len);
         int   rc;
-        switch (socket::recvfrom(self.fd, rc, buf, (int)len, ep)) {
+        switch (socket::recvfrom(fd, rc, buf, (int)len, ep)) {
         case socket::status::close:
             lua_pushnil(L);
             return 1;
@@ -135,7 +129,7 @@ namespace bee::lua_socket {
         }
     }
     static int sendto(lua_State* L) {
-        luafd&           self = checkfd(L, 1);
+        socket::fd_t     fd = checkfd(L, 1);
         std::string_view buf = lua::to_strview(L, 2);
         std::string_view ip = lua::to_strview(L, 3);
         int              port = (int)luaL_checkinteger(L, 4);
@@ -144,7 +138,7 @@ namespace bee::lua_socket {
             return luaL_error(L, "invalid address: %s:%d", ip, port);
         }
         int rc;
-        switch (socket::sendto(self.fd, rc, buf.data(), (int)buf.size(), ep)) {
+        switch (socket::sendto(fd, rc, buf.data(), (int)buf.size(), ep)) {
         case socket::status::wait:
             lua_pushboolean(L, 0);
             return 1;
@@ -157,68 +151,67 @@ namespace bee::lua_socket {
             std::unreachable();
         }
     }
-    static bool socket_destroy(luafd& self) {
-        socket::fd_t fd = self.fd;
+    static bool socket_destroy(socket::fd_t& fd) {
         if (fd == socket::retired_fd) {
             return true;
         }
-        self.fd = socket::retired_fd;
-        return socket::close(fd);
+        bool ok = socket::close(fd);
+        fd = socket::retired_fd;
+        return ok;
     }
     static int close(lua_State* L) {
-        luafd& self = checkfd(L, 1);
-        if (!socket_destroy(self)) {
+        socket::fd_t& fd = checkfd(L, 1);
+        if (!socket_destroy(fd)) {
             return push_neterror(L, "close");
         }
         lua_pushboolean(L, 1);
         return 1;
     }
-    static int shutdown(lua_State* L, luafd& self, socket::shutdown_flag flag) {
-        if (!socket::shutdown(self.fd, flag)) {
+    static int shutdown(lua_State* L, socket::fd_t fd, socket::shutdown_flag flag) {
+        if (!socket::shutdown(fd, flag)) {
             return push_neterror(L, "shutdown");
         }
         lua_pushboolean(L, 1);
         return 1;
     }
     static int shutdown(lua_State* L) {
-        luafd& self = checkfd(L, 1);
+        socket::fd_t fd = checkfd(L, 1);
         if (lua_isnoneornil(L, 2)) {
-            return shutdown(L, self, socket::shutdown_flag::both);
+            return shutdown(L, fd, socket::shutdown_flag::both);
         }
         std::string_view flag = lua::to_strview(L, 2);
         if (flag[0] == 'r') {
-            return shutdown(L, self, socket::shutdown_flag::read);
+            return shutdown(L, fd, socket::shutdown_flag::read);
         }
         else if (flag[0] == 'w') {
-            return shutdown(L, self, socket::shutdown_flag::write);
+            return shutdown(L, fd, socket::shutdown_flag::write);
         }
         lua_pushnil(L);
         lua_pushstring(L, "invalid flag");
         return 2;
     }
     static int tostring(lua_State* L) {
-        luafd& self = checkfd(L, 1);
-        if (self.fd == socket::retired_fd) {
+        socket::fd_t fd = checkfd(L, 1);
+        if (fd == socket::retired_fd) {
             lua_pushstring(L, "socket (closed)");
             return 1;
         }
-        lua_pushfstring(L, "socket (%d)", self.fd);
+        lua_pushfstring(L, "socket (%d)", fd);
         return 1;
     }
     static int toclose(lua_State* L) {
-        luafd& self = checkfd(L, 1);
-        socket_destroy(self);
+        socket::fd_t& fd = checkfd(L, 1);
+        socket_destroy(fd);
         return 0;
     }
     static int gc(lua_State* L) {
-        luafd& self = checkfd(L, 1);
-        socket_destroy(self);
-        self.~luafd();
+        socket::fd_t& fd = checkfd(L, 1);
+        socket_destroy(fd);
         return 0;
     }
     static int status(lua_State* L) {
-        luafd& self = checkfd(L, 1);
-        int    err = socket::errcode(self.fd);
+        socket::fd_t fd = checkfd(L, 1);
+        int    err = socket::errcode(fd);
         if (err == 0) {
             lua_pushboolean(L, 1);
             return 1;
@@ -229,11 +222,11 @@ namespace bee::lua_socket {
         return 2;
     }
     static int info(lua_State* L) {
-        luafd&           self = checkfd(L, 1);
+        socket::fd_t     fd = checkfd(L, 1);
         std::string_view which = lua::to_strview(L, 2);
         if (which == "peer") {
             endpoint ep = endpoint::from_empty();
-            if (!socket::getpeername(self.fd, ep)) {
+            if (!socket::getpeername(fd, ep)) {
                 return push_neterror(L, "getpeername");
             }
             auto [ip, port] = ep.info();
@@ -243,7 +236,7 @@ namespace bee::lua_socket {
         }
         else if (which == "socket") {
             endpoint ep = endpoint::from_empty();
-            if (!socket::getsockname(self.fd, ep)) {
+            if (!socket::getsockname(fd, ep)) {
                 return push_neterror(L, "getsockname");
             }
             auto [ip, port] = ep.info();
@@ -254,15 +247,15 @@ namespace bee::lua_socket {
         return 0;
     }
     static int handle(lua_State* L) {
-        luafd& self = checkfd(L, 1);
-        lua_pushlightuserdata(L, (void*)(intptr_t)self.fd);
+        socket::fd_t fd = checkfd(L, 1);
+        lua_pushlightuserdata(L, (void*)(intptr_t)fd);
         return 1;
     }
     static int option(lua_State* L) {
-        luafd& self = checkfd(L, 1);
+        socket::fd_t fd = checkfd(L, 1);
         static const char *const opts[] = {"reuseaddr", "sndbuf", "rcvbuf", NULL};
         socket::option opt = (socket::option)luaL_checkoption(L, 2, NULL, opts);
-        bool ok = socket::setoption(self.fd, opt, (int)luaL_checkinteger(L, 3));
+        bool ok = socket::setoption(fd, opt, (int)luaL_checkinteger(L, 3));
         if (!ok) {
             return push_neterror(L, "setsockopt");
         }
@@ -270,9 +263,9 @@ namespace bee::lua_socket {
         return 1;
     }
     static int connect(lua_State* L) {
-        luafd& self = checkfd(L, 1);
+        socket::fd_t fd = checkfd(L, 1);
         auto ep = read_endpoint(L, 2);
-        switch (socket::connect(self.fd, ep)) {
+        switch (socket::connect(fd, ep)) {
         case socket::status::success:
             lua_pushboolean(L, 1);
             return 1;
@@ -286,27 +279,27 @@ namespace bee::lua_socket {
         }
     }
     static int bind(lua_State* L) {
-        luafd& self = checkfd(L, 1);
+        socket::fd_t fd = checkfd(L, 1);
         auto ep = read_endpoint(L, 2);
         socket::unlink(ep);
-        if (socket::status::success != socket::bind(self.fd, ep)) {
+        if (socket::status::success != socket::bind(fd, ep)) {
             return push_neterror(L, "bind");
         }
         lua_pushboolean(L, 1);
         return 1;
     }
     static int listen(lua_State* L) {
-        luafd& self = checkfd(L, 1);
+        socket::fd_t fd = checkfd(L, 1);
         int backlog = (int)luaL_optinteger(L, 2, kDefaultBackLog);
-        if (socket::status::success != socket::listen(self.fd, backlog)) {
+        if (socket::status::success != socket::listen(fd, backlog)) {
             return push_neterror(L, "listen");
         }
         lua_pushboolean(L, 1);
         return 1;
     }
-    static luafd& pushfd(lua_State* L, socket::fd_t fd) {
-        luafd* self = (luafd*)lua_newuserdatauv(L, sizeof(luafd), 0);
-        new (self) luafd {fd};
+    static socket::fd_t& pushfd(lua_State* L, socket::fd_t fd) {
+        socket::fd_t* pfd = (socket::fd_t*)lua_newuserdatauv(L, sizeof(socket::fd_t), 0);
+        *pfd = fd;
         if (newObject(L, "socket")) {
             luaL_Reg mt[] = {
                 {"connect", connect},
@@ -333,7 +326,7 @@ namespace bee::lua_socket {
             lua_setfield(L, -2, "__index");
         }
         lua_setmetatable(L, -2);
-        return *self;
+        return *pfd;
     }
     static int pair(lua_State* L) {
         socket::fd_t sv[2];
@@ -345,19 +338,18 @@ namespace bee::lua_socket {
         return 2;
     }
     static int dump(lua_State* L) {
-        luafd& self = checkfd(L, 1);
-        lua_pushlstring(L, (const char*)&self, sizeof(luafd));
-        self.fd = socket::retired_fd;
+        socket::fd_t& fd = checkfd(L, 1);
+        lua_pushlstring(L, (const char*)&fd, sizeof(fd));
+        fd = socket::retired_fd;
         return 1;
     }
     static int undump(lua_State* L) {
         size_t sz = 0;
         const char* s = luaL_checklstring(L, 1, &sz);
-        if (sz != sizeof(luafd)) {
+        if (sz != sizeof(socket::fd_t)) {
             return luaL_error(L, "invalid string length");
         }
-        luafd& d = *(luafd*)s;
-        pushfd(L, d.fd);
+        pushfd(L, *(socket::fd_t*)s);
         return 1;
     }
     static int fd(lua_State* L) {
@@ -447,7 +439,7 @@ namespace bee::lua_socket {
                     break;
                 }
 
-                socket::fd_t fd = checkfd(L, -1).fd;
+                socket::fd_t fd = checkfd(L, -1);
                 MAXFD_SET(fd);
                 FD_SET(fd, &readfds);
                 lua_pop(L, 1);
@@ -458,15 +450,15 @@ namespace bee::lua_socket {
                     lua_pop(L, 1);
                     break;
                 }
-                luafd& self = checkfd(L, -1);
-                MAXFD_SET(self.fd);
-                FD_SET(self.fd, &writefds);
+                socket::fd_t fd = checkfd(L, -1);
+                MAXFD_SET(fd);
+                FD_SET(fd, &writefds);
                 lua_pop(L, 1);
             }
             int ok = ::select(MAXFD_GET(), &readfds, &writefds, EXFDS_GET(), timeop);
             if (ok > 0) {
                 for (int i = 0; i < r; ++i) {
-                    if (LUA_TUSERDATA == lua_rawgeti(L, 1, x + i) && FD_ISSET(tofd(L, -1).fd, &readfds)) {
+                    if (LUA_TUSERDATA == lua_rawgeti(L, 1, x + i) && FD_ISSET(tofd(L, -1), &readfds)) {
                         lua_rawseti(L, 4, ++rout);
                     }
                     else {
@@ -474,7 +466,7 @@ namespace bee::lua_socket {
                     }
                 }
                 for (int i = 0; i < w; ++i) {
-                    if (LUA_TUSERDATA == lua_rawgeti(L, 2, x + i) && FD_ISSET(tofd(L, -1).fd, &writefds)) {
+                    if (LUA_TUSERDATA == lua_rawgeti(L, 2, x + i) && FD_ISSET(tofd(L, -1), &writefds)) {
                         lua_rawseti(L, 5, ++wout);
                     }
                     else {
