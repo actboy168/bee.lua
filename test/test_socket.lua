@@ -341,7 +341,9 @@ if platform.os == "windows" then
     local test_socket_1 = lt.test "socket"
     local test_socket_2 = lt.test "socket-uds"
     for _, k in ipairs(test_socket_1) do
-        test_socket_2[k] = test_socket_1[k]
+        if k:match "unix" then
+            test_socket_2[k] = test_socket_1[k]
+        end
     end
     test_socket_1.UDS = false
     test_socket_2.UDS = true
