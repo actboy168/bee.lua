@@ -53,10 +53,6 @@ local function read_file(filename)
     return content
 end
 
-local function assertPathEquals(p1, p2)
-    lt.assertEquals(fs.path(p1):lexically_normal():string(), fs.path(p2):lexically_normal():string())
-end
-
 local test_fs = lt.test "filesystem"
 
 local ALLOW_WRITE = 0x92
