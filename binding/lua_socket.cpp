@@ -342,19 +342,6 @@ namespace bee::lua_socket {
         lua_setmetatable(L, -2);
         return *self;
     }
-    static int create(lua_State* L, int idx) {
-        static const char *const opts[] = {
-            "tcp", "udp", "unix", "tcp6", "udp6",
-            NULL
-        };
-        socket::protocol protocol = (socket::protocol)luaL_checkoption(L, idx, NULL, opts);
-        socket::fd_t fd = socket::open(protocol);
-        if (fd == socket::retired_fd) {
-            return push_neterror(L, "socket");
-        }
-        pushfd(L, fd);
-        return 1;
-    }
     static int pair(lua_State* L) {
         socket::fd_t sv[2];
         if (!socket::pair(sv)) {
@@ -392,7 +379,17 @@ namespace bee::lua_socket {
         return 1;
     }
     static int __call(lua_State* L) {
-        return create(L, 2);
+        static const char *const opts[] = {
+            "tcp", "udp", "unix", "tcp6", "udp6",
+            NULL
+        };
+        socket::protocol protocol = (socket::protocol)luaL_checkoption(L, 2, NULL, opts);
+        socket::fd_t fd = socket::open(protocol);
+        if (fd == socket::retired_fd) {
+            return push_neterror(L, "socket");
+        }
+        pushfd(L, fd);
+        return 1;
     }
 #if defined(_WIN32)
 #define MAXFD_INIT()
