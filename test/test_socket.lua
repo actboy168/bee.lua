@@ -65,6 +65,15 @@ local test_socket = lt.test "socket"
 
 local TestUnixSock = 'test.unixsock'
 
+local supportAutoUnlink = true
+local function detectAutoUnlink()
+    if supportAutoUnlink then
+        lt.assertEquals(file_exists(TestUnixSock), false)
+    else
+        os.remove(TestUnixSock)
+    end
+end
+
 function test_socket:setup()
     if platform.os == "windows" then
         socket.simulationUDS(self.UDS)
@@ -91,7 +100,7 @@ function test_socket:test_bind()
         lt.assertIsBoolean(fd:bind(TestUnixSock))
         lt.assertEquals(file_exists(TestUnixSock), true)
         fd:close()
-        lt.assertEquals(file_exists(TestUnixSock), false)
+        detectAutoUnlink()
     end
 end
 
@@ -126,7 +135,7 @@ function test_socket:test_unix_connect()
         client:close()
     end
     server:close()
-    lt.assertEquals(file_exists(TestUnixSock), false)
+    detectAutoUnlink()
 end
 
 function test_socket:test_tcp_accept()
@@ -176,7 +185,7 @@ function test_socket:test_unix_accept()
         client:close()
     end
     server:close()
-    lt.assertEquals(file_exists(TestUnixSock), false)
+    detectAutoUnlink()
 end
 
 function test_socket:test_pair()
@@ -266,7 +275,7 @@ local function createUnixEchoTest(name, f)
     server:close()
     thread.wait(client)
     assertNotThreadError()
-    lt.assertEquals(file_exists(TestUnixSock), false)
+    detectAutoUnlink()
 end
 
 local function testEcho1()

@@ -4,6 +4,7 @@
 #   include <mstcpip.h>
 #   include <bee/platform/win/unicode.h>
 #   include <bee/platform/win/version.h>
+#   include <bee/thread/spinlock.h>
 #   include <fstream>
 #   include <charconv>
 #   include <limits>
@@ -99,39 +100,24 @@ namespace bee::net::socket {
     }
 
     namespace state {
-        typedef std::map<std::string_view, std::any> u_table_t;
-        std::map<fd_t, u_table_t> _state;
-        std::mutex                _mutex;
-
+        using value_type = std::string;
+        std::map<fd_t, value_type> _state;
+        spinlock                   _mutex;
         static void remove(fd_t s) {
-            std::unique_lock<std::mutex> _(_mutex);
+            std::unique_lock<spinlock> _(_mutex);
             _state.erase(s);
         }
-
-        template <typename T>
-        static void store(fd_t s, std::string_view key, T const& value) {
-            std::unique_lock<std::mutex> _(_mutex);
-            _state[s].emplace(key, value);
+        static void store(fd_t s, const value_type& value) {
+            std::unique_lock<spinlock> _(_mutex);
+            _state.emplace(s, value);
         }
-
-        template <typename T>
-        static std::optional<T> load(fd_t s, std::string_view key) {
-            std::unique_lock<std::mutex> _(_mutex);
-            auto i1 = _state.find(s);
-            if (i1 == _state.end()) {
-                return {};
+        static std::optional<value_type> load(fd_t s) {
+            std::unique_lock<spinlock> _(_mutex);
+            auto it = _state.find(s);
+            if (it == _state.end()) {
+                return std::nullopt;
             }
-            u_table_t& table = i1->second;
-            auto i2 = table.find(key);
-            if (i2 == table.end()) {
-                return {};
-            }
-            std::any& value = i2->second;
-            T* r = std::any_cast<T>(&value);
-            if (!r) {
-                return {};
-            }
-            return *r;
+            return it->second;
         }
     }
 
@@ -167,7 +153,7 @@ namespace bee::net::socket {
             ::WSASetLastError(WSAENETDOWN);
             return status::failed;
         }
-        state::store<std::string>(s, "path", path);
+        state::store(s, path);
         return status::success;
     }
 #endif
@@ -515,7 +501,7 @@ namespace bee::net::socket {
     bool unlink(fd_t s) {
 #if defined(_WIN32)
         if (!socket::supportUnixDomainSocket()) {
-            auto path = state::load<std::string>(s, "path");
+            auto path = state::load(s);
             if (!path) {
                 return false;
             }
