@@ -74,12 +74,6 @@ local function detectAutoUnlink()
     end
 end
 
-function test_socket:setup()
-    if platform.os == "windows" then
-        socket.simulationUDS(self.UDS)
-    end
-end
-
 function test_socket:test_bind()
     do
         local fd = lt.assertIsUserdata(socket 'tcp')
@@ -344,16 +338,4 @@ function test_socket:test_dump()
         client:close()
     end
     server:close()
-end
-
-if platform.os == "windows" then
-    local test_socket_1 = lt.test "socket"
-    local test_socket_2 = lt.test "socket-uds"
-    for _, k in ipairs(test_socket_1) do
-        if k:match "unix" then
-            test_socket_2[k] = test_socket_1[k]
-        end
-    end
-    test_socket_1.UDS = false
-    test_socket_2.UDS = true
 end

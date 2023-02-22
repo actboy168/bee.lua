@@ -156,6 +156,14 @@ namespace bee::net::socket {
         state::store(s, path);
         return status::success;
     }
+
+    static bool supportUnixDomainSocket_() {
+        return !(bee::platform::get_version() < bee::platform::version {10, 0, 17763, 0});
+    }
+    static bool supportUnixDomainSocket() {
+        static bool support = supportUnixDomainSocket_();
+        return support;
+    }
 #endif
 
     void initialize() {
@@ -280,23 +288,6 @@ namespace bee::net::socket {
         return ::close(s) == 0;
 #endif
     }
-
-#if defined _WIN32
-    static bool forceSimulationUDS = false;
-    static bool supportUnixDomainSocket_() {
-        return !(bee::platform::get_version() < bee::platform::version {10, 0, 17763, 0});
-    }
-    bool supportUnixDomainSocket() {
-        if (forceSimulationUDS) {
-            return false;
-        }
-        static bool support = supportUnixDomainSocket_();
-        return support;
-    }
-    void simulationUnixDomainSocket(bool open) {
-        forceSimulationUDS = open;
-    }
-#endif
 
     bool shutdown(fd_t s, shutdown_flag flag) {
         assert(s != retired_fd);
@@ -500,7 +491,7 @@ namespace bee::net::socket {
 
     bool unlink(fd_t s) {
 #if defined(_WIN32)
-        if (!socket::supportUnixDomainSocket()) {
+        if (!supportUnixDomainSocket()) {
             auto path = state::load(s);
             if (!path) {
                 return false;

@@ -69,8 +69,4 @@ namespace bee::net::socket {
     bool   unlink(fd_t s);
     int    errcode(fd_t s);
     fd_t   dup(fd_t s);
-#if defined _WIN32
-    bool   supportUnixDomainSocket();
-    void   simulationUnixDomainSocket(bool open);
-#endif
 }
