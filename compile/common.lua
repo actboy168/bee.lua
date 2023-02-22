@@ -118,6 +118,7 @@ lm:lua_source "source_bee" {
             "wbemuuid",
             "oleAut32",
             "shell32",
+            "ntdll",
         },
     },
     mingw = {

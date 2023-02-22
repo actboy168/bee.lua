@@ -65,7 +65,7 @@ local test_socket = lt.test "socket"
 
 local TestUnixSock = 'test.unixsock'
 
-local supportAutoUnlink = true
+local supportAutoUnlink = false
 local function detectAutoUnlink()
     if supportAutoUnlink then
         lt.assertEquals(file_exists(TestUnixSock), false)
@@ -90,6 +90,12 @@ function test_socket:test_bind()
     end
     do
         os.remove(TestUnixSock)
+        local fd = lt.assertIsUserdata(socket 'unix')
+        lt.assertIsBoolean(fd:bind(TestUnixSock))
+        lt.assertEquals(file_exists(TestUnixSock), true)
+        fd:close()
+    end
+    do
         local fd = lt.assertIsUserdata(socket 'unix')
         lt.assertIsBoolean(fd:bind(TestUnixSock))
         lt.assertEquals(file_exists(TestUnixSock), true)

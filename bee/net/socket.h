@@ -66,7 +66,7 @@ namespace bee::net::socket {
     status sendto(fd_t s, int& rc, const char* buf, int len, const endpoint& ep);
     bool   getpeername(fd_t s, endpoint& ep);
     bool   getsockname(fd_t s, endpoint& ep);
-    bool   unlink(fd_t s);
+    bool   unlink(const endpoint& ep);
     int    errcode(fd_t s);
     fd_t   dup(fd_t s);
 }

@@ -16,10 +16,8 @@ namespace bee::lua_socket {
     static const int kDefaultBackLog = 5;
     struct luafd {
         socket::fd_t fd;
-        bool         unlink;
         luafd(socket::fd_t fd)
             : fd(fd)
-            , unlink(false)
         {}
     };
     static int push_neterror(lua_State* L, const char* msg) {
@@ -165,9 +163,6 @@ namespace bee::lua_socket {
             return true;
         }
         self.fd = socket::retired_fd;
-        if (self.unlink) {
-            socket::unlink(fd);
-        }
         return socket::close(fd);
     }
     static int close(lua_State* L) {
@@ -293,11 +288,9 @@ namespace bee::lua_socket {
     static int bind(lua_State* L) {
         luafd& self = checkfd(L, 1);
         auto ep = read_endpoint(L, 2);
+        socket::unlink(ep);
         if (socket::status::success != socket::bind(self.fd, ep)) {
             return push_neterror(L, "bind");
-        }
-        if (ep.family() == AF_UNIX) {
-            self.unlink = true;
         }
         lua_pushboolean(L, 1);
         return 1;
@@ -364,18 +357,13 @@ namespace bee::lua_socket {
             return luaL_error(L, "invalid string length");
         }
         luafd& d = *(luafd*)s;
-        auto& self = pushfd(L, d.fd);
-        self.unlink = d.unlink;
+        pushfd(L, d.fd);
         return 1;
     }
     static int fd(lua_State* L) {
         luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
-        if (lua_gettop(L) >= 2) {
-            luaL_checktype(L, 2, LUA_TBOOLEAN);
-        }
         socket::fd_t fd = (socket::fd_t)(intptr_t)lua_touserdata(L, 1);
-        auto& self = pushfd(L, fd);
-        self.unlink = lua_toboolean(L, 2);
+        pushfd(L, fd);
         return 1;
     }
     static int __call(lua_State* L) {

@@ -4,15 +4,11 @@
 #   include <mstcpip.h>
 #   include <bee/platform/win/unicode.h>
 #   include <bee/platform/win/version.h>
-#   include <bee/thread/spinlock.h>
+#   include <bee/platform/win/unlink.h>
 #   include <fstream>
 #   include <charconv>
 #   include <limits>
 #   include <array>
-#   include <map>
-#   include <optional>
-#   include <mutex>
-#   include <any>
 #else
 #   include <fcntl.h>
 #   include <netinet/tcp.h>
@@ -99,28 +95,6 @@ namespace bee::net::socket {
         return file_write(path, portstr.data());
     }
 
-    namespace state {
-        using value_type = std::string;
-        std::map<fd_t, value_type> _state;
-        spinlock                   _mutex;
-        static void remove(fd_t s) {
-            std::unique_lock<spinlock> _(_mutex);
-            _state.erase(s);
-        }
-        static void store(fd_t s, const value_type& value) {
-            std::unique_lock<spinlock> _(_mutex);
-            _state.emplace(s, value);
-        }
-        static std::optional<value_type> load(fd_t s) {
-            std::unique_lock<spinlock> _(_mutex);
-            auto it = _state.find(s);
-            if (it == _state.end()) {
-                return std::nullopt;
-            }
-            return it->second;
-        }
-    }
-
     static status u_connect(fd_t s, const endpoint& ep) {
         int tcpport = 0;
         if (!read_tcp_port(ep, tcpport)) {
@@ -153,7 +127,6 @@ namespace bee::net::socket {
             ::WSASetLastError(WSAENETDOWN);
             return status::failed;
         }
-        state::store(s, path);
         return status::success;
     }
 
@@ -489,21 +462,12 @@ namespace bee::net::socket {
         return true;
     }
 
-    bool unlink(fd_t s) {
+    bool unlink(const endpoint& ep) {
 #if defined(_WIN32)
         if (!supportUnixDomainSocket()) {
-            auto path = state::load(s);
-            if (!path) {
-                return false;
-            }
-            state::remove(s);
-            return 0 == _wunlink(u2w(path.value()).c_str());
-        }
-#endif
-        endpoint ep = endpoint::from_empty();
-        if (!socket::getsockname(s, ep)) {
             return false;
         }
+#endif
         if (ep.family() != AF_UNIX) {
             return false;
         }
@@ -512,7 +476,7 @@ namespace bee::net::socket {
             return false;
         }
 #if defined _WIN32
-        return 0 == _wunlink(u2w(path).c_str());
+        return win::unlink(u2w(path).c_str());
 #else
         return 0 == ::unlink(path.c_str());
 #endif
@@ -580,6 +544,7 @@ namespace bee::net::socket {
                 continue;
             }
             auto ep = endpoint::from_unixpath(tmpname);
+            socket::unlink(ep);
             if (ep.valid() && status::success == socket::bind(s, ep)) {
                 return true;
             }
@@ -614,7 +579,6 @@ namespace bee::net::socket {
         if (status::failed == connect(cfd, cep)) {
             goto failed;
         }
-        socket::unlink(sfd);
         fd_set readfds, writefds, exceptfds;
         FD_ZERO(&readfds);
         FD_ZERO(&writefds);
