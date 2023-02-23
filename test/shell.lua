@@ -1,6 +1,7 @@
 local platform = require 'bee.platform'
 local subprocess = require 'bee.subprocess'
 local fs = require 'bee.filesystem'
+local lt = require 'ltest'
 
 local isWindows = platform.os == 'windows'
 local isMingw = os.getenv 'MSYSTEM' ~= nil
@@ -65,7 +66,9 @@ function shell:runlua(script, option)
         luaexe,
         '-e', init.."\n"..script.."\nos.exit(true)",
     }
-    return subprocess.spawn(option)
+    local process, errmsg = subprocess.spawn(option)
+    lt.assertIsUserdata(process, errmsg)
+    return process
 end
 
 shell.isMingw = isMingw

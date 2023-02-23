@@ -262,7 +262,8 @@ namespace bee::lua_filesystem {
 
         static int mt_tostring(lua_State* L) {
             path_ptr self = getpathptr(L, 1);
-            auto str = u8tostrview(self->generic_u8string());
+            auto u8str = self->generic_u8string();
+            auto str = u8tostrview(u8str);
             lua_pushlstring(L, str.data(), str.size());
             return 1;
         }

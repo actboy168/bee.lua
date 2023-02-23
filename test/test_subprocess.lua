@@ -31,7 +31,7 @@ end
 local test_subprocess = lt.test "subprocess"
 
 function test_subprocess:test_spawn()
-    lt.assertIsUserdata(shell:runlua ' ')
+    shell:runlua ' '
 
     local process = shell:runlua(' ', { stdin = true })
     lt.assertIsUserdata(process)
@@ -259,10 +259,10 @@ end
 function test_subprocess:test_env()
     local function test_env(cond, env)
         local script = ('assert(%s)'):format(cond)
-        local process = lt.assertIsUserdata(shell:runlua(
+        local process = shell:runlua(
             script,
             {env = env}
-        ))
+        )
         lt.assertEquals(process:wait(), 0)
     end
     test_env('os.getenv "BEE_TEST" == nil', {})
@@ -316,11 +316,10 @@ function test_subprocess:test_cwd()
     local fs = require "bee.filesystem"
     local path = fs.absolute(fs.path("test_cwd"))
     fs.create_directories(path)
-    local process, errmsg = shell:runlua([[
+    local process = shell:runlua([[
         local fs = require "bee.filesystem"
         assert(fs.path(arg[3]) == fs.current_path())
     ]], { "", path:string(), cwd = path })
-    lt.assertIsUserdata(process, errmsg)
     lt.assertEquals(process:wait(), 0)
     fs.remove_all(path)
 end
