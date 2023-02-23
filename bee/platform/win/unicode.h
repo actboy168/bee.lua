@@ -3,7 +3,7 @@
 #include <string>
 #include <string_view>
 
-namespace bee {
+namespace bee::win {
     std::wstring u2w(const std::string_view& str);
     std::string  w2u(const std::wstring_view& wstr);
     std::wstring a2w(const std::string_view& str);

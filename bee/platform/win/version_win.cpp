@@ -6,7 +6,7 @@
 #include <Windows.h>
 #include <assert.h>
 
-namespace bee::platform {
+namespace bee::win {
 	class module_version_info {
 	public:
 		module_version_info();

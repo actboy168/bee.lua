@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-namespace bee::platform {
+namespace bee::win {
 	struct version {
 		uint32_t major;
 		uint32_t minor;

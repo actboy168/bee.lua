@@ -193,13 +193,13 @@ namespace bee::filewatch {
             path = task.path() + L"/" + path;
             switch (fni.Action) {
             case FILE_ACTION_MODIFIED:
-                m_notify.emplace(notify::flag::modify, w2u(path));
+                m_notify.emplace(notify::flag::modify, win::w2u(path));
                 break;
             case FILE_ACTION_ADDED:
             case FILE_ACTION_REMOVED:
             case FILE_ACTION_RENAMED_OLD_NAME:
             case FILE_ACTION_RENAMED_NEW_NAME:
-                m_notify.emplace(notify::flag::rename, w2u(path));
+                m_notify.emplace(notify::flag::rename, win::w2u(path));
                 break;
             default:
                 std::unreachable();

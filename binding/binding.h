@@ -25,7 +25,7 @@ namespace bee::lua {
     inline string_type to_string(lua_State* L, int idx) {
         auto str = to_strview(L, idx);
 #if defined(_WIN32)
-        return u2w(str);
+        return win::u2w(str);
 #else
         return string_type { str };
 #endif

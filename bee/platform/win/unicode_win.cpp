@@ -2,7 +2,7 @@
 #include <vector>
 #include <Windows.h>
 
-namespace bee {
+namespace bee::win {
     std::wstring u2w(const std::string_view& str) {
         if (str.empty())  {
             return L"";

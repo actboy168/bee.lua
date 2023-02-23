@@ -155,7 +155,7 @@ namespace bee::lua_platform {
 		lua_setfield(L, -2, "DEBUG");
 
 #if defined(_WIN32)
-		auto version = bee::platform::get_version();
+		auto version = bee::win::get_version();
 		lua_createtable(L, 0, 4);
 		lua_pushinteger(L, version.major);
 		lua_setfield(L, -2, "major");

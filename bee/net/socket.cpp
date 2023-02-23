@@ -44,7 +44,7 @@ namespace bee::net::socket {
 #if defined _WIN32
 
 #if defined(_MSC_VER)
-#define FILENAME(n) u2w(n)
+#define FILENAME(n) win::u2w(n)
 #else
 #define FILENAME(n) (n)
 #endif
@@ -131,7 +131,7 @@ namespace bee::net::socket {
     }
 
     static bool supportUnixDomainSocket_() {
-        return !(bee::platform::get_version() < bee::platform::version {10, 0, 17763, 0});
+        return !(bee::win::get_version() < bee::win::version {10, 0, 17763, 0});
     }
     static bool supportUnixDomainSocket() {
         static bool support = supportUnixDomainSocket_();
@@ -481,7 +481,7 @@ namespace bee::net::socket {
             return false;
         }
 #if defined _WIN32
-        return win::unlink(u2w(path).c_str());
+        return win::unlink(win::u2w(path).c_str());
 #else
         return 0 == ::unlink(path.c_str());
 #endif
