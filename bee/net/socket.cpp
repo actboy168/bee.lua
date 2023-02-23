@@ -159,21 +159,26 @@ namespace bee::net::socket {
     }
 
     static bool wait_finish() {
-        switch (last_neterror()) {
 #if defined(_WIN32)
+        switch (::WSAGetLastError()) {
         case WSAEINPROGRESS:
         case WSAEWOULDBLOCK:
+            return true;
+        default:
+            return false;
+        }
 #else
+        switch (errno) {
         case EAGAIN:
         case EINTR:
 #if EAGAIN != EWOULDBLOCK
         case EWOULDBLOCK:
 #endif
-#endif
             return true;
         default:
             return false;
         }
+#endif
     }
 
 #if defined(_WIN32)
@@ -488,7 +493,11 @@ namespace bee::net::socket {
         if (getsockopt(s, SOL_SOCKET, SO_ERROR, (char *)&err, &errl) >= 0) {
             return err;
         }
-        return last_neterror();
+#if defined(_WIN32)
+        return ::WSAGetLastError();
+#else
+        return errno;
+#endif
     }
 
 #if !defined(_WIN32)

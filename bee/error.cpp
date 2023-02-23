@@ -63,11 +63,11 @@ namespace bee {
     }
 #endif
 
-    int last_crterror() {
+    static int last_crterror() {
         return errno;
     }
 
-    int last_syserror() {
+    static int last_syserror() {
 #if defined(_WIN32)
         return ::GetLastError();
 #else
@@ -75,7 +75,7 @@ namespace bee {
 #endif
     }
 
-    int last_neterror() {
+    static int last_neterror() {
 #if defined(_WIN32)
         return ::WSAGetLastError();
 #else
