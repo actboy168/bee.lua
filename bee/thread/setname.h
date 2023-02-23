@@ -21,7 +21,7 @@ namespace bee {
 void inline
 thread_setname(const char* name) {
 #if defined(_WIN32)
-	typedef HRESULT (WINAPI *SetThreadDescriptionProc)(HANDLE, PCWSTR);
+	using SetThreadDescriptionProc = HRESULT (WINAPI *)(HANDLE, PCWSTR);
 	SetThreadDescriptionProc SetThreadDescription = (SetThreadDescriptionProc)GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "SetThreadDescription");
 	if (SetThreadDescription) {
 		size_t size = (strlen(name)+1) * sizeof(wchar_t);

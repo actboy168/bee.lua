@@ -10,11 +10,10 @@ namespace bee::net {
 }
 
 namespace bee::net::socket {
-
 #if defined _WIN32
-    typedef uintptr_t fd_t;
+    using fd_t = uintptr_t;
 #else
-    typedef int fd_t;
+    using fd_t = int;
 #endif
     inline static const fd_t retired_fd = (fd_t)-1;
 

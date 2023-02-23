@@ -21,7 +21,7 @@ namespace bee::lua_socket {
         return 2;
     }
     static endpoint read_endpoint(lua_State* L, int idx) {
-        std::string_view ip = lua::to_strview(L, idx);
+        std::string_view ip = lua::checkstrview(L, idx);
         if (lua_isnoneornil(L, idx + 1)) {
             endpoint ep = endpoint::from_unixpath(ip);
             if (!ep.valid()) {
@@ -82,7 +82,7 @@ namespace bee::lua_socket {
     }
     static int send(lua_State* L) {
         socket::fd_t     fd  = checkfd(L, 1);
-        std::string_view buf = lua::to_strview(L, 2);
+        std::string_view buf = lua::checkstrview(L, 2);
         int         rc;
         switch (socket::send(fd, rc, (const char*)buf.data(), (int)buf.size())) {
         case socket::status::wait:
@@ -127,8 +127,8 @@ namespace bee::lua_socket {
     }
     static int sendto(lua_State* L) {
         socket::fd_t     fd = checkfd(L, 1);
-        std::string_view buf = lua::to_strview(L, 2);
-        std::string_view ip = lua::to_strview(L, 3);
+        std::string_view buf = lua::checkstrview(L, 2);
+        std::string_view ip = lua::checkstrview(L, 3);
         auto             port = lua::checkinteger<uint16_t>(L, 4, "port");
         auto             ep = endpoint::from_hostname(ip, port);
         if (!ep.valid()) {
@@ -176,7 +176,7 @@ namespace bee::lua_socket {
         if (lua_isnoneornil(L, 2)) {
             return shutdown(L, fd, socket::shutdown_flag::both);
         }
-        std::string_view flag = lua::to_strview(L, 2);
+        std::string_view flag = lua::checkstrview(L, 2);
         if (flag[0] == 'r') {
             return shutdown(L, fd, socket::shutdown_flag::read);
         }
@@ -214,7 +214,7 @@ namespace bee::lua_socket {
     }
     static int info(lua_State* L) {
         socket::fd_t     fd = checkfd(L, 1);
-        std::string_view which = lua::to_strview(L, 2);
+        std::string_view which = lua::checkstrview(L, 2);
         if (which == "peer") {
             endpoint ep = endpoint::from_empty();
             if (!socket::getpeername(fd, ep)) {
@@ -335,12 +335,11 @@ namespace bee::lua_socket {
         return 1;
     }
     static int undump(lua_State* L) {
-        size_t sz = 0;
-        const char* s = luaL_checklstring(L, 1, &sz);
-        if (sz != sizeof(socket::fd_t)) {
+        auto s = lua::checkstrview(L, 1);
+        if (s.size() != sizeof(socket::fd_t)) {
             return luaL_error(L, "invalid string length");
         }
-        pushfd(L, *(socket::fd_t*)s);
+        pushfd(L, *(socket::fd_t*)s.data());
         return 1;
     }
     static int fd(lua_State* L) {

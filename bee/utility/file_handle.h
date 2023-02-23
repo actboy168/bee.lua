@@ -11,9 +11,9 @@ namespace bee {
     class file_handle {
     public:
 #if defined(_WIN32)
-        typedef HANDLE value_type;
+        using value_type = HANDLE;
 #else
-        typedef int value_type;
+        using value_type = int;
 #endif
         enum class mode {
             read,

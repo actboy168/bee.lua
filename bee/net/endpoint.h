@@ -13,7 +13,7 @@ struct sockaddr;
 
 namespace bee::net {
 #if defined(_WIN32)
-    typedef int socklen_t;
+    using socklen_t = int;
 #endif
 
     enum class un_format: uint16_t {

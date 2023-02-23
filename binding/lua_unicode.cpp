@@ -3,13 +3,13 @@
 
 namespace bee::lua_unicode {
     static int lu2a(lua_State* L) {
-        std::string r = win::u2a(lua::to_strview(L, 1));
+        auto r = win::u2a(lua::checkstrview(L, 1));
         lua_pushlstring(L, r.data(), r.size());
         return 1;
     }
 
     static int la2u(lua_State* L) {
-        std::string r = win::a2u(lua::to_strview(L, 1));
+        auto r = win::a2u(lua::checkstrview(L, 1));
         lua_pushlstring(L, r.data(), r.size());
         return 1;
     }

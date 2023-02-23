@@ -18,7 +18,7 @@ extern "C" {
 namespace bee::lua_thread {
     class channel {
     public:
-        typedef void* value_type;
+        using value_type = void*;
 
         void push(value_type data) {
             do {
@@ -73,13 +73,14 @@ namespace bee::lua_thread {
         channelmgr() {
             channels.emplace(std::make_pair("errlog", new channel));
         }
-        bool create(const std::string& name) {
+        bool create(std::string_view name) {
             std::unique_lock<spinlock> lk(mutex);
-            auto                       it = channels.find(name);
+            std::string namestr {name};
+            auto it = channels.find(namestr);
             if (it != channels.end()) {
                 return false;
             }
-            channels.emplace(std::make_pair(name, new channel));
+            channels.emplace(std::make_pair(namestr, new channel));
             return true;
         }
         void clear() {
@@ -94,9 +95,10 @@ namespace bee::lua_thread {
                 channels.clear();
             }
         }
-        boxchannel query(const std::string& name) {
+        boxchannel query(std::string_view name) {
             std::unique_lock<spinlock> lk(mutex);
-            auto                       it = channels.find(name);
+            std::string namestr {name};
+            auto it = channels.find(namestr);
             if (it != channels.end()) {
                 return it->second;
             }
@@ -105,19 +107,13 @@ namespace bee::lua_thread {
 
     private:
         std::map<std::string, boxchannel> channels;
-        spinlock                                        mutex;
+        spinlock mutex;
     };
 
 
     static channelmgr       g_channel;
     static std::atomic<int> g_thread_id = -1;
     static int       THREADID;
-
-    static std::string checkstring(lua_State* L, int idx) {
-        size_t      len = 0;
-        const char* buf = luaL_checklstring(L, idx, &len);
-        return std::string(buf, len);
-    }
 
     static int lchannel_push(lua_State* L) {
         boxchannel& bc = *(boxchannel*)luaL_checkudata(L, 1, "bee::channel");
@@ -166,18 +162,18 @@ namespace bee::lua_thread {
     }
 
     static int lnewchannel(lua_State* L) {
-        std::string name = checkstring(L, 1);
+        auto name = lua::checkstrview(L, 1);
         if (!g_channel.create(name)) {
-            return luaL_error(L, "Duplicate channel '%s'", name.c_str());
+            return luaL_error(L, "Duplicate channel '%s'", name.data());
         }
         return 0;
     }
 
     static int lchannel(lua_State* L) {
-        std::string name = checkstring(L, 1);
+        auto name = lua::checkstrview(L, 1);
         boxchannel c = g_channel.query(name);
         if (!c) {
-            return luaL_error(L, "Can't query channel '%s'", name.c_str());
+            return luaL_error(L, "Can't query channel '%s'", name.data());
         }
 
         boxchannel* bc = (boxchannel*)lua_newuserdatauv(L, sizeof(boxchannel), 0);
@@ -277,10 +273,10 @@ namespace bee::lua_thread {
     }
 
     static int lthread(lua_State* L) {
-        std::string source = checkstring(L, 1);
+        auto source = lua::checkstrview(L, 1);
         void*       params = seri_pack(L, 1, NULL);
         int id = gen_threadid();
-        thread_args* args = new thread_args { std::move(source), id, params };
+        thread_args* args = new thread_args { std::string {source}, id, params };
         thread_handle handle = thread_create(thread_main, args);
         if (!handle) {
             {

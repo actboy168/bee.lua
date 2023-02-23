@@ -11,7 +11,7 @@
 namespace bee {
 #if defined(_WIN32)
     struct errormsg : public std::wstring_view {
-        typedef std::wstring_view mybase;
+        using mybase = std::wstring_view;
         errormsg(wchar_t* str) : mybase(str) { }
         ~errormsg() { ::LocalFree(reinterpret_cast<HLOCAL>(const_cast<wchar_t*>(mybase::data()))); }
     };

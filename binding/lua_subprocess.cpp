@@ -132,7 +132,7 @@ namespace bee::lua_subprocess {
             lua_getfield(L, 1, "cwd");
             switch (lua_type(L, -1)) {
             case LUA_TSTRING: {
-                auto ret = lua::to_string(L, -1);
+                auto ret = lua::checkstring(L, -1);
                 lua_pop(L, 1);
                 return ret;
             }
@@ -154,7 +154,7 @@ namespace bee::lua_subprocess {
                 lua_geti(L, idx, i);
                 switch (lua_type(L, -1)) {
                 case LUA_TSTRING:
-                    args.push(lua::to_string(L, -1));
+                    args.push(lua::checkstring(L, -1));
                     break;
                 case LUA_TUSERDATA: {
                     const fs::path& path = *(fs::path*)luaL_checkudata(L, -1, "bee::path");
@@ -267,10 +267,10 @@ namespace bee::lua_subprocess {
                 lua_pushnil(L);
                 while (lua_next(L, -2)) {
                     if (LUA_TSTRING == lua_type(L, -1)) {
-                        builder.set(lua::to_string(L, -2), lua::to_string(L, -1));
+                        builder.set(lua::checkstring(L, -2), lua::checkstring(L, -1));
                     }
                     else {
-                        builder.del(lua::to_string(L, -2));
+                        builder.del(lua::checkstring(L, -2));
                     }
                     lua_pop(L, 1);
                 }
@@ -300,7 +300,7 @@ namespace bee::lua_subprocess {
 #if defined(_WIN32)
         static void cast_option(lua_State* L, subprocess::spawn& self) {
             if (LUA_TSTRING == lua_getfield(L, 1, "console")) {
-                std::string console = luaL_checkstring(L, -1);
+                auto console = lua::checkstrview(L, -1);
                 if (console == "new") {
                     self.set_console(subprocess::console::eNew);
                 }

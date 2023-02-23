@@ -11,19 +11,19 @@
 
 namespace bee::lua {
 #if defined(_WIN32)
-    typedef std::wstring string_type;
+    using string_type = std::wstring;
 #else
-    typedef std::string string_type;
+    using string_type = std::string;
 #endif
 
-    inline std::string_view to_strview(lua_State* L, int idx) {
+    inline std::string_view checkstrview(lua_State* L, int idx) {
         size_t len = 0;
         const char* buf = luaL_checklstring(L, idx, &len);
         return std::string_view(buf, len);
     }
 
-    inline string_type to_string(lua_State* L, int idx) {
-        auto str = to_strview(L, idx);
+    inline string_type checkstring(lua_State* L, int idx) {
+        auto str = checkstrview(L, idx);
 #if defined(_WIN32)
         return win::u2w(str);
 #else
