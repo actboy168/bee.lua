@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <bee/error.h>
+#include <limits>
 #if defined(_WIN32)
 #include <bee/platform/win/unicode.h>
 #endif
