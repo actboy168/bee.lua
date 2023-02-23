@@ -32,19 +32,39 @@ namespace bee::lua {
 
     template <typename T>
     T checkinteger(lua_State* L, int arg, const char* symbol) {
-        lua_Integer r = luaL_checkinteger(L, arg);
-        if (r < std::numeric_limits<T>::lowest() || r >(std::numeric_limits<T>::max)()) {
-            luaL_error(L, "bad argument '%s' limit exceeded", symbol);
+        if constexpr (std::is_enum<T>::value) {
+            using UT = typename std::underlying_type<T>::type;
+            return (T)checkinteger<UT>(L, arg, symbol);
         }
-        return (T)r;
+        else if (sizeof(T) == sizeof(lua_Integer)) {
+            return (T)luaL_checkinteger(L, arg);
+        }
+        else {
+            static_assert(sizeof(T) < sizeof(lua_Integer));
+            lua_Integer r = luaL_checkinteger(L, arg);
+            if (r < std::numeric_limits<T>::lowest() || r > (std::numeric_limits<T>::max)()) {
+                luaL_error(L, "bad argument '%s' limit exceeded", symbol);
+            }
+            return (T)r;
+        }
     }
     template <typename T>
-    T optinteger(lua_State* L, int arg, lua_Integer def, const char* symbol) {
-        lua_Integer r = luaL_optinteger(L, arg, def);
-        if (r < std::numeric_limits<T>::lowest() || r >(std::numeric_limits<T>::max)()) {
-            luaL_error(L, "bad argument '%s' limit exceeded", symbol);
+    T optinteger(lua_State* L, int arg, T def, const char* symbol) {
+        if constexpr (std::is_enum<T>::value) {
+            using UT = typename std::underlying_type<T>::type;
+            return (T)optinteger<UT>(L, arg, (UT)def, symbol);
         }
-        return (T)r;
+        else if (sizeof(T) == sizeof(lua_Integer)) {
+            return (T)luaL_optinteger(L, arg, (lua_Integer)def);
+        }
+        else {
+            static_assert(sizeof(T) < sizeof(lua_Integer));
+            lua_Integer r = luaL_optinteger(L, arg, (lua_Integer)def);
+            if (r < std::numeric_limits<T>::lowest() || r > (std::numeric_limits<T>::max)()) {
+                luaL_error(L, "bad argument '%s' limit exceeded", symbol);
+            }
+            return (T)r;
+        }
     }
 
     inline void push_errormesg(lua_State* L, const char* msg, const std::error_code& ec) {
