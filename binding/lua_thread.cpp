@@ -303,8 +303,7 @@ namespace bee::lua_thread {
     }
 
     static int lwait(lua_State* L) {
-        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
-        thread_handle th = (thread_handle)lua_touserdata(L, 1);
+        thread_handle th = lua::checklightud<thread_handle>(L, 1);
         thread_wait(th);
         return 0;
     }
@@ -323,15 +322,13 @@ namespace bee::lua_thread {
     }
 
     static int lrpc_wait(lua_State* L) {
-        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
-        struct rpc *r = (struct rpc *)lua_touserdata(L, 1);
+        auto r = lua::checklightud<struct rpc *>(L, 1);
         r->trigger.acquire();
         return seri_unpackptr(L, r->data);
     }
 
     static int lrpc_return(lua_State* L) {
-        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
-        struct rpc *r = (struct rpc *)lua_touserdata(L, 1);
+        auto r = lua::checklightud<struct rpc *>(L, 1);
         r->data = seri_pack(L, 1, NULL);
         r->trigger.release();
         return 0;

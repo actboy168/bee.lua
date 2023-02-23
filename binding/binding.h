@@ -68,6 +68,13 @@ namespace bee::lua {
         }
     }
 
+    template <typename T>
+    T checklightud(lua_State* L, int arg) {
+        static_assert(sizeof(T) <= sizeof(intptr_t));
+        luaL_checktype(L, arg, LUA_TLIGHTUSERDATA);
+        return (T)(intptr_t)lua_touserdata(L, arg);
+    }
+
     inline void push_errormesg(lua_State* L, const char* msg, const std::error_code& ec) {
         lua_pushfstring(L, "%s: %s (%d)", msg, error_message(ec).c_str(), ec.value());
     }

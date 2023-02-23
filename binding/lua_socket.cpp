@@ -47,6 +47,38 @@ namespace bee::lua_socket {
     static socket::fd_t& checkfdref(lua_State* L, int idx) {
         return *(socket::fd_t*)luaL_checkudata(L, idx, "bee::socket");
     }
+    static void dump_fd(lua_State* L, socket::fd_t fd, int type) {
+        switch (type) {
+        case LUA_TNUMBER:
+            lua_pushinteger(L, fd);
+            break;
+        case LUA_TSTRING:
+            lua_pushlstring(L, (const char*)&fd, sizeof(fd));
+            break;
+        default:
+        case LUA_TLIGHTUSERDATA:
+            lua_pushlightuserdata(L, (void*)(intptr_t)fd);
+            break;
+        }
+    }
+    static socket::fd_t undump_fd(lua_State* L, int idx) {
+        switch (lua_type(L, idx)) {
+        case LUA_TNUMBER:
+            return lua::checkinteger<socket::fd_t>(L, idx, "fd");
+        case LUA_TLIGHTUSERDATA:
+            return lua::checklightud<socket::fd_t>(L, idx);
+        case LUA_TSTRING: {
+            auto s = lua::checkstrview(L, idx);
+            if (s.size() != sizeof(socket::fd_t)) {
+                return luaL_error(L, "invalid string length");
+            }
+            return *(socket::fd_t*)s.data();
+        }
+        default:
+            luaL_checktype(L, idx, LUA_TLIGHTUSERDATA);
+            std::unreachable();
+        }
+    }
     static void pushfd(lua_State* L, socket::fd_t fd);
     static int accept(lua_State* L) {
         socket::fd_t fd = checkfd(L, 1);
@@ -239,7 +271,17 @@ namespace bee::lua_socket {
     }
     static int handle(lua_State* L) {
         socket::fd_t fd = checkfd(L, 1);
-        lua_pushlightuserdata(L, (void*)(intptr_t)fd);
+        dump_fd(L, fd, LUA_TLIGHTUSERDATA);
+        return 1;
+    }
+    static int detach(lua_State* L) {
+        socket::fd_t& fd = checkfdref(L, 1);
+        static const char *const opts[] = {
+            "nil", "boolean", "lightuserdata", "number", "string", "table", "function", "userdata", "thread", NULL
+        };
+        int type = luaL_checkoption(L, 2, "lightuserdata", opts);
+        dump_fd(L, fd, type);
+        fd = socket::retired_fd;
         return 1;
     }
     static int option(lua_State* L) {
@@ -307,6 +349,7 @@ namespace bee::lua_socket {
                 {"status", status},
                 {"info", info},
                 {"handle", handle},
+                {"detach", detach},
                 {"option", option},
                 {"__tostring", tostring},
                 {"__close", destroy},
@@ -330,21 +373,12 @@ namespace bee::lua_socket {
     }
     static int dump(lua_State* L) {
         socket::fd_t& fd = checkfdref(L, 1);
-        lua_pushlstring(L, (const char*)&fd, sizeof(fd));
+        dump_fd(L, fd, LUA_TSTRING);
         fd = socket::retired_fd;
         return 1;
     }
-    static int undump(lua_State* L) {
-        auto s = lua::checkstrview(L, 1);
-        if (s.size() != sizeof(socket::fd_t)) {
-            return luaL_error(L, "invalid string length");
-        }
-        pushfd(L, *(socket::fd_t*)s.data());
-        return 1;
-    }
     static int fd(lua_State* L) {
-        luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
-        socket::fd_t fd = (socket::fd_t)(intptr_t)lua_touserdata(L, 1);
+        socket::fd_t fd = undump_fd(L, 1);
         pushfd(L, fd);
         return 1;
     }
@@ -471,8 +505,8 @@ namespace bee::lua_socket {
         luaL_Reg lib[] = {
             {"pair", pair},
             {"select", select},
-            {"dump", dump},
-            {"undump", undump},
+            {"dump", dump}, //TODO: remove
+            {"undump", fd}, //TODO: remove
             {"fd", fd},
             {NULL, NULL}
         };
