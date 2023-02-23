@@ -371,17 +371,20 @@ namespace bee::lua_socket {
         pushfd(L, fd);
         return 1;
     }
+    struct select_wrap {
+        select_wrap() { reset(); }
 #if defined(_WIN32)
-#define MAXFD_INIT()
-#define MAXFD_SET(fd)
-#define MAXFD_GET() 0
-#define EXFDS_GET() (&writefds)
+        void reset() { FD_ZERO(&readfds); FD_ZERO(&writefds); }
+        void set_fd(socket::fd_t fd, fd_set& set) { FD_SET(fd, &set); }
+        int select(struct timeval* timeop) { return ::select(0, &readfds, &writefds, &writefds, timeop); }
 #else
-#define MAXFD_INIT() int maxfd = 0
-#define MAXFD_SET(fd) maxfd = (std::max)(maxfd, (int)(fd))
-#define MAXFD_GET() (maxfd + 1)
-#define EXFDS_GET() NULL
+        void reset() { FD_ZERO(&readfds); FD_ZERO(&writefds); maxfd = 0; }
+        void set_fd(socket::fd_t fd, fd_set& set) { FD_SET(fd, &set);  maxfd = std::max(maxfd, fd); }
+        int select(struct timeval* timeop) { return ::select(maxfd + 1, &readfds, &writefds, NULL, timeop); }
+        int    maxfd;
 #endif
+        fd_set readfds, writefds;
+    };
     static int select(lua_State* L) {
         bool read_finish = true, write_finish = true;
         if (lua_isnoneornil(L, 1))
@@ -426,11 +429,9 @@ namespace bee::lua_socket {
         lua_newtable(L);
         lua_newtable(L);
         lua_Integer rout = 0, wout = 0;
-        fd_set      readfds, writefds;
+        select_wrap wrap;
         for (int x = 1; !read_finish || !write_finish; x += FD_SETSIZE) {
-            MAXFD_INIT();
-            FD_ZERO(&readfds);
-            FD_ZERO(&writefds);
+            wrap.reset();
             int r = 0, w = 0;
             for (; !read_finish && r < FD_SETSIZE; ++r) {
                 if (LUA_TNIL == lua_rawgeti(L, 1, x + r)) {
@@ -438,10 +439,7 @@ namespace bee::lua_socket {
                     lua_pop(L, 1);
                     break;
                 }
-
-                socket::fd_t fd = checkfd(L, -1);
-                MAXFD_SET(fd);
-                FD_SET(fd, &readfds);
+                wrap.set_fd(checkfd(L, -1), wrap.readfds);
                 lua_pop(L, 1);
             }
             for (; !write_finish && w < FD_SETSIZE; ++w) {
@@ -450,15 +448,13 @@ namespace bee::lua_socket {
                     lua_pop(L, 1);
                     break;
                 }
-                socket::fd_t fd = checkfd(L, -1);
-                MAXFD_SET(fd);
-                FD_SET(fd, &writefds);
+                wrap.set_fd(checkfd(L, -1), wrap.writefds);
                 lua_pop(L, 1);
             }
-            int ok = ::select(MAXFD_GET(), &readfds, &writefds, EXFDS_GET(), timeop);
+            int ok = wrap.select(timeop);
             if (ok > 0) {
                 for (int i = 0; i < r; ++i) {
-                    if (LUA_TUSERDATA == lua_rawgeti(L, 1, x + i) && FD_ISSET(tofd(L, -1), &readfds)) {
+                    if (LUA_TUSERDATA == lua_rawgeti(L, 1, x + i) && FD_ISSET(tofd(L, -1), &wrap.readfds)) {
                         lua_rawseti(L, 4, ++rout);
                     }
                     else {
@@ -466,7 +462,7 @@ namespace bee::lua_socket {
                     }
                 }
                 for (int i = 0; i < w; ++i) {
-                    if (LUA_TUSERDATA == lua_rawgeti(L, 2, x + i) && FD_ISSET(tofd(L, -1), &writefds)) {
+                    if (LUA_TUSERDATA == lua_rawgeti(L, 2, x + i) && FD_ISSET(tofd(L, -1), &wrap.writefds)) {
                         lua_rawseti(L, 5, ++wout);
                     }
                     else {
