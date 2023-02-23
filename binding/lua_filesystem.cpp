@@ -12,14 +12,15 @@
 #endif
 
 namespace bee::lua_filesystem {
-    static std::string_view pathtostrview(fs::path const& path) {
-        auto u8str = path.generic_u8string();
 #if defined(__cpp_lib_char8_t)
+    static std::string_view u8tostrview(std::u8string const& u8str) {
         return { reinterpret_cast<const char*>(u8str.data()), u8str.size() };
-#else
-        return { u8str.data(), u8str.size() };
-#endif
     }
+#else
+    static std::string_view u8tostrview(std::string const& u8str) {
+        return { u8str.data(), u8str.size() };
+    }
+#endif
 
     static int pusherror(
         lua_State* L,
@@ -46,7 +47,7 @@ namespace bee::lua_filesystem {
             auto errmsg = std::format("{}: {}: \"{}\"",
                 op,
                 error_message(ec),
-                pathtostrview(path1)
+                u8tostrview(path1.generic_u8string())
             );
             lua_pushlstring(L, errmsg.data(), errmsg.size());
         }
@@ -64,8 +65,8 @@ namespace bee::lua_filesystem {
             auto errmsg = std::format("{}: {}: \"{}\", \"{}\"",
                 op,
                 error_message(ec),
-                pathtostrview(path1),
-                pathtostrview(path2)
+                u8tostrview(path1.generic_u8string()),
+                u8tostrview(path2.generic_u8string())
             );
             lua_pushlstring(L, errmsg.data(), errmsg.size());
         }
@@ -261,7 +262,7 @@ namespace bee::lua_filesystem {
 
         static int mt_tostring(lua_State* L) {
             path_ptr self = getpathptr(L, 1);
-            auto str = pathtostrview(*self);
+            auto str = u8tostrview(self->generic_u8string());
             lua_pushlstring(L, str.data(), str.size());
             return 1;
         }
