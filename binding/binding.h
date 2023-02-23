@@ -36,7 +36,7 @@ namespace bee::lua {
             using UT = typename std::underlying_type<T>::type;
             return (T)checkinteger<UT>(L, arg, symbol);
         }
-        else if (sizeof(T) == sizeof(lua_Integer)) {
+        else if constexpr (sizeof(T) == sizeof(lua_Integer)) {
             return (T)luaL_checkinteger(L, arg);
         }
         else {
@@ -54,7 +54,7 @@ namespace bee::lua {
             using UT = typename std::underlying_type<T>::type;
             return (T)optinteger<UT>(L, arg, (UT)def, symbol);
         }
-        else if (sizeof(T) == sizeof(lua_Integer)) {
+        else if constexpr (sizeof(T) == sizeof(lua_Integer)) {
             return (T)luaL_optinteger(L, arg, (lua_Integer)def);
         }
         else {
