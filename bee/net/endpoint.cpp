@@ -94,7 +94,7 @@ namespace bee::net {
         su->sun_path[path.size()] = '\0';
         return ep;
     }
-    endpoint endpoint::from_hostname(const std::string_view& ip, int port) {
+    endpoint endpoint::from_hostname(const std::string_view& ip, uint16_t port) {
 #if defined(__linux__) && defined(BEE_DISABLE_DLOPEN)
         struct sockaddr_in sa4;
         if (1 == inet_pton(AF_INET, ip.data(), &sa4.sin_addr)) {

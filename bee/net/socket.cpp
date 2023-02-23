@@ -61,7 +61,7 @@ namespace bee::net::socket {
         return true;
     }
 
-    static bool read_tcp_port(const endpoint& ep, int& tcpport) {
+    static bool read_tcp_port(const endpoint& ep, uint16_t& tcpport) {
         auto[path, type] = ep.info();
         if (type != (uint16_t)un_format::pathname) {
             return false;
@@ -96,7 +96,7 @@ namespace bee::net::socket {
     }
 
     static status u_connect(fd_t s, const endpoint& ep) {
-        int tcpport = 0;
+        uint16_t tcpport = 0;
         if (!read_tcp_port(ep, tcpport)) {
             ::WSASetLastError(WSAECONNREFUSED);
             return status::failed;

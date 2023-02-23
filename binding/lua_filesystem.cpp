@@ -600,7 +600,7 @@ namespace bee::lua_filesystem {
         path_ptr to = getpathptr(L, 2);
         fs::copy_options options = fs::copy_options::none;
         if (lua_gettop(L) > 2) {
-            options = static_cast<fs::copy_options>(luaL_checkinteger(L, 3));
+            options = lua::checkinteger<fs::copy_options>(L, 3, "options");
         }
         std::error_code ec;
         fs::copy(from, to, options, ec);
@@ -643,7 +643,7 @@ namespace bee::lua_filesystem {
         path_ptr to = getpathptr(L, 2);
         fs::copy_options options = fs::copy_options::none;
         if (lua_gettop(L) > 2) {
-            options = static_cast<fs::copy_options>(luaL_checkinteger(L, 3));
+            options = lua::checkinteger<fs::copy_options>(L, 3, "options");
         }
         std::error_code ec;
 #if defined(__MINGW32__)
@@ -741,7 +741,7 @@ namespace bee::lua_filesystem {
             return 1;
         }
         case 2: {
-            auto perms = fs::perms::mask & fs::perms(luaL_checkinteger(L, 2));
+            auto perms = fs::perms::mask & lua::checkinteger<fs::perms>(L, 2, "perms");
             fs::permissions(p, perms, ec);
             if (ec) {
                 return pusherror(L, "permissions", ec, p); 
@@ -749,8 +749,8 @@ namespace bee::lua_filesystem {
             return 0;
         }
         default: {
-            auto perms = fs::perms::mask & fs::perms(luaL_checkinteger(L, 2));
-            auto options = fs::perm_options(luaL_checkinteger(L, 3));
+            auto perms = fs::perms::mask & lua::checkinteger<fs::perms>(L, 2, "perms");
+            auto options = lua::checkinteger<fs::perm_options>(L, 3, "options");
             fs::permissions(p, perms, options, ec);
             if (ec) {
                 return pusherror(L, "permissions", ec, p); 

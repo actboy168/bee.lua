@@ -30,6 +30,23 @@ namespace bee::lua {
 #endif
     }
 
+    template <typename T>
+    T checkinteger(lua_State* L, int arg, const char* symbol) {
+        lua_Integer r = luaL_checkinteger(L, arg);
+        if (r < std::numeric_limits<T>::lowest() || r >(std::numeric_limits<T>::max)()) {
+            luaL_error(L, "bad argument '%s' limit exceeded", symbol);
+        }
+        return (T)r;
+    }
+    template <typename T>
+    T optinteger(lua_State* L, int arg, lua_Integer def, const char* symbol) {
+        lua_Integer r = luaL_optinteger(L, arg, def);
+        if (r < std::numeric_limits<T>::lowest() || r >(std::numeric_limits<T>::max)()) {
+            luaL_error(L, "bad argument '%s' limit exceeded", symbol);
+        }
+        return (T)r;
+    }
+
     inline void push_errormesg(lua_State* L, const char* msg, const std::error_code& ec) {
         lua_pushfstring(L, "%s: %s (%d)", msg, error_message(ec).c_str(), ec.value());
     }

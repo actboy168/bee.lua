@@ -36,7 +36,7 @@ namespace bee::net {
         int             family() const;
         bool            valid() const;
 
-        static endpoint from_hostname(const std::string_view& ip, int port);
+        static endpoint from_hostname(const std::string_view& ip, uint16_t port);
         static endpoint from_unixpath(const std::string_view& path);
         static endpoint from_empty();
         static endpoint from_invalid();
