@@ -22,7 +22,7 @@ namespace bee::lua {
 #define luabuf_buffsub(B,s)	((B)->n -= (s))
 
     inline luaL_Stream* tolstream(lua_State* L) {
-        return (luaL_Stream*)getObject(L, 1, "file");
+        return (luaL_Stream*)luaL_checkudata(L, 1, "bee::file");
     }
     inline bool isclosed(luaL_Stream* p) {
         return p->closef == NULL;
@@ -216,7 +216,7 @@ namespace bee::lua {
         luaL_Stream* pf = (luaL_Stream*)lua_newuserdatauv(L, sizeof(luaL_Stream), 0);
         pf->closef = &_fileclose;
         pf->f = f;
-        if (newObject(L, "file")) {
+        if (luaL_newmetatable(L, "bee::file")) {
             const luaL_Reg meth[] = {
                 {"read", f_read},
                 {"write", f_write},

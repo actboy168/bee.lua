@@ -6,7 +6,7 @@
 
 namespace bee::lua_filewatch {
     static filewatch::watch& to(lua_State* L, int idx) {
-        return *(filewatch::watch*)getObject(L, idx, "filewatch");
+        return *(filewatch::watch*)luaL_checkudata(L, idx, "bee::filewatch");
     }
 
     static lua_State* get_thread(lua_State* L) {
@@ -109,7 +109,7 @@ namespace bee::lua_filewatch {
 
     static int create(lua_State* L) {
         void* storage = lua_newuserdatauv(L, sizeof(filewatch::watch), 1);
-        if (newObject(L, "filewatch")) {
+        if (luaL_newmetatable(L, "bee::filewatch")) {
             static luaL_Reg mt[] = {
                 {"add", add},
                 {"set_recursive", set_recursive},

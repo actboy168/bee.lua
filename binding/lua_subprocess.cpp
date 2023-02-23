@@ -15,7 +15,7 @@
 namespace bee::lua_subprocess {
     namespace process {
         static subprocess::process& to(lua_State* L, int idx) {
-            return *(subprocess::process*)getObject(L, idx, "subprocess");
+            return *(subprocess::process*)luaL_checkudata(L, idx, "bee::subprocess");
         }
 #if defined(_WIN32)
         static int close(lua_State* L) {
@@ -99,7 +99,7 @@ namespace bee::lua_subprocess {
         static int constructor(lua_State* L, subprocess::spawn& spawn) {
             void* storage = lua_newuserdatauv(L, sizeof(subprocess::process), 1);
 
-            if (newObject(L, "subprocess")) {
+            if (luaL_newmetatable(L, "bee::subprocess")) {
                 static luaL_Reg mt[] = {
                     {"wait", process::wait},
                     {"kill", process::kill},
@@ -137,7 +137,7 @@ namespace bee::lua_subprocess {
                 return ret;
             }
             case LUA_TUSERDATA: {
-                const fs::path& path = *(fs::path*)getObject(L, -1, "path");
+                const fs::path& path = *(fs::path*)luaL_checkudata(L, -1, "bee::path");
                 auto ret = path.string<lua::string_type::value_type>();
                 lua_pop(L, 1);
                 return ret;
@@ -157,7 +157,7 @@ namespace bee::lua_subprocess {
                     args.push(lua::to_string(L, -1));
                     break;
                 case LUA_TUSERDATA: {
-                    const fs::path& path = *(fs::path*)getObject(L, -1, "path");
+                    const fs::path& path = *(fs::path*)luaL_checkudata(L, -1, "bee::path");
                     args.push(path.string<lua::string_type::value_type>());
                     break;
                 }

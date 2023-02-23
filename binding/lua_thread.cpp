@@ -120,21 +120,21 @@ namespace bee::lua_thread {
     }
 
     static int lchannel_push(lua_State* L) {
-        boxchannel& bc = *(boxchannel*)getObject(L, 1, "channel");
+        boxchannel& bc = *(boxchannel*)luaL_checkudata(L, 1, "bee::channel");
         void*       buffer = seri_pack(L, 1, NULL);
         bc->push(buffer);
         return 0;
     }
 
     static int lchannel_bpop(lua_State* L) {
-        boxchannel& bc = *(boxchannel*)getObject(L, 1, "channel");
+        boxchannel& bc = *(boxchannel*)luaL_checkudata(L, 1, "bee::channel");
         void*       data;
         bc->blocked_pop(data);
         return seri_unpackptr(L, data);
     }
 
     static int lchannel_pop(lua_State* L) {
-        boxchannel& bc = *(boxchannel*)getObject(L, 1, "channel");
+        boxchannel& bc = *(boxchannel*)luaL_checkudata(L, 1, "bee::channel");
         void*       data;
         lua_settop(L, 2);
         lua_Number sec = lua_tonumber(L, 2);
@@ -160,7 +160,7 @@ namespace bee::lua_thread {
     };
 
     static int lchannel_gc(lua_State* L) {
-        boxchannel* bc = (boxchannel*)getObject(L, 1, "channel");
+        boxchannel* bc = (boxchannel*)luaL_checkudata(L, 1, "bee::channel");
         bc->~boxchannel();
         return 0;
     }
@@ -182,7 +182,7 @@ namespace bee::lua_thread {
 
         boxchannel* bc = (boxchannel*)lua_newuserdatauv(L, sizeof(boxchannel), 0);
         new (bc) boxchannel(c);
-        if (newObject(L, "channel")) {
+        if (luaL_newmetatable(L, "bee::channel")) {
             luaL_Reg mt[] = {
                 {"push", lchannel_push},
                 {"pop", lchannel_pop},

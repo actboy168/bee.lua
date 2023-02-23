@@ -270,7 +270,7 @@ namespace bee::lua_filesystem {
 
         static void* newudata(lua_State* L) {
             void* storage = lua_newuserdatauv(L, sizeof(fs::path), 0);
-            if (newObject(L, "path")) {
+            if (luaL_newmetatable(L, "bee::path")) {
                 static luaL_Reg mt[] = {
                     {"string", path::mt_tostring},
                     {"filename", path::filename},
@@ -377,7 +377,7 @@ namespace bee::lua_filesystem {
 
         static void* newudata(lua_State* L) {
             void* storage = lua_newuserdatauv(L, sizeof(fs::file_status), 0);
-            if (newObject(L, "file_status")) {
+            if (luaL_newmetatable(L, "bee::file_status")) {
                 static luaL_Reg mt[] = {
                     {"type", type},
                     {"exists", exists},
@@ -457,7 +457,7 @@ namespace bee::lua_filesystem {
 
         static void* newudata(lua_State* L) {
             void* storage = lua_newuserdatauv(L, sizeof(fs::directory_entry), 0);
-            if (newObject(L, "directory_entry")) {
+            if (luaL_newmetatable(L, "bee::directory_entry")) {
                 static luaL_Reg mt[] = {
                     {"path", path},
                     {"status", status},

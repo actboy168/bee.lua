@@ -118,7 +118,3 @@ namespace bee::lua {
         return bee::lua_##name ::luaopen(L); \
     }                                        \
     static ::bee::lua::callfunc _init_##name(::bee::lua::register_module, "bee."#name, luaopen_bee_##name);
-
-
-#define newObject(L, name)      luaL_newmetatable((L), "bee::" name)
-#define getObject(L, idx, name) luaL_checkudata((L), (idx), "bee::" name)

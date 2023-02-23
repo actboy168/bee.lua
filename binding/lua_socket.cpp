@@ -42,10 +42,10 @@ namespace bee::lua_socket {
         return *(socket::fd_t*)lua_touserdata(L, idx);
     }
     static socket::fd_t checkfd(lua_State* L, int idx) {
-        return *(socket::fd_t*)getObject(L, idx, "socket");
+        return *(socket::fd_t*)luaL_checkudata(L, idx, "bee::socket");
     }
     static socket::fd_t& checkfdref(lua_State* L, int idx) {
-        return *(socket::fd_t*)getObject(L, idx, "socket");
+        return *(socket::fd_t*)luaL_checkudata(L, idx, "bee::socket");
     }
     static void pushfd(lua_State* L, socket::fd_t fd);
     static int accept(lua_State* L) {
@@ -292,7 +292,7 @@ namespace bee::lua_socket {
     static void pushfd(lua_State* L, socket::fd_t fd) {
         socket::fd_t* pfd = (socket::fd_t*)lua_newuserdatauv(L, sizeof(socket::fd_t), 0);
         *pfd = fd;
-        if (newObject(L, "socket")) {
+        if (luaL_newmetatable(L, "bee::socket")) {
             luaL_Reg mt[] = {
                 {"connect", connect},
                 {"bind", bind},
