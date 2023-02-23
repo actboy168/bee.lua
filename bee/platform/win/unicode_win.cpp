@@ -1,5 +1,4 @@
 #include <bee/platform/win/unicode.h>
-#include <vector>
 #include <Windows.h>
 
 namespace bee::win {
@@ -11,9 +10,9 @@ namespace bee::win {
         if (wlen <= 0)  {
             return L"";
         }
-        std::vector<wchar_t> result(wlen);
-        ::MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), result.data(), wlen);
-        return std::wstring(result.data(), result.size());
+        std::wstring wresult(wlen, L'\0');
+        ::MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), wresult.data(), (int)wresult.size());
+        return wresult;
     }
 
     std::string w2u(const std::wstring_view& wstr)  {
@@ -24,9 +23,9 @@ namespace bee::win {
         if (len <= 0) {
             return "";
         }
-        std::vector<char> result(len);
-        ::WideCharToMultiByte(CP_UTF8, 0, wstr.data(), (int)wstr.size(), result.data(), len, 0, 0);
-        return std::string(result.data(), result.size());
+        std::string result(len, '\0');
+        ::WideCharToMultiByte(CP_UTF8, 0, wstr.data(), (int)wstr.size(), result.data(), (int)result.size(), 0, 0);
+        return result;
     }
 
     std::wstring a2w(const std::string_view& str) {
@@ -37,9 +36,9 @@ namespace bee::win {
         if (wlen <= 0) {
             return L"";
         }
-        std::vector<wchar_t> result(wlen);
-        ::MultiByteToWideChar(CP_ACP, 0, str.data(), (int)str.size(), result.data(), wlen);
-        return std::wstring(result.data(), result.size());
+        std::wstring wresult(wlen, L'\0');
+        ::MultiByteToWideChar(CP_ACP, 0, str.data(), (int)str.size(), wresult.data(), (int)wresult.size());
+        return wresult;
     }
 
     std::string w2a(const std::wstring_view& wstr) {
@@ -50,9 +49,9 @@ namespace bee::win {
         if (len <= 0) {
             return "";
         }
-        std::vector<char> result(len);
-        ::WideCharToMultiByte(CP_ACP, 0, wstr.data(), (int)wstr.size(), result.data(), len, 0, 0);
-        return std::string(result.data(), result.size());
+        std::string result(len, '\0');
+        ::WideCharToMultiByte(CP_ACP, 0, wstr.data(), (int)wstr.size(), result.data(), (int)result.size(), 0, 0);
+        return result;
     }
 
     std::string a2u(const std::string_view& str) {
