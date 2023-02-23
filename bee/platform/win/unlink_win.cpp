@@ -1,16 +1,6 @@
 #include <bee/platform/win/unlink.h>
 #include <windows.h>
 
-#if !defined(_M_X64)
-#include <io.h>
-namespace bee::win {
-    bool unlink(const wchar_t* path) {
-        //TODO
-        return ::_wunlink(path);
-    }
-}
-#else
-
 enum {
     FILE_DISPOSITION_DO_NOT_DELETE = 0x00,
     FILE_DISPOSITION_DELETE = 0x01,
@@ -127,13 +117,12 @@ struct OBJECT_ATTRIBUTES {
 };
 
 extern "C" {
-NTSTATUS NtOpenFile(PHANDLE, ACCESS_MASK, OBJECT_ATTRIBUTES*, IO_STATUS_BLOCK*, ULONG, ULONG);
-NTSTATUS NtSetInformationFile(HANDLE, IO_STATUS_BLOCK*, PVOID, ULONG, FILE_INFORMATION_CLASS);
-NTSTATUS NtClose(HANDLE);
-ULONG    RtlNtStatusToDosError(NTSTATUS);
-BOOLEAN  RtlDosPathNameToNtPathName_U(PCWSTR, UNICODE_STRING*, PWSTR*, PVOID);
-BOOLEAN  RtlDosPathNameToNtPathName_U(PCWSTR, UNICODE_STRING*, PWSTR*, PVOID);
-VOID     RtlFreeUnicodeString(UNICODE_STRING*);
+NTSTATUS __stdcall NtOpenFile(PHANDLE, ACCESS_MASK, OBJECT_ATTRIBUTES*, IO_STATUS_BLOCK*, ULONG, ULONG);
+NTSTATUS __stdcall NtSetInformationFile(HANDLE, IO_STATUS_BLOCK*, PVOID, ULONG, FILE_INFORMATION_CLASS);
+NTSTATUS __stdcall NtClose(HANDLE);
+ULONG    __stdcall RtlNtStatusToDosError(NTSTATUS);
+BOOLEAN  __stdcall RtlDosPathNameToNtPathName_U(PCWSTR, UNICODE_STRING*, PWSTR*, PVOID);
+VOID     __stdcall RtlFreeUnicodeString(UNICODE_STRING*);
 }
 
 #define FILE_OPEN_FOR_BACKUP_INTENT 0x00004000
@@ -176,4 +165,3 @@ namespace bee::win {
         return false;
     }
 }
-#endif
