@@ -9,6 +9,8 @@
 #include <string.h>
 #if defined(_WIN32)
 #include <bee/platform/win/unicode.h>
+#include <fcntl.h>
+#include <io.h>
 #else
 #include <unistd.h>
 #endif
@@ -400,9 +402,6 @@ namespace bee::lua_subprocess {
     }
 
 #if defined(_WIN32)
-#include <fcntl.h>
-#include <io.h>
-
     static int filemode(lua_State* L) {
         luaL_Stream* p = spawn::get_file(L, 1);
         const char*  mode = luaL_checkstring(L, 2);
