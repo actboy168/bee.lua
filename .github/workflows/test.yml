@@ -7,7 +7,7 @@ jobs:
     - uses: actions/checkout@v3
     - uses: actboy168/setup-luamake@master
     - run: luamake -arch x86
-  windows-x64:
+  windows-x86_64:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
@@ -46,14 +46,18 @@ jobs:
     - uses: actboy168/setup-luamake@master
     # see actions/runner-images#2187
     - run: luamake -arch arm64 -notest
-  linux-x64:
+  linux-x86_64:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
     - uses: actboy168/setup-luamake@master
     - run: luamake
     - run: luamake lua test/glibc-version.lua
-  linux-arm64:
+  linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [aarch64, armv7, riscv64]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -64,7 +68,7 @@ jobs:
           submodules : recursive
       - uses: uraimo/run-on-arch-action@v2
         with:
-          arch: aarch64
+          arch: ${{ matrix.arch }}
           distro: ubuntu20.04
           dockerRunArgs: |
             --volume "${PWD}:/actboy168"
@@ -72,30 +76,7 @@ jobs:
             apt-get update -q -y
             apt-get install -q -y gcc g++ ninja-build
           run: |
-            cd luamake
+            pushd luamake
             ./compile/build.sh notest
-            cd ..
-            ./luamake/luamake
-  linux-arm:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/checkout@v3
-        with:
-          path: luamake
-          repository: actboy168/luamake
-          submodules : recursive
-      - uses: uraimo/run-on-arch-action@v2
-        with:
-          arch: armv7
-          distro: ubuntu20.04
-          dockerRunArgs: |
-            --volume "${PWD}:/actboy168"
-          install: |
-            apt-get update -q -y
-            apt-get install -q -y gcc g++ ninja-build
-          run: |
-            cd luamake
-            ./compile/build.sh notest
-            cd ..
+            popd
             ./luamake/luamake
