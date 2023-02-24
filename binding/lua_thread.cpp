@@ -68,6 +68,20 @@ namespace bee::lua_thread {
 
     using boxchannel = std::shared_ptr<channel>;
 
+    struct rpc {
+        std::binary_semaphore trigger = std::binary_semaphore(0);
+        void* data = nullptr;
+    };
+}
+
+namespace bee::lua {
+    template <>
+    struct udata<lua_thread::boxchannel> {
+        static inline auto name = "bee::channel";
+    };
+}
+
+namespace bee::lua_thread {
     class channelmgr {
     public:
         channelmgr() {
@@ -116,22 +130,22 @@ namespace bee::lua_thread {
     static int       THREADID;
 
     static int lchannel_push(lua_State* L) {
-        boxchannel& bc = *(boxchannel*)luaL_checkudata(L, 1, "bee::channel");
-        void*       buffer = seri_pack(L, 1, NULL);
+        auto& bc = lua::checkudata<boxchannel>(L, 1);
+        void* buffer = seri_pack(L, 1, NULL);
         bc->push(buffer);
         return 0;
     }
 
     static int lchannel_bpop(lua_State* L) {
-        boxchannel& bc = *(boxchannel*)luaL_checkudata(L, 1, "bee::channel");
-        void*       data;
+        auto& bc = lua::checkudata<boxchannel>(L, 1);
+        void* data;
         bc->blocked_pop(data);
         return seri_unpackptr(L, data);
     }
 
     static int lchannel_pop(lua_State* L) {
-        boxchannel& bc = *(boxchannel*)luaL_checkudata(L, 1, "bee::channel");
-        void*       data;
+        auto& bc = lua::checkudata<boxchannel>(L, 1);
+        void* data;
         lua_settop(L, 2);
         lua_Number sec = lua_tonumber(L, 2);
         if (sec == 0) {
@@ -150,14 +164,9 @@ namespace bee::lua_thread {
         return 1 + seri_unpackptr(L, data);
     }
 
-    struct rpc {
-        std::binary_semaphore trigger = std::binary_semaphore(0);
-        void* data = nullptr;
-    };
-
     static int lchannel_gc(lua_State* L) {
-        boxchannel* bc = (boxchannel*)luaL_checkudata(L, 1, "bee::channel");
-        bc->~boxchannel();
+        auto& bc = lua::checkudata<boxchannel>(L, 1);
+        bc.~boxchannel();
         return 0;
     }
 
@@ -169,28 +178,26 @@ namespace bee::lua_thread {
         return 0;
     }
 
+    static void metatable(lua_State* L) {
+        luaL_Reg mt[] = {
+            {"push", lchannel_push},
+            {"pop", lchannel_pop},
+            {"bpop", lchannel_bpop},
+            {"__gc", lchannel_gc},
+            {NULL, NULL},
+        };
+        luaL_setfuncs(L, mt, 0);
+        lua_pushvalue(L, -1);
+        lua_setfield(L, -2, "__index");
+    }
+
     static int lchannel(lua_State* L) {
         auto name = lua::checkstrview(L, 1);
         boxchannel c = g_channel.query(name);
         if (!c) {
             return luaL_error(L, "Can't query channel '%s'", name.data());
         }
-
-        boxchannel* bc = (boxchannel*)lua_newuserdatauv(L, sizeof(boxchannel), 0);
-        new (bc) boxchannel(c);
-        if (luaL_newmetatable(L, "bee::channel")) {
-            luaL_Reg mt[] = {
-                {"push", lchannel_push},
-                {"pop", lchannel_pop},
-                {"bpop", lchannel_bpop},
-                {"__gc", lchannel_gc},
-                {NULL, NULL},
-            };
-            luaL_setfuncs(L, mt, 0);
-            lua_pushvalue(L, -1);
-            lua_setfield(L, -2, "__index");
-        }
-        lua_setmetatable(L, -2);
+        lua::newudata<boxchannel>(L, metatable, c);
         return 1;
     }
 
@@ -312,9 +319,8 @@ namespace bee::lua_thread {
     }
 
     static int lrpc_create(lua_State* L) {
-        struct rpc* r = (struct rpc*)lua_newuserdatauv(L, sizeof(*r), 0);
-        new (r) rpc;
-        lua_pushlightuserdata(L, r);
+        auto& r = lua::newudata<rpc>(L, nullptr);
+        lua_pushlightuserdata(L, &r);
         lua_rotate(L, 1, 1);
         return 2;
     }

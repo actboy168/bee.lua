@@ -4,9 +4,17 @@
 #include <bee/nonstd/unreachable.h>
 #include <bee/nonstd/filesystem.h>
 
+namespace bee::lua {
+    template <>
+    struct udata<filewatch::watch> {
+        static inline int  nupvalue = 1;
+        static inline auto name = "bee::filewatch";
+    };
+}
+
 namespace bee::lua_filewatch {
     static filewatch::watch& to(lua_State* L, int idx) {
-        return *(filewatch::watch*)luaL_checkudata(L, idx, "bee::filewatch");
+        return lua::checkudata<filewatch::watch>(L, idx);
     }
 
     static lua_State* get_thread(lua_State* L) {
@@ -108,27 +116,24 @@ namespace bee::lua_filewatch {
         return 0;
     }
 
+    static void metatable(lua_State* L) {
+        static luaL_Reg mt[] = {
+            {"add", add},
+            {"set_recursive", set_recursive},
+            {"set_follow_symlinks", set_follow_symlinks},
+            {"set_filter", set_filter},
+            {"select", select},
+            {"__close", toclose},
+            {"__gc", gc},
+            {NULL, NULL}
+        };
+        luaL_setfuncs(L, mt, 0);
+        lua_pushvalue(L, -1);
+        lua_setfield(L, -2, "__index");
+    }
+
     static int create(lua_State* L) {
-        void* storage = lua_newuserdatauv(L, sizeof(filewatch::watch), 1);
-        if (luaL_newmetatable(L, "bee::filewatch")) {
-            static luaL_Reg mt[] = {
-                {"add", add},
-                {"set_recursive", set_recursive},
-                {"set_follow_symlinks", set_follow_symlinks},
-                {"set_filter", set_filter},
-                {"select", select},
-                {"__close", toclose},
-                {"__gc", gc},
-                {NULL, NULL}
-            };
-            luaL_setfuncs(L, mt, 0);
-            lua_pushvalue(L, -1);
-            lua_setfield(L, -2, "__index");
-        }
-        lua_setmetatable(L, -2);
-        lua_newthread(L);
-        lua_setiuservalue(L, -2, 1);
-        new (storage) filewatch::watch;
+        lua::newudata<filewatch::watch>(L, metatable);
         return 1;
     }
 

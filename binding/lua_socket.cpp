@@ -11,6 +11,13 @@
 #include <bee/thread/simplethread.h>
 #include <limits>
 
+namespace bee::lua {
+    template <>
+    struct udata<net::socket::fd_t> {
+        static inline auto name = "bee::socket";
+    };
+}
+
 namespace bee::lua_socket {
     using namespace bee::net;
     static const int kDefaultBackLog = 5;
@@ -41,11 +48,11 @@ namespace bee::lua_socket {
     static socket::fd_t tofd(lua_State* L, int idx) {
         return *(socket::fd_t*)lua_touserdata(L, idx);
     }
-    static socket::fd_t checkfd(lua_State* L, int idx) {
-        return *(socket::fd_t*)luaL_checkudata(L, idx, "bee::socket");
-    }
     static socket::fd_t& checkfdref(lua_State* L, int idx) {
-        return *(socket::fd_t*)luaL_checkudata(L, idx, "bee::socket");
+        return lua::checkudata<socket::fd_t>(L, idx);
+    }
+    static socket::fd_t checkfd(lua_State* L, int idx) {
+        return lua::checkudata<socket::fd_t>(L, idx);
     }
     static void dump_fd(lua_State* L, socket::fd_t fd, int type) {
         switch (type) {
@@ -332,36 +339,34 @@ namespace bee::lua_socket {
         lua_pushboolean(L, 1);
         return 1;
     }
+    static void metatable(lua_State* L) {
+        luaL_Reg mt[] = {
+            {"connect", connect},
+            {"bind", bind},
+            {"listen", listen},
+            {"accept", accept},
+            {"recv", recv},
+            {"send", send},
+            {"recvfrom", recvfrom},
+            {"sendto", sendto},
+            {"close", close},
+            {"shutdown", shutdown},
+            {"status", status},
+            {"info", info},
+            {"handle", handle},
+            {"detach", detach},
+            {"option", option},
+            {"__tostring", tostring},
+            {"__close", destroy},
+            {"__gc", destroy},
+            {NULL, NULL},
+        };
+        luaL_setfuncs(L, mt, 0);
+        lua_pushvalue(L, -1);
+        lua_setfield(L, -2, "__index");
+    }
     static void pushfd(lua_State* L, socket::fd_t fd) {
-        socket::fd_t* pfd = (socket::fd_t*)lua_newuserdatauv(L, sizeof(socket::fd_t), 0);
-        *pfd = fd;
-        if (luaL_newmetatable(L, "bee::socket")) {
-            luaL_Reg mt[] = {
-                {"connect", connect},
-                {"bind", bind},
-                {"listen", listen},
-                {"accept", accept},
-                {"recv", recv},
-                {"send", send},
-                {"recvfrom", recvfrom},
-                {"sendto", sendto},
-                {"close", close},
-                {"shutdown", shutdown},
-                {"status", status},
-                {"info", info},
-                {"handle", handle},
-                {"detach", detach},
-                {"option", option},
-                {"__tostring", tostring},
-                {"__close", destroy},
-                {"__gc", destroy},
-                {NULL, NULL},
-            };
-            luaL_setfuncs(L, mt, 0);
-            lua_pushvalue(L, -1);
-            lua_setfield(L, -2, "__index");
-        }
-        lua_setmetatable(L, -2);
+        lua::newudata<socket::fd_t>(L, metatable, fd);
     }
     static int pair(lua_State* L) {
         socket::fd_t sv[2];

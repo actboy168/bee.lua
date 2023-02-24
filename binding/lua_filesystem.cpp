@@ -1,4 +1,5 @@
 #include <binding/binding.h>
+#include <binding/udata.h>
 #include <binding/file.h>
 #include <bee/error.h>
 #include <bee/nonstd/filesystem.h>
@@ -10,6 +11,26 @@
 #if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 #define BEE_DISABLE_FULLPATH
 #endif
+
+namespace bee::lua {
+    template <>
+    struct udata<fs::file_status> {
+        static inline auto name = "bee::file_status";
+    };
+    template <>
+    struct udata<fs::directory_entry> {
+        static inline auto name = "bee::directory_entry";
+    };
+    template <>
+    struct udata<fs::recursive_directory_iterator> {
+        static inline auto name = "bee::pairs_r";
+    };
+    template <>
+    struct udata<fs::directory_iterator> {
+        static inline auto name = "bee::pairs";
+    };
+
+}
 
 namespace bee::lua_filesystem {
 #if defined(__cpp_lib_char8_t)
@@ -123,15 +144,15 @@ namespace bee::lua_filesystem {
     };
     using path_ptr = constptr<fs::path>;
 
+    static fs::path& getpath(lua_State* L, int idx) {
+        return lua::checkudata<fs::path>(L, idx);
+    }
+
     static path_ptr getpathptr(lua_State* L, int idx) {
         if (lua_type(L, idx) == LUA_TSTRING) {
             return fs::path { lua::checkstring(L, idx) };
         }
-        return (const fs::path*)luaL_checkudata(L, idx, "bee::path");
-    }
-
-    static fs::path& getpath(lua_State* L, int idx) {
-        return *(fs::path*)luaL_checkudata(L, idx, "bee::path");
+        return &getpath(L, idx);
     }
 
     namespace path {
@@ -268,48 +289,40 @@ namespace bee::lua_filesystem {
             return 1;
         }
 
-        static void* newudata(lua_State* L) {
-            void* storage = lua_newuserdatauv(L, sizeof(fs::path), 0);
-            if (luaL_newmetatable(L, "bee::path")) {
-                static luaL_Reg mt[] = {
-                    {"string", path::mt_tostring},
-                    {"filename", path::filename},
-                    {"parent_path", path::parent_path},
-                    {"stem", path::stem},
-                    {"extension", path::extension},
-                    {"is_absolute", path::is_absolute},
-                    {"is_relative", path::is_relative},
-                    {"remove_filename", path::remove_filename},
-                    {"replace_filename", path::replace_filename},
-                    {"replace_extension", path::replace_extension},
-                    {"equal_extension", path::equal_extension},
-                    {"lexically_normal", path::lexically_normal},
-                    {"__div", path::mt_div},
-                    {"__concat", path::mt_concat},
-                    {"__eq", path::mt_eq},
-                    {"__gc", path::destructor},
-                    {"__tostring", path::mt_tostring},
-                    {"__debugger_tostring", path::mt_tostring},
-                    {NULL, NULL},
-                };
-                luaL_setfuncs(L, mt, 0);
-                lua_pushvalue(L, -1);
-                lua_setfield(L, -2, "__index");
-            }
-            lua_setmetatable(L, -2);
-            return storage;
+        static void metatable(lua_State* L) {
+            static luaL_Reg mt[] = {
+                {"string", mt_tostring},
+                {"filename", filename},
+                {"parent_path", parent_path},
+                {"stem", stem},
+                {"extension", extension},
+                {"is_absolute", is_absolute},
+                {"is_relative", is_relative},
+                {"remove_filename", remove_filename},
+                {"replace_filename", replace_filename},
+                {"replace_extension", replace_extension},
+                {"equal_extension", equal_extension},
+                {"lexically_normal", lexically_normal},
+                {"__div", mt_div},
+                {"__concat", mt_concat},
+                {"__eq", mt_eq},
+                {"__gc", destructor},
+                {"__tostring", mt_tostring},
+                {"__debugger_tostring", mt_tostring},
+                {NULL, NULL},
+            };
+            luaL_setfuncs(L, mt, 0);
+            lua_pushvalue(L, -1);
+            lua_setfield(L, -2, "__index");
         }
         static void push(lua_State* L) {
-            void* storage = path::newudata(L);
-            new (storage) fs::path();
+            lua::newudata<fs::path>(L, metatable);
         }
         static void push(lua_State* L, const fs::path& path) {
-            void* storage = path::newudata(L);
-            new (storage) fs::path(path);
+            lua::newudata<fs::path>(L, metatable, path);
         }
         static void push(lua_State* L, fs::path&& path) {
-            void* storage = path::newudata(L);
-            new (storage) fs::path(std::forward<fs::path>(path));
+            lua::newudata<fs::path>(L, metatable, std::forward<fs::path>(path));
         }
     }
 
@@ -317,7 +330,7 @@ namespace bee::lua_filesystem {
         static void push(lua_State* L, fs::file_status&& status);
 
         static fs::file_status& to(lua_State* L, int idx) {
-            return *(fs::file_status*)luaL_checkudata(L, idx, "bee::file_status");;
+            return lua::checkudata<fs::file_status>(L, idx);
         }
 
         static const char* filetypename(fs::file_type type) {
@@ -376,36 +389,30 @@ namespace bee::lua_filesystem {
             return 0;
         }
 
-        static void* newudata(lua_State* L) {
-            void* storage = lua_newuserdatauv(L, sizeof(fs::file_status), 0);
-            if (luaL_newmetatable(L, "bee::file_status")) {
-                static luaL_Reg mt[] = {
-                    {"type", type},
-                    {"exists", exists},
-                    {"is_directory", is_directory},
-                    {"is_regular_file", is_regular_file},
-                    {"__eq", eq},
-                    {"__gc", destructor},
-                    {"__tostring", type},
-                    {"__debugger_tostring", type},
-                    {NULL, NULL},
-                };
-                luaL_setfuncs(L, mt, 0);
-                lua_pushvalue(L, -1);
-                lua_setfield(L, -2, "__index");
-            }
-            lua_setmetatable(L, -2);
-            return storage;
+        static void metatable(lua_State* L) {
+            static luaL_Reg mt[] = {
+                {"type", type},
+                {"exists", exists},
+                {"is_directory", is_directory},
+                {"is_regular_file", is_regular_file},
+                {"__eq", eq},
+                {"__gc", destructor},
+                {"__tostring", type},
+                {"__debugger_tostring", type},
+                {NULL, NULL},
+            };
+            luaL_setfuncs(L, mt, 0);
+            lua_pushvalue(L, -1);
+            lua_setfield(L, -2, "__index");
         }
         static void push(lua_State* L, fs::file_status&& status) {
-            void* storage = newudata(L);
-            new (storage) fs::file_status(std::forward<fs::file_status>(status));
+            lua::newudata<fs::file_status>(L, metatable, std::forward<fs::file_status>(status));
         }
     }
 
     namespace directory_entry {
         static fs::directory_entry& to(lua_State* L, int idx) {
-            return *(fs::directory_entry*)luaL_checkudata(L, idx, "bee::directory_entry");;
+            return lua::checkudata<fs::directory_entry>(L, idx);
         }
 
         static int path(lua_State* L) {
@@ -456,32 +463,26 @@ namespace bee::lua_filesystem {
             return 0;
         }
 
-        static void* newudata(lua_State* L) {
-            void* storage = lua_newuserdatauv(L, sizeof(fs::directory_entry), 0);
-            if (luaL_newmetatable(L, "bee::directory_entry")) {
-                static luaL_Reg mt[] = {
-                    {"path", path},
-                    {"status", status},
-                    {"symlink_status", symlink_status},
-                    {"type", type},
-                    {"exists", exists},
-                    {"is_directory", is_directory},
-                    {"is_regular_file", is_regular_file},
-                    {"__gc", destructor},
-                    {"__tostring", path},
-                    {"__debugger_tostring", path},
-                    {NULL, NULL},
-                };
-                luaL_setfuncs(L, mt, 0);
-                lua_pushvalue(L, -1);
-                lua_setfield(L, -2, "__index");
-            }
-            lua_setmetatable(L, -2);
-            return storage;
+        static void metatable(lua_State* L) {
+            static luaL_Reg mt[] = {
+                {"path", path},
+                {"status", status},
+                {"symlink_status", symlink_status},
+                {"type", type},
+                {"exists", exists},
+                {"is_directory", is_directory},
+                {"is_regular_file", is_regular_file},
+                {"__gc", destructor},
+                {"__tostring", path},
+                {"__debugger_tostring", path},
+                {NULL, NULL},
+            };
+            luaL_setfuncs(L, mt, 0);
+            lua_pushvalue(L, -1);
+            lua_setfield(L, -2, "__index");
         }
         static void push(lua_State* L, fs::directory_entry const& entry) {
-            void* storage = newudata(L);
-            new (storage) fs::directory_entry(entry);
+            lua::newudata<fs::directory_entry>(L, metatable, entry);
         }
     }
 
@@ -805,72 +806,52 @@ namespace bee::lua_filesystem {
     }
 
     template <typename T>
-    struct pairs_metatable {};
-
-    template <>
-    struct pairs_metatable<fs::recursive_directory_iterator> {
-        static inline const char name[] = "bee::pairs_r";
-    };
-    template <>
-    struct pairs_metatable<fs::directory_iterator> {
-        static inline const char name[] = "bee::pairs";
-    };
-
-    template <typename T>
     struct pairs_directory {
-        static pairs_directory& get(lua_State* L, int idx) {
-            return *static_cast<pairs_directory*>(lua_touserdata(L, idx));
+        static T& get(lua_State* L, int idx) {
+            return *static_cast<T*>(lua_touserdata(L, idx));
         }
         static int next(lua_State* L) {
-            pairs_directory& self = get(L, lua_upvalueindex(1));
-            if (self.cur == self.end) {
+            auto& self = get(L, lua_upvalueindex(1));
+            if (self == T {}) {
                 lua_pushnil(L);
                 return 1;
             }
-            path::push(L, self.cur->path());
-            directory_entry::push(L, *self.cur);
+            path::push(L, self->path());
+            directory_entry::push(L, *self);
             std::error_code ec;
-            self.cur.increment(ec);
+            self.increment(ec);
             if (ec) {
                 return pusherror(L, "directory_iterator::operator++", ec); 
             }
             return 2;
         }
         static int close(lua_State* L) {
-            pairs_directory& self = get(L, 1);
-            self.cur = self.end;
+            auto& self = get(L, 1);
+            self = {};
             return 0;
         }
         static int gc(lua_State* L) {
-            get(L, 1).~pairs_directory();
+            get(L, 1).~T();
             return 0;
         }
+        static void metatable(lua_State* L) {
+            static luaL_Reg mt[] = {
+                {"__gc", pairs_directory::gc},
+                {"__close", pairs_directory::close},
+                {NULL, NULL},
+            };
+            luaL_setfuncs(L, mt, 0);
+        }
         static int constructor(lua_State* L, const fs::path& path) {
-            void* storage = lua_newuserdatauv(L, sizeof(pairs_directory), 0);
             std::error_code ec;
-            new (storage) pairs_directory(path, ec);
+            lua::newudata<T>(L, metatable, path, ec);
             if (ec) {
                 return pusherror(L, "directory_iterator::directory_iterator", ec, path); 
             }
-            if (luaL_newmetatable(L, pairs_metatable<T>::name)) {
-                static luaL_Reg mt[] = {
-                    {"__gc", pairs_directory::gc},
-                    {"__close", pairs_directory::close},
-                    {NULL, NULL},
-                };
-                luaL_setfuncs(L, mt, 0);
-            }
-            lua_setmetatable(L, -2);
             lua_pushvalue(L, -1);
             lua_pushcclosure(L, pairs_directory::next, 1);
             return 2;
         }
-        pairs_directory(const fs::path& path, std::error_code& ec)
-            : cur(T(path, ec))
-            , end(T())
-        {}
-        T cur;
-        T end;
     };
 
     static int pairs(lua_State* L) {

@@ -76,6 +76,44 @@ namespace bee::lua {
     }
 
     template <typename T>
+    struct udata {};
+    template <typename T, typename = void>
+    struct udata_has_name : std::false_type {};
+    template <typename T>
+    struct udata_has_name<T, decltype((void)udata<T>::name, void())> : std::true_type {};
+    template <typename T, typename = void>
+    struct udata_has_nupvalue : std::false_type {};
+    template <typename T>
+    struct udata_has_nupvalue<T, decltype((void)udata<T>::nupvalue, void())> : std::true_type {};
+
+    template <typename T, typename...Args>
+    T& newudata(lua_State* L, void (*create_metatable)(lua_State*), Args&&...args) {
+        int nupvalue = 0;
+        if constexpr (udata_has_nupvalue<T>::value) {
+            nupvalue = udata<T>::nupvalue;
+        }
+        T* o = (T*)lua_newuserdatauv(L, sizeof(T), nupvalue);
+        new (o) T(std::forward<Args>(args)...);
+        if constexpr (udata_has_name<T>::value) {
+            if (luaL_newmetatable(L, udata<T>::name)) {
+                create_metatable(L);
+            }
+            lua_setmetatable(L, -2);
+        }
+        return *o;
+    }
+
+    template <typename T>
+    T& checkudata(lua_State* L, int ud) {
+        if constexpr (udata_has_name<T>::value) {
+            return *(T*)luaL_checkudata(L, ud, udata<T>::name);
+        }
+        else {
+            return *(T*)lua_touserdata(L, ud);
+        }
+    }
+
+    template <typename T>
     struct global { static inline T v = T(); };
     using usermodules = global<std::map<std::string, lua_CFunction>>;
 

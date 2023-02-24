@@ -1,4 +1,5 @@
 #include <binding/binding.h>
+#include <binding/udata.h>
 #include <binding/file.h>
 #include <bee/error.h>
 #include <bee/nonstd/filesystem.h>
@@ -12,32 +13,40 @@
 #include <unistd.h>
 #endif
 
+namespace bee::lua {
+    template <>
+    struct udata<subprocess::process> {
+        static inline int  nupvalue = 1;
+        static inline auto name = "bee::subprocess";
+    };
+}
+
 namespace bee::lua_subprocess {
     namespace process {
-        static subprocess::process& to(lua_State* L, int idx) {
-            return *(subprocess::process*)luaL_checkudata(L, idx, "bee::subprocess");
+        static auto& to(lua_State* L, int idx) {
+            return lua::checkudata<subprocess::process>(L, idx);
         }
 #if defined(_WIN32)
         static int close(lua_State* L) {
-            subprocess::process& self = to(L, 1);
+            auto& self = to(L, 1);
             self.close();
             return 0;
         }
 #endif
         static int destructor(lua_State* L) {
-            subprocess::process& self = to(L, 1);
+            auto& self = to(L, 1);
             self.~process();
             return 0;
         }
 
         static int wait(lua_State* L) {
-            subprocess::process& self = to(L, 1);
+            auto& self = to(L, 1);
             lua_pushinteger(L, (lua_Integer)self.wait());
             return 1;
         }
 
         static int kill(lua_State* L) {
-            subprocess::process& self = to(L, 1);
+            auto& self = to(L, 1);
             auto signum = lua::optinteger<int>(L, 2, 15, "signum");
             bool ok = self.kill(signum);
             lua_pushboolean(L, ok);
@@ -45,25 +54,25 @@ namespace bee::lua_subprocess {
         }
 
         static int get_id(lua_State* L) {
-            subprocess::process& self = to(L, 1);
+            auto& self = to(L, 1);
             lua_pushinteger(L, (lua_Integer)self.get_id());
             return 1;
         }
 
         static int is_running(lua_State* L) {
-            subprocess::process& self = to(L, 1);
+            auto& self = to(L, 1);
             lua_pushboolean(L, self.is_running());
             return 1;
         }
 
         static int resume(lua_State* L) {
-            subprocess::process& self = to(L, 1);
+            auto& self = to(L, 1);
             lua_pushboolean(L, self.resume());
             return 1;
         }
 
         static int native_handle(lua_State* L) {
-            subprocess::process& self = to(L, 1);
+            auto& self = to(L, 1);
             lua_pushinteger(L, self.native_handle());
             return 1;
         }
@@ -96,33 +105,33 @@ namespace bee::lua_subprocess {
             return 0;
         }
 
-        static int constructor(lua_State* L, subprocess::spawn& spawn) {
-            void* storage = lua_newuserdatauv(L, sizeof(subprocess::process), 1);
-
-            if (luaL_newmetatable(L, "bee::subprocess")) {
-                static luaL_Reg mt[] = {
-                    {"wait", process::wait},
-                    {"kill", process::kill},
-                    {"get_id", process::get_id},
-                    {"is_running", process::is_running},
-                    {"resume", process::resume},
-                    {"native_handle", process::native_handle},
+        static void metatable(lua_State* L) {
+            namespace process = lua_subprocess::process;
+            static luaL_Reg mt[] = {
+                {"wait", process::wait},
+                {"kill", process::kill},
+                {"get_id", process::get_id},
+                {"is_running", process::is_running},
+                {"resume", process::resume},
+                {"native_handle", process::native_handle},
 #if defined(_WIN32)
-                    {"__close", process::close},
+                {"__close", process::close},
 #endif
-                    {"__gc", process::destructor},
-                    {NULL, NULL}};
-                luaL_setfuncs(L, mt, 0);
+                {"__gc", process::destructor},
+                {NULL, NULL}
+            };
+            luaL_setfuncs(L, mt, 0);
+            static luaL_Reg mt2[] = {
+                {"__index", process::index},
+                {"__newindex", process::newindex},
+                {NULL, NULL}
+            };
+            lua_pushvalue(L, -1);
+            luaL_setfuncs(L, mt2, 1);
+        }
 
-                static luaL_Reg mt2[] = {
-                    {"__index", process::index},
-                    {"__newindex", process::newindex},
-                    {NULL, NULL}};
-                lua_pushvalue(L, -1);
-                luaL_setfuncs(L, mt2, 1);
-            }
-            lua_setmetatable(L, -2);
-            new (storage) subprocess::process(spawn);
+        static int constructor(lua_State* L, subprocess::spawn& spawn) {
+            lua::newudata<subprocess::process>(L, metatable, spawn);
             return 1;
         }
     }
@@ -137,7 +146,7 @@ namespace bee::lua_subprocess {
                 return ret;
             }
             case LUA_TUSERDATA: {
-                const fs::path& path = *(fs::path*)luaL_checkudata(L, -1, "bee::path");
+                auto const & path = lua::checkudata<fs::path>(L, -1);
                 auto ret = path.string<lua::string_type::value_type>();
                 lua_pop(L, 1);
                 return ret;
@@ -157,7 +166,7 @@ namespace bee::lua_subprocess {
                     args.push(lua::checkstring(L, -1));
                     break;
                 case LUA_TUSERDATA: {
-                    const fs::path& path = *(fs::path*)luaL_checkudata(L, -1, "bee::path");
+                    auto const & path = lua::checkudata<fs::path>(L, -1);
                     args.push(path.string<lua::string_type::value_type>());
                     break;
                 }
