@@ -369,7 +369,7 @@ namespace bee::lua_filesystem {
             return 1;
         }
 
-        static int eq(lua_State* L) {
+        static int mt_eq(lua_State* L) {
             auto const& l = to(L, 1);
             auto const& r = to(L, 2);
             lua_pushboolean(L, l.type() == r.type() && l.permissions() == r.permissions());
@@ -382,7 +382,7 @@ namespace bee::lua_filesystem {
                 {"exists", exists},
                 {"is_directory", is_directory},
                 {"is_regular_file", is_regular_file},
-                {"__eq", eq},
+                {"__eq", mt_eq},
                 {"__tostring", type},
                 {"__debugger_tostring", type},
                 {NULL, NULL},
@@ -804,14 +804,14 @@ namespace bee::lua_filesystem {
             }
             return 2;
         }
-        static int close(lua_State* L) {
+        static int mt_close(lua_State* L) {
             auto& self = get(L, 1);
             self = {};
             return 0;
         }
         static void metatable(lua_State* L) {
             static luaL_Reg mt[] = {
-                {"__close", pairs_directory::close},
+                {"__close", mt_close},
                 {NULL, NULL},
             };
             luaL_setfuncs(L, mt, 0);
@@ -823,7 +823,7 @@ namespace bee::lua_filesystem {
                 return pusherror(L, "directory_iterator::directory_iterator", ec, path); 
             }
             lua_pushvalue(L, -1);
-            lua_pushcclosure(L, pairs_directory::next, 1);
+            lua_pushcclosure(L, next, 1);
             return 2;
         }
     };

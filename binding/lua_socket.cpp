@@ -227,7 +227,7 @@ namespace bee::lua_socket {
             return 2;
         }
     }
-    static int tostring(lua_State* L) {
+    static int mt_tostring(lua_State* L) {
         auto fd = checkfd(L, 1);
         if (fd == socket::retired_fd) {
             lua_pushstring(L, "socket (closed)");
@@ -236,7 +236,7 @@ namespace bee::lua_socket {
         lua_pushfstring(L, "socket (%d)", fd);
         return 1;
     }
-    static int destroy(lua_State* L) {
+    static int mt_close(lua_State* L) {
         socket_destroy(L);
         return 0;
     }
@@ -356,8 +356,8 @@ namespace bee::lua_socket {
             {"handle", handle},
             {"detach", detach},
             {"option", option},
-            {"__tostring", tostring},
-            {"__close", destroy},
+            {"__tostring", mt_tostring},
+            {"__close", mt_close},
             {NULL, NULL},
         };
         luaL_setfuncs(L, mt, 0);
@@ -387,7 +387,7 @@ namespace bee::lua_socket {
         pushfd(L, fd);
         return 1;
     }
-    static int __call(lua_State* L) {
+    static int mt_call(lua_State* L) {
         static const char *const opts[] = {
             "tcp", "udp", "unix", "tcp6", "udp6",
             NULL
@@ -522,7 +522,7 @@ namespace bee::lua_socket {
         lua_newtable(L);
         luaL_setfuncs(L, lib, 0);
         luaL_Reg mt[] = {
-            {"__call", __call},
+            {"__call", mt_call},
             {NULL, NULL}
         };
         lua_newtable(L);

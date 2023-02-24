@@ -29,7 +29,7 @@ namespace bee::lua_subprocess {
             return lua::checkudata<subprocess::process>(L, idx);
         }
 #if defined(_WIN32)
-        static int close(lua_State* L) {
+        static int mt_close(lua_State* L) {
             auto& self = to(L, 1);
             self.close();
             return 0;
@@ -74,7 +74,7 @@ namespace bee::lua_subprocess {
             return 1;
         }
 
-        static int index(lua_State* L) {
+        static int mt_index(lua_State* L) {
             lua_pushvalue(L, 2);
             if (LUA_TNIL != lua_rawget(L, lua_upvalueindex(1))) {
                 return 1;
@@ -88,7 +88,7 @@ namespace bee::lua_subprocess {
             return 0;
         }
 
-        static int newindex(lua_State* L) {
+        static int mt_newindex(lua_State* L) {
             if (LUA_TTABLE != lua_getiuservalue(L, 1, 1)) {
                 lua_pop(L, 1);
                 lua_newtable(L);
@@ -103,23 +103,22 @@ namespace bee::lua_subprocess {
         }
 
         static void metatable(lua_State* L) {
-            namespace process = lua_subprocess::process;
             static luaL_Reg mt[] = {
-                {"wait", process::wait},
-                {"kill", process::kill},
-                {"get_id", process::get_id},
-                {"is_running", process::is_running},
-                {"resume", process::resume},
-                {"native_handle", process::native_handle},
+                {"wait", wait},
+                {"kill", kill},
+                {"get_id", get_id},
+                {"is_running", is_running},
+                {"resume", resume},
+                {"native_handle", native_handle},
 #if defined(_WIN32)
-                {"__close", process::close},
+                {"__close", mt_close},
 #endif
                 {NULL, NULL}
             };
             luaL_setfuncs(L, mt, 0);
             static luaL_Reg mt2[] = {
-                {"__index", process::index},
-                {"__newindex", process::newindex},
+                {"__index", mt_index},
+                {"__newindex", mt_newindex},
                 {NULL, NULL}
             };
             lua_pushvalue(L, -1);

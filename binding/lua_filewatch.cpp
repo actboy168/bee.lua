@@ -104,7 +104,7 @@ namespace bee::lua_filewatch {
         return 2;
     }
 
-    static int toclose(lua_State* L) {
+    static int mt_close(lua_State* L) {
         filewatch::watch& self = to(L, 1);
         self.stop();
         return 0;
@@ -117,7 +117,7 @@ namespace bee::lua_filewatch {
             {"set_follow_symlinks", set_follow_symlinks},
             {"set_filter", set_filter},
             {"select", select},
-            {"__close", toclose},
+            {"__close", mt_close},
             {NULL, NULL}
         };
         luaL_setfuncs(L, mt, 0);
