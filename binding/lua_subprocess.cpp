@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <optional>
 #include <string.h>
+#include <signal.h>
 #if defined(_WIN32)
 #include <bee/platform/win/unicode.h>
 #include <fcntl.h>
@@ -44,7 +45,7 @@ namespace bee::lua_subprocess {
 
         static int kill(lua_State* L) {
             auto& self = to(L, 1);
-            auto signum = lua::optinteger<int>(L, 2, 15, "signum");
+            auto signum = lua::optinteger<int>(L, 2, SIGTERM, "signum");
             bool ok = self.kill(signum);
             lua_pushboolean(L, ok);
             return 1;
