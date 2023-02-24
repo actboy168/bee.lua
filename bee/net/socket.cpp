@@ -39,9 +39,6 @@
 namespace bee::net::socket {
 #if defined(_WIN32)
     static_assert(sizeof(SOCKET) == sizeof(fd_t));
-#endif
-
-#if defined _WIN32
 
 #if defined(_MSC_VER)
 #define FILENAME(n) win::u2w(n)
@@ -139,16 +136,15 @@ namespace bee::net::socket {
     }
 #endif
 
-    void initialize() {
+    bool initialize() {
         static bool initialized = false;
         if (!initialized) {
-            initialized = true;
 #if defined(_WIN32)
             WSADATA wd;
             int rc = WSAStartup(MAKEWORD(2, 2), &wd);
-            (void)rc;
-            assert(rc >= 0);
+            initialized = rc >= 0;
 #else
+            initialized = true;
             struct sigaction sa;
             sa.sa_handler = SIG_IGN;
             sa.sa_flags = 0;
@@ -156,6 +152,7 @@ namespace bee::net::socket {
             sigaction(SIGPIPE, &sa, 0);
 #endif
         }
+        return initialized;
     }
 
     static bool wait_finish() {
@@ -259,7 +256,6 @@ namespace bee::net::socket {
     }
 
     bool close(fd_t s) {
-        assert(s != retired_fd);
 #if defined _WIN32
         return ::closesocket(s) != SOCKET_ERROR;
 #else
@@ -268,7 +264,6 @@ namespace bee::net::socket {
     }
 
     bool shutdown(fd_t s, shutdown_flag flag) {
-        assert(s != retired_fd);
 #if defined(_WIN32)
         switch (flag) {
         case shutdown_flag::both:  return net_success(::shutdown(s, SD_BOTH));

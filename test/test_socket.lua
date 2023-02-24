@@ -1,6 +1,5 @@
 local lt = require 'ltest'
 local socket = require 'bee.socket'
-local platform = require 'bee.platform'
 local thread = require 'bee.thread'
 local errlog = thread.channel "errlog"
 
@@ -330,11 +329,15 @@ function test_socket:test_unix_echo_3()
 end
 
 function test_socket:test_dump()
+    local client = lt.assertIsUserdata(socket "tcp")
+    print(client:bind('127.0.0.1', 11001))
+    print(client:listen())
+    print(client:connect('127.0.0.1', 11001))
     local server = lt.assertIsUserdata(socket "tcp")
     lt.assertIsBoolean(server:bind('127.0.0.1', 0))
     lt.assertIsBoolean(server:listen())
-    local bindata = socket.dump(server)
-    server = socket.undump(bindata)
+    local bindata = server:detach()
+    server = socket.fd(bindata)
     local address, port = server:info('socket')
     lt.assertIsString(address)
     lt.assertIsNumber(port)

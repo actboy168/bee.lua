@@ -2,8 +2,7 @@
 #if defined(_WIN32)
 #include <Windows.h>
 #include <bee/platform/win/unicode.h>
-#include <sstream>
-#include <Windows.h>
+#include <bee/nonstd/format.h>
 #else
 #include <errno.h>
 #endif
@@ -28,9 +27,7 @@ namespace bee {
             NULL);
 
         if ((result == 0) || !message) {
-            std::wostringstream os;
-            os << L"Unable to get an error message for error code: " << error_code << ".";
-            return os.str();
+            return std::format(L"Unable to get an error message for error code: {}.", error_code);
         }
         errormsg str(message);
         while (str.size() && ((str.back() == L'\n') || (str.back() == L'\r'))) {

@@ -502,7 +502,11 @@ namespace bee::lua_socket {
         return 2;
     }
     static int luaopen(lua_State* L) {
-        socket::initialize();
+        if (!socket::initialize()) {
+            auto error = make_neterror("initialize");
+            lua::push_errormesg(L, "initialize", error);
+            return lua_error(L);
+        }
         luaL_Reg lib[] = {
             {"pair", pair},
             {"select", select},
