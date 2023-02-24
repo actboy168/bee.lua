@@ -110,12 +110,6 @@ namespace bee::lua_filewatch {
         return 0;
     }
 
-    static int gc(lua_State* L) {
-        filewatch::watch& self = to(L, 1);
-        self.~watch();
-        return 0;
-    }
-
     static void metatable(lua_State* L) {
         static luaL_Reg mt[] = {
             {"add", add},
@@ -124,7 +118,6 @@ namespace bee::lua_filewatch {
             {"set_filter", set_filter},
             {"select", select},
             {"__close", toclose},
-            {"__gc", gc},
             {NULL, NULL}
         };
         luaL_setfuncs(L, mt, 0);

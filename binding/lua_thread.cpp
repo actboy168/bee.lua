@@ -79,6 +79,10 @@ namespace bee::lua {
     struct udata<lua_thread::boxchannel> {
         static inline auto name = "bee::channel";
     };
+    template <>
+    struct udata<lua_thread::rpc> {
+        static inline auto name = "bee::rpc";
+    };
 }
 
 namespace bee::lua_thread {
@@ -164,12 +168,6 @@ namespace bee::lua_thread {
         return 1 + seri_unpackptr(L, data);
     }
 
-    static int lchannel_gc(lua_State* L) {
-        auto& bc = lua::checkudata<boxchannel>(L, 1);
-        bc.~boxchannel();
-        return 0;
-    }
-
     static int lnewchannel(lua_State* L) {
         auto name = lua::checkstrview(L, 1);
         if (!g_channel.create(name)) {
@@ -183,7 +181,6 @@ namespace bee::lua_thread {
             {"push", lchannel_push},
             {"pop", lchannel_pop},
             {"bpop", lchannel_bpop},
-            {"__gc", lchannel_gc},
             {NULL, NULL},
         };
         luaL_setfuncs(L, mt, 0);
@@ -318,8 +315,10 @@ namespace bee::lua_thread {
         return 0;
     }
 
+    static void rpc_metatable(lua_State* L) {}
+
     static int lrpc_create(lua_State* L) {
-        auto& r = lua::newudata<rpc>(L, nullptr);
+        auto& r = lua::newudata<rpc>(L, rpc_metatable);
         lua_pushlightuserdata(L, &r);
         lua_rotate(L, 1, 1);
         return 2;

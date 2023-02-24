@@ -275,12 +275,6 @@ namespace bee::lua_filesystem {
             return 1;
         }
 
-        static int destructor(lua_State* L) {
-            fs::path& self = getpath(L, 1);
-            self.~path();
-            return 0;
-        }
-
         static int mt_tostring(lua_State* L) {
             path_ptr self = getpathptr(L, 1);
             auto u8str = self->generic_u8string();
@@ -306,7 +300,6 @@ namespace bee::lua_filesystem {
                 {"__div", mt_div},
                 {"__concat", mt_concat},
                 {"__eq", mt_eq},
-                {"__gc", destructor},
                 {"__tostring", mt_tostring},
                 {"__debugger_tostring", mt_tostring},
                 {NULL, NULL},
@@ -383,12 +376,6 @@ namespace bee::lua_filesystem {
             return 1;
         }
 
-        static int destructor(lua_State* L) {
-            auto const& status = to(L, 1);
-            status.~file_status();
-            return 0;
-        }
-
         static void metatable(lua_State* L) {
             static luaL_Reg mt[] = {
                 {"type", type},
@@ -396,7 +383,6 @@ namespace bee::lua_filesystem {
                 {"is_directory", is_directory},
                 {"is_regular_file", is_regular_file},
                 {"__eq", eq},
-                {"__gc", destructor},
                 {"__tostring", type},
                 {"__debugger_tostring", type},
                 {NULL, NULL},
@@ -457,12 +443,6 @@ namespace bee::lua_filesystem {
             return 1;
         }
 
-        static int destructor(lua_State* L) {
-            auto const& entry = to(L, 1);
-            entry.~directory_entry();
-            return 0;
-        }
-
         static void metatable(lua_State* L) {
             static luaL_Reg mt[] = {
                 {"path", path},
@@ -472,7 +452,6 @@ namespace bee::lua_filesystem {
                 {"exists", exists},
                 {"is_directory", is_directory},
                 {"is_regular_file", is_regular_file},
-                {"__gc", destructor},
                 {"__tostring", path},
                 {"__debugger_tostring", path},
                 {NULL, NULL},
@@ -830,13 +809,8 @@ namespace bee::lua_filesystem {
             self = {};
             return 0;
         }
-        static int gc(lua_State* L) {
-            get(L, 1).~T();
-            return 0;
-        }
         static void metatable(lua_State* L) {
             static luaL_Reg mt[] = {
-                {"__gc", pairs_directory::gc},
                 {"__close", pairs_directory::close},
                 {NULL, NULL},
             };

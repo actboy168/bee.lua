@@ -86,20 +86,40 @@ namespace bee::lua {
     template <typename T>
     struct udata_has_nupvalue<T, decltype((void)udata<T>::nupvalue, void())> : std::true_type {};
 
+    template <typename T>
+    int destroyudata(lua_State* L) {
+        auto o = (T*)lua_touserdata(L, 1);
+        o->~T();
+        return 0;
+    }
+
+    template <typename T>
+    T& newudata(lua_State* L) {
+        static_assert(!udata_has_name<T>::value);
+        static_assert(std::is_trivial<T>::value);
+        int nupvalue = 0;
+        if constexpr (udata_has_nupvalue<T>::value) {
+            nupvalue = udata<T>::nupvalue;
+        }
+        T* o = (T*)lua_newuserdatauv(L, sizeof(T), nupvalue);
+        return *o;
+    }
+
     template <typename T, typename...Args>
-    T& newudata(lua_State* L, void (*create_metatable)(lua_State*), Args&&...args) {
+    T& newudata(lua_State* L, void (*init_metatable)(lua_State*), Args&&...args) {
+        static_assert(udata_has_name<T>::value);
         int nupvalue = 0;
         if constexpr (udata_has_nupvalue<T>::value) {
             nupvalue = udata<T>::nupvalue;
         }
         T* o = (T*)lua_newuserdatauv(L, sizeof(T), nupvalue);
         new (o) T(std::forward<Args>(args)...);
-        if constexpr (udata_has_name<T>::value) {
-            if (luaL_newmetatable(L, udata<T>::name)) {
-                create_metatable(L);
-            }
-            lua_setmetatable(L, -2);
+        if (luaL_newmetatable(L, udata<T>::name)) {
+            init_metatable(L);
+            lua_pushcfunction(L, destroyudata<T>);
+            lua_setfield(L, -2, "__gc");
         }
+        lua_setmetatable(L, -2);
         return *o;
     }
 

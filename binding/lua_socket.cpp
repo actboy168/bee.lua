@@ -358,7 +358,6 @@ namespace bee::lua_socket {
             {"option", option},
             {"__tostring", tostring},
             {"__close", destroy},
-            {"__gc", destroy},
             {NULL, NULL},
         };
         luaL_setfuncs(L, mt, 0);

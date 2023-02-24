@@ -33,11 +33,6 @@ namespace bee::lua_subprocess {
             return 0;
         }
 #endif
-        static int destructor(lua_State* L) {
-            auto& self = to(L, 1);
-            self.~process();
-            return 0;
-        }
 
         static int wait(lua_State* L) {
             auto& self = to(L, 1);
@@ -117,7 +112,6 @@ namespace bee::lua_subprocess {
 #if defined(_WIN32)
                 {"__close", process::close},
 #endif
-                {"__gc", process::destructor},
                 {NULL, NULL}
             };
             luaL_setfuncs(L, mt, 0);
