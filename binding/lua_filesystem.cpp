@@ -30,7 +30,7 @@ namespace bee::lua_filesystem {
         {
             auto errmsg = std::format("{}: {}",
                 op,
-                error_message(ec)
+                ec.message()
             );
             lua_pushlstring(L, errmsg.data(), errmsg.size());
         }
@@ -46,7 +46,7 @@ namespace bee::lua_filesystem {
         {
             auto errmsg = std::format("{}: {}: \"{}\"",
                 op,
-                error_message(ec),
+                ec.message(),
                 u8tostrview(path1.generic_u8string())
             );
             lua_pushlstring(L, errmsg.data(), errmsg.size());
@@ -64,7 +64,7 @@ namespace bee::lua_filesystem {
         {
             auto errmsg = std::format("{}: {}: \"{}\", \"{}\"",
                 op,
-                error_message(ec),
+                ec.message(),
                 u8tostrview(path1.generic_u8string()),
                 u8tostrview(path2.generic_u8string())
             );
@@ -892,7 +892,9 @@ namespace bee::lua_filesystem {
     static int exe_path(lua_State* L) {
         auto r = path_helper::exe_path();
         if (!r) {
-            return luaL_error(L, "%s\n", r.error().c_str());
+            lua_pushnil(L);
+            lua_pushstring(L,  r.error().c_str());
+            return 2;
         }
         path::push(L, r.value());
         return 1;
@@ -901,7 +903,9 @@ namespace bee::lua_filesystem {
     static int dll_path(lua_State* L) {
         auto r = path_helper::dll_path();
         if (!r) {
-            return luaL_error(L, "%s\n", r.error().c_str());
+            lua_pushnil(L);
+            lua_pushstring(L,  r.error().c_str());
+            return 2;
         }
         path::push(L, r.value());
         return 1;
@@ -912,13 +916,13 @@ namespace bee::lua_filesystem {
         file_handle fd = file_handle::lock(self);
         if (!fd) {
             lua_pushnil(L);
-            lua::push_errormesg(L, "filelock", make_syserror());
+            lua_pushstring(L, make_syserror("filelock").what());
             return 2;
         }
         FILE* f = fd.to_file(file_handle::mode::write);
         if (!f) {
             lua_pushnil(L);
-            lua::push_errormesg(L, "filelock", make_crterror());
+            lua_pushstring(L, make_crterror("filelock").what());
             fd.close();
             return 2;
         }
@@ -931,12 +935,16 @@ namespace bee::lua_filesystem {
         path_ptr path = getpathptr(L, 1);
         file_handle fd = file_handle::open_link(path);
         if (!fd) {
-            return pusherror(L, "fullpath", make_syserror().code()); 
+            lua_pushnil(L);
+            lua_pushstring(L, make_syserror("fullpath").what());
+            return 2;
         }
         auto fullpath = fd.path();
         fd.close();
         if (!fullpath) {
-            return pusherror(L, "fullpath", make_syserror().code()); 
+            lua_pushnil(L);
+            lua_pushstring(L, make_syserror("fullpath").what());
+            return 2;
         }
         path::push(L, *fullpath);
         return 1;

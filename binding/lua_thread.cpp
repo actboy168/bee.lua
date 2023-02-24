@@ -282,7 +282,7 @@ namespace bee::lua_thread {
             {
                 auto error = make_syserror("thread_create");
                 delete args;
-                lua::push_errormesg(L, "thread", error);
+                lua_pushstring(L, error.what());
             }
             return lua_error(L);
         }

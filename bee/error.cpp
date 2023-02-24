@@ -54,10 +54,6 @@ namespace bee {
     };
 
     static winCategory g_windows_category;
-
-    static const std::error_category& windows_category() noexcept {
-        return g_windows_category;
-    }
 #endif
 
     static int last_crterror() {
@@ -82,21 +78,18 @@ namespace bee {
 
     static std::error_code make_error_code(int err) {
 #if defined(_WIN32)
-        return std::error_code(err, windows_category());
+        return std::error_code(err, g_windows_category);
 #else
         return std::error_code(err, std::generic_category());
 #endif
     }
 
     std::system_error make_error(int err, const char* message) {
-        return std::system_error(make_error_code(err), message ? message : "");
+        return std::system_error(make_error_code(err), message);
     }
 
     std::system_error make_crterror(const char* message) {
-        return std::system_error(
-            std::error_code(last_crterror(), std::generic_category()), 
-            message ? message : ""
-        );
+        return std::system_error(std::error_code(last_crterror(), std::generic_category()), message);
     }
 
     std::system_error make_syserror(const char* message) {
@@ -105,13 +98,5 @@ namespace bee {
 
     std::system_error make_neterror(const char* message) {
         return make_error(last_neterror(), message);
-    }
-    
-    std::string error_message(const std::error_code& ec) {
-#if defined(_WIN32)
-        return windows_category().message(ec.value());
-#else
-        return ec.message();
-#endif
     }
 }

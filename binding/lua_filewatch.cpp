@@ -22,7 +22,8 @@ namespace bee::lua_filewatch {
         std::error_code ec;
         fs::path abspath = fs::absolute(path, ec);
         if (ec) {
-            lua::push_errormesg(L, "fs::absolute", ec);
+            auto error = std::system_error(ec, "fs::absolute");
+            lua_pushstring(L, error.what());
             lua_error(L);
             return 0;
         }

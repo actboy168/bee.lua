@@ -75,14 +75,6 @@ namespace bee::lua {
         return (T)(intptr_t)lua_touserdata(L, arg);
     }
 
-    inline void push_errormesg(lua_State* L, const char* msg, const std::error_code& ec) {
-        lua_pushfstring(L, "%s: %s (%d)", msg, error_message(ec).c_str(), ec.value());
-    }
-
-    inline void push_errormesg(lua_State* L, const char* msg, const std::system_error& err) {
-        push_errormesg(L, msg, err.code());
-    }
-
     template <typename T>
     struct global { static inline T v = T(); };
     using usermodules = global<std::map<std::string, lua_CFunction>>;
