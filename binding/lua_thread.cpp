@@ -260,9 +260,7 @@ namespace bee::lua_thread {
         if (lua_pcall(L, 1, 0, 1) != LUA_OK) {
             boxchannel errlog = g_channel.query("errlog");
             if (errlog) {
-                size_t      sz;
-                const char* str = lua_tolstring(L, -1, &sz);
-                void*       errmsg = seri_packstring(str, (int)sz);
+                void* errmsg = seri_pack(L, lua_gettop(L)-1, NULL);
                 errlog->push(errmsg);
             }
             else {
