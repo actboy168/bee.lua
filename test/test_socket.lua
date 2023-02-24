@@ -329,10 +329,6 @@ function test_socket:test_unix_echo_3()
 end
 
 function test_socket:test_dump()
-    local client = lt.assertIsUserdata(socket "tcp")
-    print(client:bind('127.0.0.1', 11001))
-    print(client:listen())
-    print(client:connect('127.0.0.1', 11001))
     local server = lt.assertIsUserdata(socket "tcp")
     lt.assertIsBoolean(server:bind('127.0.0.1', 0))
     lt.assertIsBoolean(server:listen())
