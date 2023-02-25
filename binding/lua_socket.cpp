@@ -373,24 +373,17 @@ namespace bee::lua_socket {
     };
     static int select(lua_State* L) {
         bool read_finish = true, write_finish = true;
-        if (lua_isnoneornil(L, 1))
-            read_finish = true;
-        else if (lua_type(L, 1) == LUA_TTABLE)
+        if (lua_type(L, 1) == LUA_TTABLE)
             read_finish = false;
-        else
+        else if (!lua_isnoneornil(L, 1))
             luaL_typeerror(L, 1, lua_typename(L, LUA_TTABLE));
-        if (lua_isnoneornil(L, 2))
-            write_finish = true;
-        else if (lua_type(L, 2) == LUA_TTABLE)
+        if (lua_type(L, 2) == LUA_TTABLE)
             write_finish = false;
-        else
+        else if (!lua_isnoneornil(L, 2))
             luaL_typeerror(L, 2, lua_typename(L, LUA_TTABLE));
-
-        int    rmax = read_finish ? 0 : (int)luaL_len(L, 1);
-        int    wmax = write_finish ? 0 : (int)luaL_len(L, 2);
         double timeo = luaL_optnumber(L, 3, -1);
-        if (!rmax && !wmax) {
-            if (timeo == -1) {
+        if (read_finish && write_finish) {
+            if (timeo < 0) {
                 return luaL_error(L, "no open sockets to check and no timeout set");
             }
             else {
@@ -399,9 +392,6 @@ namespace bee::lua_socket {
                 lua_newtable(L);
                 return 2;
             }
-        }
-        if (rmax > FD_SETSIZE || wmax > FD_SETSIZE) {
-            return luaL_error(L, "sockets too much");
         }
         struct timeval timeout, *timeop = &timeout;
         if (timeo < 0) {
