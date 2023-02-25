@@ -102,7 +102,7 @@ namespace bee::subprocess {
     };
 
     template <class char_t>
-    inline std::basic_string<char_t> quote_arg(const std::basic_string<char_t>& source) {
+    std::basic_string<char_t> quote_arg(const std::basic_string<char_t>& source) {
         size_t len = source.size();
         if (len == 0) {
             return {'\"','\"','\0'};
