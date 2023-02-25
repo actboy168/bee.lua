@@ -5,9 +5,7 @@
 
 #if defined(_WIN32)
 #	include <Windows.h>
-#	ifndef _WIN32_WINNT
-#		error "_WIN32_WINNT* is not defined!"
-#	endif
+#	include <bee/platform/win/version.h>
 #elif defined(__ANDROID__)
 #	include <sys/cdefs.h>
 #endif
@@ -16,10 +14,6 @@
 #	if __has_include(<android/ndk-version.h>)
 #		include <android/ndk-version.h>
 #	endif
-#endif
-
-#if defined(_WIN32)
-#	include <bee/platform/win/version.h>
 #endif
 
 namespace bee::lua_platform {

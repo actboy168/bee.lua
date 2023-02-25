@@ -938,9 +938,11 @@ namespace bee::lua_filesystem {
 #if !defined(BEE_DISABLE_FULLPATH)
             {"fullpath", fullpath},
 #endif
+            {"copy_options", NULL},
+            {"perm_options", NULL},
             {NULL, NULL},
         };
-        lua_newtable(L);
+        luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);
 
 #define DEF_ENUM(CLASS, MEMBER) \

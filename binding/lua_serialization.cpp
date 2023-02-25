@@ -46,8 +46,10 @@ namespace bee::lua_serialization {
             {"pack", pack},
             {"packstring", packstring},
             {"lightuserdata", lightuserdata},
-            {NULL, NULL}};
-        luaL_newlib(L, lib);
+            {NULL, NULL}
+        };
+        luaL_newlibtable(L, lib);
+        luaL_setfuncs(L, lib, 0);
         return 1;
     }
 }

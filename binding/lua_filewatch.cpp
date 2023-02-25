@@ -136,7 +136,7 @@ namespace bee::lua_filewatch {
             {"type", NULL},
             {NULL, NULL}
         };
-        lua_newtable(L);
+        luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);
         lua_pushstring(L, filewatch::watch::type());
         lua_setfield(L, -2, "type");

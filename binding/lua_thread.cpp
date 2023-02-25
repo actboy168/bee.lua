@@ -361,9 +361,10 @@ namespace bee::lua_thread {
             {"rpc_wait", lrpc_wait},
             {"rpc_return", lrpc_return},
             {"preload_module", ::bee::lua::preload_module},
+            {"id", NULL},
             {NULL, NULL},
         };
-        lua_newtable(L);
+        luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);
         init_threadid(L);
         lua_setfield(L, -2, "id");

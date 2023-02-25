@@ -493,8 +493,11 @@ return table.concat(t)
             {"filemode", filemode},
             {"setenv", lsetenv},
             {"get_id", get_id},
-            {NULL, NULL}};
-        luaL_newlib(L, lib);
+            {"quotearg", NULL},
+            {NULL, NULL}
+        };
+        luaL_newlibtable(L, lib);
+        luaL_setfuncs(L, lib, 0);
 
         lua_pushscript(L, script_quotearg);
         lua_setfield(L, -2, "quotearg");

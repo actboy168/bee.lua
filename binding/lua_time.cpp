@@ -75,7 +75,7 @@ namespace bee::lua_time {
             {"counter", NULL},
             {NULL, NULL},
         };
-        lua_newtable(L);
+        luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);
 
         lua_pushinteger(L, time_frequency());

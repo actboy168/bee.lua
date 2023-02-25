@@ -519,13 +519,13 @@ namespace bee::lua_socket {
             {"fd", fd},
             {NULL, NULL}
         };
-        lua_newtable(L);
+        luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);
         luaL_Reg mt[] = {
             {"__call", mt_call},
             {NULL, NULL}
         };
-        lua_newtable(L);
+        luaL_newlibtable(L, mt);
         luaL_setfuncs(L, mt, 0);
         lua_setmetatable(L, -2);
         return 1;
