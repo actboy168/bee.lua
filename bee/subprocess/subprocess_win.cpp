@@ -6,7 +6,6 @@
 #include <memory>
 #include <thread>
 #include <deque>
-#include <assert.h>
 #include <fcntl.h>
 #include <io.h>
 #include <signal.h>
@@ -254,7 +253,7 @@ namespace bee::subprocess {
         return wnd;
     }
 
-    bool hide_taskbar(HWND w) {
+    static bool hide_taskbar(HWND w) {
         ITaskbarList* taskbar;
         ::CoInitializeEx(NULL, COINIT_MULTITHREADED);
         if (SUCCEEDED(CoCreateInstance(CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, IID_ITaskbarList, (void**)&taskbar))) {
@@ -268,16 +267,9 @@ namespace bee::subprocess {
 
     static bool hide_console(PROCESS_INFORMATION& pi) {
         HANDLE hProcess = NULL;
-        if (!::DuplicateHandle(
-            ::GetCurrentProcess(),
-            pi.hProcess,
-            ::GetCurrentProcess(),
-            &hProcess,
-            0, FALSE, DUPLICATE_SAME_ACCESS)
-            ) {
+        if (!::DuplicateHandle(::GetCurrentProcess(), pi.hProcess, ::GetCurrentProcess(), &hProcess, 0, FALSE, DUPLICATE_SAME_ACCESS)) {
             return false;
         }
-
         std::thread thd([=]() {
             PROCESS_INFORMATION cpi;
             cpi.dwProcessId = pi.dwProcessId;
@@ -301,8 +293,7 @@ namespace bee::subprocess {
         return true;
     }
 
-    spawn::spawn()
-    {
+    spawn::spawn() {
         memset(&si_, 0, sizeof(STARTUPINFOW));
         memset(&pi_, 0, sizeof(PROCESS_INFORMATION));
         si_.cb = sizeof(STARTUPINFOW);
@@ -398,17 +389,7 @@ namespace bee::subprocess {
         ::SetHandleInformation(si_.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
         ::SetHandleInformation(si_.hStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
         ::SetHandleInformation(si_.hStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
-        if (!::CreateProcessW(
-            application,
-            command_line.get(),
-            NULL, NULL,
-            inherit_handle_,
-            flags_ | NORMAL_PRIORITY_CLASS,
-            env_,
-            cwd,
-            &si_, &pi_
-        ))
-        {
+        if (!::CreateProcessW(application, command_line.get(), NULL, NULL, inherit_handle_, flags_ | NORMAL_PRIORITY_CLASS, env_, cwd, &si_, &pi_)) {
             do_duplicate_shutdown();
             return false;
         }

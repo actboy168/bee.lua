@@ -10,17 +10,6 @@
 #include <spawn.h>
 
 namespace bee::subprocess {
-    enum class stdio {
-        eInput,
-        eOutput,
-        eError,
-    };
-
-    namespace pipe {
-        open_result open();
-        int         peek(FILE* f);
-    }
-
     class envbuilder {
     public:
         void set(const std::string& key, const std::string& value);
@@ -62,8 +51,6 @@ namespace bee::subprocess {
         void redirect(stdio type, file_handle f);
         void env(environment&& env);
         bool exec(args_t& args, const char* cwd);
-    private:
-        bool fork_exec(args_t& args, const char* cwd);
     private:
         environment                        env_ = nullptr;
         int                                fds_[3];

@@ -4,7 +4,6 @@
 #include <charconv>
 #include <memory>
 #include <Windows.h>
-#include <assert.h>
 
 namespace bee::win {
 	class module_version_info {
@@ -109,7 +108,6 @@ namespace bee::win {
 	}
 
 	bool module_version_info::get_value(WORD language, WORD code_page, const wchar_t* key, const wchar_t** value_ptr) const {
-		assert(value_ptr);
 		UINT size;
 		std::wstring query = std::format(L"\\StringFileInfo\\{:04x}{:04x}\\{}", language, code_page, key);
 		return (!!::VerQueryValueW(version_info_.get(), (LPWSTR)(LPCWSTR)query.c_str(), (LPVOID*)value_ptr, &size));

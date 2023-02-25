@@ -183,7 +183,35 @@ namespace bee::subprocess {
 #define USE_POSIX_SPAWN 1
 #endif
 
-    bool spawn::fork_exec(args_t& args, const char* cwd) {
+    bool spawn::exec(args_t& args, const char* cwd) {
+        if (args.size() == 0) {
+            return false;
+        }
+        args.push(nullptr);
+#if defined(USE_POSIX_SPAWN)
+        char** arguments = args.data();
+        if (cwd) {
+            posix_spawn_file_actions_addchdir_np(&spawnfile_, cwd);
+        }
+        pid_t pid;
+        for (int i = 0; i < 3; ++i) {
+            if (fds_[i] > 0) {
+                if (posix_spawn_file_actions_adddup2(&spawnfile_, fds_[i], i)) {
+                    return false;
+                }
+            }
+        }
+        if (posix_spawnp(&pid, arguments[0], &spawnfile_, &spawnattr_, arguments, env_)) {
+            return false;
+        }
+        pid_ = pid;
+        for (int i = 0; i < 3; ++i) {
+            if (fds_[i] > 0) {
+                close(fds_[i]);
+            }
+        }
+        return true;
+#else
         pid_t pid = fork();
         if (pid == -1) {
             return false;
@@ -218,38 +246,6 @@ namespace bee::subprocess {
             }
         }
         return true;
-    }
-
-    bool spawn::exec(args_t& args, const char* cwd) {
-        if (args.size() == 0) {
-            return false;
-        }
-        args.push(nullptr);
-#if defined(USE_POSIX_SPAWN)
-        char** arguments = args.data();
-        if (cwd) {
-            posix_spawn_file_actions_addchdir_np(&spawnfile_, cwd);
-        }
-        pid_t pid;
-        for (int i = 0; i < 3; ++i) {
-            if (fds_[i] > 0) {
-                if (posix_spawn_file_actions_adddup2(&spawnfile_, fds_[i], i)) {
-                    return false;
-                }
-            }
-        }
-        if (posix_spawnp(&pid, arguments[0], &spawnfile_, &spawnattr_, arguments, env_)) {
-            return false;
-        }
-        pid_ = pid;
-        for (int i = 0; i < 3; ++i) {
-            if (fds_[i] > 0) {
-                close(fds_[i]);
-            }
-        }
-        return true;
-#else
-        return fork_exec(args, cwd);
 #endif
     }
 

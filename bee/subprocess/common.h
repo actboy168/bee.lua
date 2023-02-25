@@ -44,7 +44,13 @@ namespace bee::subprocess {
             return v.get();
         }
     };
-    
+
+    enum class stdio {
+        eInput,
+        eOutput,
+        eError,
+    };
+
     namespace pipe {
         struct open_result {
             file_handle rd;
@@ -57,5 +63,7 @@ namespace bee::subprocess {
             }
             operator bool() const { return rd && wr; }
         };
+        open_result open();
+        int         peek(FILE* f);
     }
 }

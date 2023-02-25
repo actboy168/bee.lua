@@ -32,17 +32,6 @@ namespace bee::subprocess {
         eDetached,
         eHide,
     };
-    enum class stdio {
-        eInput,
-        eOutput,
-        eError,
-    };
-
-    namespace pipe {
-        open_result open();
-        int         peek(FILE* f);
-    }
-
     class envbuilder {
     public:
         void set(const std::wstring& key, const std::wstring& value);
