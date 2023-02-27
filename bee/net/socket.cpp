@@ -474,11 +474,7 @@ namespace bee::net::socket {
             return false;
         }
 #if defined _WIN32
-        auto wpath = win::u2w(path);
-        if (!win::unlink(wpath.c_str())) {
-            return false;
-        }
-        return 0 == ::_wunlink(wpath.c_str());
+        return win::unlink(win::u2w(path).c_str());
 #else
         return 0 == ::unlink(path.c_str());
 #endif
