@@ -137,8 +137,8 @@ namespace bee::net::socket {
         if (!initialized) {
 #if defined(_WIN32)
             WSADATA wd;
-            int rc = WSAStartup(MAKEWORD(2, 2), &wd);
-            SetLastError(rc);
+            int rc = ::WSAStartup(MAKEWORD(2, 2), &wd);
+            ::SetLastError(rc);
             initialized = rc == 0;
 #else
             initialized = true;
@@ -178,7 +178,7 @@ namespace bee::net::socket {
 #if defined(_WIN32)
     static bool no_blocking(fd_t s) {
         unsigned long nonblock = 1;
-        int ok = ioctlsocket(s, FIONBIO, &nonblock);
+        int ok = ::ioctlsocket(s, FIONBIO, &nonblock);
         return net_success(ok);
     }
     static bool no_inherit(fd_t s) {
@@ -189,14 +189,14 @@ namespace bee::net::socket {
     }
 #elif defined(__APPLE__)
     static bool no_blocking(fd_t s) {
-        int flags = fcntl(s, F_GETFL, 0);
-        int ok = fcntl(s, F_SETFL, flags | O_NONBLOCK);
+        int flags = ::fcntl(s, F_GETFL, 0);
+        int ok = ::fcntl(s, F_SETFL, flags | O_NONBLOCK);
         return net_success(ok);
     }
     static bool no_inherit(fd_t s) {
         int ok;
         do
-            ok = ioctl(s, FIOCLEX);
+            ok = ::ioctl(s, FIOCLEX);
         while (!net_success(ok) && errno == EINTR);
         return net_success(ok);
     }
@@ -207,7 +207,7 @@ namespace bee::net::socket {
         fd_t fd = ::WSASocketW(af, type, protocol, 0, 0, WSA_FLAG_NO_HANDLE_INHERIT);
         if (fd != retired_fd) {
             if (!no_blocking(fd)) {
-                close(fd);
+                ::closesocket(fd);
                 return retired_fd;
             }
         }
@@ -216,11 +216,11 @@ namespace bee::net::socket {
         fd_t fd = ::socket(af, type, protocol);
         if (fd != retired_fd) {
             if (!no_inherit(fd)) {
-                close(fd);
+                socket::close(fd);
                 return retired_fd;
             }
             if (!no_blocking(fd)) {
-                close(fd);
+                socket::close(fd);
                 return retired_fd;
             }
         }
@@ -256,7 +256,7 @@ namespace bee::net::socket {
 #if defined _WIN32
         int ok = ::closesocket(s);
 #else
-        int ok = ::close(s)
+        int ok = ::close(s);
 #endif
         return net_success(ok);
     }
@@ -281,7 +281,7 @@ namespace bee::net::socket {
 
     template <typename T>
     static bool setoption(fd_t s, int level, int optname, T& v) {
-        int ok = setsockopt(s, level, optname, (char*)&v, sizeof(T));
+        int ok = ::setsockopt(s, level, optname, (char*)&v, sizeof(T));
         return net_success(ok);
     }
 
@@ -302,7 +302,7 @@ namespace bee::net::socket {
 #if defined _WIN32
         DWORD byte_retruned = 0;
         bool new_be = false;
-        WSAIoctl(s, SIO_UDP_CONNRESET, &new_be, sizeof(new_be), NULL, 0, &byte_retruned, NULL, NULL);
+        ::WSAIoctl(s, SIO_UDP_CONNRESET, &new_be, sizeof(new_be), NULL, 0, &byte_retruned, NULL, NULL);
 #else
         (void)s;
 #endif
@@ -349,11 +349,11 @@ namespace bee::net::socket {
         fd_t fd = ::accept(s, addr, addrlen);
         if (fd != retired_fd) {
             if (!no_inherit(fd)) {
-                close(fd);
+                socket::close(fd);
                 return retired_fd;
             }
             if (!no_blocking(fd)) {
-                close(fd);
+                socket::close(fd);
                 return retired_fd;
             }
         }
@@ -363,9 +363,9 @@ namespace bee::net::socket {
 #endif
     }
 
-    fdstat accept(fd_t s, fd_t& fd) {
-        fd = acceptEx(s, NULL, NULL);
-        if (fd == retired_fd) {
+    fdstat accept(fd_t s, fd_t& newfd) {
+        newfd = acceptEx(s, NULL, NULL);
+        if (newfd == retired_fd) {
 #if defined _WIN32
             return fdstat::failed;
 #else 
@@ -380,10 +380,10 @@ namespace bee::net::socket {
         return fdstat::success;
     }
 
-    fdstat accept(fd_t s, fd_t& fd, endpoint& ep) {
+    fdstat accept(fd_t s, fd_t& newfd, endpoint& ep) {
         socklen_t addrlen = ep.addrlen();
-        fd = acceptEx(s, ep.addr(), &addrlen);
-        if (fd == retired_fd) {
+        newfd = acceptEx(s, ep.addr(), &addrlen);
+        if (newfd == retired_fd) {
 #if defined _WIN32
             return fdstat::failed;
 #else 
@@ -482,7 +482,7 @@ namespace bee::net::socket {
     int errcode(fd_t s) {
         int err;
         socklen_t errl = sizeof(err);
-        if (getsockopt(s, SOL_SOCKET, SO_ERROR, (char *)&err, &errl) >= 0) {
+        if (::getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&err, &errl) >= 0) {
             return err;
         }
 #if defined(_WIN32)
@@ -498,13 +498,13 @@ namespace bee::net::socket {
         bool ok = 0 == ::socketpair(PF_UNIX, SOCK_STREAM, 0, sv);
         if (ok) {
             if (!no_inherit(sv[0])) {
-                close(sv[0]);
-                close(sv[1]);
+                socket::close(sv[0]);
+                socket::close(sv[1]);
                 return false;
             }
             if (!no_inherit(sv[1])) {
-                close(sv[0]);
-                close(sv[1]);
+                socket::close(sv[0]);
+                socket::close(sv[1]);
                 return false;
             }
         }
@@ -600,14 +600,14 @@ namespace bee::net::socket {
         if (fdstat::success != accept(sfd, newfd)) {
             goto failed;
         }
-        close(sfd);
+        socket::close(sfd);
         sv[0] = newfd;
         sv[1] = cfd;
         return true;
     failed:
         int err = ::WSAGetLastError();
-        if (sfd != retired_fd) close(sfd);
-        if (cfd != retired_fd) close(cfd);
+        if (sfd != retired_fd) socket::close(sfd);
+        if (cfd != retired_fd) socket::close(cfd);
         ::WSASetLastError(err);
         return false;
 #elif defined(__APPLE__)
@@ -615,13 +615,13 @@ namespace bee::net::socket {
             return false;
         }
         if (!no_blocking(sv[0])) {
-            close(sv[0]);
-            close(sv[1]);
+            socket::close(sv[0]);
+            socket::close(sv[1]);
             return false;
         }
         if (!no_blocking(sv[1])) {
-            close(sv[0]);
-            close(sv[1]);
+            socket::close(sv[0]);
+            socket::close(sv[1]);
             return false;
         }
         return true;

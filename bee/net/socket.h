@@ -63,8 +63,8 @@ namespace bee::net::socket {
     bool   bind(fd_t s, const endpoint& ep);
     bool   listen(fd_t s, int backlog);
     fdstat connect(fd_t s, const endpoint& ep);
-    fdstat accept(fd_t s, fd_t& sock);
-    fdstat accept(fd_t s, fd_t& fd, endpoint& ep);
+    fdstat accept(fd_t s, fd_t& newfd);
+    fdstat accept(fd_t s, fd_t& newfd, endpoint& ep);
     status recv(fd_t s, int& rc, char* buf, int len);
     status send(fd_t s, int& rc, const char* buf, int len);
     status recvfrom(fd_t s, int& rc, char* buf, int len, endpoint& ep);
