@@ -88,39 +88,39 @@ namespace bee::net::socket {
         return file_write(path, portstr.data());
     }
 
-    static status u_connect(fd_t s, const endpoint& ep) {
+    static fdstat u_connect(fd_t s, const endpoint& ep) {
         uint16_t tcpport = 0;
         if (!read_tcp_port(ep, tcpport)) {
             ::WSASetLastError(WSAECONNREFUSED);
-            return status::failed;
+            return fdstat::failed;
         }
         auto newep = endpoint::from_hostname("127.0.0.1", tcpport);
         if (!newep.valid()) {
             ::WSASetLastError(WSAECONNREFUSED);
-            return status::failed;
+            return fdstat::failed;
         }
         return socket::connect(s, newep);
     }
 
-    static status u_bind(fd_t s, const endpoint& ep) {
+    static bool u_bind(fd_t s, const endpoint& ep) {
         auto newep = endpoint::from_hostname("127.0.0.1", 0);
         if (!newep.valid()) {
-            return status::failed;
+            return false;
         }
-        status ok = socket::bind(s, newep);
-        if (ok != status::success) {
+        bool ok = socket::bind(s, newep);
+        if (!ok) {
             return ok;
         }
         auto[path, type] = ep.info();
         if (type != (uint16_t)un_format::pathname) {
             ::WSASetLastError(WSAENETDOWN);
-            return status::failed;
+            return false;
         }
         if (!write_tcp_port(path, s)) {
             ::WSASetLastError(WSAENETDOWN);
-            return status::failed;
+            return false;
         }
-        return status::success;
+        return true;
     }
 
     static bool supportUnixDomainSocket_() {
@@ -138,7 +138,8 @@ namespace bee::net::socket {
 #if defined(_WIN32)
             WSADATA wd;
             int rc = WSAStartup(MAKEWORD(2, 2), &wd);
-            initialized = rc >= 0;
+            SetLastError(rc);
+            initialized = rc == 0;
 #else
             initialized = true;
             struct sigaction sa;
@@ -253,10 +254,11 @@ namespace bee::net::socket {
 
     bool close(fd_t s) {
 #if defined _WIN32
-        return ::closesocket(s) != SOCKET_ERROR;
+        int ok = ::closesocket(s);
 #else
-        return ::close(s) == 0;
+        int ok = ::close(s)
 #endif
+        return net_success(ok);
     }
 
     bool shutdown(fd_t s, shutdown_flag flag) {
@@ -306,41 +308,40 @@ namespace bee::net::socket {
 #endif
     }
 
-    status connect(fd_t s, const endpoint& ep) {
-#if defined _WIN32
-        if (!supportUnixDomainSocket() && ep.family() == AF_UNIX) {
-            return u_connect(s, ep);
-        }
-#endif
-
-        int ok = ::connect(s, ep.addr(), (int)ep.addrlen());
-        if (net_success(ok))
-            return status::success;
-
-#if defined _WIN32
-        const int error_code = ::WSAGetLastError();
-        if (error_code == WSAEINPROGRESS || error_code == WSAEWOULDBLOCK)
-            return status::wait;
-#else
-        if (errno == EINTR || errno == EINPROGRESS)
-            return status::wait;
-#endif
-        return status::failed;
-    }
-
-    status bind(fd_t s, const endpoint& ep) {
+    bool bind(fd_t s, const endpoint& ep) {
 #if defined _WIN32
         if (!supportUnixDomainSocket() && ep.family() == AF_UNIX) {
             return u_bind(s, ep);
         }
 #endif
         int ok = ::bind(s, ep.addr(), ep.addrlen());
-        return net_success(ok) ? status::success : status::failed;
+        return net_success(ok);
     }
 
-    status listen(fd_t s, int backlog) {
+    bool listen(fd_t s, int backlog) {
         int ok = ::listen(s, backlog);
-        return net_success(ok) ? status::success : status::failed;
+        return net_success(ok);
+    }
+
+    fdstat connect(fd_t s, const endpoint& ep) {
+#if defined _WIN32
+        if (!supportUnixDomainSocket() && ep.family() == AF_UNIX) {
+            return u_connect(s, ep);
+        }
+#endif
+        int ok = ::connect(s, ep.addr(), (int)ep.addrlen());
+        if (net_success(ok))
+            return fdstat::success;
+
+#if defined _WIN32
+        const int error_code = ::WSAGetLastError();
+        if (error_code == WSAEINPROGRESS || error_code == WSAEWOULDBLOCK)
+            return fdstat::wait;
+#else
+        if (errno == EINTR || errno == EINPROGRESS)
+            return fdstat::wait;
+#endif
+        return fdstat::failed;
     }
 
     static fd_t acceptEx(fd_t s, struct sockaddr* addr, socklen_t* addrlen) {
@@ -362,40 +363,40 @@ namespace bee::net::socket {
 #endif
     }
 
-    status accept(fd_t s, fd_t& fd) {
+    fdstat accept(fd_t s, fd_t& fd) {
         fd = acceptEx(s, NULL, NULL);
         if (fd == retired_fd) {
 #if defined _WIN32
-            return status::failed;
+            return fdstat::failed;
 #else 
             if (errno != EAGAIN && errno != ECONNABORTED && errno != EPROTO && errno != EINTR) {
-                return status::failed;
+                return fdstat::failed;
             }
             else {
-                return status::wait;
+                return fdstat::wait;
             }
 #endif
         }
-        return status::success;
+        return fdstat::success;
     }
 
-    status accept(fd_t s, fd_t& fd, endpoint& ep) {
+    fdstat accept(fd_t s, fd_t& fd, endpoint& ep) {
         socklen_t addrlen = ep.addrlen();
         fd = acceptEx(s, ep.addr(), &addrlen);
         if (fd == retired_fd) {
 #if defined _WIN32
-            return status::failed;
+            return fdstat::failed;
 #else 
             if (errno != EAGAIN && errno != ECONNABORTED && errno != EPROTO && errno != EINTR) {
-                return status::failed;
+                return fdstat::failed;
             }
             else {
-                return status::wait;
+                return fdstat::wait;
             }
 #endif
         }
         ep.resize(addrlen);
-        return status::success;
+        return fdstat::success;
     }
 
     status recv(fd_t s, int& rc, char* buf, int len) {
@@ -440,7 +441,8 @@ namespace bee::net::socket {
 
     bool getpeername(fd_t s, endpoint& ep) {
         socklen_t addrlen = ep.addrlen();
-        if (::getpeername(s, ep.addr(), &addrlen) < 0) {
+        int ok = ::getpeername(s, ep.addr(), &addrlen);
+        if (!net_success(ok)) {
             return false;
         }
         ep.resize(addrlen);
@@ -449,7 +451,8 @@ namespace bee::net::socket {
 
     bool getsockname(fd_t s, endpoint& ep) {
         socklen_t addrlen = ep.addrlen();
-        if (::getsockname(s, ep.addr(), &addrlen) < 0) {
+        int ok = ::getsockname(s, ep.addr(), &addrlen);
+        if (!net_success(ok)) {
             return false;
         }
         ep.resize(addrlen);
@@ -543,7 +546,7 @@ namespace bee::net::socket {
             }
             auto ep = endpoint::from_unixpath(tmpname);
             socket::unlink(ep);
-            if (ep.valid() && status::success == socket::bind(s, ep)) {
+            if (ep.valid() && socket::bind(s, ep)) {
                 return true;
             }
         }
@@ -564,7 +567,7 @@ namespace bee::net::socket {
         if (!unnamed_unix_bind(sfd)) {
             goto failed;
         }
-        if (status::success != socket::listen(sfd, 5)) {
+        if (!socket::listen(sfd, 5)) {
             goto failed;
         }
         if (!getsockname(sfd, cep)) {
@@ -574,7 +577,7 @@ namespace bee::net::socket {
         if (cfd == retired_fd) {
             goto failed;
         }
-        if (status::failed == connect(cfd, cep)) {
+        if (fdstat::failed == connect(cfd, cep)) {
             goto failed;
         }
         fd_set readfds, writefds, exceptfds;
@@ -594,7 +597,7 @@ namespace bee::net::socket {
             goto failed;
         }
         fd_t newfd;
-        if (status::success != accept(sfd, newfd)) {
+        if (fdstat::success != accept(sfd, newfd)) {
             goto failed;
         }
         close(sfd);

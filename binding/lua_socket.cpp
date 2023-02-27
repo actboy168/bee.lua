@@ -90,7 +90,7 @@ namespace bee::lua_socket {
     static int accept(lua_State* L) {
         auto fd = checkfd(L, 1);
         socket::fd_t newfd;
-        if (socket::status::success != socket::accept(fd, newfd)) {
+        if (socket::fdstat::success != socket::accept(fd, newfd)) {
             return push_neterror(L, "accept");
         }
         pushfd(L, newfd);
@@ -308,13 +308,13 @@ namespace bee::lua_socket {
         auto fd = checkfd(L, 1);
         auto ep = read_endpoint(L, 2);
         switch (socket::connect(fd, ep)) {
-        case socket::status::success:
+        case socket::fdstat::success:
             lua_pushboolean(L, 1);
             return 1;
-        case socket::status::wait:
+        case socket::fdstat::wait:
             lua_pushboolean(L, 0);
             return 1;
-        case socket::status::failed:
+        case socket::fdstat::failed:
             return push_neterror(L, "connect");
         default:
             std::unreachable();
@@ -324,7 +324,7 @@ namespace bee::lua_socket {
         auto fd = checkfd(L, 1);
         auto ep = read_endpoint(L, 2);
         socket::unlink(ep);
-        if (socket::status::success != socket::bind(fd, ep)) {
+        if (!socket::bind(fd, ep)) {
             return push_neterror(L, "bind");
         }
         lua_pushboolean(L, 1);
@@ -333,7 +333,7 @@ namespace bee::lua_socket {
     static int listen(lua_State* L) {
         auto fd = checkfd(L, 1);
         auto backlog = lua::optinteger<int>(L, 2, kDefaultBackLog, "backlog");
-        if (socket::status::success != socket::listen(fd, backlog)) {
+        if (!socket::listen(fd, backlog)) {
             return push_neterror(L, "listen");
         }
         lua_pushboolean(L, 1);
@@ -507,7 +507,7 @@ namespace bee::lua_socket {
     }
     static int luaopen(lua_State* L) {
         if (!socket::initialize()) {
-            auto error = make_neterror("initialize");
+            auto error = make_syserror("initialize");
             lua_pushstring(L, error.what());
             return lua_error(L);
         }
