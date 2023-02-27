@@ -127,6 +127,8 @@ namespace bee::lua_filewatch {
 
     static int create(lua_State* L) {
         lua::newudata<filewatch::watch>(L, metatable);
+        lua_newthread(L);
+        lua_setiuservalue(L, -2, 1);
         return 1;
     }
 
