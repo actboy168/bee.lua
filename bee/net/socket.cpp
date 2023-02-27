@@ -330,8 +330,9 @@ namespace bee::net::socket {
         }
 #endif
         int ok = ::connect(s, ep.addr(), (int)ep.addrlen());
-        if (net_success(ok))
+        if (net_success(ok)) {
             return fdstat::success;
+        }
 
 #if defined _WIN32
         const int error_code = ::WSAGetLastError();
@@ -482,7 +483,8 @@ namespace bee::net::socket {
     int errcode(fd_t s) {
         int err;
         socklen_t errl = sizeof(err);
-        if (::getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&err, &errl) >= 0) {
+        int ok = ::getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&err, &errl);
+        if (net_success(ok)) {
             return err;
         }
 #if defined(_WIN32)
@@ -495,22 +497,24 @@ namespace bee::net::socket {
 #if !defined(_WIN32)
     bool blockpair(fd_t sv[2]) {
 #if defined(__APPLE__)
-        bool ok = 0 == ::socketpair(PF_UNIX, SOCK_STREAM, 0, sv);
-        if (ok) {
-            if (!no_inherit(sv[0])) {
-                socket::close(sv[0]);
-                socket::close(sv[1]);
-                return false;
-            }
-            if (!no_inherit(sv[1])) {
-                socket::close(sv[0]);
-                socket::close(sv[1]);
-                return false;
-            }
+        int ok = ::socketpair(PF_UNIX, SOCK_STREAM, 0, sv);
+        if (!net_success(ok)) {
+            return false;
         }
-        return ok;
+        if (!no_inherit(sv[0])) {
+            socket::close(sv[0]);
+            socket::close(sv[1]);
+            return false;
+        }
+        if (!no_inherit(sv[1])) {
+            socket::close(sv[0]);
+            socket::close(sv[1]);
+            return false;
+        }
+        return true;
 #else
-        return 0 == ::socketpair(PF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, sv);
+        int ok = ::socketpair(PF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, sv);
+        return net_success(ok);
 #endif
     }
 #endif
@@ -626,7 +630,8 @@ namespace bee::net::socket {
         }
         return true;
 #else
-        return 0 == ::socketpair(PF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0, sv);
+        int ok = ::socketpair(PF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0, sv);
+        return net_success(ok);
 #endif
     }
 
