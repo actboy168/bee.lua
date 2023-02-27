@@ -26,11 +26,7 @@
 #include <bee/nonstd/unreachable.h>
 #include <assert.h>
 
-#if defined(_WIN32)
-#    define net_success(x) ((x) != SOCKET_ERROR)
-#else
-#    define net_success(x) ((x) == 0)
-#endif
+#define net_success(x) ((x) == 0)
 
 #if defined(__MINGW32__)
 #define WSA_FLAG_NO_HANDLE_INHERIT 0x80
@@ -181,8 +177,8 @@ namespace bee::net::socket {
 #if defined(_WIN32)
     static bool no_blocking(fd_t s) {
         unsigned long nonblock = 1;
-        int rc = ioctlsocket(s, FIONBIO, &nonblock);
-        return net_success(rc);
+        int ok = ioctlsocket(s, FIONBIO, &nonblock);
+        return net_success(ok);
     }
     static bool no_inherit(fd_t s) {
         DWORD flags = 0;
@@ -193,15 +189,15 @@ namespace bee::net::socket {
 #elif defined(__APPLE__)
     static bool no_blocking(fd_t s) {
         int flags = fcntl(s, F_GETFL, 0);
-        int rc = fcntl(s, F_SETFL, flags | O_NONBLOCK);
-        return net_success(rc);
+        int ok = fcntl(s, F_SETFL, flags | O_NONBLOCK);
+        return net_success(ok);
     }
     static bool no_inherit(fd_t s) {
-        int r;
+        int ok;
         do
-            r = ioctl(s, FIOCLEX);
-        while (r == -1 && errno == EINTR);
-        return !r;
+            ok = ioctl(s, FIOCLEX);
+        while (!net_success(ok) && errno == EINTR);
+        return net_success(ok);
     }
 #endif
 
@@ -283,8 +279,8 @@ namespace bee::net::socket {
 
     template <typename T>
     static bool setoption(fd_t s, int level, int optname, T& v) {
-        const int rc = setsockopt(s, level, optname, (char*)&v, sizeof(T));
-        return net_success(rc);
+        int ok = setsockopt(s, level, optname, (char*)&v, sizeof(T));
+        return net_success(ok);
     }
 
     bool setoption(fd_t s, option opt, int value) {
@@ -317,8 +313,8 @@ namespace bee::net::socket {
         }
 #endif
 
-        int rc = ::connect(s, ep.addr(), (int)ep.addrlen());
-        if (rc == 0)
+        int ok = ::connect(s, ep.addr(), (int)ep.addrlen());
+        if (net_success(ok))
             return status::success;
 
 #if defined _WIN32
@@ -339,14 +335,12 @@ namespace bee::net::socket {
         }
 #endif
         int ok = ::bind(s, ep.addr(), ep.addrlen());
-        return ok == 0 ? status::success : status::failed;
+        return net_success(ok) ? status::success : status::failed;
     }
 
     status listen(fd_t s, int backlog) {
-        if (::listen(s, backlog) == -1) {
-            return status::failed;
-        }
-        return status::success;
+        int ok = ::listen(s, backlog);
+        return net_success(ok) ? status::success : status::failed;
     }
 
     static fd_t acceptEx(fd_t s, struct sockaddr* addr, socklen_t* addrlen) {
@@ -423,7 +417,7 @@ namespace bee::net::socket {
         return status::success;
     }
 
-    status  recvfrom(fd_t s, int& rc, char* buf, int len, endpoint& ep) {
+    status recvfrom(fd_t s, int& rc, char* buf, int len, endpoint& ep) {
         socklen_t addrlen = ep.addrlen();
         rc = ::recvfrom(s, buf, len, 0, ep.addr(), &addrlen);
         if (rc == 0) {
@@ -436,7 +430,7 @@ namespace bee::net::socket {
         return status::success;
     }
 
-    status  sendto(fd_t s, int& rc, const char* buf, int len, const endpoint& ep) {
+    status sendto(fd_t s, int& rc, const char* buf, int len, const endpoint& ep) {
         rc = ::sendto(s, buf, len, 0, ep.addr(), ep.addrlen());
         if (rc < 0) {
             return wait_finish() ? status::wait : status::failed;
