@@ -5,6 +5,7 @@
 #include <string>
 #include <bee/error.h>
 #include <limits>
+#include <stdint.h>
 #if defined(_WIN32)
 #include <bee/platform/win/unicode.h>
 #endif
