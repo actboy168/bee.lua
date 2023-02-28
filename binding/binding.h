@@ -3,9 +3,10 @@
 #include <lua.hpp>
 #include <map>
 #include <string>
-#include <bee/error.h>
 #include <limits>
 #include <stdint.h>
+#include <bee/error.h>
+#include <bee/nonstd/unreachable.h>
 #if defined(_WIN32)
 #include <bee/platform/win/unicode.h>
 #endif
@@ -48,6 +49,7 @@ namespace bee::lua {
                 return (T)r;
             }
             luaL_error(L, "bad argument '%s' limit exceeded", symbol);
+            std::unreachable();
         }
     }
     template <typename T>
@@ -66,6 +68,7 @@ namespace bee::lua {
                 return (T)r;
             }
             luaL_error(L, "bad argument '%s' limit exceeded", symbol);
+            std::unreachable();
         }
     }
 
