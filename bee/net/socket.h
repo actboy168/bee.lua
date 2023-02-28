@@ -20,7 +20,7 @@ namespace bee::net::socket {
     enum class protocol {
         tcp = 0,
         udp,
-        uds,
+        unix,
         tcp6,
         udp6,
     };

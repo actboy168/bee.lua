@@ -9,7 +9,6 @@
 #include <bee/net/socket.h>
 #include <bee/nonstd/unreachable.h>
 #include <bee/thread/simplethread.h>
-#include <limits>
 
 namespace bee::lua {
     template <>
@@ -20,7 +19,6 @@ namespace bee::lua {
 
 namespace bee::lua_socket {
     using namespace bee::net;
-    static const int kDefaultBackLog = 5;
     static int push_neterror(lua_State* L, const char* msg) {
         auto error = make_neterror(msg);
         lua_pushnil(L);
@@ -295,6 +293,7 @@ namespace bee::lua_socket {
         return 1;
     }
     static int listen(lua_State* L) {
+        static const int kDefaultBackLog = 5;
         auto fd = checkfd(L, 1);
         auto backlog = lua::optinteger<int>(L, 2, kDefaultBackLog, "backlog");
         if (!socket::listen(fd, backlog)) {
@@ -368,7 +367,7 @@ namespace bee::lua_socket {
         void reset() { FD_ZERO(&readfds); FD_ZERO(&writefds); maxfd = 0; }
         void set_fd(socket::fd_t fd, fd_set& set) { FD_SET(fd, &set);  maxfd = std::max(maxfd, fd); }
         int select(struct timeval* timeop) { return ::select(maxfd + 1, &readfds, &writefds, NULL, timeop); }
-        int    maxfd;
+        int maxfd;
 #endif
         fd_set readfds, writefds;
     };

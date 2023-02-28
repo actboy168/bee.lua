@@ -260,7 +260,7 @@ namespace bee::net::socket {
             return createSocket(PF_INET6, SOCK_STREAM, IPPROTO_TCP);
         case protocol::udp6:
             return createSocket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-        case protocol::uds:
+        case protocol::unix:
 #if defined _WIN32
             if (!supportUnixDomainSocket()) {
                 return createSocket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -584,7 +584,7 @@ namespace bee::net::socket {
         fd_t sfd = retired_fd;
         fd_t cfd = retired_fd;
         auto cep = endpoint::from_empty();
-        sfd = open(protocol::uds);
+        sfd = open(protocol::unix);
         if (sfd == retired_fd) {
             goto failed;
         }
@@ -597,7 +597,7 @@ namespace bee::net::socket {
         if (!getsockname(sfd, cep)) {
             goto failed;
         }
-        cfd = open(protocol::uds);
+        cfd = open(protocol::unix);
         if (cfd == retired_fd) {
             goto failed;
         }
