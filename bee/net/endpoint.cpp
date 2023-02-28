@@ -86,7 +86,7 @@ namespace bee::net {
     endpoint endpoint::from_unixpath(const std::string_view& path) {
         if (path.size() >= UNIX_PATH_MAX) {
             return from_invalid();
-        };
+        }
         endpoint ep(offsetof(struct sockaddr_un, sun_path) + path.size() + 1);
         struct sockaddr_un* su = (struct sockaddr_un*)ep.addr();
         su->sun_family = AF_UNIX;

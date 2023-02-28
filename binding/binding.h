@@ -43,10 +43,10 @@ namespace bee::lua {
         else {
             static_assert(sizeof(T) < sizeof(lua_Integer));
             lua_Integer r = luaL_checkinteger(L, arg);
-            if (r < std::numeric_limits<T>::lowest() || r > (std::numeric_limits<T>::max)()) {
-                luaL_error(L, "bad argument '%s' limit exceeded", symbol);
+            if (r >= std::numeric_limits<T>::lowest() && r <= (std::numeric_limits<T>::max)()) {
+                return (T)r;
             }
-            return (T)r;
+            luaL_error(L, "bad argument '%s' limit exceeded", symbol);
         }
     }
     template <typename T>
@@ -61,10 +61,10 @@ namespace bee::lua {
         else {
             static_assert(sizeof(T) < sizeof(lua_Integer));
             lua_Integer r = luaL_optinteger(L, arg, (lua_Integer)def);
-            if (r < std::numeric_limits<T>::lowest() || r > (std::numeric_limits<T>::max)()) {
-                luaL_error(L, "bad argument '%s' limit exceeded", symbol);
+            if (r >= std::numeric_limits<T>::lowest() && r <= (std::numeric_limits<T>::max)()) {
+                return (T)r;
             }
-            return (T)r;
+            luaL_error(L, "bad argument '%s' limit exceeded", symbol);
         }
     }
 

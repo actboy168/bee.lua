@@ -94,7 +94,7 @@ namespace bee::subprocess {
         STARTUPINFOW            si_;
         PROCESS_INFORMATION     pi_;
         DWORD                   flags_ = 0;
-		console                 console_ = console::eInherit;
+        console                 console_ = console::eInherit;
         bool                    inherit_handle_ = false;
         bool                    search_path_ = false;
         bool                    detached_ = false;
