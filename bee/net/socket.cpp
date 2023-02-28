@@ -3,7 +3,6 @@
 #   include <mswsock.h>
 #   include <mstcpip.h>
 #   include <bee/platform/win/unicode.h>
-#   include <bee/platform/win/version.h>
 #   include <bee/platform/win/unlink.h>
 #   include <fstream>
 #   include <charconv>
@@ -123,8 +122,29 @@ namespace bee::net::socket {
         return true;
     }
 
+    static WSAPROTOCOL_INFOW UnixProtocol;
     static bool supportUnixDomainSocket_() {
-        return !(bee::win::get_version() < bee::win::version {10, 0, 17763, 0});
+        static GUID AF_UNIX_PROVIDER_ID = { 0xA00943D9, 0x9C2E, 0x4633, { 0x9B, 0x59, 0x00, 0x57, 0xA3, 0x16, 0x09, 0x94 } };
+        DWORD len = 0;
+        ::WSAEnumProtocolsW(0, NULL, &len);
+        std::unique_ptr<uint8_t[]> buf(new uint8_t[len]);
+        LPWSAPROTOCOL_INFOW protocols = (LPWSAPROTOCOL_INFOW)buf.get();
+        int n = ::WSAEnumProtocolsW(0, protocols, &len);
+        if (n == SOCKET_ERROR) {
+            return false;
+        }
+        for (size_t i = 0; i < n; ++i) {
+            if (protocols[i].iAddressFamily == AF_UNIX && IsEqualGUID(protocols[i].ProviderId, AF_UNIX_PROVIDER_ID)) {
+                fd_t fd = ::WSASocketW(PF_UNIX, SOCK_STREAM, 0, &protocols[i], 0, WSA_FLAG_NO_HANDLE_INHERIT);
+                if (fd == retired_fd) {
+                    return false;
+                }
+                ::closesocket(fd);
+                UnixProtocol = protocols[i];
+                return true;
+            }
+        }
+        return false;
     }
     static bool supportUnixDomainSocket() {
         static bool support = supportUnixDomainSocket_();
@@ -204,7 +224,7 @@ namespace bee::net::socket {
 
     static fd_t createSocket(int af, int type, int protocol) {
 #if defined(_WIN32)
-        fd_t fd = ::WSASocketW(af, type, protocol, 0, 0, WSA_FLAG_NO_HANDLE_INHERIT);
+        fd_t fd = ::WSASocketW(af, type, protocol, af == PF_UNIX? &UnixProtocol: NULL, 0, WSA_FLAG_NO_HANDLE_INHERIT);
         if (fd != retired_fd) {
             if (!no_blocking(fd)) {
                 ::closesocket(fd);
