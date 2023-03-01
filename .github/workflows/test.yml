@@ -51,7 +51,7 @@ jobs:
     - uses: actboy168/setup-luamake@master
     # see actions/runner-images#2187
     - run: luamake -arch arm64 -notest
-  linux-(x86_64):
+  linux-x86_64:
     name: linux (x86_64)
     runs-on: ubuntu-20.04
     steps:
