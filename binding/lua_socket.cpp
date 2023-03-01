@@ -206,6 +206,13 @@ namespace bee::lua_socket {
         socket_destroy(L);
         return 0;
     }
+    static int mt_gc(lua_State* L) {
+        auto fd = checkfd(L, 1);
+        if (fd != socket::retired_fd) {
+            socket::close(fd);
+        }
+        return 0;
+    }
     static int status(lua_State* L) {
         auto fd = checkfd(L, 1);
         int err = socket::errcode(fd);
@@ -321,6 +328,7 @@ namespace bee::lua_socket {
             {"option", option},
             {"__tostring", mt_tostring},
             {"__close", mt_close},
+            {"__gc", mt_gc},
             {NULL, NULL},
         };
         luaL_setfuncs(L, mt, 0);

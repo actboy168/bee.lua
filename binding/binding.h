@@ -84,11 +84,11 @@ namespace bee::lua {
     template <typename T, typename = void>
     struct udata_has_name : std::false_type {};
     template <typename T>
-    struct udata_has_name<T, decltype((void)udata<T>::name, void())> : std::true_type {};
+    struct udata_has_name<T, std::void_t<decltype(udata<T>::name)>> : std::true_type {};
     template <typename T, typename = void>
     struct udata_has_nupvalue : std::false_type {};
     template <typename T>
-    struct udata_has_nupvalue<T, decltype((void)udata<T>::nupvalue, void())> : std::true_type {};
+    struct udata_has_nupvalue<T, std::void_t<decltype(udata<T>::nupvalue)>> : std::true_type {};
 
     template <typename T>
     int destroyudata(lua_State* L) {
@@ -120,8 +120,10 @@ namespace bee::lua {
         new (o) T(std::forward<Args>(args)...);
         if (luaL_newmetatable(L, udata<T>::name)) {
             init_metatable(L);
-            lua_pushcfunction(L, destroyudata<T>);
-            lua_setfield(L, -2, "__gc");
+            if constexpr (!std::is_trivially_destructible<T>::value) {
+                lua_pushcfunction(L, destroyudata<T>);
+                lua_setfield(L, -2, "__gc");
+            }
         }
         lua_setmetatable(L, -2);
         return *o;
