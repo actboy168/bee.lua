@@ -104,26 +104,27 @@ namespace bee::lua_subprocess {
         }
 
         static void metatable(lua_State* L) {
-            static luaL_Reg mt[] = {
+            static luaL_Reg lib[] = {
                 {"wait", wait},
                 {"kill", kill},
                 {"get_id", get_id},
                 {"is_running", is_running},
                 {"resume", resume},
                 {"native_handle", native_handle},
+                {NULL, NULL}
+            };
+            luaL_newlibtable(L, lib);
+            luaL_setfuncs(L, lib, 0);
+            lua_pushcclosure(L, mt_index, 1);
+            lua_setfield(L, -2, "__index");
+            static luaL_Reg mt[] = {
+                {"__newindex", mt_newindex},
 #if defined(_WIN32)
                 {"__close", mt_close},
 #endif
                 {NULL, NULL}
             };
             luaL_setfuncs(L, mt, 0);
-            static luaL_Reg mt2[] = {
-                {"__index", mt_index},
-                {"__newindex", mt_newindex},
-                {NULL, NULL}
-            };
-            lua_pushvalue(L, -1);
-            luaL_setfuncs(L, mt2, 1);
         }
 
         static int constructor(lua_State* L, subprocess::spawn& spawn) {

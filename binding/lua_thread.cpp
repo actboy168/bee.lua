@@ -177,14 +177,14 @@ namespace bee::lua_thread {
     }
 
     static void metatable(lua_State* L) {
-        luaL_Reg mt[] = {
+        luaL_Reg lib[] = {
             {"push", lchannel_push},
             {"pop", lchannel_pop},
             {"bpop", lchannel_bpop},
             {NULL, NULL},
         };
-        luaL_setfuncs(L, mt, 0);
-        lua_pushvalue(L, -1);
+        luaL_newlibtable(L, lib);
+        luaL_setfuncs(L, lib, 0);
         lua_setfield(L, -2, "__index");
     }
 

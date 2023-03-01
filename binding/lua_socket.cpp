@@ -310,7 +310,7 @@ namespace bee::lua_socket {
         return 1;
     }
     static void metatable(lua_State* L) {
-        luaL_Reg mt[] = {
+        luaL_Reg lib[] = {
             {"connect", connect},
             {"bind", bind},
             {"listen", listen},
@@ -326,14 +326,18 @@ namespace bee::lua_socket {
             {"handle", handle},
             {"detach", detach},
             {"option", option},
+            {NULL, NULL},
+        };
+        luaL_newlibtable(L, lib);
+        luaL_setfuncs(L, lib, 0);
+        lua_setfield(L, -2, "__index");
+        luaL_Reg mt[] = {
             {"__tostring", mt_tostring},
             {"__close", mt_close},
             {"__gc", mt_gc},
             {NULL, NULL},
         };
         luaL_setfuncs(L, mt, 0);
-        lua_pushvalue(L, -1);
-        lua_setfield(L, -2, "__index");
     }
     static void pushfd(lua_State* L, socket::fd_t fd) {
         lua::newudata<socket::fd_t>(L, metatable, fd);

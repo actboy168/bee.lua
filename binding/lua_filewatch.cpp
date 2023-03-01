@@ -111,18 +111,22 @@ namespace bee::lua_filewatch {
     }
 
     static void metatable(lua_State* L) {
-        static luaL_Reg mt[] = {
+        static luaL_Reg lib[] = {
             {"add", add},
             {"set_recursive", set_recursive},
             {"set_follow_symlinks", set_follow_symlinks},
             {"set_filter", set_filter},
             {"select", select},
+            {NULL, NULL}
+        };
+        luaL_newlibtable(L, lib);
+        luaL_setfuncs(L, lib, 0);
+        lua_setfield(L, -2, "__index");
+        static luaL_Reg mt[] = {
             {"__close", mt_close},
             {NULL, NULL}
         };
         luaL_setfuncs(L, mt, 0);
-        lua_pushvalue(L, -1);
-        lua_setfield(L, -2, "__index");
     }
 
     static int create(lua_State* L) {

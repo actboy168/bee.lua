@@ -284,7 +284,7 @@ namespace bee::lua_filesystem {
         }
 
         static void metatable(lua_State* L) {
-            static luaL_Reg mt[] = {
+            static luaL_Reg lib[] = {
                 {"string", mt_tostring},
                 {"filename", filename},
                 {"parent_path", parent_path},
@@ -297,6 +297,12 @@ namespace bee::lua_filesystem {
                 {"replace_extension", replace_extension},
                 {"equal_extension", equal_extension},
                 {"lexically_normal", lexically_normal},
+                {NULL, NULL},
+            };
+            luaL_newlibtable(L, lib);
+            luaL_setfuncs(L, lib, 0);
+            lua_setfield(L, -2, "__index");
+            static luaL_Reg mt[] = {
                 {"__div", mt_div},
                 {"__concat", mt_concat},
                 {"__eq", mt_eq},
@@ -305,8 +311,6 @@ namespace bee::lua_filesystem {
                 {NULL, NULL},
             };
             luaL_setfuncs(L, mt, 0);
-            lua_pushvalue(L, -1);
-            lua_setfield(L, -2, "__index");
         }
         static void push(lua_State* L) {
             lua::newudata<fs::path>(L, metatable);
@@ -377,19 +381,23 @@ namespace bee::lua_filesystem {
         }
 
         static void metatable(lua_State* L) {
-            static luaL_Reg mt[] = {
+            static luaL_Reg lib[] = {
                 {"type", type},
                 {"exists", exists},
                 {"is_directory", is_directory},
                 {"is_regular_file", is_regular_file},
+                {NULL, NULL},
+            };
+            luaL_newlibtable(L, lib);
+            luaL_setfuncs(L, lib, 0);
+            lua_setfield(L, -2, "__index");
+            static luaL_Reg mt[] = {
                 {"__eq", mt_eq},
                 {"__tostring", type},
                 {"__debugger_tostring", type},
                 {NULL, NULL},
             };
             luaL_setfuncs(L, mt, 0);
-            lua_pushvalue(L, -1);
-            lua_setfield(L, -2, "__index");
         }
         static void push(lua_State* L, fs::file_status&& status) {
             lua::newudata<fs::file_status>(L, metatable, std::forward<fs::file_status>(status));
@@ -444,7 +452,7 @@ namespace bee::lua_filesystem {
         }
 
         static void metatable(lua_State* L) {
-            static luaL_Reg mt[] = {
+            static luaL_Reg lib[] = {
                 {"path", path},
                 {"status", status},
                 {"symlink_status", symlink_status},
@@ -452,13 +460,17 @@ namespace bee::lua_filesystem {
                 {"exists", exists},
                 {"is_directory", is_directory},
                 {"is_regular_file", is_regular_file},
+                {NULL, NULL},
+            };
+            luaL_newlibtable(L, lib);
+            luaL_setfuncs(L, lib, 0);
+            lua_setfield(L, -2, "__index");
+            static luaL_Reg mt[] = {
                 {"__tostring", path},
                 {"__debugger_tostring", path},
                 {NULL, NULL},
             };
             luaL_setfuncs(L, mt, 0);
-            lua_pushvalue(L, -1);
-            lua_setfield(L, -2, "__index");
         }
         static void push(lua_State* L, fs::directory_entry const& entry) {
             lua::newudata<fs::directory_entry>(L, metatable, entry);
