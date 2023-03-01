@@ -80,6 +80,11 @@ namespace bee::lua {
     }
 
     template <typename T>
+    T& toudata(lua_State* L, int arg) {
+        return *(T*)lua_touserdata(L, arg);
+    }
+
+    template <typename T>
     struct udata {};
     template <typename T, typename = void>
     struct udata_has_name : std::false_type {};
@@ -92,8 +97,7 @@ namespace bee::lua {
 
     template <typename T>
     int destroyudata(lua_State* L) {
-        auto o = (T*)lua_touserdata(L, 1);
-        o->~T();
+        toudata<T>(L, 1).~T();
         return 0;
     }
 
@@ -135,7 +139,7 @@ namespace bee::lua {
             return *(T*)luaL_checkudata(L, ud, udata<T>::name);
         }
         else {
-            return *(T*)lua_touserdata(L, ud);
+            return toudata<T>(L, ud);
         }
     }
 

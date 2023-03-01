@@ -44,7 +44,7 @@ namespace bee::lua_socket {
         }
     }
     static socket::fd_t tofd(lua_State* L, int idx) {
-        return *(socket::fd_t*)lua_touserdata(L, idx);
+        return lua::toudata<socket::fd_t>(L, idx);
     }
     static socket::fd_t& checkfdref(lua_State* L, int idx) {
         return lua::checkudata<socket::fd_t>(L, idx);

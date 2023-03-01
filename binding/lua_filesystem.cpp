@@ -798,27 +798,24 @@ namespace bee::lua_filesystem {
 
     template <typename T>
     struct pairs_directory {
-        static T& get(lua_State* L, int idx) {
-            return *static_cast<T*>(lua_touserdata(L, idx));
-        }
         static int next(lua_State* L) {
-            auto& self = get(L, lua_upvalueindex(1));
-            if (self == T {}) {
+            auto& iter = lua::toudata<T>(L, lua_upvalueindex(1));
+            if (iter == T {}) {
                 lua_pushnil(L);
                 return 1;
             }
-            path::push(L, self->path());
-            directory_entry::push(L, *self);
+            path::push(L, iter->path());
+            directory_entry::push(L, *iter);
             std::error_code ec;
-            self.increment(ec);
+            iter.increment(ec);
             if (ec) {
                 return pusherror(L, "directory_iterator::operator++", ec); 
             }
             return 2;
         }
         static int mt_close(lua_State* L) {
-            auto& self = get(L, 1);
-            self = {};
+            auto& iter = lua::checkudata<T>(L, 1);
+            iter = {};
             return 0;
         }
         static void metatable(lua_State* L) {
