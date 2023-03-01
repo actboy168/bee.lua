@@ -1,5 +1,6 @@
 #include <binding/binding.h>
 #include <bee/nonstd/semaphore.h>
+#include <bee/nonstd/format.h>
 #include <bee/thread/simplethread.h>
 #include <bee/thread/spinlock.h>
 #include <bee/thread/setname.h>
@@ -268,7 +269,7 @@ namespace bee::lua_thread {
                 errlog->push(errmsg);
             }
             else {
-                printf("thread error : %s", lua_tostring(L, -1));
+                std::println(stdout, "thread error : {}", lua_tostring(L, -1));
             }
         }
         lua_close(L);
@@ -276,7 +277,7 @@ namespace bee::lua_thread {
 
     static int lthread(lua_State* L) {
         auto source = lua::checkstrview(L, 1);
-        void*       params = seri_pack(L, 1, NULL);
+        void* params = seri_pack(L, 1, NULL);
         int id = gen_threadid();
         thread_args* args = new thread_args { std::string {source}, id, params };
         thread_handle handle = thread_create(thread_main, args);
