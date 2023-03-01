@@ -201,7 +201,9 @@ namespace bee::subprocess {
                 }
             }
         }
-        if (posix_spawnp(&pid, arguments[0], &spawnfile_, &spawnattr_, arguments, env_)) {
+        int ec = posix_spawnp(&pid, arguments[0], &spawnfile_, &spawnattr_, arguments, env_);
+        if (ec != 0) {
+            errno = ec;
             return false;
         }
         pid_ = pid;
