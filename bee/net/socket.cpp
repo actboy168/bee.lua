@@ -133,7 +133,7 @@ namespace bee::net::socket {
         if (n == SOCKET_ERROR) {
             return false;
         }
-        for (size_t i = 0; i < n; ++i) {
+        for (int i = 0; i < n; ++i) {
             if (protocols[i].iAddressFamily == AF_UNIX && IsEqualGUID(protocols[i].ProviderId, AF_UNIX_PROVIDER_ID)) {
                 fd_t fd = ::WSASocketW(PF_UNIX, SOCK_STREAM, 0, &protocols[i], 0, WSA_FLAG_NO_HANDLE_INHERIT);
                 if (fd == retired_fd) {
