@@ -170,6 +170,11 @@ namespace bee::lua_subprocess {
                 case LUA_TTABLE:
                     cast_args_array(L, lua_absindex(L, -1), args);
                     break;
+                case LUA_TNUMBER:
+                    args.push(lua_tostring(L, -1));
+                    break;
+                case LUA_TNIL:
+                    break;
                 default:
                     luaL_error(L, "Unsupported type: %s.", lua_typename(L, lua_type(L, -1)));
                     break;
