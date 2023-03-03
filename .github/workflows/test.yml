@@ -28,7 +28,7 @@ jobs:
           mingw-w64-x86_64-gcc
           mingw-w64-x86_64-ninja
     - shell: msys2 {0}
-      run: ./luamake/luamake.exe
+      run: luamake
   macos-x86_64:
     name: macos (x86_64)
     runs-on: macos-latest
