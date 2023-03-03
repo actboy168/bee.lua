@@ -417,37 +417,43 @@ namespace bee::lua_filesystem {
 
         static int status(lua_State* L) {
             auto const& entry = to(L, 1);
-            file_status::push(L, entry.status());
+            std::error_code ec;
+            file_status::push(L, entry.status(ec));
             return 1;
         }
 
         static int symlink_status(lua_State* L) {
             auto const& entry = to(L, 1);
-            file_status::push(L, entry.symlink_status());
+            std::error_code ec;
+            file_status::push(L, entry.symlink_status(ec));
             return 1;
         }
 
         static int type(lua_State* L) {
             auto const& entry = to(L, 1);
-            lua_pushstring(L, file_status::filetypename(entry.status().type()));
+            std::error_code ec;
+            lua_pushstring(L, file_status::filetypename(entry.status(ec).type()));
             return 1;
         }
 
         static int exists(lua_State* L) {
             auto const& entry = to(L, 1);
-            lua_pushboolean(L, entry.exists());
+            std::error_code ec;
+            lua_pushboolean(L, entry.exists(ec));
             return 1;
         }
 
         static int is_directory(lua_State* L) {
             auto const& entry = to(L, 1);
-            lua_pushboolean(L, entry.is_directory());
+            std::error_code ec;
+            lua_pushboolean(L, entry.is_directory(ec));
             return 1;
         }
 
         static int is_regular_file(lua_State* L) {
             auto const& entry = to(L, 1);
-            lua_pushboolean(L, entry.is_regular_file());
+            std::error_code ec;
+            lua_pushboolean(L, entry.is_regular_file(ec));
             return 1;
         }
 
