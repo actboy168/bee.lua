@@ -43,55 +43,32 @@ namespace bee::lua_filesystem {
     }
 #endif
 
-    static int pusherror(
-        lua_State* L,
-        const char* op,
-        std::error_code ec
-    ) {
-        {
-            auto errmsg = std::format("{}: {}",
-                op,
-                ec.message()
-            );
-            lua_pushlstring(L, errmsg.data(), errmsg.size());
-        }
-        return lua_error(L);
+    template <typename ...Args>
+    static void lua_pushfmtstring(lua_State* L, std::format_string<Args...> fmt, Args... args) {
+        auto str = std::format(fmt, std::forward<Args>(args)...);
+        lua_pushlstring(L, str.data(), str.size());
     }
 
-    static int pusherror(
-        lua_State* L,
-        const char* op,
-        std::error_code ec,
-        const fs::path& path1
-    ) {
-        {
-            auto errmsg = std::format("{}: {}: \"{}\"",
-                op,
-                ec.message(),
-                u8tostrview(path1.generic_u8string())
-            );
-            lua_pushlstring(L, errmsg.data(), errmsg.size());
-        }
-        return lua_error(L);
+    template <typename ...Args>
+    [[noreturn]] static void lua_fmterror(lua_State* L, std::format_string<Args...> fmt, Args... args) {
+        lua_pushfmtstring(L, fmt, std::forward<Args>(args)...);
+        lua_error(L);
+        std::unreachable();
     }
 
-    static int pusherror(
-        lua_State* L,
-        const char* op,
-        std::error_code ec,
-        const fs::path& path1,
-        const fs::path& path2
-    ) {
-        {
-            auto errmsg = std::format("{}: {}: \"{}\", \"{}\"",
-                op,
-                ec.message(),
-                u8tostrview(path1.generic_u8string()),
-                u8tostrview(path2.generic_u8string())
-            );
-            lua_pushlstring(L, errmsg.data(), errmsg.size());
-        }
-        return lua_error(L);
+    static int pusherror(lua_State* L, std::string_view op, std::error_code ec) {
+        lua_fmterror(L, "{}: {}", op, ec.message());
+        return 0;
+    }
+
+    static int pusherror(lua_State* L, std::string_view op, std::error_code ec, const fs::path& path1) {
+        lua_fmterror(L, "{}: {}: \"{}\"", op, ec.message(), u8tostrview(path1.generic_u8string()));
+        return 0;
+    }
+
+    static int pusherror(lua_State* L, std::string_view op, std::error_code ec, const fs::path& path1, const fs::path& path2) {
+        lua_fmterror(L, "{}: {}: \"{}\", \"{}\"", op, ec.message(), u8tostrview(path1.generic_u8string()), u8tostrview(path2.generic_u8string()));
+        return 0;
     }
 
     template <typename T>
