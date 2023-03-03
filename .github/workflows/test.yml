@@ -20,11 +20,7 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/checkout@v3
-      with:
-        path: luamake
-        repository: actboy168/luamake
-        submodules : recursive
+    - uses: actboy168/setup-luamake@master
     - uses: msys2/setup-msys2@v2
       with:
         update: true
@@ -32,10 +28,7 @@ jobs:
           mingw-w64-x86_64-gcc
           mingw-w64-x86_64-ninja
     - shell: msys2 {0}
-      working-directory: luamake
-      run: ./compile/build.sh notest
-    - shell: msys2 {0}
-      run: ./luamake/luamake
+      run: ./luamake/luamake.exe
   macos-x86_64:
     name: macos (x86_64)
     runs-on: macos-latest
