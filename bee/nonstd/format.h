@@ -15,6 +15,7 @@ namespace std {
 #include <bee/nonstd/3rd/fmt/xchar.h>
 namespace std {
     using ::fmt::format;
+    using ::fmt::format_string;
     using ::fmt::print;
     using ::fmt::println;
 }
