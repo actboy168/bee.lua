@@ -1,6 +1,5 @@
 #include <bee/filewatch/filewatch.h>
 #include <bee/nonstd/unreachable.h>
-#include <assert.h>
 
 namespace bee::filewatch {
     const char* watch::type() {
@@ -39,16 +38,18 @@ namespace bee::filewatch {
         }
         FSEventStreamContext ctx = { 0 , this, NULL , NULL , NULL };
 
-        FSEventStreamRef ref = 
-            FSEventStreamCreate(NULL,
-                &event_cb,
-                &ctx,
-                cf_paths,
-                kFSEventStreamEventIdSinceNow,
-                0.05,
-                kFSEventStreamCreateFlagNoDefer | kFSEventStreamCreateFlagFileEvents
-            );
-        assert(ref != NULL);
+        FSEventStreamRef ref = FSEventStreamCreate(
+            NULL,
+            &event_cb,
+            &ctx,
+            cf_paths,
+            kFSEventStreamEventIdSinceNow,
+            0.05,
+            kFSEventStreamCreateFlagNoDefer | kFSEventStreamCreateFlagFileEvents
+        );
+        if (ref == NULL) {
+            return false;
+        }
         m_fsevent_queue = dispatch_queue_create("fsevent_queue", NULL);
         FSEventStreamSetDispatchQueue(ref, m_fsevent_queue);
         if (!FSEventStreamStart(ref)) {
