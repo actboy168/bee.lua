@@ -55,7 +55,13 @@ namespace bee::filewatch {
         }
         int desc = inotify_add_watch(m_inotify_fd, path.c_str(), IN_ALL_EVENTS);
         if (desc != -1) {
-            m_fd_path.emplace(std::make_pair(desc, path.string()));
+            const auto &emplace_result = m_fd_path.emplace(std::make_pair(desc, path.string()));
+            // 没有插入新元素说明key已经存在,
+            // 即该path已经监听过, 忽略不继续
+            if (!emplace_result.second) {
+                return;
+            }
+
         }
         if (!m_recursive) {
             return;
@@ -64,7 +70,7 @@ namespace bee::filewatch {
         fs::directory_iterator iter {path, fs::directory_options::skip_permission_denied, ec };
         fs::directory_iterator end {};
         for (; !ec && iter != end; iter.increment(ec)) {
-            if (fs::is_directory(m_follow_symlinks? iter->status(): iter->symlink_status())) {
+            if (fs::is_directory(m_follow_symlinks? iter->status(ec): iter->symlink_status(ec))) {
                 add(iter->path());
             }
         }
