@@ -281,11 +281,8 @@ namespace bee::lua_thread {
         thread_args* args = new thread_args { std::string {source}, id, params };
         thread_handle handle = thread_create(thread_main, args);
         if (!handle) {
-            {
-                auto error = make_syserror("thread_create");
-                delete args;
-                lua_pushstring(L, error.what());
-            }
+            delete args;
+            lua_pushstring(L, make_syserror("thread_create").what());
             return lua_error(L);
         }
         lua_pushlightuserdata(L, handle);

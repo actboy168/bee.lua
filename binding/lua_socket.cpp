@@ -466,8 +466,7 @@ namespace bee::lua_socket {
     }
     static int luaopen(lua_State* L) {
         if (!socket::initialize()) {
-            auto error = make_syserror("initialize");
-            lua_pushstring(L, error.what());
+            lua_pushstring(L, make_syserror("initialize").what());
             return lua_error(L);
         }
         luaL_Reg lib[] = {

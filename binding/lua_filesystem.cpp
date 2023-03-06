@@ -49,26 +49,22 @@ namespace bee::lua_filesystem {
         lua_pushlstring(L, str.data(), str.size());
     }
 
-    template <typename ...Args>
-    [[noreturn]] static void lua_fmterror(lua_State* L, std::format_string<Args...> fmt, Args... args) {
-        lua_pushfmtstring(L, fmt, std::forward<Args>(args)...);
+    [[noreturn]] static void pusherror(lua_State* L, std::string_view op, std::error_code ec) {
+        lua_pushfmtstring(L, "{}: {}", op, ec.message());
         lua_error(L);
         std::unreachable();
     }
 
-    static int pusherror(lua_State* L, std::string_view op, std::error_code ec) {
-        lua_fmterror(L, "{}: {}", op, ec.message());
-        return 0;
+    [[noreturn]] static void pusherror(lua_State* L, std::string_view op, std::error_code ec, const fs::path& path1) {
+        lua_pushfmtstring(L, "{}: {}: \"{}\"", op, ec.message(), u8tostrview(path1.generic_u8string()));
+        lua_error(L);
+        std::unreachable();
     }
 
-    static int pusherror(lua_State* L, std::string_view op, std::error_code ec, const fs::path& path1) {
-        lua_fmterror(L, "{}: {}: \"{}\"", op, ec.message(), u8tostrview(path1.generic_u8string()));
-        return 0;
-    }
-
-    static int pusherror(lua_State* L, std::string_view op, std::error_code ec, const fs::path& path1, const fs::path& path2) {
-        lua_fmterror(L, "{}: {}: \"{}\", \"{}\"", op, ec.message(), u8tostrview(path1.generic_u8string()), u8tostrview(path2.generic_u8string()));
-        return 0;
+    [[noreturn]] static void pusherror(lua_State* L, std::string_view op, std::error_code ec, const fs::path& path1, const fs::path& path2) {
+        lua_pushfmtstring(L, "{}: {}: \"{}\", \"{}\"", op, ec.message(), u8tostrview(path1.generic_u8string()), u8tostrview(path2.generic_u8string()));
+        lua_error(L);
+        std::unreachable();
     }
 
     template <typename T>
@@ -503,7 +499,8 @@ namespace bee::lua_filesystem {
         std::error_code ec;
         bool r = fs::create_directory(p, ec);
         if (ec) {
-            return pusherror(L, "create_directory", ec, p); 
+            pusherror(L, "create_directory", ec, p);
+            return 0;
         }
         lua_pushboolean(L, r);
         return 1;
@@ -514,7 +511,8 @@ namespace bee::lua_filesystem {
         std::error_code ec;
         bool r = fs::create_directories(p, ec);
         if (ec) {
-            return pusherror(L, "create_directories", ec, p); 
+            pusherror(L, "create_directories", ec, p);
+            return 0;
         }
         lua_pushboolean(L, r);
         return 1;
@@ -526,7 +524,8 @@ namespace bee::lua_filesystem {
         std::error_code ec;
         fs::rename(from, to, ec);
         if (ec) {
-            return pusherror(L, "rename", ec, from, to); 
+            pusherror(L, "rename", ec, from, to);
+            return 0;
         }
         return 0;
     }
@@ -536,7 +535,8 @@ namespace bee::lua_filesystem {
         std::error_code ec;
         bool r = fs::remove(p, ec);
         if (ec) {
-            return pusherror(L, "remove", ec, p); 
+            pusherror(L, "remove", ec, p);
+            return 0;
         }
         lua_pushboolean(L, r);
         return 1;
@@ -547,7 +547,8 @@ namespace bee::lua_filesystem {
         std::error_code ec;
         uintmax_t r = fs::remove_all(p, ec);
         if (ec) {
-            return pusherror(L, "remove_all", ec, p); 
+            pusherror(L, "remove_all", ec, p);
+            return 0;
         }
         lua_pushinteger(L, static_cast<lua_Integer>(r));
         return 1;
@@ -558,7 +559,8 @@ namespace bee::lua_filesystem {
         if (lua_gettop(L) == 0) {
             fs::path r = fs::current_path(ec);
             if (ec) {
-                return pusherror(L, "current_path()", ec); 
+                pusherror(L, "current_path()", ec);
+            return 0;
             }
             path::push(L, r);
             return 1;
@@ -566,7 +568,8 @@ namespace bee::lua_filesystem {
         path_ptr p = getpathptr(L, 1);
         fs::current_path(p, ec);
         if (ec) {
-            return pusherror(L, "current_path(path)", ec, p); 
+            pusherror(L, "current_path(path)", ec, p);
+            return 0;
         }
         return 0;
     }
@@ -581,7 +584,8 @@ namespace bee::lua_filesystem {
         std::error_code ec;
         fs::copy(from, to, options, ec);
         if (ec) {
-            return pusherror(L, "copy", ec, from, to); 
+            pusherror(L, "copy", ec, from, to);
+            return 0;
         }
         return 0;
     }
@@ -628,7 +632,8 @@ namespace bee::lua_filesystem {
         bool ok = fs::copy_file(from, to, options, ec);
 #endif
         if (ec) {
-            return pusherror(L, "copy_file", ec, from, to); 
+            pusherror(L, "copy_file", ec, from, to);
+            return 0;
         }
         lua_pushboolean(L, ok);
         return 1;
@@ -639,7 +644,8 @@ namespace bee::lua_filesystem {
         std::error_code ec;
         fs::path r = fs::absolute(p, ec);
         if (ec) {
-            return pusherror(L, "absolute", ec, p); 
+            pusherror(L, "absolute", ec, p);
+            return 0;
         }
         path::push(L, r);
         return 1;
@@ -650,7 +656,8 @@ namespace bee::lua_filesystem {
         std::error_code ec;
         fs::path r = fs::canonical(p, ec);
         if (ec) {
-            return pusherror(L, "canonical", ec, p); 
+            pusherror(L, "canonical", ec, p);
+            return 0;
         }
         path::push(L, r);
         return 1;
@@ -662,7 +669,8 @@ namespace bee::lua_filesystem {
         if (lua_gettop(L) == 1) {
             fs::path r = fs::relative(p, ec);
             if (ec) {
-                return pusherror(L, "relative", ec, p); 
+                pusherror(L, "relative", ec, p);
+                return 0;
             }
             path::push(L, r);
             return 1;
@@ -670,7 +678,8 @@ namespace bee::lua_filesystem {
         path_ptr base = getpathptr(L, 2);
         fs::path r = fs::relative(p, base, ec);
         if (ec) {
-            return pusherror(L, "relative", ec, p, base); 
+            pusherror(L, "relative", ec, p, base);
+            return 0;
         }
         path::push(L, r);
         return 1;
@@ -690,7 +699,8 @@ namespace bee::lua_filesystem {
         if (lua_gettop(L) == 1) {
             auto time = fs::last_write_time(p, ec);
             if (ec) {
-                return pusherror(L, "last_write_time", ec, p); 
+                pusherror(L, "last_write_time", ec, p);
+                return 0;
             }
             auto system_time = clock_cast<system_clock>(time);
             lua_pushinteger(L, duration_cast<seconds>(system_time.time_since_epoch()).count());
@@ -699,7 +709,8 @@ namespace bee::lua_filesystem {
         auto file_time = clock_cast<fs::file_time_type::clock>(system_clock::time_point() + seconds(luaL_checkinteger(L, 2)));
         fs::last_write_time(p, file_time, ec);
         if (ec) {
-            return pusherror(L, "last_write_time", ec, p); 
+            pusherror(L, "last_write_time", ec, p);
+            return 0;
         }
         return 0;
     }
@@ -711,7 +722,8 @@ namespace bee::lua_filesystem {
         case 1: {
             auto status = fs::status(p, ec);
             if (!fs::status_known(status) || status.type() == fs::file_type::not_found) {
-                return pusherror(L, "status", ec, p); 
+                pusherror(L, "status", ec, p);
+                return 0;
             }
             lua_pushinteger(L, lua_Integer(status.permissions()));
             return 1;
@@ -720,7 +732,8 @@ namespace bee::lua_filesystem {
             auto perms = fs::perms::mask & lua::checkinteger<fs::perms>(L, 2, "perms");
             fs::permissions(p, perms, ec);
             if (ec) {
-                return pusherror(L, "permissions", ec, p); 
+                pusherror(L, "permissions", ec, p);
+                return 0;
             }
             return 0;
         }
@@ -729,7 +742,8 @@ namespace bee::lua_filesystem {
             auto options = lua::checkinteger<fs::perm_options>(L, 3, "options");
             fs::permissions(p, perms, options, ec);
             if (ec) {
-                return pusherror(L, "permissions", ec, p); 
+                pusherror(L, "permissions", ec, p);
+                return 0;
             }
             return 0;
         }
@@ -742,7 +756,8 @@ namespace bee::lua_filesystem {
         std::error_code ec;
         fs::create_symlink(target, link, ec);
         if (ec) {
-            return pusherror(L, "create_symlink", ec, target, link); 
+            pusherror(L, "create_symlink", ec, target, link);
+            return 0;
         }
         return 0;
     }
@@ -753,7 +768,8 @@ namespace bee::lua_filesystem {
         std::error_code ec;
         fs::create_directory_symlink(target, link, ec);
         if (ec) {
-            return pusherror(L, "create_directory_symlink", ec, target, link); 
+            pusherror(L, "create_directory_symlink", ec, target, link);
+            return 0;
         }
         return 0;
     }
@@ -764,7 +780,8 @@ namespace bee::lua_filesystem {
         std::error_code ec;
         fs::create_hard_link(target, link, ec);
         if (ec) {
-            return pusherror(L, "create_hard_link", ec, target, link); 
+            pusherror(L, "create_hard_link", ec, target, link);
+            return 0;
         }
         return 0;
     }
@@ -773,7 +790,8 @@ namespace bee::lua_filesystem {
         std::error_code ec;
         fs::path r = fs::temp_directory_path(ec);
         if (ec) {
-            return pusherror(L, "temp_directory_path", ec); 
+            pusherror(L, "temp_directory_path", ec);
+            return 0;
         }
         path::push(L, r);
         return 1;
@@ -792,7 +810,8 @@ namespace bee::lua_filesystem {
             std::error_code ec;
             iter.increment(ec);
             if (ec) {
-                return pusherror(L, "directory_iterator::operator++", ec); 
+                pusherror(L, "directory_iterator::operator++", ec);
+                return 0;
             }
             return 2;
         }
@@ -812,7 +831,8 @@ namespace bee::lua_filesystem {
             std::error_code ec;
             lua::newudata<T>(L, metatable, path, ec);
             if (ec) {
-                return pusherror(L, "directory_iterator::directory_iterator", ec, path); 
+                pusherror(L, "directory_iterator::directory_iterator", ec, path);
+                return 0;
             }
             lua_pushvalue(L, -1);
             lua_pushcclosure(L, next, 1);
