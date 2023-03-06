@@ -1,3 +1,7 @@
+#if defined(_WIN32) && !defined(_CRT_SECURE_NO_WARNINGS)
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -143,11 +147,61 @@ static void init_cpath(lua_State *L) {
     lua_pop(L, 1);
 }
 
+typedef struct LoadF {
+  int n;  /* number of pre-read characters */
+  FILE *f;  /* file being read */
+  char buff[BUFSIZ];  /* area for reading file */
+} LoadF;
+
+static const char *getF (lua_State *L, void *ud, size_t *size) {
+  LoadF *lf = (LoadF *)ud;
+  (void)L;  /* not used */
+  if (lf->n > 0) {  /* are there pre-read characters to be read? */
+    *size = lf->n;  /* return them (chars already in buffer) */
+    lf->n = 0;  /* no more pre-read characters */
+  }
+  else {  /* read a block from file */
+    /* 'fread' can return > 0 *and* set the EOF flag. If next call to
+       'getF' called 'fread', it might still wait for user input.
+       The next check avoids this problem. */
+    if (feof(lf->f)) return NULL;
+    *size = fread(lf->buff, 1, sizeof(lf->buff), lf->f);  /* read block */
+  }
+  return lf->buff;
+}
+
+static int errfile(lua_State *L, const char *what, int fnameindex) {
+  const char *serr = strerror(errno);
+  const char *filename = lua_tostring(L, fnameindex) + 1;
+  lua_pushfstring(L, "cannot %s %s: %s", what, filename, serr);
+  lua_remove(L, fnameindex);
+  return LUA_ERRFILE;
+}
+
+static int loadfile(lua_State *L, const char *filename, const char* chunkname) {
+  LoadF lf;
+  int status, readstatus;
+  int fnameindex = lua_gettop(L) + 1;  /* index of filename on the stack */
+  lua_pushstring(L, chunkname);
+  lf.f = fopen(filename, "r");
+  if (lf.f == NULL) return errfile(L, "open", fnameindex);
+  lf.n = 0;
+  status = lua_load(L, getF, &lf, lua_tostring(L, -1), "t");
+  readstatus = ferror(lf.f);
+  if (filename) fclose(lf.f);  /* close file (even in case of errors) */
+  if (readstatus) {
+    lua_settop(L, fnameindex);  /* ignore results from 'lua_load' */
+    return errfile(L, "read", fnameindex);
+  }
+  lua_remove(L, fnameindex);
+  return status;
+}
+
 static int handle_script (lua_State *L) {
   pushprogdir(L);
   lua_pushstring(L, "main.lua");
   lua_concat(L, 2);
-  int status = luaL_loadfile(L, lua_tostring(L, -1));
+  int status = loadfile(L, lua_tostring(L, -1), "=(bootstrap.lua)");
   if (status == LUA_OK) {
     int n = pushargs(L);  /* push arguments to script */
     status = docall(L, n, LUA_MULTRET);
