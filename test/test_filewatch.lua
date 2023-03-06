@@ -1,9 +1,22 @@
 local lt = require 'ltest'
 local filewatch = require 'bee.filewatch'
 local fs = require 'bee.filesystem'
+local platform = require 'bee.platform'
 local thread = require 'bee.thread'
 
 local test_fw = lt.test "filewatch"
+
+local isWindows = platform.os == 'windows'
+
+local function supportedSymlink()
+    if not isWindows then
+        return true
+    end
+    -- see https://blogs.windows.com/windowsdeveloper/2016/12/02/symlinks-windows-10/
+    local ok = pcall(fs.create_symlink, "temp.txt", "temp.link")
+    fs.remove_all "temp.link"
+    return ok
+end
 
 local function create_file(filename, content)
     fs.remove(filename)
@@ -19,7 +32,7 @@ local function test(f)
     fs.create_directories(root)
     local fw = filewatch.create()
     fw:set_recursive(true)
-    fw:set_follow_symlinks(false)
+    fw:set_follow_symlinks(true)
     fw:set_filter(function ()
         return true
     end)
@@ -75,19 +88,16 @@ end
 
 -- test unexist symlink link to self
 function test_fw:test_link_self_symlink()
-    test(function(fw, root)
+    test(function(_, root)
+        if not supportedSymlink() then
+            return
+        end
+
         local test_root = root / 'test_symlink'
         local err = fs.create_directories(test_root)
         lt.assertEquals(err, true)
 
-        pcall(fs.remove_all, test_root/'*')
-
         fs.create_symlink(test_root / 'test1', test_root/'test1')
-
-        local fw = filewatch.create()
-        fw:set_recursive(true)
-        fw:set_follow_symlinks(true)
-        fw:add(test_root:string())
 
         pcall(fs.remove_all, root)
     end)
@@ -95,19 +105,16 @@ end
 
 -- test directory symlink link to parent
 function test_fw:test_directory_symlink_link_to_parent()
-    test(function(fw, root)
+    test(function(_, root)
+        if not supportedSymlink() then
+            return
+        end
+
         local test_root = root / 'test_symlink'
         local err = fs.create_directories(test_root)
         lt.assertEquals(err, true)
 
-        pcall(fs.remove_all, test_root/'*')
-
         fs.create_symlink(test_root, test_root/'child')
-
-        local fw = filewatch.create()
-        fw:set_recursive(true)
-        fw:set_follow_symlinks(true)
-        fw:add(test_root:string())
 
         pcall(fs.remove_all, root)
     end)
