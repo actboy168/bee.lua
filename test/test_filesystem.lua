@@ -2,10 +2,10 @@ local platform = require 'bee.platform'
 local fs = require 'bee.filesystem'
 local lt = require 'ltest'
 local shell = require 'shell'
+local supported = require 'supported'
 
 local isWindows = platform.os == 'windows'
 local isMinGW   = isWindows and platform.CRT == 'libstdc++'
-local isAndroid = platform.os == 'android'
 local isMacOS   = platform.os ~= "macos"
 
 local C
@@ -16,20 +16,6 @@ if isWindows then
 else
     C = '/mnt/c/'
     D = '/mnt/d/'
-end
-
-local function supportedSymlink()
-    if not isWindows then
-        return true
-    end
-    -- see https://blogs.windows.com/windowsdeveloper/2016/12/02/symlinks-windows-10/
-    local ok = pcall(fs.create_symlink, "temp.txt", "temp.link")
-    fs.remove_all "temp.link"
-    return ok
-end
-
-local function supportedHardlink()
-    return not isAndroid
 end
 
 local function create_file(filename, content)
@@ -855,7 +841,7 @@ function test_fs:test_status()
 end
 
 function test_fs:test_symlink()
-    if not supportedSymlink() then
+    if not supported "symlink" then
         return
     end
     local function test_create(createf, target, link)
@@ -906,7 +892,7 @@ function test_fs:test_symlink()
 end
 
 function test_fs:test_hard_link()
-    if not supportedHardlink() then
+    if not supported "hardlink" then
         return
     end
     local function test_create(createf, target, link)

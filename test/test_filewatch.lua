@@ -1,22 +1,10 @@
 local lt = require 'ltest'
 local filewatch = require 'bee.filewatch'
 local fs = require 'bee.filesystem'
-local platform = require 'bee.platform'
 local thread = require 'bee.thread'
+local supported = require 'supported'
 
 local test_fw = lt.test "filewatch"
-
-local isWindows = platform.os == 'windows'
-
-local function supportedSymlink()
-    if not isWindows then
-        return true
-    end
-    -- see https://blogs.windows.com/windowsdeveloper/2016/12/02/symlinks-windows-10/
-    local ok = pcall(fs.create_symlink, "temp.txt", "temp.link")
-    fs.remove_all "temp.link"
-    return ok
-end
 
 local function create_file(filename, content)
     fs.remove(filename)
@@ -89,7 +77,7 @@ end
 -- test unexist symlink link to self
 -- test directory symlink link to parent
 function test_fw:test_symlink()
-    if not supportedSymlink() then
+    if not supported "symlink" then
         return
     end
 
