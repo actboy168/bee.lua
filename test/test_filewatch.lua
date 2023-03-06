@@ -87,35 +87,21 @@ function test_fw:test_2()
 end
 
 -- test unexist symlink link to self
-function test_fw:test_link_self_symlink()
-    test(function(_, root)
-        if not supportedSymlink() then
-            return
-        end
-
-        local test_root = root / 'test_symlink'
-        local err = fs.create_directories(test_root)
-        lt.assertEquals(err, true)
-
-        fs.create_symlink(test_root / 'test1', test_root/'test1')
-
-        pcall(fs.remove_all, root)
-    end)
-end
-
 -- test directory symlink link to parent
-function test_fw:test_directory_symlink_link_to_parent()
-    test(function(_, root)
-        if not supportedSymlink() then
-            return
-        end
+function test_fw:test_symlink()
+    if not supportedSymlink() then
+        return
+    end
 
-        local test_root = root / 'test_symlink'
-        local err = fs.create_directories(test_root)
-        lt.assertEquals(err, true)
+    local root = fs.absolute('./temp/'):lexically_normal()
+    pcall(fs.remove_all, root)
+    fs.create_directories(root)
+    fs.create_symlink(root / 'test1', root/'test1')
+    fs.create_symlink(root, root/'child')
 
-        fs.create_symlink(test_root, test_root/'child')
-
-        pcall(fs.remove_all, root)
-    end)
+    local fw = filewatch.create()
+    fw:set_recursive(true)
+    fw:set_follow_symlinks(true)
+    fw:add(root:string())
+    pcall(fs.remove_all, root)
 end
