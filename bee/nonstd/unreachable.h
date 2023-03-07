@@ -4,9 +4,11 @@
 #include <utility>
 #else
 
-#include <cstdlib>
+#if !defined(NDEBUG)
+    #include <cstdlib>
+#endif
 
-namespace bee {
+namespace std {
 [[noreturn]] inline void unreachable() noexcept {
 #if defined(_MSC_VER)
     __assume(false);
@@ -17,10 +19,6 @@ namespace bee {
     std::abort();
 #endif
 }
-}
-
-namespace std {
-    using bee::unreachable;
 }
 
 #endif
