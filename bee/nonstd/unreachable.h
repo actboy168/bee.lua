@@ -9,7 +9,11 @@
 #endif
 
 namespace std {
-[[noreturn]] inline void unreachable() noexcept {
+[[noreturn]] inline
+#if defined(_MSC_VER)
+    __forceinline
+#endif
+void unreachable() noexcept {
 #if defined(_MSC_VER)
     __assume(false);
 #else
