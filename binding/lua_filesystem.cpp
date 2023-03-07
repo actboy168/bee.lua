@@ -871,7 +871,7 @@ namespace bee::lua_filesystem {
         auto r = path_helper::dll_path();
         if (!r) {
             lua_pushnil(L);
-            lua_pushstring(L,  r.error().c_str());
+            lua_pushstring(L, r.error().c_str());
             return 2;
         }
         path::push(L, r.value());

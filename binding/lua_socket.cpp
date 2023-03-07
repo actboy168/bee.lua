@@ -89,7 +89,7 @@ namespace bee::lua_socket {
         auto fd = checkfd(L, 1);
         auto buf = lua::checkstrview(L, 2);
         int rc;
-        switch (socket::send(fd, rc, (const char*)buf.data(), (int)buf.size())) {
+        switch (socket::send(fd, rc, buf.data(), (int)buf.size())) {
         case socket::status::wait:
             lua_pushboolean(L, 0);
             return 1;
