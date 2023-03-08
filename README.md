@@ -21,6 +21,7 @@ Lua runtime and toolset
 
 ## 3rd Party Libraries
 
+* [lua/lua](https://github.com/lua/lua) Lua.
 * [cloudwu/lua-seri](https://github.com/cloudwu/ltask/blob/master/src/lua-seri.c) Lua serialize.
 * [fmtlib/fmt](https://github.com/fmtlib/fmt) Compatible with `std::format`(c++20) and `std::print`(c++23).
 * [gulrak/filesystem](https://github.com/gulrak/filesystem) Compatible with `std::filesystem`(c++17).
