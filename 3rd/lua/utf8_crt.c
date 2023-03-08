@@ -223,32 +223,31 @@ static void ConsoleWrite(FILE* stream, const char* s, int l) {
 		fwrite(s, sizeof(char), l, stream);
 		return;
 	}
-	wchar_t* wmsg = NULL;
 	int wsz = MultiByteToWideChar(CP_UTF8, 0, s, l, NULL, 0);
-	if (wsz) {
-		wmsg = (wchar_t*)calloc(wsz, sizeof(wchar_t));
-		if (!wmsg) {
-			return;
-		}
-		wsz = MultiByteToWideChar(CP_UTF8, 0, s, l, wmsg, wsz);
-		if (wsz < 0) {
+	if (wsz > 0) {
+		wchar_t* wmsg = (wchar_t*)calloc(wsz, sizeof(wchar_t));
+		if (wmsg) {
+			wsz = MultiByteToWideChar(CP_UTF8, 0, s, l, wmsg, wsz);
+			if (wsz > 0) {
+				int sz = WideCharToMultiByte(cp, 0, wmsg, wsz, NULL, 0, NULL, NULL);
+				if (sz > 0) {
+					char* msg = (char*)calloc(sz, sizeof(char));
+					if (msg) {
+						sz = WideCharToMultiByte(cp, 0, wmsg, wsz, msg, sz, NULL, NULL);
+						if (sz > 0) {
+							fwrite(msg, sizeof(char), sz, stream);
+							free(msg);
+							free(wmsg);
+							return;
+						}
+						free(msg);
+					}
+				}
+			}
 			free(wmsg);
-			return;
 		}
 	}
-	char* msg = NULL;
-	int sz = WideCharToMultiByte(cp, 0, wmsg, wsz, NULL, 0, NULL, NULL);
-	if (sz) {
-		msg = (char*)calloc(sz, sizeof(char));
-		if (!msg) {
-			free(wmsg);
-			return;
-		}
-		sz = WideCharToMultiByte(cp, 0, wmsg, wsz, msg, sz, NULL, NULL);
-	}
-	fwrite(msg, sizeof(char), sz, stream);
-	free(msg);
-	free(wmsg);
+	fwrite(s, sizeof(char), l, stream);
 }
 
 void utf8_ConsoleWrite(const char* s, int l) {
