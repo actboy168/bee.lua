@@ -11,7 +11,6 @@ lm:lua_source "source_bee" {
 lm:source_set "source_bee" {
     sources = {
         "bee/nonstd/3rd/format.cc",
-        "bee/nonstd/3rd/os.cc",
     }
 }
 
