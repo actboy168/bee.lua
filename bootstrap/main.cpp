@@ -280,6 +280,9 @@ void enable_vtmode() {
 int wmain(int argc, wchar_t **wargv) {
     enable_vtmode();
     char **argv = (char **)calloc(argc + 1, sizeof(char*));
+    if (!argv) {
+        return EXIT_FAILURE;
+    }
     for (int i = 0; i < argc; ++i) {
         argv[i] = w2u(wargv[i]);
     }

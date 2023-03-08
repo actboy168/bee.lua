@@ -405,16 +405,20 @@ namespace bee::lua_subprocess {
 #if defined(_WIN32)
     static int filemode(lua_State* L) {
         luaL_Stream* p = spawn::get_file(L, 1);
-        const char*  mode = luaL_checkstring(L, 2);
+        const char* mode = luaL_checkstring(L, 2);
         if (p && p->closef && p->f) {
-            if (mode[0] == 'b') {
-                _setmode(_fileno(p->f), _O_BINARY);
+            int ok = _setmode(_fileno(p->f), mode[0] == 'b'? _O_BINARY: _O_TEXT);
+            if (ok == -1) {
+                lua_pushnil(L);
+                lua_pushstring(L, make_crterror("_setmode").what());
+                return 2;
             }
-            else {
-                _setmode(_fileno(p->f), _O_TEXT);
-            }
+            lua_pushboolean(L, 1);
+            return 1;
         }
-        return 0;
+        lua_pushnil(L);
+        lua_pushstring(L, std::system_error(std::make_error_code(std::errc::bad_file_descriptor), "_setmode").what());
+        return 2;
     }
 #else
     static int filemode(lua_State*) { return 0; }
@@ -425,11 +429,24 @@ namespace bee::lua_subprocess {
         const char* value = luaL_checkstring(L, 2);
 #if defined(_WIN32)
         lua_pushfstring(L, "%s=%s", name, value);
-        ::_putenv(lua_tostring(L, -1));
+        int ok = ::_putenv(lua_tostring(L, -1));
+        if (ok == -1) {
+            lua_pushnil(L);
+            lua_pushstring(L, make_crterror("_putenv").what());
+            return 2;
+        }
+        lua_pushboolean(L, 1);
+        return 1;
 #else
-        ::setenv(name, value, 1);
+        int ok = ::setenv(name, value, 1);
+        if (ok == -1) {
+            lua_pushnil(L);
+            lua_pushstring(L, make_crterror("setenv").what());
+            return 2;
+        }
+        lua_pushboolean(L, 1);
+        return 1;
 #endif
-        return 0;
     }
 
     static int get_id(lua_State* L) {

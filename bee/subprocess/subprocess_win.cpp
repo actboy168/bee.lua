@@ -255,7 +255,9 @@ namespace bee::subprocess {
 
     static bool hide_taskbar(HWND w) {
         ITaskbarList* taskbar;
-        ::CoInitializeEx(NULL, COINIT_MULTITHREADED);
+        if (!SUCCEEDED(::CoInitializeEx(NULL, COINIT_MULTITHREADED))) {
+            return false;
+        }
         if (SUCCEEDED(CoCreateInstance(CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, IID_ITaskbarList, (void**)&taskbar))) {
             taskbar->HrInit();
             taskbar->DeleteTab(w);

@@ -18,6 +18,9 @@ namespace bee {
 
     thread_handle thread_create(thread_func func, void* ud) {
         struct simplethread* thread = (struct simplethread*)malloc(sizeof(*thread));
+        if (!thread) {
+            return 0;
+        }
         thread->func = func;
         thread->ud = ud;
         pthread_t id;

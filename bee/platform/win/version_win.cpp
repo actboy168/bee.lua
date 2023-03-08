@@ -163,7 +163,7 @@ namespace bee::win {
 		OSVERSIONINFOW osvi = {  };
 		osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
 #if defined(_MSC_VER)
-#pragma warning(suppress:4996)
+#pragma warning(suppress:4996; suppress:28159)
 		::GetVersionExW(&osvi);
 #else
 		::GetVersionExW(&osvi);
