@@ -54,8 +54,9 @@ namespace bee::lua_thread {
             if (!sem.try_acquire_for(timeout)) {
                 return false;
             }
+            auto time = now + std::chrono::duration_cast<std::chrono::steady_clock::duration>(timeout);
             while (!pop(data)) {
-                if (!sem.try_acquire_until(now + timeout)) {
+                if (!sem.try_acquire_until(time)) {
                     return false;
                 }
             }
