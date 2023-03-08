@@ -29,12 +29,15 @@
 #  if FMT_HAS_INCLUDE(<variant>)
 #    include <variant>
 #  endif
+#  if FMT_HAS_INCLUDE(<optional>)
+#    include <optional>
+#  endif
 #endif
 
 // GCC 4 does not support FMT_HAS_INCLUDE.
 #if FMT_HAS_INCLUDE(<cxxabi.h>) || defined(__GLIBCXX__)
 #  include <cxxabi.h>
-// Android NDK with gabi++ library on some archtectures does not implement
+// Android NDK with gabi++ library on some architectures does not implement
 // abi::__cxa_demangle().
 #  ifndef __GABIXX_CXXABI_H__
 #    define FMT_HAS_ABI_CXA_DEMANGLE
@@ -74,6 +77,11 @@ inline void write_escaped_path<std::filesystem::path::value_type>(
 template <typename Char>
 struct formatter<std::filesystem::path, Char>
     : formatter<basic_string_view<Char>> {
+  template <typename ParseContext> FMT_CONSTEXPR auto parse(ParseContext& ctx) {
+    auto out = formatter<basic_string_view<Char>>::parse(ctx);
+    this->set_debug_format(false);
+    return out;
+  }
   template <typename FormatContext>
   auto format(const std::filesystem::path& p, FormatContext& ctx) const ->
       typename FormatContext::iterator {
@@ -90,6 +98,49 @@ FMT_BEGIN_NAMESPACE
 template <typename Char>
 struct formatter<std::thread::id, Char> : basic_ostream_formatter<Char> {};
 FMT_END_NAMESPACE
+
+#ifdef __cpp_lib_optional
+FMT_BEGIN_NAMESPACE
+template <typename T, typename Char>
+struct formatter<std::optional<T>, Char,
+                 std::enable_if_t<is_formattable<T, Char>::value>> {
+ private:
+  formatter<T, Char> underlying_;
+  static constexpr basic_string_view<Char> optional =
+      detail::string_literal<Char, 'o', 'p', 't', 'i', 'o', 'n', 'a', 'l',
+                             '('>{};
+  static constexpr basic_string_view<Char> none =
+      detail::string_literal<Char, 'n', 'o', 'n', 'e'>{};
+
+  template <class U>
+  FMT_CONSTEXPR static auto maybe_set_debug_format(U& u, bool set)
+      -> decltype(u.set_debug_format(set)) {
+    u.set_debug_format(set);
+  }
+
+  template <class U>
+  FMT_CONSTEXPR static void maybe_set_debug_format(U&, ...) {}
+
+ public:
+  template <typename ParseContext> FMT_CONSTEXPR auto parse(ParseContext& ctx) {
+    maybe_set_debug_format(underlying_, true);
+    return underlying_.parse(ctx);
+  }
+
+  template <typename FormatContext>
+  auto format(std::optional<T> const& opt, FormatContext& ctx) const
+      -> decltype(ctx.out()) {
+    if (!opt) return detail::write<Char>(ctx.out(), none);
+
+    auto out = ctx.out();
+    out = detail::write<Char>(out, optional);
+    ctx.advance_to(out);
+    out = underlying_.format(*opt, ctx);
+    return detail::write(out, ')');
+  }
+};
+FMT_END_NAMESPACE
+#endif  // __cpp_lib_optional
 
 #ifdef __cpp_lib_variant
 FMT_BEGIN_NAMESPACE

@@ -485,7 +485,7 @@ inline auto bit_cast(const From& from) -> To {
   return result;
 }
 
-template <class UInt>
+template <typename UInt>
 FMT_CONSTEXPR20 inline auto countl_zero_fallback(UInt n) -> int {
   int lz = 0;
   constexpr UInt msb_mask = static_cast<UInt>(1) << (num_bits<UInt>() - 1);
@@ -2631,7 +2631,7 @@ FMT_CONSTEXPR20 auto do_write_float(OutputIt out, const DecimalFP& f,
     abort_fuzzing_if(num_zeros > 5000);
     if (fspecs.showpoint) {
       ++size;
-      if (num_zeros <= 0 && fspecs.format != float_format::fixed) num_zeros = 1;
+      if (num_zeros <= 0 && fspecs.format != float_format::fixed) num_zeros = 0;
       if (num_zeros > 0) size += to_unsigned(num_zeros);
     }
     auto grouping = Grouping(loc, fspecs.locale);
