@@ -308,7 +308,7 @@
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 // ghc::filesystem version in decimal (major * 10000 + minor * 100 + patch)
-#define GHC_FILESYSTEM_VERSION 10513L
+#define GHC_FILESYSTEM_VERSION 10514L
 
 #if !defined(GHC_WITH_EXCEPTIONS) && (defined(__EXCEPTIONS) || defined(__cpp_exceptions) || defined(_CPPUNWIND))
 #define GHC_WITH_EXCEPTIONS
@@ -1957,10 +1957,15 @@ GHC_INLINE void create_symlink(const path& target_name, const path& new_symlink,
 #if defined(__GNUC__) && __GNUC__ >= 8
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-function-type"
+#elif defined(_MSC_VER) && !defined(__INTEL_COMPILER) && !defined(__clang__)
+#pragma warning(push)
+#pragma warning(disable : 4191)
 #endif
     static CreateSymbolicLinkW_fp api_call = reinterpret_cast<CreateSymbolicLinkW_fp>(GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "CreateSymbolicLinkW"));
 #if defined(__GNUC__) && __GNUC__ >= 8
 #pragma GCC diagnostic pop
+#elif defined(_MSC_VER) && !defined(__INTEL_COMPILER) && !defined(__clang__)
+#pragma warning(pop)
 #endif
     if (api_call) {
         if (api_call(GHC_NATIVEWP(new_symlink), GHC_NATIVEWP(target_name), to_directory ? 1 : 0) == 0) {
@@ -1981,10 +1986,15 @@ GHC_INLINE void create_hardlink(const path& target_name, const path& new_hardlin
 #if defined(__GNUC__) && __GNUC__ >= 8
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-function-type"
+#elif defined(_MSC_VER) && !defined(__INTEL_COMPILER) && !defined(__clang__)
+#pragma warning(push)
+#pragma warning(disable : 4191)
 #endif
     static CreateHardLinkW_fp api_call = reinterpret_cast<CreateHardLinkW_fp>(GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "CreateHardLinkW"));
 #if defined(__GNUC__) && __GNUC__ >= 8
 #pragma GCC diagnostic pop
+#elif defined(_MSC_VER) && !defined(__INTEL_COMPILER) && !defined(__clang__)
+#pragma warning(pop)
 #endif
     if (api_call) {
         if (api_call(GHC_NATIVEWP(new_hardlink), GHC_NATIVEWP(target_name), NULL) == 0) {
@@ -3976,14 +3986,24 @@ GHC_INLINE bool copy_file(const path& from, const path& to, copy_options options
         }
     }
     ssize_t br, bw;
-    while ((br = ::read(in, buffer.data(), buffer.size())) > 0) {
+    while (true) {
+        do { br = ::read(in, buffer.data(), buffer.size()); } while(errno == EINTR);
+        if(!br) {
+            break;
+        }
+        if(br < 0) {
+            ec = detail::make_system_error();
+            ::close(in);
+            ::close(out);
+            return false;
+        }
         ssize_t offset = 0;
         do {
             if ((bw = ::write(out, buffer.data() + offset, static_cast<size_t>(br))) > 0) {
                 br -= bw;
                 offset += bw;
             }
-            else if (bw < 0) {
+            else if (bw < 0 && errno != EINTR) {
                 ec = detail::make_system_error();
                 ::close(in);
                 ::close(out);
@@ -5273,7 +5293,7 @@ GHC_INLINE void directory_entry::refresh()
 {
     std::error_code ec;
     refresh(ec);
-    if (ec) {
+    if (ec && (_status.type() == file_type::none || _symlink_status.type() != file_type::symlink)) {
         throw filesystem_error(detail::systemErrorText(ec.value()), _path, ec);
     }
 }
@@ -5684,7 +5704,7 @@ public:
         , _entry(nullptr)
     {
         if (!path.empty()) {
-            _dir = ::opendir(path.native().c_str());
+            do { _dir = ::opendir(path.native().c_str()); } while(errno == EINTR);
             if (!_dir) {
                 auto error = errno;
                 _base = filesystem::path();
@@ -5711,7 +5731,7 @@ public:
             do {
                 skip = false;
                 errno = 0;
-                _entry = ::readdir(_dir);
+                do { _entry = ::readdir(_dir); } while(errno == EINTR);
                 if (_entry) {
                     _dir_entry._path = _base;
                     _dir_entry._path.append_name(_entry->d_name);
@@ -5725,7 +5745,7 @@ public:
                     ::closedir(_dir);
                     _dir = nullptr;
                     _dir_entry._path.clear();
-                    if (errno) {
+                    if (errno && errno != EINTR) {
                         ec = detail::make_system_error();
                     }
                     break;
