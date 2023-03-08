@@ -18,3 +18,10 @@ Lua runtime and toolset
 * Remove randomness when traversing the table
 * Add error hook (for debugger)
 * Add resume/yield hook (for debugger)
+
+## 3rd Party Libraries
+
+* [cloudwu/lua-seri](https://github.com/cloudwu/ltask/blob/master/src/lua-seri.c) Lua serialize.
+* [fmtlib/fmt](https://github.com/fmtlib/fmt) Compatible with `std::format`(c++20) and `std::print`(c++23).
+* [gulrak/filesystem](https://github.com/gulrak/filesystem) Compatible with `std::filesystem`(c++17).
+* [actboy168/ltest](https://github.com/actboy168/ltest) Test framework.
