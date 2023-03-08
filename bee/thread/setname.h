@@ -2,7 +2,7 @@
 
 #if defined(_WIN32)
 #   include <windows.h>
-#   include <malloc.h>
+#   include <bee/platform/win/unicode.h>
 #else
 #   include <pthread.h>
 #   if defined(__linux__)
@@ -18,17 +18,8 @@
 
 namespace bee {
 
-inline void thread_setname(const char* name) {
-#if defined(_WIN32)
-	using SetThreadDescriptionProc = HRESULT (WINAPI *)(HANDLE, PCWSTR);
-	SetThreadDescriptionProc SetThreadDescription = (SetThreadDescriptionProc)GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "SetThreadDescription");
-	if (SetThreadDescription) {
-		size_t size = (strlen(name)+1) * sizeof(wchar_t);
-		wchar_t* wname = (wchar_t*)_alloca(size);
-		mbstowcs(wname, name, size-2);
-		SetThreadDescription(GetCurrentThread(), wname);
-	}
 #if defined(_MSC_VER)
+inline void thread_setname_internal(const char* name) {
 	const DWORD MS_VC_EXCEPTION = 0x406D1388;
 #pragma pack(push, 8)
 	struct ThreadNameInfo {
@@ -45,7 +36,25 @@ inline void thread_setname(const char* name) {
 	info.flags = 0;
 	__try {
 		RaiseException(MS_VC_EXCEPTION, 0, sizeof(info)/sizeof(ULONG_PTR), (ULONG_PTR*)&info);
-	} __except(EXCEPTION_EXECUTE_HANDLER) {}
+	} __except(GetExceptionCode() == MS_VC_EXCEPTION) {
+		(void)NULL;
+	}
+}
+#endif
+
+inline void thread_setname(const char* name) {
+#if defined(_WIN32)
+	using SetThreadDescriptionProc = HRESULT (WINAPI *)(HANDLE, PCWSTR);
+	if (HMODULE kernel32 = GetModuleHandleW(L"kernel32.dll")) {
+		if (SetThreadDescriptionProc SetThreadDescription = (SetThreadDescriptionProc)GetProcAddress(kernel32, "SetThreadDescription")) {
+			SetThreadDescription(GetCurrentThread(), win::u2w(name).c_str());
+		}
+	}
+#if defined(_MSC_VER)
+	if (!IsDebuggerPresent()) {
+		return;
+	}
+	thread_setname_internal(name);
 #endif
 
 #elif defined(__APPLE__)
