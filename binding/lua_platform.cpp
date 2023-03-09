@@ -1,11 +1,11 @@
 #include <binding/binding.h>
+#include <bee/platform/version.h>
 
 #define BEE_STRINGIZE(_x) BEE_STRINGIZE_(_x)
 #define BEE_STRINGIZE_(_x) #_x
 
 #if defined(_WIN32)
 #	include <Windows.h>
-#	include <bee/platform/win/version.h>
 #elif defined(__ANDROID__)
 #	include <sys/cdefs.h>
 #endif
@@ -148,8 +148,7 @@ namespace bee::lua_platform {
 #endif
 		lua_setfield(L, -2, "DEBUG");
 
-#if defined(_WIN32)
-		auto version = bee::win::get_version();
+		auto version = bee::os_version();
 		lua_createtable(L, 0, 4);
 		lua_pushinteger(L, version.major);
 		lua_setfield(L, -2, "major");
@@ -157,10 +156,7 @@ namespace bee::lua_platform {
 		lua_setfield(L, -2, "minor");
 		lua_pushinteger(L, version.revision);
 		lua_setfield(L, -2, "revision");
-		lua_pushinteger(L, version.build);
-		lua_setfield(L, -2, "build");
 		lua_setfield(L, -2, "os_version");
-#endif
 		return 1;
 	}
 }

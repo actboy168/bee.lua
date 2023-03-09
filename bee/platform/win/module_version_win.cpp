@@ -1,7 +1,6 @@
-#include <bee/platform/win/version.h>
+#include <bee/platform/win/module_version.h>
 #include <bee/nonstd/format.h>
 #include <vector>
-#include <charconv>
 #include <memory>
 #include <Windows.h>
 
@@ -113,74 +112,8 @@ namespace bee::win {
 		return (!!::VerQueryValueW(version_info_.get(), (LPWSTR)(LPCWSTR)query.c_str(), (LPVOID*)value_ptr, &size));
 	}
 
-	template <typename ResultT, typename StrT>
-	static void split(ResultT& Result, StrT& input, typename StrT::value_type c) {
-		for (size_t pos = 0;;) {
-			size_t next = input.find(c, pos);
-			if (next != StrT::npos) {
-				Result.push_back(input.substr(pos, next - pos));
-				pos = next + 1;
-			}
-			else {
-				Result.push_back(input.substr(pos));
-				break;
-			}
-		}
-	}
-
-	static unsigned int toint(std::wstring_view const& wstr, unsigned int def = 0) {
-		std::string str;
-		str.resize(wstr.size());
-		for (size_t i = 0; i < wstr.size(); ++i) {
-			if (wstr[i] > 127) {
-				return def;
-			}
-			str[i] = (char)wstr[i];
-		}
-		unsigned int res;
-		auto first = str.data();
-		auto last = str.data() + str.size();
-		if (auto[p, ec] = std::from_chars(first, last, res); ec != std::errc() || p != last) {
-			return def;
-		}
-		return res;
-	}
-
-	static version get_module_version(const wchar_t* module_path, const wchar_t* key, const wchar_t pred) {
-		std::vector<std::wstring_view> vers;
+	std::wstring get_module_version(const wchar_t* module_path, const wchar_t* key) {
 		module_version_info info(module_path);
-		std::wstring_view verstr = info[key];
-		split(vers, verstr, pred);
-		return {
-			(vers.size() > 0) ? toint(vers[0]) : 0,
-			(vers.size() > 1) ? toint(vers[1]) : 0,
-			(vers.size() > 2) ? toint(vers[2]) : 0,
-			(vers.size() > 3) ? toint(vers[3]) : 0,
-		};
-	}
-
-	version get_version() {
-		OSVERSIONINFOW osvi = {  };
-		osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
-#if defined(_MSC_VER)
-#pragma warning(suppress:4996; suppress:28159)
-		::GetVersionExW(&osvi);
-#else
-		::GetVersionExW(&osvi);
-#endif
-
-		version v {
-			osvi.dwMajorVersion,
-			osvi.dwMinorVersion,
-			osvi.dwBuildNumber,
-			0
-		};
-		if ((v.major > 6) || (v.major == 6 && v.minor >= 2)) {
-			// see
-			//   http://msdn.microsoft.com/en-us/library/windows/desktop/ms724451(v=vs.85).aspx
-			//   http://msdn.microsoft.com/en-us/library/windows/desktop/ms724429(v=vs.85).aspx
-			return get_module_version(L"kernel32.dll", L"ProductVersion", L'.');
-		}
-		return v;
+		return info[key];
 	}
 }
