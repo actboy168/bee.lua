@@ -25,7 +25,7 @@ constexpr To bit_cast(const From& v) noexcept {
 #else
 #include <type_traits>
 #include <memory>
-#include <cmemory>
+#include <cstring>
 namespace std {
 template <typename To, typename From, typename = std::enable_if_t<
     sizeof(To) == sizeof(From)

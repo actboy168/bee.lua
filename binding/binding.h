@@ -35,6 +35,25 @@ namespace bee::lua {
 #endif
     }
 
+    template <typename T, typename I>
+    constexpr bool checklimit(I i) {
+        static_assert(std::is_integral_v<I>);
+        static_assert(std::is_integral_v<T>);
+        static_assert(sizeof(I) >= sizeof(T));
+        if constexpr (sizeof(I) == sizeof(T)) {
+            return true;
+        }
+        else if constexpr (std::numeric_limits<I>::is_signed == std::numeric_limits<T>::is_signed) {
+            return i >= std::numeric_limits<T>::lowest() && i <= (std::numeric_limits<T>::max)();
+        }
+        else if constexpr (std::numeric_limits<I>::is_signed) {
+            return static_cast<std::make_unsigned_t<I>>(i) >= std::numeric_limits<T>::lowest() && static_cast<std::make_unsigned_t<I>>(i) <= (std::numeric_limits<T>::max)();
+        }
+        else {
+            return static_cast<std::make_signed_t<I>>(i) >= std::numeric_limits<T>::lowest() && static_cast<std::make_signed_t<I>>(i) <= (std::numeric_limits<T>::max)();
+        }
+    }
+
     template <typename T>
     T checkinteger(lua_State* L, int arg, const char* symbol) {
         static_assert(std::is_trivial_v<T>);
@@ -46,9 +65,10 @@ namespace bee::lua {
             return std::bit_cast<T>(luaL_checkinteger(L, arg));
         }
         else {
-            static_assert(std::is_integral_v<T> && sizeof(T) < sizeof(lua_Integer));
+            static_assert(std::is_integral_v<T>);
+            static_assert(sizeof(T) < sizeof(lua_Integer));
             lua_Integer r = luaL_checkinteger(L, arg);
-            if (r >= std::numeric_limits<T>::lowest() && r <= (std::numeric_limits<T>::max)()) {
+            if (checklimit<T>(r)) {
                 return static_cast<T>(r);
             }
             luaL_error(L, "bad argument '%s' limit exceeded", symbol);
@@ -66,9 +86,10 @@ namespace bee::lua {
             return std::bit_cast<T>(luaL_optinteger(L, arg, std::bit_cast<lua_Integer>(def)));
         }
         else {
-            static_assert(std::is_integral_v<T> && sizeof(T) < sizeof(lua_Integer));
+            static_assert(std::is_integral_v<T>);
+            static_assert(sizeof(T) < sizeof(lua_Integer));
             lua_Integer r = luaL_optinteger(L, arg, static_cast<lua_Integer>(def));
-            if (r >= std::numeric_limits<T>::lowest() && r <= (std::numeric_limits<T>::max)()) {
+            if (checklimit<T>(r)) {
                 return static_cast<T>(r);
             }
             luaL_error(L, "bad argument '%s' limit exceeded", symbol);
@@ -78,7 +99,22 @@ namespace bee::lua {
 
     template <typename T>
     T tolightud(lua_State* L, int arg) {
-        return std::bit_cast<T>(lua_touserdata(L, arg));
+        if constexpr (std::is_integral_v<T>) {
+            uintptr_t r = std::bit_cast<uintptr_t>(lua_touserdata(L, arg));
+            if constexpr (sizeof(T) == sizeof(uintptr_t)) {
+                return static_cast<T>(r);
+            }
+            else {
+                if (checklimit<T>(r)) {
+                    return static_cast<T>(r);
+                }
+                luaL_error(L, "bad argument #%d limit exceeded", arg);
+                std::unreachable();
+            }
+        }
+        else {
+            return std::bit_cast<T>(lua_touserdata(L, arg));
+        }
     }
 
     template <typename T>
