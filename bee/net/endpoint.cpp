@@ -12,12 +12,10 @@
 #       define UNIX_PATH_MAX (sizeof(sockaddr_un::sun_path) / sizeof(sockaddr_un::sun_path[0]))
 #   endif
 #endif
-#include <bee/nonstd/format.h>
+#include <bee/nonstd/charconv.h>
 #include <bee/error.h>
 #include <array>
-#if __has_include(<charconv>)
-#   include <charconv>
-#endif
+#include <limits>
 
 // see the https://blogs.msdn.microsoft.com/commandline/2017/12/19/af_unix-comes-to-windows/
 #if defined(_WIN32)
@@ -120,18 +118,14 @@ namespace bee::net {
         if (needsnolookup(ip)) {
             hint.ai_flags = AI_NUMERICHOST;
         }
-#if __has_include(<charconv>) and !defined(__APPLE__)
-        std::array<char, 10> portstr;
-        if (auto[p, ec] = std::to_chars(portstr.data(), portstr.data() + portstr.size() - 1, port); ec != std::errc()) {
+        char portstr[std::numeric_limits<uint16_t>::digits10+1];
+        if (auto[p, ec] = std::to_chars(portstr, portstr + std::size(portstr), port); ec != std::errc()) {
             return from_invalid();
         }
         else {
             p[0] = '\0';
         }
-        auto info = gethostaddr(hint, ip, portstr.data());
-#else
-        auto info = gethostaddr(hint, ip, std::format("{}", port).c_str());
-#endif
+        auto info = gethostaddr(hint, ip, portstr);
         if (!info) {
             return from_invalid();
         }
