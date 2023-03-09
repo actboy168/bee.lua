@@ -226,7 +226,7 @@ namespace bee::lua_thread {
         lua_pushboolean(L, 1);
         lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
         luaL_openlibs(L);
-        thread_args* args = (thread_args*)lua_touserdata(L, 1);
+        thread_args* args = lua::tolightud<thread_args*>(L, 1);
         lua_pushinteger(L, args->id);
         lua_rawsetp(L, LUA_REGISTRYINDEX, &THREADID);
         ::bee::lua::preload_module(L);

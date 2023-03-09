@@ -35,8 +35,9 @@ namespace bee::lua {
 
     template <typename T>
     T checkinteger(lua_State* L, int arg, const char* symbol) {
-        if constexpr (std::is_enum<T>::value) {
-            using UT = typename std::underlying_type<T>::type;
+        static_assert(std::is_trivial_v<T>);
+        if constexpr (std::is_enum_v<T>) {
+            using UT = std::underlying_type_t<T>;
             return (T)checkinteger<UT>(L, arg, symbol);
         }
         else if constexpr (sizeof(T) == sizeof(lua_Integer)) {
@@ -54,8 +55,9 @@ namespace bee::lua {
     }
     template <typename T>
     T optinteger(lua_State* L, int arg, T def, const char* symbol) {
-        if constexpr (std::is_enum<T>::value) {
-            using UT = typename std::underlying_type<T>::type;
+        static_assert(std::is_trivial_v<T>);
+        if constexpr (std::is_enum_v<T>) {
+            using UT = std::underlying_type_t<T>;
             return (T)optinteger<UT>(L, arg, (UT)def, symbol);
         }
         else if constexpr (sizeof(T) == sizeof(lua_Integer)) {
@@ -73,10 +75,16 @@ namespace bee::lua {
     }
 
     template <typename T>
-    T checklightud(lua_State* L, int arg) {
+    T tolightud(lua_State* L, int arg) {
+        static_assert(std::is_trivial_v<T>);
         static_assert(sizeof(T) <= sizeof(intptr_t));
-        luaL_checktype(L, arg, LUA_TLIGHTUSERDATA);
         return (T)(intptr_t)lua_touserdata(L, arg);
+    }
+
+    template <typename T>
+    T checklightud(lua_State* L, int arg) {
+        luaL_checktype(L, arg, LUA_TLIGHTUSERDATA);
+        return tolightud<T>(L, arg);
     }
 
     template <typename T>
@@ -109,8 +117,7 @@ namespace bee::lua {
         if constexpr (udata_has_nupvalue<T>::value) {
             nupvalue = udata<T>::nupvalue;
         }
-        T* o = (T*)lua_newuserdatauv(L, sizeof(T), nupvalue);
-        return *o;
+        return *(T*)lua_newuserdatauv(L, sizeof(T), nupvalue);
     }
 
     template <typename T, typename...Args>
@@ -134,12 +141,13 @@ namespace bee::lua {
     }
 
     template <typename T>
-    T& checkudata(lua_State* L, int ud) {
+    T& checkudata(lua_State* L, int arg) {
         if constexpr (udata_has_name<T>::value) {
-            return *(T*)luaL_checkudata(L, ud, udata<T>::name);
+            return *(T*)luaL_checkudata(L, arg, udata<T>::name);
         }
         else {
-            return toudata<T>(L, ud);
+            luaL_checktype(L, arg, LUA_TUSERDATA);
+            return toudata<T>(L, arg);
         }
     }
 
