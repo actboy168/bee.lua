@@ -73,9 +73,11 @@ end)()
 
 function shell:runlua(script, option)
     option = option or {}
+    local filename = option[1]
     option[1] = {
         luaexe,
         '-e', initscript.."\n"..script.."\nos.exit(true)",
+        filename
     }
     local process, errmsg = subprocess.spawn(option)
     lt.assertIsUserdata(process, errmsg)

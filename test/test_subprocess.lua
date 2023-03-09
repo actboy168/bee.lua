@@ -20,8 +20,8 @@ local function testArgs(...)
             end
         end
         local t = {%s}
-        eq(arg, t, 2)
-    ]]):format(table.concat(s, ',')), {'', args, stderr = true})
+        eq(arg, t, 0)
+    ]]):format(table.concat(s, ',')), {'_', args, stderr = true})
 
     lt.assertIsUserdata(process)
     lt.assertIsUserdata(process.stderr)
@@ -317,8 +317,12 @@ function test_subprocess:test_cwd()
     fs.create_directories(path)
     local process = shell:runlua([[
         local fs = require "bee.filesystem"
-        assert(fs.path(arg[3]) == fs.current_path())
-    ]], { "", path:string(), cwd = path })
+        assert(fs.path(arg[1]) == fs.current_path())
+    ]], { "_", path:string(), cwd = path, stdout = true, stderr = true })
+    lt.assertIsUserdata(process)
+    lt.assertIsUserdata(process.stderr)
+    print(process.stdout:read 'a')
+    lt.assertEquals(process.stderr:read 'a', '')
     lt.assertEquals(process:wait(), 0)
     fs.remove_all(path)
 end
