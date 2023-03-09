@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <bee/error.h>
 #include <bee/nonstd/unreachable.h>
+#include <bee/nonstd/bit.h>
+#include <bee/nonstd/to_underlying.h>
 #if defined(_WIN32)
 #include <bee/platform/win/unicode.h>
 #endif
@@ -38,16 +40,16 @@ namespace bee::lua {
         static_assert(std::is_trivial_v<T>);
         if constexpr (std::is_enum_v<T>) {
             using UT = std::underlying_type_t<T>;
-            return (T)checkinteger<UT>(L, arg, symbol);
+            return static_cast<T>(checkinteger<UT>(L, arg, symbol));
         }
         else if constexpr (sizeof(T) == sizeof(lua_Integer)) {
-            return (T)luaL_checkinteger(L, arg);
+            return std::bit_cast<T>(luaL_checkinteger(L, arg));
         }
         else {
-            static_assert(sizeof(T) < sizeof(lua_Integer));
+            static_assert(std::is_integral_v<T> && sizeof(T) < sizeof(lua_Integer));
             lua_Integer r = luaL_checkinteger(L, arg);
             if (r >= std::numeric_limits<T>::lowest() && r <= (std::numeric_limits<T>::max)()) {
-                return (T)r;
+                return static_cast<T>(r);
             }
             luaL_error(L, "bad argument '%s' limit exceeded", symbol);
             std::unreachable();
@@ -58,16 +60,16 @@ namespace bee::lua {
         static_assert(std::is_trivial_v<T>);
         if constexpr (std::is_enum_v<T>) {
             using UT = std::underlying_type_t<T>;
-            return (T)optinteger<UT>(L, arg, (UT)def, symbol);
+            return static_cast<T>(optinteger<UT>(L, arg, std::to_underlying(def), symbol));
         }
         else if constexpr (sizeof(T) == sizeof(lua_Integer)) {
-            return (T)luaL_optinteger(L, arg, (lua_Integer)def);
+            return std::bit_cast<T>(luaL_optinteger(L, arg, std::bit_cast<lua_Integer>(def)));
         }
         else {
-            static_assert(sizeof(T) < sizeof(lua_Integer));
-            lua_Integer r = luaL_optinteger(L, arg, (lua_Integer)def);
+            static_assert(std::is_integral_v<T> && sizeof(T) < sizeof(lua_Integer));
+            lua_Integer r = luaL_optinteger(L, arg, static_cast<lua_Integer>(def));
             if (r >= std::numeric_limits<T>::lowest() && r <= (std::numeric_limits<T>::max)()) {
-                return (T)r;
+                return static_cast<T>(r);
             }
             luaL_error(L, "bad argument '%s' limit exceeded", symbol);
             std::unreachable();
@@ -76,9 +78,7 @@ namespace bee::lua {
 
     template <typename T>
     T tolightud(lua_State* L, int arg) {
-        static_assert(std::is_trivial_v<T>);
-        static_assert(sizeof(T) <= sizeof(intptr_t));
-        return (T)(intptr_t)lua_touserdata(L, arg);
+        return std::bit_cast<T>(lua_touserdata(L, arg));
     }
 
     template <typename T>
@@ -89,7 +89,7 @@ namespace bee::lua {
 
     template <typename T>
     T& toudata(lua_State* L, int arg) {
-        return *(T*)lua_touserdata(L, arg);
+        return *static_cast<T*>(lua_touserdata(L, arg));
     }
 
     template <typename T>
@@ -117,7 +117,7 @@ namespace bee::lua {
         if constexpr (udata_has_nupvalue<T>::value) {
             nupvalue = udata<T>::nupvalue;
         }
-        return *(T*)lua_newuserdatauv(L, sizeof(T), nupvalue);
+        return *static_cast<T*>(lua_newuserdatauv(L, sizeof(T), nupvalue));
     }
 
     template <typename T, typename...Args>
@@ -127,7 +127,7 @@ namespace bee::lua {
         if constexpr (udata_has_nupvalue<T>::value) {
             nupvalue = udata<T>::nupvalue;
         }
-        T* o = (T*)lua_newuserdatauv(L, sizeof(T), nupvalue);
+        T* o = static_cast<T*>(lua_newuserdatauv(L, sizeof(T), nupvalue));
         new (o) T(std::forward<Args>(args)...);
         if (luaL_newmetatable(L, udata<T>::name)) {
             init_metatable(L);
@@ -143,7 +143,7 @@ namespace bee::lua {
     template <typename T>
     T& checkudata(lua_State* L, int arg) {
         if constexpr (udata_has_name<T>::value) {
-            return *(T*)luaL_checkudata(L, arg, udata<T>::name);
+            return *static_cast<T*>(luaL_checkudata(L, arg, udata<T>::name));
         }
         else {
             luaL_checktype(L, arg, LUA_TUSERDATA);
