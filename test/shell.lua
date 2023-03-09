@@ -59,12 +59,23 @@ local luaexe = (function()
 end)()
 luaexe = fs.absolute(fs.path(luaexe)):string()
 
+local initscript = (function()
+    local cpaths = {}
+    for cpath in package.cpath:gmatch "[^;]*" do
+        if cpath:sub(1,1) == "." then
+            cpaths[#cpaths+1] = fs.absolute(cpath):string()
+        else
+            cpaths[#cpaths+1] = cpath
+        end
+    end
+    return ("package.cpath = [[%s]]"):format(table.concat(cpaths, ";"))
+end)()
+
 function shell:runlua(script, option)
-    local init = ("package.cpath = [[%s]]"):format(package.cpath)
     option = option or {}
     option[1] = {
         luaexe,
-        '-e', init.."\n"..script.."\nos.exit(true)",
+        '-e', initscript.."\n"..script.."\nos.exit(true)",
     }
     local process, errmsg = subprocess.spawn(option)
     lt.assertIsUserdata(process, errmsg)

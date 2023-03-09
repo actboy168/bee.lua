@@ -1,9 +1,16 @@
 local subprocess = require "bee.subprocess"
 local thread = require "bee.thread"
-local EXE = (require "bee.platform".OS == "Windows") and ".exe" or ""
+
+local luaexe = (function()
+    local i = 0
+    while arg[i] ~= nil do
+        i = i - 1
+    end
+    return arg[i + 1]
+end)()
 
 local process = assert(subprocess.spawn {
-    "build/bin/bootstrap"..EXE, "test/test.lua", arg,
+    luaexe, "test/test.lua", arg,
     stdout = true,
     stderr = "stdout",
 })
