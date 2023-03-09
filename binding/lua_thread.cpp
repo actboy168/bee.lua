@@ -230,10 +230,7 @@ namespace bee::lua_thread {
         lua_pushinteger(L, args->id);
         lua_rawsetp(L, LUA_REGISTRYINDEX, &THREADID);
         ::bee::lua::preload_module(L);
-
-#if LUA_VERSION_NUM >= 504
         lua_gc(L, LUA_GCGEN, 0, 0);
-#endif
         if (luaL_loadbuffer(L, args->source.data(), args->source.size(), args->source.c_str()) != LUA_OK) {
             delete args;
             return lua_error(L);
