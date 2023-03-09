@@ -33,9 +33,17 @@ template <typename To, typename From, typename = std::enable_if_t<
     && std::is_trivially_copyable_v<From>
     && std::is_default_constructible_v<To>
 >>
+#if BEE_HAS_BUILTIN(__builtin_memcpy) || defined(__GNUC__)
+constexpr
+#endif
 To bit_cast(const From& src) noexcept {
     To dst;
-    std::memcpy(static_cast<void*>(std::addressof(dst)), static_cast<const void*>(std::addressof(src)), sizeof(v));
+#if BEE_HAS_BUILTIN(__builtin_memcpy) || defined(__GNUC__)
+    __builtin_memcpy
+#else
+    std::memcpy
+#endif
+        (static_cast<void*>(std::addressof(dst)), static_cast<const void*>(std::addressof(src)), sizeof(src));
     return dst;
 }
 }
