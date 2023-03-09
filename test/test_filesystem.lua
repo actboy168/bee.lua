@@ -22,7 +22,7 @@ local function create_file(filename, content)
     if type(filename) == "userdata" then
         filename = filename:string()
     end
-    os.remove(filename)
+    fs.remove(filename)
     local f = assert(io.open(filename, 'wb'))
     if content ~= nil then
         f:write(content)
@@ -47,11 +47,11 @@ local USER_WRITE = 0x80
 function test_fs:test_setup()
     if fs.exists(fs.path('temp1.txt')) then
         fs.permissions(fs.path('temp1.txt'), ALLOW_WRITE)
-        os.remove('temp1.txt')
+        fs.remove('temp1.txt')
     end
     if fs.exists(fs.path('temp2.txt')) then
         fs.permissions(fs.path('temp2.txt'), ALLOW_WRITE)
-        os.remove('temp2.txt')
+        fs.remove('temp2.txt')
     end
 end
 
@@ -214,7 +214,7 @@ function test_fs:test_get_permissions()
     lt.assertEquals(fs.permissions(fs.path(filename)) & USER_WRITE, 0)
     shell:del_readonly(filename)
 
-    os.remove(filename)
+    fs.remove(filename)
 end
 
 function test_fs:test_set_permissions()
@@ -231,7 +231,7 @@ function test_fs:test_set_permissions()
     fs.permissions(filename, ALLOW_WRITE)
     lt.assertEquals(fs.permissions(filename) & USER_WRITE, USER_WRITE)
 
-    os.remove(filename:string())
+    fs.remove(filename:string())
 end
 
 function test_fs:test_div()
@@ -342,14 +342,14 @@ function test_fs:test_exists()
         lt.assertEquals(fs.exists(fs.path(path)), b)
     end
     local filename = 'temp.txt'
-    os.remove(filename)
+    fs.remove(filename)
     is_exists(filename, false)
 
     create_file(filename)
     is_exists(filename, true)
     is_exists(filename .. '/' .. filename, false)
 
-    os.remove(filename)
+    fs.remove(filename)
     is_exists(filename, false)
     is_exists(filename .. '/' .. filename, false)
 end
@@ -366,7 +366,7 @@ function test_fs:test_remove()
         lt.assertEquals(fs.exists(fs.path(path)), true)
     end
 
-    os.remove 'temp.txt'
+    fs.remove 'temp.txt'
     create_file 'temp.txt'
     remove_ok('temp.txt', true)
     remove_ok('temp.txt', false)
@@ -397,7 +397,7 @@ function test_fs:test_remove_all()
         lt.assertEquals(fs.exists(fs.path(path)), false)
     end
 
-    os.remove 'temp.txt'
+    fs.remove 'temp.txt'
     create_file 'temp.txt'
     remove_all('temp.txt', 1)
     remove_all('temp.txt', 0)
@@ -427,7 +427,7 @@ function test_fs:test_is_directory()
     is_directory('.', true)
     create_file(filename)
     is_directory(filename, false)
-    os.remove(filename)
+    fs.remove(filename)
     is_directory(filename, false)
 end
 
@@ -439,7 +439,7 @@ function test_fs:test_is_regular_file()
     is_regular_file('.', false)
     create_file(filename)
     is_regular_file(filename, true)
-    os.remove(filename)
+    fs.remove(filename)
     is_regular_file(filename, false)
 end
 
@@ -501,8 +501,8 @@ function test_fs:test_rename()
         lt.assertEquals(fs.exists(fs.path(from)), false)
         lt.assertEquals(fs.exists(fs.path(to)), false)
     end
-    os.remove('temp1.txt')
-    os.remove('temp2.txt')
+    fs.remove('temp1.txt')
+    fs.remove('temp2.txt')
     create_file('temp1.txt')
     rename_ok('temp1.txt', 'temp2.txt')
 
@@ -557,12 +557,12 @@ function test_fs:test_copy_file()
             OVERWRITE = OVERWRITE | fs.copy_options.recursive
         end
         create_file('temp1.txt', tostring(os.time()))
-        os.remove('temp2.txt')
+        fs.remove('temp2.txt')
         copy(fs.path 'temp1.txt', fs.path 'temp2.txt', NONE)
         copy_file_ok('temp1.txt', 'temp2.txt')
 
         create_file('temp1.txt', tostring(os.time()))
-        os.remove('temp2.txt')
+        fs.remove('temp2.txt')
         copy(fs.path 'temp1.txt', fs.path 'temp2.txt', OVERWRITE)
         copy_file_ok('temp1.txt', 'temp2.txt')
 
@@ -738,12 +738,12 @@ end
 
 function test_fs:test_last_write_time()
     local function last_write_time(filename)
-        os.remove(filename)
+        fs.remove(filename)
         local t1 = os.time()
         create_file(filename)
         local tf = fs.last_write_time(fs.path(filename))
         local t2 = os.time()
-        os.remove(filename)
+        fs.remove(filename)
         lt.assertEquals(tf >= t1 - 10, true)
         lt.assertEquals(tf <= t2 + 10, true)
     end
@@ -824,7 +824,7 @@ function test_fs:test_canonical()
     --    test("abcabc.txt", "ABCabc.txt")
     --end
     --test("ABCabc.txt", "ABCabc.txt")
-    --os.remove "ABCabc.txt"
+    --fs.remove "ABCabc.txt"
 end
 
 function test_fs:test_status()

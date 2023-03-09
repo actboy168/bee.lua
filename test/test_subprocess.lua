@@ -3,6 +3,7 @@ local lt = require 'ltest'
 local subprocess = require 'bee.subprocess'
 local thread = require 'bee.thread'
 local platform = require 'bee.platform'
+local fs = require 'bee.filesystem'
 local shell = require 'shell'
 
 local function testArgs(...)
@@ -124,21 +125,19 @@ function test_subprocess:test_stdio_1()
 end
 
 function test_subprocess:test_stdio_2()
-    os.remove 'temp.txt'
-    local f = io.open('temp.txt', 'w')
-    lt.assertIsUserdata(f)
+    fs.remove 'temp.txt'
+    local f = lt.assertIsUserdata(io.open('temp.txt', 'w'))
     ---@cast f file*
     local process = shell:runlua('io.write "ok"', { stdout = f })
     lt.assertEquals(process.stdout, f)
     f:close()
     lt.assertEquals(process:wait(), 0)
-    local f = io.open('temp.txt', 'r')
-    lt.assertIsUserdata(f)
+    local f = lt.assertIsUserdata(io.open('temp.txt', 'r'))
     ---@cast f file*
     lt.assertEquals(f:read 'a', "ok")
     f:close()
 
-    os.remove 'temp.txt'
+    fs.remove 'temp.txt'
     local wr = io.open('temp.txt', 'w')
     local rd = io.open('temp.txt', 'r')
     lt.assertIsUserdata(wr)
@@ -151,7 +150,7 @@ function test_subprocess:test_stdio_2()
     lt.assertEquals(process:wait(), 0)
     lt.assertEquals(rd:read 'a', "ok")
     rd:close()
-    os.remove 'temp.txt'
+    fs.remove 'temp.txt'
 
     local process1 = shell:runlua('io.write "ok"', { stdout = true })
     local process2 = shell:runlua('io.write(io.read "a")', { stdin = process1.stdout, stdout = true })

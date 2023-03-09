@@ -134,7 +134,7 @@ for _, name in ipairs {'Nil', 'Number', 'String', 'Table', 'Boolean', 'Function'
     local typeExpected = name:lower()
     m["assertIs"..name] = function(value, errmsg)
         if type(value) ~= typeExpected then
-            failure('expected: a %s value, actual: type %s, value %s.%s', typeExpected, type(value), stringify(value), errmsg or '')
+            failure('expected: a %s value, actual: type %s, value %s. (%s)', typeExpected, type(value), stringify(value), errmsg or '')
         end
         return value
     end

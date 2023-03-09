@@ -1,6 +1,7 @@
 local lt = require 'ltest'
 local socket = require 'bee.socket'
 local thread = require 'bee.thread'
+local fs = require 'bee.filesystem'
 local errlog = thread.channel "errlog"
 
 local function assertNotThreadError()
@@ -69,7 +70,7 @@ local function detectAutoUnlink()
     if supportAutoUnlink then
         lt.assertEquals(file_exists(TestUnixSock), false)
     else
-        os.remove(TestUnixSock)
+        fs.remove(TestUnixSock)
     end
 end
 
@@ -88,7 +89,7 @@ function test_socket:test_bind()
         lt.assertErrorMsgEquals([[bad argument #2 to '?' (invalid option 'icmp')]], socket, 'icmp')
     end
     do
-        os.remove(TestUnixSock)
+        fs.remove(TestUnixSock)
         local fd = lt.assertIsUserdata(socket 'unix')
         lt.assertIsBoolean(fd:bind(TestUnixSock))
         lt.assertEquals(file_exists(TestUnixSock), true)
@@ -119,7 +120,7 @@ function test_socket:test_tcp_connect()
 end
 
 function test_socket:test_unix_connect()
-    os.remove(TestUnixSock)
+    fs.remove(TestUnixSock)
     --TODO: 某些低版本的windows过不了？
     --lt.assertEquals(socket 'unix':connect(TestUnixSock), nil)
     --lt.assertEquals(file_exists(TestUnixSock), false)
@@ -163,7 +164,7 @@ function test_socket:test_tcp_accept()
 end
 
 function test_socket:test_unix_accept()
-    os.remove(TestUnixSock)
+    fs.remove(TestUnixSock)
     local server = lt.assertIsUserdata(socket "unix")
     lt.assertIsBoolean(server:bind(TestUnixSock))
     lt.assertIsBoolean(server:listen())
@@ -258,7 +259,7 @@ local function createTcpEchoTest(name, f)
 end
 
 local function createUnixEchoTest(name, f)
-    os.remove(TestUnixSock)
+    fs.remove(TestUnixSock)
     local server = lt.assertIsUserdata(socket "unix")
     lt.assertIsBoolean(server:bind(TestUnixSock))
     lt.assertIsBoolean(server:listen())

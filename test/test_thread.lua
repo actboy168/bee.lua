@@ -1,6 +1,7 @@
 local lt = require 'ltest'
 
 local thread = require "bee.thread"
+local fs = require "bee.filesystem"
 local err = thread.channel "errlog"
 
 local function createThread(script, ...)
@@ -29,14 +30,14 @@ function test_thread:test_thread_1()
         return false
     end
     assertNotThreadError()
-    os.remove('temp.txt')
+    fs.remove('temp.txt')
     lt.assertEquals(file_exists('temp.txt'), false)
     local thd = createThread [[
         io.open('temp.txt', 'w'):close()
     ]]
     thread.wait(thd)
     lt.assertEquals(file_exists('temp.txt'), true)
-    os.remove('temp.txt')
+    fs.remove('temp.txt')
     assertNotThreadError()
 end
 
