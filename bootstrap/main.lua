@@ -24,7 +24,7 @@ end
 for _, e in ipairs(expr) do
     load(e)()
 end
-if arg[i] == nil then
+if arg[0] == nil then
     return
 end
 assert(loadfile(arg[0]))(table.unpack(arg))
