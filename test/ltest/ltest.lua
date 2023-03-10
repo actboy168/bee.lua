@@ -56,15 +56,19 @@ end
 local equals_value
 
 local function equals_table(actual, expected, recursions)
+    local actual_n = 0
     for k, v in pairs(actual) do
         if not equals_value(v, expected[k], recursions) then
             return false
         end
+        actual_n = actual_n + 1
     end
-    for k, v in pairs(expected) do
-        if not equals_value(actual[k], v, recursions) then
-            return false
-        end
+    local expected_n = 0
+    for _ in pairs(expected) do
+        expected_n = expected_n + 1
+    end
+    if actual_n ~= expected_n then
+        return false
     end
     return equals_value(getmetatable(actual), getmetatable(expected), recursions)
 end
