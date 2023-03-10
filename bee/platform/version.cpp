@@ -37,7 +37,7 @@ namespace bee {
         unsigned int res;
         auto first = str.data();
         auto last = str.data() + str.size();
-        if (auto[p, ec] = std::from_chars(first, last, res); ec != std::errc() || p != last) {
+        if (auto[p, ec] = std::from_chars(first, last, res); ec != std::errc()) {
             return def;
         }
         return res;
