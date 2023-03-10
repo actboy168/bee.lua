@@ -22,7 +22,7 @@ for j = #arg - i + 1, #arg do
 end
 
 for _, e in ipairs(expr) do
-    load(e)()
+    assert(load(e))()
 end
 if arg[0] == nil then
     return
