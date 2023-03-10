@@ -1,6 +1,8 @@
 #pragma once
 
-#include <version>
+#if __has_include(<version>)
+#   include <version>
+#endif
 
 #if defined(__cpp_lib_to_underlying)
 #include <utility>

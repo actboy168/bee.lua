@@ -1,6 +1,8 @@
 #pragma once
 
-#include <version>
+#if __has_include(<version>)
+#   include <version>
+#endif
 
 #if defined(__has_builtin)
 #define BEE_HAS_BUILTIN(x) __has_builtin(x)
