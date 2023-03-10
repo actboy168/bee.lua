@@ -82,6 +82,7 @@ lm:source_set "source_bee" {
         }
     },
     freebsd = {
+        sysincludes = "/usr/local/include",
         sources = need {
             "bsd",
             "posix",
@@ -161,6 +162,7 @@ lm:lua_source "source_bee" {
             "!binding/lua_unicode.cpp",
         },
         links = "inotify",
+        linkdirs = "/usr/local/lib",
         ldflags = "-pthread"
     },
     openbsd = {
