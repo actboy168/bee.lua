@@ -13,7 +13,7 @@
 #include <string>
 
 extern "C" {
-#include <lua-seri.h>
+#include <3rd/lua-seri/lua-seri.h>
 }
 
 namespace bee::lua_thread {

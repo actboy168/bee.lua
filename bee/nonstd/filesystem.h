@@ -29,6 +29,6 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 #else
-#include <bee/nonstd/3rd/filesystem.h>
+#include <3rd/filesystem.h>
 namespace fs = ghc::filesystem;
 #endif

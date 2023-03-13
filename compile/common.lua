@@ -1,15 +1,14 @@
 local lm = require 'luamake'
 
 lm:lua_source "source_bee" {
-    includes = "3rd/lua-seri",
-    sources = "3rd/lua-seri/*.c",
+    sources = "3rd/lua-seri/lua-seri.c",
     msvc = {
         flags = "/wd4244"
     }
 }
 
 lm:source_set "source_bee" {
-    sources = "bee/nonstd/3rd/format.cc",
+    sources = "3rd/fmt/format.cc",
 }
 
 local OS = {
@@ -97,10 +96,7 @@ lm:source_set "source_bee" {
 }
 
 lm:lua_source "source_bee" {
-    includes = {
-        "3rd/lua-seri",
-        "."
-    },
+    includes = ".",
     defines = {
         lm.EXE ~= "lua" and "BEE_STATIC",
     },
