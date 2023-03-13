@@ -127,7 +127,7 @@ namespace bee::net::socket {
         static GUID AF_UNIX_PROVIDER_ID = { 0xA00943D9, 0x9C2E, 0x4633, { 0x9B, 0x59, 0x00, 0x57, 0xA3, 0x16, 0x09, 0x94 } };
         DWORD len = 0;
         ::WSAEnumProtocolsW(0, NULL, &len);
-        std::unique_ptr<uint8_t[]> buf(new uint8_t[len]);
+        std::unique_ptr<std::byte[]> buf(new std::byte[len]);
         LPWSAPROTOCOL_INFOW protocols = (LPWSAPROTOCOL_INFOW)buf.get();
         int n = ::WSAEnumProtocolsW(0, protocols, &len);
         if (n == SOCKET_ERROR) {

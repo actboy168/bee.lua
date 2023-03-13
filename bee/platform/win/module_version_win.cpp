@@ -25,7 +25,7 @@ namespace bee::win {
 		size_t translation_size_;
 		size_t current_;
 		std::unique_ptr<TRANSLATION[]> translation_;
-		std::unique_ptr<uint8_t[]> version_info_;
+		std::unique_ptr<std::byte[]> version_info_;
 		bool valid_;
 	};
 
@@ -82,7 +82,7 @@ namespace bee::win {
 		if (size <= 0) {
 			return false;
 		}
-		version_info_.reset(new uint8_t[size]);
+		version_info_.reset(new std::byte[size]);
 		if (!::GetFileVersionInfoW(module_path, 0, size, version_info_.get())) {
 			return false;
 		}

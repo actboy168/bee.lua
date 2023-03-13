@@ -29,12 +29,12 @@ namespace bee::filewatch {
         void   cancel();
         result try_read();
         const std::wstring& path() const;
-        const uint8_t* data() const;
+        const std::byte* data() const;
 
     private:
-        std::wstring                  m_path;
-        HANDLE                        m_directory;
-        std::array<uint8_t, kBufSize> m_buffer;
+        std::wstring                    m_path;
+        HANDLE                          m_directory;
+        std::array<std::byte, kBufSize> m_buffer;
     };
 
     task::task(watch* watch)
@@ -130,7 +130,7 @@ namespace bee::filewatch {
         return m_path;
     }
 
-    const uint8_t* task::data() const {
+    const std::byte* task::data() const {
         return m_buffer.data();
     }
 
@@ -186,7 +186,7 @@ namespace bee::filewatch {
         case task::result::success:
             break;
         }
-        const uint8_t* data = task.data();
+        const std::byte* data = task.data();
         for (;;) {
             FILE_NOTIFY_INFORMATION& fni = (FILE_NOTIFY_INFORMATION&)*data;
             std::wstring path(fni.FileName, fni.FileNameLength / sizeof(wchar_t));

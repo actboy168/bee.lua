@@ -101,12 +101,12 @@ namespace bee::filewatch {
             return;
         }
 
-        char buf[4096];
+        std::byte buf[4096];
         ssize_t n = read(m_inotify_fd, buf, sizeof buf);
         if (n == 0 || n == -1) {
             return;
         }
-        for (char *p = buf; p < buf + n; ) {
+        for (std::byte *p = buf; p < buf + n; ) {
             auto event = (struct inotify_event *)p;
             event_update(event);
             p += sizeof(*event) + event->len;
