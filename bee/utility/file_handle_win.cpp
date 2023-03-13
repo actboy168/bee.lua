@@ -1,8 +1,8 @@
 #include <bee/utility/file_handle.h>
 #include <bee/nonstd/unreachable.h>
+#include <bee/utility/dynarray.h>
 #include <fcntl.h>
 #include <io.h>
-#include <vector>
 
 namespace bee {
     static FILE* handletofile(HANDLE h, int flags, const char* mode) {
@@ -81,20 +81,19 @@ namespace bee {
         if (len == 0) {
             return std::nullopt;
         }
-        std::vector<wchar_t> path(static_cast<size_t>(len));
+        dynarray<wchar_t> path(static_cast<size_t>(len));
         DWORD len2 = GetFinalPathNameByHandleW(h, path.data(), len, VOLUME_NAME_DOS);
         if (len2 == 0 || len2 >= len) {
             return std::nullopt;
         }
-        path.resize(static_cast<size_t>(len2));
         if (path[0] == L'\\' && path[1] == L'\\' && path[2] == L'?' && path[3] == L'\\') {
             // Turn the \\?\UNC\ network path prefix into \\.
             if (path[4] == L'U' && path[5] == L'N' && path[6] == L'C' && path[7] == L'\\') {
-                return fs::path(L"\\\\").concat(path.begin() + 8, path.end());
+                return fs::path(L"\\\\").concat(path.data() + 8, path.data() + len2);
             }
             // Remove the \\?\ prefix.
-            return fs::path {path.begin() + 4, path.end()};
+            return fs::path {path.data() + 4, path.data() + len2};
         }
-        return fs::path {path.begin(), path.end()};
+        return fs::path {path.data(), path.data() + len2};
     }
 }

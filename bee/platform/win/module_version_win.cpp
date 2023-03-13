@@ -1,6 +1,6 @@
 #include <bee/platform/win/module_version.h>
 #include <bee/nonstd/format.h>
-#include <vector>
+#include <bee/utility/dynarray.h>
 #include <memory>
 #include <Windows.h>
 
@@ -24,8 +24,8 @@ namespace bee::win {
 		VS_FIXEDFILEINFO* fixed_file_info_;
 		size_t translation_size_;
 		size_t current_;
-		std::unique_ptr<TRANSLATION[]> translation_;
-		std::unique_ptr<std::byte[]> version_info_;
+		dynarray<TRANSLATION> translation_;
+		dynarray<std::byte> version_info_;
 		bool valid_;
 	};
 
@@ -82,26 +82,26 @@ namespace bee::win {
 		if (size <= 0) {
 			return false;
 		}
-		version_info_.reset(new std::byte[size]);
-		if (!::GetFileVersionInfoW(module_path, 0, size, version_info_.get())) {
+		version_info_ = dynarray<std::byte>(size);
+		if (!::GetFileVersionInfoW(module_path, 0, size, version_info_.data())) {
 			return false;
 		}
 		UINT length;
-		if (!::VerQueryValueW(version_info_.get(), L"\\", (LPVOID*)&fixed_file_info_, &length)) {
+		if (!::VerQueryValueW(version_info_.data(), L"\\", (LPVOID*)&fixed_file_info_, &length)) {
 			return false;
 		}
 		if (fixed_file_info()->dwSignature != VS_FFI_SIGNATURE) {
 			return false;
 		}
 		TRANSLATION* translate_ptr = nullptr;
-		if (!::VerQueryValueW(version_info_.get(), L"\\VarFileInfo\\Translation", (LPVOID*)&translate_ptr, &length)
+		if (!::VerQueryValueW(version_info_.data(), L"\\VarFileInfo\\Translation", (LPVOID*)&translate_ptr, &length)
 			|| (length < sizeof(TRANSLATION))) {
 			return false;
 		}
 		current_ = 0;
 		translation_size_ = length / sizeof(TRANSLATION);
-		translation_.reset(new TRANSLATION[translation_size_]);
-		memcpy(translation_.get(), translate_ptr, translation_size_ * sizeof(TRANSLATION));
+		translation_ = dynarray<TRANSLATION>(translation_size_);
+		memcpy(translation_.data(), translate_ptr, translation_size_ * sizeof(TRANSLATION));
 		select_language(::GetUserDefaultLangID());
 		return true;
 	}
@@ -109,7 +109,7 @@ namespace bee::win {
 	bool module_version_info::get_value(WORD language, WORD code_page, const wchar_t* key, const wchar_t** value_ptr) const {
 		UINT size;
 		std::wstring query = std::format(L"\\StringFileInfo\\{:04x}{:04x}\\{}", language, code_page, key);
-		return (!!::VerQueryValueW(version_info_.get(), (LPWSTR)(LPCWSTR)query.c_str(), (LPVOID*)value_ptr, &size));
+		return (!!::VerQueryValueW(version_info_.data(), (LPWSTR)(LPCWSTR)query.c_str(), (LPVOID*)value_ptr, &size));
 	}
 
 	std::wstring get_module_version(const wchar_t* module_path, const wchar_t* key) {

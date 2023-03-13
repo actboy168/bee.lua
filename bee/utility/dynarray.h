@@ -23,6 +23,10 @@ namespace bee {
 
         static_assert(std::is_trivial_v<value_type>);
 
+        explicit dynarray()
+            : data_(nullptr)
+            , size_(0)
+        {}
         explicit dynarray(size_type c)
             : data_(alloc(c))
             , size_(c)
@@ -51,14 +55,16 @@ namespace bee {
                 std::swap(size_, right.size_);
             }
         }
-        bool           empty() const noexcept { return size_ == 0; }
-        pointer        data()        noexcept { return data_; }
-        const_pointer  data()  const noexcept { return data_; }
-        size_type      size()  const noexcept { return size_; }
-        const_iterator begin() const noexcept { return data_; }
-        iterator       begin()       noexcept { return data_; }
-        const_iterator end()   const noexcept { return data_ + size_; }
-        iterator       end()         noexcept { return data_ + size_; }
+        bool            empty()                 const noexcept { return size_ == 0; }
+        pointer         data()                        noexcept { return data_; }
+        const_pointer   data()                  const noexcept { return data_; }
+        size_type       size()                  const noexcept { return size_; }
+        const_iterator  begin()                 const noexcept { return data_; }
+        iterator        begin()                       noexcept { return data_; }
+        const_iterator  end()                   const noexcept { return data_ + size_; }
+        iterator        end()                         noexcept { return data_ + size_; }
+        const_reference operator[](size_type i) const noexcept { return data_[i]; }
+        reference       operator[](size_type i)       noexcept { return data_[i]; }
 
     private:
         class bad_array_length : public std::bad_alloc {

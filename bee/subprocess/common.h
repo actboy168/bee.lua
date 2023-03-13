@@ -15,7 +15,7 @@ namespace bee::subprocess {
         using ptr_type = dynarray<value_type>;
         ptr_type v;
         environment(std::nullptr_t)
-            : v(0)
+            : v()
         { }
         environment(ptr_type&& o)
             : v(std::move(o))
@@ -42,7 +42,7 @@ namespace bee::subprocess {
             return !v.empty();
         }
         operator value_type*() {
-            return v.empty()? nullptr: v.data();
+            return v.data();
         }
     };
 

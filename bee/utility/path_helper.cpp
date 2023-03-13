@@ -1,6 +1,6 @@
 #include <bee/utility/path_helper.h>
+#include <bee/utility/dynarray.h>
 #include <bee/error.h>
-#include <vector>
 
 #if defined(_WIN32)
 
@@ -21,7 +21,7 @@ namespace bee::path_helper {
             return fs::path(buffer, buffer + path_len);
         }
         for (DWORD buf_len = 0x200; buf_len <= 0x10000; buf_len <<= 1) {
-            std::vector<wchar_t> buf(buf_len);
+            dynarray<wchar_t> buf(buf_len);
             path_len = ::GetModuleFileNameW((HMODULE)module_handle, buf.data(), buf_len);
             if (path_len == 0) {
                 return unexpected<std::string>(make_syserror("GetModuleFileNameW").what());
@@ -55,7 +55,7 @@ namespace bee::path_helper {
         if (path_len <= 1) {
             return unexpected<std::string>("_NSGetExecutablePath failed.");
         }
-        std::vector<char> buf(path_len);
+        dynarray<char> buf(path_len);
         int rv = _NSGetExecutablePath(buf.data(), &path_len);
         if (rv != 0) {
             return unexpected<std::string>("_NSGetExecutablePath failed.");
