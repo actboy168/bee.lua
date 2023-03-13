@@ -1,7 +1,8 @@
 #include <bee/subprocess.h>
-#include <bee/nonstd/format.h>
 #include <bee/net/socket.h>
+#include <bee/nonstd/format.h>
 #include <bee/nonstd/unreachable.h>
+#include <bee/utility/dynarray.h>
 #include <memory.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
@@ -82,10 +83,10 @@ namespace bee::subprocess {
         envs.emplace_back(str);
     }
 
-    static std::unique_ptr<char*[]> env_release(std::vector<char*>& envs) {
+    static dynarray<char*> env_release(std::vector<char*>& envs) {
         envs.emplace_back(nullptr);
-        std::unique_ptr<char*[]> r(new char*[envs.size()]);
-        memcpy(r.get(), envs.data(), envs.size() * sizeof(char*));
+        dynarray<char*> r(envs.size());
+        memcpy(r.data(), envs.data(), envs.size() * sizeof(char*));
         return r;
     }
 

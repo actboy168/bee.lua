@@ -3,6 +3,7 @@
 #include <memory>
 #include <utility>
 #include <bee/utility/file_handle.h>
+#include <bee/utility/dynarray.h>
 
 namespace bee::subprocess {
     struct environment {
@@ -11,10 +12,10 @@ namespace bee::subprocess {
 #else
         using value_type = char*;
 #endif
-        using ptr_type = std::unique_ptr<value_type[]>;
+        using ptr_type = dynarray<value_type>;
         ptr_type v;
         environment(std::nullptr_t)
-            : v()
+            : v(0)
         { }
         environment(ptr_type&& o)
             : v(std::move(o))
@@ -24,8 +25,8 @@ namespace bee::subprocess {
         { }
         ~environment() {
 #if !defined(_WIN32)
-            if (v) {
-                for (char** p = v.get(); *p; ++p) {
+            if (!v.empty()) {
+                for (char** p = v.data(); *p; ++p) {
                     delete[] (*p);
                 }
             }
@@ -38,10 +39,10 @@ namespace bee::subprocess {
             return *this;
         }
         operator bool() const {
-            return !!v;
+            return !v.empty();
         }
-        operator value_type*() const {
-            return v.get();
+        operator value_type*() {
+            return v.empty()? nullptr: v.data();
         }
     };
 

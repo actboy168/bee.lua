@@ -1,6 +1,7 @@
 #include <bee/subprocess.h>
 #include <bee/nonstd/format.h>
 #include <bee/nonstd/unreachable.h>
+#include <bee/utility/dynarray.h>
 #include <Windows.h>
 #include <Shobjidl.h>
 #include <memory>
@@ -16,24 +17,20 @@ namespace bee::subprocess {
     template <class char_t>
     struct strbuilder {
         struct node {
+            dynarray<char_t> data;
             size_t size;
-            size_t maxsize;
-            std::unique_ptr<char_t[]> data;
             node(size_t maxsize)
-                : size(0)
-                , maxsize(maxsize)
-                , data(new char_t[maxsize])
+                : data(maxsize)
+                , size(0)
             { }
-            std::unique_ptr<char_t[]> release() {
-                std::unique_ptr<char_t[]> r;
-                std::swap(r, data);
-                return r;
+            dynarray<char_t> release() {
+                return std::move(data);
             }
             bool append(const char_t* str, size_t n) {
-                if (size + n > maxsize) {
+                if (size + n > data.size()) {
                     return false;
                 }
-                memcpy(data.get() + size, str, n * sizeof(char_t));
+                memcpy(data.data() + size, str, n * sizeof(char_t));
                 size += n;
                 return true;
             }
@@ -48,10 +45,10 @@ namespace bee::subprocess {
         strbuilder() : size(0) { }
         void clear() {
             size = 0;
-            data.clear();
+            deque.clear();
         }
         bool append(const char_t* str, size_t n) {
-            if (!data.empty() && data.back().append(str, n)) {
+            if (!deque.empty() && deque.back().append(str, n)) {
                 size += n;
                 return true;
             }
@@ -59,7 +56,7 @@ namespace bee::subprocess {
             while (m < n) {
                 m *= 2;
             }
-            data.emplace_back(m).append(str, n);
+            deque.emplace_back(m).append(str, n);
             size += n;
             return true;
         }
@@ -72,16 +69,16 @@ namespace bee::subprocess {
             append(s.data(), s.size());
             return *this;
         }
-        std::unique_ptr<char_t[]> string() {
+        dynarray<char_t> string() {
             node r(size + 1);
-            for (auto& s : data) {
-                r.append(s.data.get(), s.size);
+            for (auto& s : deque) {
+                r.append(s.data.data(), s.size);
             }
             char_t empty[] = { '\0' };
             r.append(empty, 1);
             return r.release();
         }
-        std::deque<node> data;
+        std::deque<node> deque;
         size_t size;
     };
 
@@ -136,7 +133,7 @@ namespace bee::subprocess {
         return target;
     }
 
-    static std::unique_ptr<wchar_t[]> make_args(const args_t& args, std::wstring_view prefix = std::wstring_view()) {
+    static dynarray<wchar_t> make_args(const args_t& args, std::wstring_view prefix = std::wstring_view()) {
         strbuilder<wchar_t> res;
         if (!prefix.empty()) {
             res += prefix;
@@ -380,8 +377,8 @@ namespace bee::subprocess {
         if (args.size() == 0) {
             return false;
         }
-        std::unique_ptr<wchar_t[]> command_line = make_args(args);
-        if (!command_line) {
+        dynarray<wchar_t> command_line = make_args(args);
+        if (command_line.empty()) {
             return false;
         }
         const wchar_t* application = search_path_ ? 0 : args[0].c_str();
@@ -391,7 +388,7 @@ namespace bee::subprocess {
         ::SetHandleInformation(si_.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
         ::SetHandleInformation(si_.hStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
         ::SetHandleInformation(si_.hStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
-        if (!::CreateProcessW(application, command_line.get(), NULL, NULL, inherit_handle_, flags_ | NORMAL_PRIORITY_CLASS, env_, cwd, &si_, &pi_)) {
+        if (!::CreateProcessW(application, command_line.data(), NULL, NULL, inherit_handle_, flags_ | NORMAL_PRIORITY_CLASS, env_, cwd, &si_, &pi_)) {
             do_duplicate_shutdown();
             return false;
         }
