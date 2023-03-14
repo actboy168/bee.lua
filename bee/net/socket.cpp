@@ -73,19 +73,18 @@ namespace bee::net::socket {
     }
 
     static bool write_tcp_port(const std::string& path, fd_t s) {
-        endpoint newep = endpoint::from_empty();
-        if (!socket::getsockname(s, newep)) {
-            return false;
+        if (auto ep_opt = socket::getsockname(s)) {
+            auto[ip, tcpport] = ep_opt->info();
+            std::array<char, 10> portstr;
+            if (auto[p, ec] = std::to_chars(portstr.data(), portstr.data() + portstr.size() - 1, tcpport); ec != std::errc()) {
+                return false;
+            }
+            else {
+                p[0] = '\0';
+            }
+            return file_write(path, portstr.data());
         }
-        auto[ip, tcpport] = newep.info();
-        std::array<char, 10> portstr;
-        if (auto[p, ec] = std::to_chars(portstr.data(), portstr.data() + portstr.size() - 1, tcpport); ec != std::errc()) {
-            return false;
-        }
-        else {
-            p[0] = '\0';
-        }
-        return file_write(path, portstr.data());
+        return false;
     }
 
     static fdstat u_connect(fd_t s, const endpoint& ep) {
@@ -350,7 +349,7 @@ namespace bee::net::socket {
             return u_connect(s, ep);
         }
 #endif
-        int ok = ::connect(s, ep.addr(), (int)ep.addrlen());
+        int ok = ::connect(s, ep.addr(), ep.addrlen());
         if (net_success(ok)) {
             return fdstat::success;
         }
@@ -402,25 +401,6 @@ namespace bee::net::socket {
         return fdstat::success;
     }
 
-    fdstat accept(fd_t s, fd_t& newfd, endpoint& ep) {
-        socklen_t addrlen = ep.addrlen();
-        newfd = acceptEx(s, ep.addr(), &addrlen);
-        if (newfd == retired_fd) {
-#if defined _WIN32
-            return fdstat::failed;
-#else 
-            if (errno != EAGAIN && errno != ECONNABORTED && errno != EPROTO && errno != EINTR) {
-                return fdstat::failed;
-            }
-            else {
-                return fdstat::wait;
-            }
-#endif
-        }
-        ep.resize(addrlen);
-        return fdstat::success;
-    }
-
     status recv(fd_t s, int& rc, char* buf, int len) {
         rc = ::recv(s, buf, len, 0);
         if (rc == 0) {
@@ -440,17 +420,16 @@ namespace bee::net::socket {
         return status::success;
     }
 
-    status recvfrom(fd_t s, int& rc, char* buf, int len, endpoint& ep) {
-        socklen_t addrlen = ep.addrlen();
-        rc = ::recvfrom(s, buf, len, 0, ep.addr(), &addrlen);
+    bee::expected<endpoint, status> recvfrom(fd_t s, int& rc, char* buf, int len) {
+        endpoint_buf tmp;
+        rc = ::recvfrom(s, buf, len, 0, tmp.addr(), tmp.addrlen());
         if (rc == 0) {
             return status::close;
         }
         if (rc < 0) {
             return wait_finish() ? status::wait : status::failed;
         }
-        ep.resize(addrlen);
-        return status::success;
+        return endpoint::from_buf(std::move(tmp));
     }
 
     status sendto(fd_t s, int& rc, const char* buf, int len, const endpoint& ep) {
@@ -461,24 +440,22 @@ namespace bee::net::socket {
         return status::success;
     }
 
-    bool getpeername(fd_t s, endpoint& ep) {
-        socklen_t addrlen = ep.addrlen();
-        int ok = ::getpeername(s, ep.addr(), &addrlen);
+    std::optional<endpoint> getpeername(fd_t s) {
+        endpoint_buf tmp;
+        int ok = ::getpeername(s, tmp.addr(), tmp.addrlen());
         if (!net_success(ok)) {
-            return false;
+            return std::nullopt;
         }
-        ep.resize(addrlen);
-        return true;
+        return endpoint::from_buf(std::move(tmp));
     }
 
-    bool getsockname(fd_t s, endpoint& ep) {
-        socklen_t addrlen = ep.addrlen();
-        int ok = ::getsockname(s, ep.addr(), &addrlen);
+    std::optional<endpoint> getsockname(fd_t s) {
+        endpoint_buf tmp;
+        int ok = ::getsockname(s, tmp.addr(), tmp.addrlen());
         if (!net_success(ok)) {
-            return false;
+            return std::nullopt;
         }
-        ep.resize(addrlen);
-        return true;
+        return endpoint::from_buf(std::move(tmp));
     }
 
     bool unlink(const endpoint& ep) {
@@ -582,27 +559,34 @@ namespace bee::net::socket {
 
     bool pair(fd_t sv[2]) {
 #if defined(_WIN32)
-        fd_t sfd = retired_fd;
-        fd_t cfd = retired_fd;
-        auto cep = endpoint::from_empty();
-        sfd = open(protocol::unix);
+        fd_t sfd = open(protocol::unix);
         if (sfd == retired_fd) {
-            goto failed;
+            return false;
         }
         if (!unnamed_unix_bind(sfd)) {
-            goto failed;
+            int err = ::WSAGetLastError();
+            socket::close(sfd);
+            ::WSASetLastError(err);
+            return false;
         }
         if (!socket::listen(sfd, 5)) {
-            goto failed;
+            int err = ::WSAGetLastError();
+            socket::close(sfd);
+            ::WSASetLastError(err);
+            return false;
         }
-        if (!getsockname(sfd, cep)) {
-            goto failed;
+        auto cep = getsockname(sfd);
+        if (!cep) {
+            int err = ::WSAGetLastError();
+            socket::close(sfd);
+            ::WSASetLastError(err);
+            return false;
         }
-        cfd = open(protocol::unix);
+        fd_t cfd = open(protocol::unix);
         if (cfd == retired_fd) {
             goto failed;
         }
-        if (fdstat::failed == connect(cfd, cep)) {
+        if (fdstat::failed == connect(cfd, *cep)) {
             goto failed;
         }
         fd_set readfds, writefds, exceptfds;

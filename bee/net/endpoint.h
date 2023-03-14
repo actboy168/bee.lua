@@ -27,23 +27,34 @@ namespace bee::net {
         uint16_t port;
     };
 
+    struct endpoint_buf {
+        endpoint_buf();
+        sockaddr*  addr();
+        socklen_t* addrlen();
+    private:
+        friend struct endpoint;
+        dynarray<std::byte> m_data;
+        socklen_t m_size = 0;
+    };
+
     struct endpoint {
         endpoint_info   info() const;
         const sockaddr* addr() const;
         socklen_t       addrlen() const;
-        sockaddr*       addr();
-        void            resize(socklen_t len);
         int             family() const;
         bool            valid() const;
 
         static endpoint from_hostname(zstring_view ip, uint16_t port);
         static endpoint from_unixpath(zstring_view path);
-        static endpoint from_empty();
+        static endpoint from_buf(endpoint_buf&& buf);
         static endpoint from_invalid();
 
     private:
-        endpoint(size_t n);
+        endpoint();
+        endpoint(size_t size);
+        endpoint(std::byte const* data, size_t size);
+        endpoint(dynarray<std::byte>&& data);
+        endpoint(dynarray<std::byte>&& data, size_t size);
         dynarray<std::byte> m_data;
-        size_t m_size = 0;
     };
 }

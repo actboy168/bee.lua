@@ -4,6 +4,9 @@
 #include <stdint.h>
 #endif
 
+#include <optional>
+#include <bee/nonstd/expected.h>
+
 namespace bee::net {
     struct endpoint;
 }
@@ -63,13 +66,12 @@ namespace bee::net::socket {
     bool   listen(fd_t s, int backlog);
     fdstat connect(fd_t s, const endpoint& ep);
     fdstat accept(fd_t s, fd_t& newfd);
-    fdstat accept(fd_t s, fd_t& newfd, endpoint& ep);
     status recv(fd_t s, int& rc, char* buf, int len);
     status send(fd_t s, int& rc, const char* buf, int len);
-    status recvfrom(fd_t s, int& rc, char* buf, int len, endpoint& ep);
+    bee::expected<endpoint, status> recvfrom(fd_t s, int& rc, char* buf, int len);
     status sendto(fd_t s, int& rc, const char* buf, int len, const endpoint& ep);
-    bool   getpeername(fd_t s, endpoint& ep);
-    bool   getsockname(fd_t s, endpoint& ep);
+    std::optional<endpoint> getpeername(fd_t s);
+    std::optional<endpoint> getsockname(fd_t s);
     bool   unlink(const endpoint& ep);
     int    errcode(fd_t s);
     fd_t   dup(fd_t s);

@@ -5,6 +5,7 @@
 #include <limits>
 #include <type_traits>
 #include <memory.h>
+#include <assert.h>
 
 namespace bee {
     template <class T>
@@ -62,16 +63,20 @@ namespace bee {
                 std::swap(size_, right.size_);
             }
         }
+        void resize(size_t size) noexcept {
+            assert(data_ != nullptr && size <= size_);
+            size_ = size;
+        }
         bool            empty()                 const noexcept { return size_ == 0; }
-        pointer         data()                        noexcept { return data_; }
-        const_pointer   data()                  const noexcept { return data_; }
-        size_type       size()                  const noexcept { return size_; }
-        const_iterator  begin()                 const noexcept { return data_; }
-        iterator        begin()                       noexcept { return data_; }
-        const_iterator  end()                   const noexcept { return data_ + size_; }
-        iterator        end()                         noexcept { return data_ + size_; }
-        const_reference operator[](size_type i) const noexcept { return data_[i]; }
-        reference       operator[](size_type i)       noexcept { return data_[i]; }
+        pointer         data()                        noexcept { assert(data_ != nullptr); return data_; }
+        const_pointer   data()                  const noexcept { assert(data_ != nullptr); return data_; }
+        size_type       size()                  const noexcept { assert(data_ != nullptr); return size_; }
+        const_iterator  begin()                 const noexcept { assert(data_ != nullptr); return data_; }
+        iterator        begin()                       noexcept { assert(data_ != nullptr); return data_; }
+        const_iterator  end()                   const noexcept { assert(data_ != nullptr); return data_ + size_; }
+        iterator        end()                         noexcept { assert(data_ != nullptr); return data_ + size_; }
+        const_reference operator[](size_type i) const noexcept { assert(data_ != nullptr && i < size_); return data_[i]; }
+        reference       operator[](size_type i)       noexcept { assert(data_ != nullptr && i < size_); return data_[i]; }
 
     private:
         class bad_array_length : public std::bad_alloc {

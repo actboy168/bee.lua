@@ -31,7 +31,18 @@
 #endif
 
 namespace bee::net {
-    static constexpr size_t kMaxEndpointSize = 256;
+    static constexpr socklen_t kMaxEndpointSize = 256;
+
+    endpoint_buf::endpoint_buf()
+        : m_data((size_t)kMaxEndpointSize)
+        , m_size(kMaxEndpointSize)
+    {}
+    sockaddr* endpoint_buf::addr() {
+        return (sockaddr*)m_data.data();
+    }
+    socklen_t* endpoint_buf::addrlen() {
+        return &m_size;
+    }
 
 #if defined(__linux__) && defined(BEE_DISABLE_DLOPEN)
 #else
@@ -98,17 +109,13 @@ namespace bee::net {
             sa4.sin_family = AF_INET;
             sa4.sin_port = htons(port);
             sa4.sin_port = htons(port);
-            endpoint ep(sizeof(struct sockaddr_in));
-            memcpy(ep.addr(), &sa4, ep.addrlen());
-            return ep;
+            return {(std::byte const*)sa4, sizeof(sa4)};
         }
         struct sockaddr_in6 sa6;
         if (1 == inet_pton(AF_INET6, ip.data(), &sa6.sin6_addr)) {
             sa4.sin_family = AF_INET6;
             sa6.sin6_port = htons(port);
-            endpoint ep(sizeof(struct sockaddr_in6));
-            memcpy(ep.addr(), &sa6, ep.addrlen());
-            return ep;
+            return {(std::byte const*)sa6, sizeof(sa6)};
         }
         return from_invalid();
 #else
@@ -131,23 +138,40 @@ namespace bee::net {
         else if (info->ai_family != AF_INET && info->ai_family != AF_INET6) {
             return from_invalid();
         }
-        const addrinfo& addrinfo = *info;
-        endpoint ep(addrinfo.ai_addrlen);
-        memcpy(ep.addr(), addrinfo.ai_addr, ep.addrlen());
-        return ep;
+        return {(std::byte const*)info->ai_addr, (size_t)info->ai_addrlen};
 #endif
     }
-    endpoint endpoint::from_empty() {
-        return endpoint(kMaxEndpointSize);
-    }
-    endpoint endpoint::from_invalid() {
-        return endpoint(0);
+
+    endpoint endpoint::from_buf(endpoint_buf&& buf) {
+        return { std::move(buf.m_data), (size_t)buf.m_size };
     }
 
-    endpoint::endpoint(size_t n)
-        : m_data(n)
-        , m_size(n)
+    endpoint endpoint::from_invalid() {
+        return endpoint();
+    }
+
+    endpoint::endpoint()
+        : m_data()
     { }
+
+    endpoint::endpoint(size_t size)
+        : m_data(size)
+    { }
+
+    endpoint::endpoint(std::byte const* data, size_t size)
+        : m_data(size) {
+        memcpy(m_data.data(), data, sizeof(std::byte) * size);
+    }
+
+    endpoint::endpoint(dynarray<std::byte>&& data)
+        : m_data(std::move(data))
+    { }
+
+    endpoint::endpoint(dynarray<std::byte>&& data, size_t size)
+        : m_data(std::move(data)) {
+        m_data.resize(size);
+    }
+
     endpoint_info endpoint::info() const {
         const sockaddr* sa = addr();
         if (sa->sa_family == AF_INET) {
@@ -183,20 +207,11 @@ namespace bee::net {
         }
         return { "", 0 };
     }
-    sockaddr* endpoint::addr() {
-        return (sockaddr*)m_data.data();
-    }
     const sockaddr* endpoint::addr() const {
         return (const sockaddr*)m_data.data();
     }
     socklen_t endpoint::addrlen() const {
-        return (socklen_t)m_size;
-    }
-    void endpoint::resize(socklen_t len) {
-        if (addrlen() <= len) {
-            return;
-        }
-        m_size = len;
+        return (socklen_t)m_data.size();
     }
     int endpoint::family() const {
         return addr()->sa_family;
