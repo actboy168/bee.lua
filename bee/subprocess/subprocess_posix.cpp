@@ -74,12 +74,12 @@ namespace bee::subprocess {
 
     static void env_append(std::vector<char*>& envs, const std::string& k, const std::string& v) {
         size_t n = k.size() + v.size() + 2;
-        char* str = new char[n];
-        memcpy(str, k.data(), k.size());
-        str[k.size()] = '=';
-        memcpy(str + k.size() + 1, v.data(), v.size());
-        str[n-1] = '\0';
-        envs.emplace_back(str);
+        dynarray<char> tmp(n);
+        memcpy(tmp.data(), k.data(), k.size());
+        tmp[k.size()] = '=';
+        memcpy(tmp.data() + k.size() + 1, v.data(), v.size());
+        tmp[n-1] = '\0';
+        envs.emplace_back(tmp.release());
     }
 
     static dynarray<char*> env_release(std::vector<char*>& envs) {
