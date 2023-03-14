@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <string>
 #include <string_view>
-#include <memory>
+#include <bee/utility/dynarray.h>
 
 #if !defined(_WIN32)
 #include <sys/socket.h>
@@ -43,7 +43,7 @@ namespace bee::net {
 
     private:
         endpoint(size_t n);
-        std::unique_ptr<std::byte[]> m_data;
+        dynarray<std::byte> m_data;
         size_t m_size = 0;
     };
 }

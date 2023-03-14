@@ -6,8 +6,7 @@
 #include <functional>
 
 #if defined(_WIN32)
-#include <memory>
-#include <set>
+#include <list>
 #elif defined(__APPLE__)
 #include <set>
 #   include <CoreServices/CoreServices.h>
@@ -80,7 +79,7 @@ namespace bee::filewatch {
         std::queue<notify>                      m_notify;
         bool                                    m_recursive = true;
 #if defined(_WIN32)
-        std::set<std::unique_ptr<task>>         m_tasks;
+        std::list<task>                         m_tasks;
 #elif defined(__APPLE__)
         std::set<std::string>                   m_paths;
         FSEventStreamRef                        m_stream;

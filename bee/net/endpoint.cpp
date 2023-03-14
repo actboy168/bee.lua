@@ -146,7 +146,7 @@ namespace bee::net {
     }
 
     endpoint::endpoint(size_t n)
-        : m_data(new std::byte[n])
+        : m_data(n)
         , m_size(n)
     { }
     endpoint_info endpoint::info() const {
@@ -185,10 +185,10 @@ namespace bee::net {
         return { "", 0 };
     }
     sockaddr* endpoint::addr() {
-        return (sockaddr*)m_data.get();
+        return (sockaddr*)m_data.data();
     }
     const sockaddr* endpoint::addr() const {
-        return (const sockaddr*)m_data.get();
+        return (const sockaddr*)m_data.data();
     }
     socklen_t endpoint::addrlen() const {
         return (socklen_t)m_size;

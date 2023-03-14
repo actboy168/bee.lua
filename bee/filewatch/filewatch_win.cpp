@@ -147,19 +147,20 @@ namespace bee::filewatch {
         if (m_tasks.empty()) {
             return;
         }
-        for (auto& it : m_tasks) {
-            it->cancel();
+        for (auto& task : m_tasks) {
+            task.cancel();
         }
         m_tasks.clear();
     }
 
     void watch::add(const string_type& path) {
-        auto t = std::make_unique<task>(this);
-        if (t->open(path)) {
-            if (t->start(m_recursive)) {
-                m_tasks.emplace(std::move(t));
+        auto& t = m_tasks.emplace_back(this);
+        if (t.open(path)) {
+            if (t.start(m_recursive)) {
+                return;
             }
         }
+        m_tasks.pop_back();
     }
 
     void watch::set_recursive(bool enable) {
@@ -215,7 +216,7 @@ namespace bee::filewatch {
 
     void watch::update() {
         for (auto iter = m_tasks.begin(); iter != m_tasks.end();) {
-            if (event_update(**iter)) {
+            if (event_update(*iter)) {
                 ++iter;
             }
             else {
