@@ -2,6 +2,7 @@
 #include <bee/nonstd/format.h>
 #include <bee/nonstd/unreachable.h>
 #include <bee/utility/dynarray.h>
+#include <bee/platform/win/unicode.h>
 #include <Windows.h>
 #include <Shobjidl.h>
 #include <memory>
@@ -14,6 +15,13 @@
 #define SIGKILL 9
 
 namespace bee::subprocess {
+    void args_t::push(const std::string_view& v) {
+        data_.emplace_back(win::u2w(v));
+    }
+    void args_t::push(std::wstring&& v) {
+        data_.emplace_back(std::forward<std::wstring>(v));
+    }
+
     template <class char_t>
     struct strbuilder {
         struct node {

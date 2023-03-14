@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <new>
 #include <limits>
 #include <type_traits>
@@ -23,14 +24,20 @@ namespace bee {
 
         static_assert(std::is_trivial_v<value_type>);
 
-        explicit dynarray()
+        dynarray()
             : data_(nullptr)
             , size_(0)
         {}
-        explicit dynarray(size_type c)
+        dynarray(size_type c)
             : data_(alloc(c))
             , size_(c)
         {}
+        template <typename Vec, typename = std::enable_if_t<std::is_same_v<typename Vec::value_type, value_type>>>
+        dynarray(Vec const& vec)
+            : data_(alloc(vec.size()))
+            , size_(vec.size()) {
+            memcpy(data_, vec.data(), sizeof(value_type) * vec.size());
+        }
         ~dynarray() {
             dealloc(data_);
         }
@@ -83,9 +90,6 @@ namespace bee {
         }
         static void dealloc(pointer ptr) { 
             delete[] reinterpret_cast<std::byte*>(ptr);
-        }
-        void uninitialized_copy(const_iterator f, const_iterator l, iterator v) noexcept {
-            memcpy(v, f, sizeof(value_type) * (l - f));
         }
     private:
         pointer   data_;

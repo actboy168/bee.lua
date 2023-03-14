@@ -1,6 +1,5 @@
 #pragma once
 
-#include <memory>
 #include <utility>
 #include <bee/utility/file_handle.h>
 #include <bee/utility/dynarray.h>

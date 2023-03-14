@@ -25,18 +25,18 @@ namespace bee::subprocess {
 
     args_t::~args_t() {
         for (size_t i = 0; i < size(); ++i) {
-            delete[]((*this)[i]);
+            delete[](data_[i]);
         }
     }
 
     void args_t::push(char* str) {
-        push_back(str);
+        data_.emplace_back(str);
     }
 
-    void args_t::push(const std::string& str) {
+    void args_t::push(const std::string_view& str) {
         std::unique_ptr<char[]> tmp(new char[str.size() + 1]);
         memcpy(tmp.get(), str.data(), str.size() + 1);
-        push(tmp.release());
+        data_.emplace_back(tmp.release());
     }
 
     static void sigalrm_handler (int) {
@@ -85,9 +85,7 @@ namespace bee::subprocess {
 
     static dynarray<char*> env_release(std::vector<char*>& envs) {
         envs.emplace_back(nullptr);
-        dynarray<char*> r(envs.size());
-        memcpy(r.data(), envs.data(), envs.size() * sizeof(char*));
-        return r;
+        return {envs};
     }
 
     environment envbuilder::release() {

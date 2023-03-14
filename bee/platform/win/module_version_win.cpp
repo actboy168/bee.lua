@@ -1,7 +1,6 @@
 #include <bee/platform/win/module_version.h>
 #include <bee/nonstd/format.h>
 #include <bee/utility/dynarray.h>
-#include <memory>
 #include <Windows.h>
 
 namespace bee::win {

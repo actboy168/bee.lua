@@ -35,10 +35,27 @@ namespace bee::subprocess {
         int status = 0;
     };
 
-    struct args_t : public std::vector<char*> {
+    struct args_t {
         ~args_t();
         void push(char* str);
-        void push(const std::string& str);
+        void push(const std::string_view& str);
+        char*& operator[](size_t i) {
+            return data_[i];
+        }
+        char* const& operator[](size_t i) const {
+            return data_[i];
+        }
+        char* const* data() const {
+            return data_.data();
+        }
+        char** data() {
+            return data_.data();
+        }
+        size_t size() const {
+            return data_.size();
+        }
+    private:
+        std::vector<char*> data_;
     };
 
     class spawn {

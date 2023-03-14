@@ -5,7 +5,6 @@
 #include <set>
 #include <vector>
 #include <string>
-#include <memory>
 #include <bee/subprocess/common.h>
 
 namespace bee::subprocess {
@@ -66,10 +65,20 @@ namespace bee::subprocess {
         PROCESS_INFORMATION           pi_;
     };
 
-    struct args_t : public std::vector<std::wstring> {
-        args_t() {}
-        args_t(std::vector<std::wstring> init) : std::vector<std::wstring>(init) {}
-        template <typename T> void push(T v) { push_back(v); }
+    struct args_t {
+        void push(const std::string_view& v);
+        void push(std::wstring&& v);
+        std::wstring& operator[](size_t i) {
+            return data_[i];
+        }
+        std::wstring const& operator[](size_t i) const {
+            return data_[i];
+        }
+        size_t size() const {
+            return data_.size();
+        }
+    private:
+        std::vector<std::wstring> data_;
     };
 
     class spawn {

@@ -160,7 +160,7 @@ namespace bee::lua_subprocess {
                 lua_geti(L, idx, i);
                 switch (lua_type(L, -1)) {
                 case LUA_TSTRING:
-                    args.push(lua::checkstring(L, -1));
+                    args.push(lua::checkstrview(L, -1));
                     break;
                 case LUA_TUSERDATA: {
                     auto const & path = lua::checkudata<fs::path>(L, -1);
