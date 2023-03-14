@@ -10,7 +10,6 @@
 #       include <sys/utsname.h>
 #       include <stdio.h>
 #   endif
-#   include <vector>
 #   include <string_view>
 #   include <bee/nonstd/charconv.h>
 #endif
@@ -18,7 +17,7 @@
 namespace bee {
     
 #if !defined(__APPLE__)
-    static uint32_t toint(std::string_view const& str, uint32_t def = 0) {
+    static uint32_t toint(std::string_view str, uint32_t def = 0) {
         uint32_t res;
         auto first = str.data();
         auto last = str.data() + str.size();
@@ -30,7 +29,7 @@ namespace bee {
     }
 
 #if defined(_WIN32)
-    static uint32_t toint(std::wstring_view const& wstr, uint32_t def = 0) {
+    static uint32_t toint(std::wstring_view wstr, uint32_t def = 0) {
         std::string str;
         str.resize(wstr.size());
         for (size_t i = 0; i < wstr.size(); ++i) {
@@ -44,26 +43,25 @@ namespace bee {
 #endif
 
     template <typename CharT>
-    static version to_version(const std::basic_string_view<CharT>& verstr) {
-        std::basic_string_view<CharT> vers[3];
-        size_t n = 0;
-        for (size_t pos = 0;;) {
-            if (n == sizeof(vers)/sizeof(vers[0])) {
-                break;
-            }
-            size_t next = verstr.find(CharT('.'), pos);
-            if (next == std::basic_string_view<CharT>::npos) {
-                vers[n++] = verstr.substr(pos);
-                break;
-            }
-            vers[n++] = verstr.substr(pos, next - pos);
-            pos = next + 1;
+    static version to_version(std::basic_string_view<CharT> verstr) {
+        constexpr auto npos = std::basic_string_view<CharT>::npos;
+        version v { 0, 0, 0 };
+        size_t pos = 0;
+        size_t next = verstr.find(CharT('.'), pos);
+        v.major = toint(verstr.substr(pos, (next == npos)? npos: (next - pos)));
+        if (next == npos) {
+            return v;
         }
-        return {
-            (n > 0) ? toint(vers[0]) : 0,
-            (n > 1) ? toint(vers[1]) : 0,
-            (n > 2) ? toint(vers[2]) : 0,
-        };
+        pos = next + 1;
+        next = verstr.find(CharT('.'), pos);
+        v.minor = toint(verstr.substr(pos, (next == npos)? npos: (next - pos)));
+        if (next == npos) {
+            return v;
+        }
+        pos = next + 1;
+        next = verstr.find(CharT('.'), pos);
+        v.revision = toint(verstr.substr(pos, (next == npos)? npos: (next - pos)));
+        return v;
     }
 #endif
 
