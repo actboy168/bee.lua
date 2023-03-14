@@ -15,9 +15,7 @@ namespace bee {
 #elif defined(__x86_64__) || defined(__i386__)
         _mm_pause();
 #elif defined(__aarch64__)
-        asm volatile("yield" ::: "memory");
-#elif defined(__arm__)
-        asm volatile("":::"memory");
+        asm volatile("isb");
 #elif defined(__riscv)
         int dummy;
         asm volatile ("div %0, %0, zero" : "=r" (dummy));
@@ -25,7 +23,7 @@ namespace bee {
 #elif defined(__powerpc__)
         asm volatile("ori 0,0,0" ::: "memory");
 #else
-        #error unsupport platform
+        std::atomic_thread_fence(std::memory_order_seq_cst);
 #endif
     }
 
