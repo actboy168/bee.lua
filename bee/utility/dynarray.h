@@ -77,9 +77,9 @@ namespace bee {
             return r;
         }
         bool            empty()                 const noexcept { return size_ == 0; }
-        pointer         data()                        noexcept { assert(data_ != nullptr); return data_; }
-        const_pointer   data()                  const noexcept { assert(data_ != nullptr); return data_; }
-        size_type       size()                  const noexcept { assert(data_ != nullptr); return size_; }
+        pointer         data()                        noexcept { return data_; }
+        const_pointer   data()                  const noexcept { return data_; }
+        size_type       size()                  const noexcept { return size_; }
         const_iterator  begin()                 const noexcept { assert(data_ != nullptr); return data_; }
         iterator        begin()                       noexcept { assert(data_ != nullptr); return data_; }
         const_iterator  end()                   const noexcept { assert(data_ != nullptr); return data_ + size_; }

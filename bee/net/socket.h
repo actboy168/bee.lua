@@ -68,7 +68,7 @@ namespace bee::net::socket {
     fdstat accept(fd_t s, fd_t& newfd);
     status recv(fd_t s, int& rc, char* buf, int len);
     status send(fd_t s, int& rc, const char* buf, int len);
-    bee::expected<endpoint, status> recvfrom(fd_t s, int& rc, char* buf, int len);
+    expected<endpoint, status> recvfrom(fd_t s, int& rc, char* buf, int len);
     status sendto(fd_t s, int& rc, const char* buf, int len, const endpoint& ep);
     std::optional<endpoint> getpeername(fd_t s);
     std::optional<endpoint> getsockname(fd_t s);

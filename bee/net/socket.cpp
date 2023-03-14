@@ -420,7 +420,7 @@ namespace bee::net::socket {
         return status::success;
     }
 
-    bee::expected<endpoint, status> recvfrom(fd_t s, int& rc, char* buf, int len) {
+    expected<endpoint, status> recvfrom(fd_t s, int& rc, char* buf, int len) {
         endpoint_buf tmp;
         rc = ::recvfrom(s, buf, len, 0, tmp.addr(), tmp.addrlen());
         if (rc == 0) {

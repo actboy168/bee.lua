@@ -18,23 +18,8 @@
 namespace bee {
     
 #if !defined(__APPLE__)
-    template <typename ResultT, typename StrT>
-    static void split(ResultT& Result, StrT& input, typename StrT::value_type c) {
-        for (size_t pos = 0;;) {
-            size_t next = input.find(c, pos);
-            if (next != StrT::npos) {
-                Result.push_back(input.substr(pos, next - pos));
-                pos = next + 1;
-            }
-            else {
-                Result.push_back(input.substr(pos));
-                break;
-            }
-        }
-    }
-
-    static unsigned int toint(std::string_view const& str, unsigned int def = 0) {
-        unsigned int res;
+    static uint32_t toint(std::string_view const& str, uint32_t def = 0) {
+        uint32_t res;
         auto first = str.data();
         auto last = str.data() + str.size();
         if (auto[p, ec] = std::from_chars(first, last, res); ec != std::errc()) {
@@ -45,7 +30,7 @@ namespace bee {
     }
 
 #if defined(_WIN32)
-    static unsigned int toint(std::wstring_view const& wstr, unsigned int def = 0) {
+    static uint32_t toint(std::wstring_view const& wstr, uint32_t def = 0) {
         std::string str;
         str.resize(wstr.size());
         for (size_t i = 0; i < wstr.size(); ++i) {
@@ -60,12 +45,24 @@ namespace bee {
 
     template <typename CharT>
     static version to_version(const std::basic_string_view<CharT>& verstr) {
-        std::vector<std::basic_string_view<CharT>> vers;
-        split(vers, verstr, CharT('.'));
+        std::basic_string_view<CharT> vers[3];
+        size_t n = 0;
+        for (size_t pos = 0;;) {
+            if (n == sizeof(vers)/sizeof(vers[0])) {
+                break;
+            }
+            size_t next = verstr.find(CharT('.'), pos);
+            if (next == std::basic_string_view<CharT>::npos) {
+                vers[n++] = verstr.substr(pos);
+                break;
+            }
+            vers[n++] = verstr.substr(pos, next - pos);
+            pos = next + 1;
+        }
         return {
-            (vers.size() > 0) ? toint(vers[0]) : 0,
-            (vers.size() > 1) ? toint(vers[1]) : 0,
-            (vers.size() > 2) ? toint(vers[2]) : 0,
+            (n > 0) ? toint(vers[0]) : 0,
+            (n > 1) ? toint(vers[1]) : 0,
+            (n > 2) ? toint(vers[2]) : 0,
         };
     }
 #endif
@@ -116,8 +113,9 @@ namespace bee {
             // see
             //   http://msdn.microsoft.com/en-us/library/windows/desktop/ms724451(v=vs.85).aspx
             //   http://msdn.microsoft.com/en-us/library/windows/desktop/ms724429(v=vs.85).aspx
-            auto wstr = win::get_module_version(L"kernel32.dll", L"ProductVersion");
-            return to_version(std::wstring_view {wstr});
+            win::module_version mv(L"kernel32.dll");
+            auto wstr = mv.get_value(L"ProductVersion");
+            return to_version(wstr);
         }
         return v;
 #else
