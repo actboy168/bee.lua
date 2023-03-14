@@ -4,27 +4,31 @@
 
 #if defined(_WIN32)
     #include <windows.h>
-    namespace bee { inline void cpu_relax() { YieldProcessor(); }}
 #elif defined(__x86_64__) || defined(__i386__)
     #include <immintrin.h>
-    namespace bee { inline void cpu_relax() { _mm_pause(); }}
-#elif defined(__aarch64__)
-    namespace bee { inline void cpu_relax() { asm volatile("yield" ::: "memory"); }}
-#elif defined(__arm__)
-    namespace bee { inline void cpu_relax() { asm volatile("":::"memory"); }}
-#elif defined(__riscv)
-    namespace bee { inline void cpu_relax() {
-        int dummy;
-        asm volatile ("div %0, %0, zero" : "=r" (dummy));
-        asm volatile ("" ::: "memory");
-    }}
-#elif defined(__powerpc__)
-    namespace bee { inline void cpu_relax() { asm volatile("ori 0,0,0" ::: "memory"); }}
-#else
-    #error unsupport platform
 #endif
 
 namespace bee {
+    inline void cpu_relax() {
+#if defined(_WIN32)
+        YieldProcessor();
+#elif defined(__x86_64__) || defined(__i386__)
+        _mm_pause();
+#elif defined(__aarch64__)
+        asm volatile("yield" ::: "memory");
+#elif defined(__arm__)
+        asm volatile("":::"memory");
+#elif defined(__riscv)
+        int dummy;
+        asm volatile ("div %0, %0, zero" : "=r" (dummy));
+        asm volatile ("" ::: "memory");
+#elif defined(__powerpc__)
+        asm volatile("ori 0,0,0" ::: "memory");
+#else
+        #error unsupport platform
+#endif
+    }
+
 #if defined(__cpp_lib_atomic_flag_test) //c++20
     using std::atomic_flag;
 #else
