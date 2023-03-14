@@ -34,8 +34,8 @@ namespace bee::subprocess {
     }
 
     void args_t::push(zstring_view str) {
-        std::unique_ptr<char[]> tmp(new char[str.size() + 1]);
-        memcpy(tmp.get(), str.data(), str.size() + 1);
+        dynarray<char> tmp(str.size()+1);
+        memcpy(tmp.data(), str.data(), str.size() + 1);
         data_.emplace_back(tmp.release());
     }
 
