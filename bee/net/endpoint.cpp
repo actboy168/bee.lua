@@ -37,6 +37,10 @@ namespace bee::net {
         : m_data((size_t)kMaxEndpointSize)
         , m_size(kMaxEndpointSize)
     {}
+    endpoint_buf::endpoint_buf(size_t size)
+        : m_data(size)
+        , m_size((socklen_t)size)
+    {}
     sockaddr* endpoint_buf::addr() {
         return (sockaddr*)m_data.data();
     }
@@ -96,11 +100,11 @@ namespace bee::net {
         if (path.size() >= UNIX_PATH_MAX) {
             return from_invalid();
         }
-        endpoint ep(offsetof(struct sockaddr_un, sun_path) + path.size() + 1);
-        struct sockaddr_un* su = (struct sockaddr_un*)ep.addr();
+        endpoint_buf tmp(offsetof(struct sockaddr_un, sun_path) + path.size() + 1);
+        struct sockaddr_un* su = (struct sockaddr_un*)tmp.addr();
         su->sun_family = AF_UNIX;
-        memcpy(&su->sun_path[0], path.data(), path.size()+1);
-        return ep;
+        memcpy(&su->sun_path[0], path.data(), path.size() + 1);
+        return from_buf(std::move(tmp));
     }
     endpoint endpoint::from_hostname(zstring_view ip, uint16_t port) {
 #if defined(__linux__) && defined(BEE_DISABLE_DLOPEN)

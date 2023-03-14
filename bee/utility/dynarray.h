@@ -29,16 +29,19 @@ namespace bee {
             : data_(nullptr)
             , size_(0)
         {}
-        dynarray(size_type c)
-            : data_(alloc(c))
-            , size_(c)
+        dynarray(size_type size)
+            : data_(alloc(size))
+            , size_(size)
         {}
+        dynarray(const value_type* data, size_type size)
+            : data_(alloc(size))
+            , size_(size) {
+            memcpy(data_, data, sizeof(value_type) * size);
+        }
         template <typename Vec, typename = std::enable_if_t<std::is_same_v<typename Vec::value_type, value_type>>>
         dynarray(Vec const& vec)
-            : data_(alloc(vec.size()))
-            , size_(vec.size()) {
-            memcpy(data_, vec.data(), sizeof(value_type) * vec.size());
-        }
+            : dynarray(vec.data(), vec.size())
+        {}
         ~dynarray() {
             dealloc(data_);
         }

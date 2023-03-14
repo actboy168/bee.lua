@@ -9,7 +9,6 @@ namespace bee::win {
 		module_version_info();
 		module_version_info(const wchar_t* module_path);
 		const wchar_t* operator[] (const wchar_t* key) const;
-		VS_FIXEDFILEINFO* fixed_file_info() const;
 		bool select_language(WORD langid);
 	protected:
 		bool create(const wchar_t* module_path);
@@ -55,10 +54,6 @@ namespace bee::win {
 		return L"";
 	}
 
-	VS_FIXEDFILEINFO* module_version_info::fixed_file_info() const {
-		return fixed_file_info_;
-	}
-
 	bool module_version_info::select_language(WORD langid) {
 		for (size_t i = 0; i < translation_size_; ++i) {
 			if (translation_[i].language == langid) {
@@ -89,7 +84,7 @@ namespace bee::win {
 		if (!::VerQueryValueW(version_info_.data(), L"\\", (LPVOID*)&fixed_file_info_, &length)) {
 			return false;
 		}
-		if (fixed_file_info()->dwSignature != VS_FFI_SIGNATURE) {
+		if (fixed_file_info_->dwSignature != VS_FFI_SIGNATURE) {
 			return false;
 		}
 		TRANSLATION* translate_ptr = nullptr;
@@ -99,8 +94,7 @@ namespace bee::win {
 		}
 		current_ = 0;
 		translation_size_ = length / sizeof(TRANSLATION);
-		translation_ = dynarray<TRANSLATION>(translation_size_);
-		memcpy(translation_.data(), translate_ptr, translation_size_ * sizeof(TRANSLATION));
+		translation_ = dynarray<TRANSLATION>(translate_ptr, translation_size_);
 		select_language(::GetUserDefaultLangID());
 		return true;
 	}
