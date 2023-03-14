@@ -48,7 +48,7 @@ namespace bee::net {
         addrinfo* info;
     };
 
-    static bool needsnolookup(const std::string_view& ip) {
+    static bool needsnolookup(zstring_view ip) {
         size_t pos = ip.find_first_not_of("0123456789.");
         if (pos == std::string_view::npos) {
             return true;
@@ -70,7 +70,7 @@ namespace bee::net {
         }
         return false;
     }
-    static autorelease_addrinfo gethostaddr(const addrinfo& hint, const std::string_view& ip, const char* port) {
+    static autorelease_addrinfo gethostaddr(const addrinfo& hint, zstring_view ip, const char* port) {
         addrinfo* info = 0;
         int err = ::getaddrinfo(ip.data(), port, &hint, &info);
         if (err != 0) {
@@ -81,18 +81,17 @@ namespace bee::net {
     }
 #endif
 
-    endpoint endpoint::from_unixpath(const std::string_view& path) {
+    endpoint endpoint::from_unixpath(zstring_view path) {
         if (path.size() >= UNIX_PATH_MAX) {
             return from_invalid();
         }
         endpoint ep(offsetof(struct sockaddr_un, sun_path) + path.size() + 1);
         struct sockaddr_un* su = (struct sockaddr_un*)ep.addr();
         su->sun_family = AF_UNIX;
-        memcpy(&su->sun_path[0], path.data(), path.size());
-        su->sun_path[path.size()] = '\0';
+        memcpy(&su->sun_path[0], path.data(), path.size()+1);
         return ep;
     }
-    endpoint endpoint::from_hostname(const std::string_view& ip, uint16_t port) {
+    endpoint endpoint::from_hostname(zstring_view ip, uint16_t port) {
 #if defined(__linux__) && defined(BEE_DISABLE_DLOPEN)
         struct sockaddr_in sa4;
         if (1 == inet_pton(AF_INET, ip.data(), &sa4.sin_addr)) {

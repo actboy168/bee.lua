@@ -2,8 +2,8 @@
 
 #include <cstddef>
 #include <string>
-#include <string_view>
 #include <bee/utility/dynarray.h>
+#include <bee/utility/zstring_view.h>
 
 #if !defined(_WIN32)
 #include <sys/socket.h>
@@ -36,8 +36,8 @@ namespace bee::net {
         int             family() const;
         bool            valid() const;
 
-        static endpoint from_hostname(const std::string_view& ip, uint16_t port);
-        static endpoint from_unixpath(const std::string_view& path);
+        static endpoint from_hostname(zstring_view ip, uint16_t port);
+        static endpoint from_unixpath(zstring_view path);
         static endpoint from_empty();
         static endpoint from_invalid();
 

@@ -93,9 +93,9 @@ namespace bee::lua_thread {
         channelmgr() {
             channels.emplace(std::make_pair("errlog", new channel));
         }
-        bool create(std::string_view name) {
+        bool create(zstring_view name) {
             std::unique_lock<spinlock> lk(mutex);
-            std::string namestr {name};
+            std::string namestr {name.data(), name.size()};
             auto it = channels.find(namestr);
             if (it != channels.end()) {
                 return false;
@@ -115,9 +115,9 @@ namespace bee::lua_thread {
                 channels.clear();
             }
         }
-        boxchannel query(std::string_view name) {
+        boxchannel query(zstring_view name) {
             std::unique_lock<spinlock> lk(mutex);
-            std::string namestr {name};
+            std::string namestr {name.data(), name.size()};
             auto it = channels.find(namestr);
             if (it != channels.end()) {
                 return it->second;
@@ -276,7 +276,7 @@ namespace bee::lua_thread {
         auto source = lua::checkstrview(L, 1);
         void* params = seri_pack(L, 1, NULL);
         int id = gen_threadid();
-        thread_args* args = new thread_args { std::string {source}, id, params };
+        thread_args* args = new thread_args { std::string {source.data(), source.size()}, id, params };
         thread_handle handle = thread_create(thread_main, args);
         if (!handle) {
             delete args;

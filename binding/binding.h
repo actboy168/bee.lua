@@ -9,6 +9,7 @@
 #include <bee/nonstd/unreachable.h>
 #include <bee/nonstd/bit.h>
 #include <bee/nonstd/to_underlying.h>
+#include <bee/utility/zstring_view.h>
 #if defined(_WIN32)
 #include <bee/platform/win/unicode.h>
 #endif
@@ -20,10 +21,10 @@ namespace bee::lua {
     using string_type = std::string;
 #endif
 
-    inline std::string_view checkstrview(lua_State* L, int idx) {
+    inline zstring_view checkstrview(lua_State* L, int idx) {
         size_t len = 0;
         const char* buf = luaL_checklstring(L, idx, &len);
-        return std::string_view(buf, len);
+        return { buf, len };
     }
 
     inline string_type checkstring(lua_State* L, int idx) {
@@ -31,7 +32,7 @@ namespace bee::lua {
 #if defined(_WIN32)
         return win::u2w(str);
 #else
-        return string_type { str };
+        return string_type { str.data(), str.size() };
 #endif
     }
 

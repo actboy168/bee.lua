@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <bee/subprocess/common.h>
+#include <bee/utility/zstring_view.h>
 
 namespace bee::subprocess {
     namespace ignore_case {
@@ -66,7 +67,7 @@ namespace bee::subprocess {
     };
 
     struct args_t {
-        void push(const std::string_view& v);
+        void push(zstring_view v);
         void push(std::wstring&& v);
         std::wstring& operator[](size_t i) {
             return data_[i];

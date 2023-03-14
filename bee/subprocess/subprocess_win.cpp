@@ -15,7 +15,7 @@
 #define SIGKILL 9
 
 namespace bee::subprocess {
-    void args_t::push(const std::string_view& v) {
+    void args_t::push(zstring_view v) {
         data_.emplace_back(win::u2w(v));
     }
     void args_t::push(std::wstring&& v) {

@@ -7,6 +7,7 @@
 #include <set>
 #include <vector>
 #include <bee/subprocess/common.h>
+#include <bee/utility/zstring_view.h>
 #include <spawn.h>
 
 namespace bee::subprocess {
@@ -38,7 +39,7 @@ namespace bee::subprocess {
     struct args_t {
         ~args_t();
         void push(char* str);
-        void push(const std::string_view& str);
+        void push(zstring_view str);
         char*& operator[](size_t i) {
             return data_[i];
         }

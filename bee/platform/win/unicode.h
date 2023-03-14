@@ -1,13 +1,13 @@
 #pragma once
 
 #include <string>
-#include <string_view>
+#include <bee/utility/zstring_view.h>
 
 namespace bee::win {
-    std::wstring u2w(const std::string_view& str);
-    std::string  w2u(const std::wstring_view& wstr);
-    std::wstring a2w(const std::string_view& str);
-    std::string  w2a(const std::wstring_view& wstr);
-    std::string  a2u(const std::string_view& str);
-    std::string  u2a(const std::string_view& str);
+    std::wstring u2w(zstring_view str);
+    std::string  w2u(wzstring_view wstr);
+    std::wstring a2w(zstring_view str);
+    std::string  w2a(wzstring_view wstr);
+    std::string  a2u(zstring_view str);
+    std::string  u2a(zstring_view str);
 }
