@@ -150,7 +150,7 @@ namespace bee::lua_subprocess {
             }
             default:
                 lua_pop(L, 1);
-                return std::optional<lua::string_type>();
+                return std::nullopt;
             }
         }
 
@@ -351,7 +351,7 @@ namespace bee::lua_subprocess {
                 return 0;
             }
 
-            std::optional<lua::string_type> cwd = cast_cwd(L);
+            auto cwd = cast_cwd(L);
             cast_env(L, spawn);
             cast_suspended(L, spawn);
             cast_option(L, spawn);

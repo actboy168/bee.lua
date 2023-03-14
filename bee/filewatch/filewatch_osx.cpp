@@ -147,6 +147,6 @@ namespace bee::filewatch {
         }
         auto n = m_notify.front();
         m_notify.pop();
-        return std::move(n);
+        return n;
     }
 }
