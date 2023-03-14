@@ -1,6 +1,5 @@
 #include <bee/utility/file_handle.h>
 #include <bee/nonstd/unreachable.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
 

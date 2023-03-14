@@ -8,8 +8,6 @@
 #include <memory>
 #include <thread>
 #include <deque>
-#include <fcntl.h>
-#include <io.h>
 #include <signal.h>
 
 #define SIGKILL 9
