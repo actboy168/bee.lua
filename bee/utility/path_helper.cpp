@@ -4,8 +4,8 @@
 
 #if defined(_WIN32)
 
-#include <Windows.h>
-#include <shlobj.h>
+#    include <Windows.h>
+#    include <shlobj.h>
 
 // http://blogs.msdn.com/oldnewthing/archive/2004/10/25/247180.aspx
 extern "C" IMAGE_DOS_HEADER __ImageBase;
@@ -44,9 +44,9 @@ namespace bee::path_helper {
 
 #else
 
-#if defined(__APPLE__)
+#    if defined(__APPLE__)
 
-#include <mach-o/dyld.h>
+#        include <mach-o/dyld.h>
 
 namespace bee::path_helper {
     path_expected exe_path() {
@@ -64,30 +64,30 @@ namespace bee::path_helper {
     }
 }
 
-#else
+#    else
 
-#include <unistd.h>
+#        include <unistd.h>
 
-#if defined(__FreeBSD__)
-#   include <sys/param.h>
-#   include <sys/sysctl.h>
-#elif defined(__OpenBSD__)
-#   include <sys/sysctl.h>
-#   include <unistd.h>
-#endif
+#        if defined(__FreeBSD__)
+#            include <sys/param.h>
+#            include <sys/sysctl.h>
+#        elif defined(__OpenBSD__)
+#            include <sys/sysctl.h>
+#            include <unistd.h>
+#        endif
 
 namespace bee::path_helper {
     path_expected exe_path() {
-#if defined(__FreeBSD__)
+#        if defined(__FreeBSD__)
         int name[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
         char exe[1024];
         size_t length = 1024;
-        int error = sysctl(name, 4, exe, &length, NULL, 0);
+        int error     = sysctl(name, 4, exe, &length, NULL, 0);
         if (error < 0 || length <= 1) {
             return unexpected<std::string>(make_syserror("exe_path").what());
         }
-        return fs::path(exe, exe+length-1);
-#elif defined(__OpenBSD__)
+        return fs::path(exe, exe + length - 1);
+#        elif defined(__OpenBSD__)
         int name[] = { CTL_KERN, KERN_PROC_ARGS, getpid(), KERN_PROC_ARGV };
         size_t argc;
         if (sysctl(name, 4, NULL, &argc, NULL, 0) < 0) {
@@ -101,20 +101,20 @@ namespace bee::path_helper {
             return unexpected<std::string>(make_syserror("exe_path").what());
         }
         return fs::path(argv[0]);
-#else
+#        else
         std::error_code ec;
         auto res = fs::read_symlink("/proc/self/exe", ec);
         if (ec) {
             return unexpected<std::string>(make_syserror("exe_path").what());
         }
         return res;
-#endif
+#        endif
     }
 }
 
-#endif
+#    endif
 
-#if defined(BEE_DISABLE_DLOPEN)
+#    if defined(BEE_DISABLE_DLOPEN)
 
 namespace bee::path_helper {
     path_expected dll_path(void* module_handle) {
@@ -125,15 +125,15 @@ namespace bee::path_helper {
     }
 }
 
-#else
+#    else
 
-#include <dlfcn.h>
+#        include <dlfcn.h>
 
 namespace bee::path_helper {
     path_expected dll_path(void* module_handle) {
         ::Dl_info dl_info;
         dl_info.dli_fname = 0;
-        int const ret = ::dladdr(module_handle, &dl_info);
+        int const ret     = ::dladdr(module_handle, &dl_info);
         if (0 != ret && dl_info.dli_fname != NULL) {
             return fs::absolute(dl_info.dli_fname).lexically_normal();
         }
@@ -145,7 +145,7 @@ namespace bee::path_helper {
     }
 }
 
-#endif
+#    endif
 
 #endif
 
@@ -157,7 +157,8 @@ namespace bee::path_helper {
         const fs::path::value_type* l(lpath.c_str());
         const fs::path::value_type* r(rpath.c_str());
         while ((towlower(*l) == towlower(*r) || (*l == L'\\' && *r == L'/') || (*l == L'/' && *r == L'\\')) && *l) {
-            ++l; ++r;
+            ++l;
+            ++r;
         }
         return *l == *r;
     }
@@ -168,10 +169,11 @@ namespace bee::path_helper {
         const fs::path::value_type* l(lpath.c_str());
         const fs::path::value_type* r(rpath.c_str());
         while (towlower(*l) == towlower(*r) && *l) {
-            ++l; ++r;
+            ++l;
+            ++r;
         }
         return *l == *r;
-}
+    }
 #else
     bool equal(fs::path const& lhs, fs::path const& rhs) {
         return lhs.lexically_normal() == rhs.lexically_normal();

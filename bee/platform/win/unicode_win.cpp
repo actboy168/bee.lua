@@ -3,11 +3,11 @@
 
 namespace bee::win {
     std::wstring u2w(zstring_view str) {
-        if (str.empty())  {
+        if (str.empty()) {
             return L"";
         }
         int wlen = ::MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), NULL, 0);
-        if (wlen <= 0)  {
+        if (wlen <= 0) {
             return L"";
         }
         std::wstring wresult(wlen, L'\0');
@@ -15,8 +15,8 @@ namespace bee::win {
         return wresult;
     }
 
-    std::string w2u(wzstring_view wstr)  {
-        if (wstr.empty())  {
+    std::string w2u(wzstring_view wstr) {
+        if (wstr.empty()) {
             return "";
         }
         int len = ::WideCharToMultiByte(CP_UTF8, 0, wstr.data(), (int)wstr.size(), NULL, 0, 0, 0);
@@ -29,7 +29,7 @@ namespace bee::win {
     }
 
     std::wstring a2w(zstring_view str) {
-        if (str.empty())  {
+        if (str.empty()) {
             return L"";
         }
         int wlen = ::MultiByteToWideChar(CP_ACP, 0, str.data(), (int)str.size(), NULL, 0);

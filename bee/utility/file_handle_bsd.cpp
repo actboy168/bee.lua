@@ -13,6 +13,6 @@ namespace bee {
             ::close(fd);
             return {};
         }
-        return {fd};
+        return { fd };
     }
 }

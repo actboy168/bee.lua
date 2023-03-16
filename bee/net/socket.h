@@ -1,7 +1,7 @@
 #pragma once
 
 #if defined _WIN32
-#include <stdint.h>
+#    include <stdint.h>
 #endif
 
 #include <optional>
@@ -52,18 +52,18 @@ namespace bee::net::socket {
         rcvbuf,
     };
 
-    bool   initialize();
-    fd_t   open(protocol protocol);
-    bool   pair(fd_t sv[2]);
+    bool initialize();
+    fd_t open(protocol protocol);
+    bool pair(fd_t sv[2]);
 #if !defined(_WIN32)
-    bool   blockpair(fd_t sv[2]);
+    bool blockpair(fd_t sv[2]);
 #endif
-    bool   close(fd_t s);
-    bool   shutdown(fd_t s, shutdown_flag flag);
-    bool   setoption(fd_t s, option opt, int value);
-    void   udp_connect_reset(fd_t s);
-    bool   bind(fd_t s, const endpoint& ep);
-    bool   listen(fd_t s, int backlog);
+    bool close(fd_t s);
+    bool shutdown(fd_t s, shutdown_flag flag);
+    bool setoption(fd_t s, option opt, int value);
+    void udp_connect_reset(fd_t s);
+    bool bind(fd_t s, const endpoint& ep);
+    bool listen(fd_t s, int backlog);
     fdstat connect(fd_t s, const endpoint& ep);
     fdstat accept(fd_t s, fd_t& newfd);
     status recv(fd_t s, int& rc, char* buf, int len);
@@ -72,7 +72,7 @@ namespace bee::net::socket {
     status sendto(fd_t s, int& rc, const char* buf, int len, const endpoint& ep);
     std::optional<endpoint> getpeername(fd_t s);
     std::optional<endpoint> getsockname(fd_t s);
-    bool   unlink(const endpoint& ep);
-    int    errcode(fd_t s);
-    fd_t   dup(fd_t s);
+    bool unlink(const endpoint& ep);
+    int errcode(fd_t s);
+    fd_t dup(fd_t s);
 }

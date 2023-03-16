@@ -1,8 +1,8 @@
 ﻿#include <binding/binding.h>
 #if defined _WIN32
-#include <winsock.h>
+#    include <winsock.h>
 #else
-#include <sys/select.h>
+#    include <sys/select.h>
 #endif
 #include <bee/error.h>
 #include <bee/net/endpoint.h>
@@ -36,7 +36,7 @@ namespace bee::lua_socket {
         }
         else {
             auto port = lua::checkinteger<uint16_t>(L, idx + 1, "port");
-            auto ep = endpoint::from_hostname(ip, port);
+            auto ep   = endpoint::from_hostname(ip, port);
             if (!ep.valid()) {
                 luaL_error(L, "invalid address: %s:%d", ip.data(), port);
             }
@@ -63,7 +63,7 @@ namespace bee::lua_socket {
         return 1;
     }
     static int recv(lua_State* L) {
-        auto fd = checkfd(L, 1);
+        auto fd  = checkfd(L, 1);
         auto len = lua::optinteger<int>(L, 2, LUAL_BUFFERSIZE, "bufsize");
         luaL_Buffer b;
         luaL_buffinit(L, &b);
@@ -86,7 +86,7 @@ namespace bee::lua_socket {
         }
     }
     static int send(lua_State* L) {
-        auto fd = checkfd(L, 1);
+        auto fd  = checkfd(L, 1);
         auto buf = lua::checkstrview(L, 2);
         int rc;
         switch (socket::send(fd, rc, buf.data(), (int)buf.size())) {
@@ -103,12 +103,12 @@ namespace bee::lua_socket {
         }
     }
     static int recvfrom(lua_State* L) {
-        auto fd = checkfd(L, 1);
+        auto fd  = checkfd(L, 1);
         auto len = lua::optinteger<int>(L, 2, LUAL_BUFFERSIZE, "bufsize");
         luaL_Buffer b;
         luaL_buffinit(L, &b);
         char* buf = luaL_prepbuffsize(&b, (size_t)len);
-        int   rc;
+        int rc;
         auto res = socket::recvfrom(fd, rc, buf, len);
         if (res) {
             auto& ep = res.value();
@@ -132,11 +132,11 @@ namespace bee::lua_socket {
         }
     }
     static int sendto(lua_State* L) {
-        auto fd = checkfd(L, 1);
-        auto buf = lua::checkstrview(L, 2);
-        auto ip = lua::checkstrview(L, 3);
+        auto fd   = checkfd(L, 1);
+        auto buf  = lua::checkstrview(L, 2);
+        auto ip   = lua::checkstrview(L, 3);
         auto port = lua::checkinteger<uint16_t>(L, 4, "port");
-        auto ep = endpoint::from_hostname(ip, port);
+        auto ep   = endpoint::from_hostname(ip, port);
         if (!ep.valid()) {
             return luaL_error(L, "invalid address: %s:%d", ip, port);
         }
@@ -160,7 +160,7 @@ namespace bee::lua_socket {
             return true;
         }
         bool ok = socket::close(fd);
-        fd = socket::retired_fd;
+        fd      = socket::retired_fd;
         return ok;
     }
     static int close(lua_State* L) {
@@ -227,7 +227,7 @@ namespace bee::lua_socket {
         return 2;
     }
     static int info(lua_State* L) {
-        auto fd = checkfd(L, 1);
+        auto fd    = checkfd(L, 1);
         auto which = lua::checkstrview(L, 2);
         if (which == "peer") {
             if (auto ep_opt = socket::getpeername(fd)) {
@@ -261,11 +261,11 @@ namespace bee::lua_socket {
         return 1;
     }
     static int option(lua_State* L) {
-        auto fd = checkfd(L, 1);
-        static const char *const opts[] = {"reuseaddr", "sndbuf", "rcvbuf", NULL};
-        auto opt = (socket::option)luaL_checkoption(L, 2, NULL, opts);
-        auto value = lua::checkinteger<int>(L, 3, "value");
-        bool ok = socket::setoption(fd, opt, value);
+        auto fd                         = checkfd(L, 1);
+        static const char* const opts[] = { "reuseaddr", "sndbuf", "rcvbuf", NULL };
+        auto opt                        = (socket::option)luaL_checkoption(L, 2, NULL, opts);
+        auto value                      = lua::checkinteger<int>(L, 3, "value");
+        bool ok                         = socket::setoption(fd, opt, value);
         if (!ok) {
             return push_neterror(L, "setsockopt");
         }
@@ -300,8 +300,8 @@ namespace bee::lua_socket {
     }
     static int listen(lua_State* L) {
         static const int kDefaultBackLog = 5;
-        auto fd = checkfd(L, 1);
-        auto backlog = lua::optinteger<int>(L, 2, kDefaultBackLog, "backlog");
+        auto fd                          = checkfd(L, 1);
+        auto backlog                     = lua::optinteger<int>(L, 2, kDefaultBackLog, "backlog");
         if (!socket::listen(fd, backlog)) {
             return push_neterror(L, "listen");
         }
@@ -310,31 +310,31 @@ namespace bee::lua_socket {
     }
     static void metatable(lua_State* L) {
         luaL_Reg lib[] = {
-            {"connect", connect},
-            {"bind", bind},
-            {"listen", listen},
-            {"accept", accept},
-            {"recv", recv},
-            {"send", send},
-            {"recvfrom", recvfrom},
-            {"sendto", sendto},
-            {"close", close},
-            {"shutdown", shutdown},
-            {"status", status},
-            {"info", info},
-            {"handle", handle},
-            {"detach", detach},
-            {"option", option},
-            {NULL, NULL},
+            { "connect", connect },
+            { "bind", bind },
+            { "listen", listen },
+            { "accept", accept },
+            { "recv", recv },
+            { "send", send },
+            { "recvfrom", recvfrom },
+            { "sendto", sendto },
+            { "close", close },
+            { "shutdown", shutdown },
+            { "status", status },
+            { "info", info },
+            { "handle", handle },
+            { "detach", detach },
+            { "option", option },
+            { NULL, NULL },
         };
         luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);
         lua_setfield(L, -2, "__index");
         luaL_Reg mt[] = {
-            {"__tostring", mt_tostring},
-            {"__close", mt_close},
-            {"__gc", mt_gc},
-            {NULL, NULL},
+            { "__tostring", mt_tostring },
+            { "__close", mt_close },
+            { "__gc", mt_gc },
+            { NULL, NULL },
         };
         luaL_setfuncs(L, mt, 0);
     }
@@ -356,12 +356,12 @@ namespace bee::lua_socket {
         return 1;
     }
     static int mt_call(lua_State* L) {
-        static const char *const opts[] = {
+        static const char* const opts[] = {
             "tcp", "udp", "unix", "tcp6", "udp6",
             NULL
         };
         auto protocol = (socket::protocol)luaL_checkoption(L, 2, NULL, opts);
-        auto fd = socket::open(protocol);
+        auto fd       = socket::open(protocol);
         if (fd == socket::retired_fd) {
             return push_neterror(L, "socket");
         }
@@ -371,12 +371,22 @@ namespace bee::lua_socket {
     struct select_wrap {
         select_wrap() { reset(); }
 #if defined(_WIN32)
-        void reset() { FD_ZERO(&readfds); FD_ZERO(&writefds); }
+        void reset() {
+            FD_ZERO(&readfds);
+            FD_ZERO(&writefds);
+        }
         void set_fd(socket::fd_t fd, fd_set& set) { FD_SET(fd, &set); }
         int select(struct timeval* timeop) { return ::select(0, &readfds, &writefds, &writefds, timeop); }
 #else
-        void reset() { FD_ZERO(&readfds); FD_ZERO(&writefds); maxfd = 0; }
-        void set_fd(socket::fd_t fd, fd_set& set) { FD_SET(fd, &set);  maxfd = std::max(maxfd, fd); }
+        void reset() {
+            FD_ZERO(&readfds);
+            FD_ZERO(&writefds);
+            maxfd = 0;
+        }
+        void set_fd(socket::fd_t fd, fd_set& set) {
+            FD_SET(fd, &set);
+            maxfd = std::max(maxfd, fd);
+        }
         int select(struct timeval* timeop) { return ::select(maxfd + 1, &readfds, &writefds, NULL, timeop); }
         int maxfd;
 #endif
@@ -409,7 +419,7 @@ namespace bee::lua_socket {
             timeop = NULL;
         }
         else {
-            timeout.tv_sec = (long)timeo;
+            timeout.tv_sec  = (long)timeo;
             timeout.tv_usec = (long)((timeo - timeout.tv_sec) * 1000000);
         }
         lua_settop(L, 3);
@@ -469,16 +479,16 @@ namespace bee::lua_socket {
             return lua_error(L);
         }
         luaL_Reg lib[] = {
-            {"pair", pair},
-            {"select", select},
-            {"fd", fd},
-            {NULL, NULL}
+            { "pair", pair },
+            { "select", select },
+            { "fd", fd },
+            { NULL, NULL }
         };
         luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);
         luaL_Reg mt[] = {
-            {"__call", mt_call},
-            {NULL, NULL}
+            { "__call", mt_call },
+            { NULL, NULL }
         };
         luaL_newlibtable(L, mt);
         luaL_setfuncs(L, mt, 0);

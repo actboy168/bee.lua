@@ -6,7 +6,7 @@
 #include <bee/utility/zstring_view.h>
 
 #if !defined(_WIN32)
-#include <sys/socket.h>
+#    include <sys/socket.h>
 #endif
 
 struct sockaddr;
@@ -16,7 +16,7 @@ namespace bee::net {
     using socklen_t = int;
 #endif
 
-    enum class un_format: uint16_t {
+    enum class un_format : uint16_t {
         pathname = 0,
         abstract,
         unnamed,
@@ -30,8 +30,9 @@ namespace bee::net {
     struct endpoint_buf {
         endpoint_buf();
         endpoint_buf(size_t size);
-        sockaddr*  addr();
+        sockaddr* addr();
         socklen_t* addrlen();
+
     private:
         friend struct endpoint;
         dynarray<std::byte> m_data;
@@ -39,11 +40,11 @@ namespace bee::net {
     };
 
     struct endpoint {
-        endpoint_info   info() const;
+        endpoint_info info() const;
         const sockaddr* addr() const;
-        socklen_t       addrlen() const;
-        int             family() const;
-        bool            valid() const;
+        socklen_t addrlen() const;
+        int family() const;
+        bool valid() const;
 
         static endpoint from_hostname(zstring_view ip, uint16_t port);
         static endpoint from_unixpath(zstring_view path);

@@ -1,11 +1,11 @@
 #pragma once
 
 #if defined(__cpp_lib_semaphore)
-#include <semaphore>
+#    include <semaphore>
 #else
 
-#include <mutex>
-#include <condition_variable>
+#    include <mutex>
+#    include <condition_variable>
 
 namespace std {
     class binary_semaphore {
@@ -29,7 +29,7 @@ namespace std {
             condition.wait(lk, [this] { return ok; });
             ok = false;
         }
-        template<class Rep, class Period>
+        template <class Rep, class Period>
         bool try_acquire_for(const std::chrono::duration<Rep, Period>& timeout) {
             std::unique_lock<std::mutex> lk(mutex);
             if (condition.wait_for(lk, timeout, [this] { return ok; })) {
@@ -47,6 +47,7 @@ namespace std {
             }
             return false;
         }
+
     private:
         std::mutex mutex;
         std::condition_variable condition;

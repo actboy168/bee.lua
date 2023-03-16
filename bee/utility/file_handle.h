@@ -2,7 +2,7 @@
 
 #include <string>
 #if defined(_WIN32)
-#include <Windows.h>
+#    include <Windows.h>
 #endif
 #include <bee/nonstd/filesystem.h>
 #include <optional>
@@ -35,6 +35,7 @@ namespace bee {
         static file_handle dup(FILE* f);
         static file_handle lock(const fs::path& filename);
         static file_handle open_link(const fs::path& filename);
+
     private:
         value_type h;
     };

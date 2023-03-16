@@ -45,31 +45,19 @@ namespace bee {
     }
 
     file_handle file_handle::lock(const fs::path& filename) {
-        HANDLE h = CreateFileW(filename.c_str(),
-            GENERIC_WRITE,
-            0, NULL,
-            CREATE_ALWAYS,
-            FILE_ATTRIBUTE_NORMAL | FILE_FLAG_DELETE_ON_CLOSE,
-            NULL
-        );
-        return {h};
+        HANDLE h = CreateFileW(filename.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_DELETE_ON_CLOSE, NULL);
+        return { h };
     }
 
     file_handle file_handle::open_link(const fs::path& filename) {
-        HANDLE h = CreateFileW(filename.c_str(),
-            0,
-            0, NULL,
-            OPEN_EXISTING,
-            FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
-            NULL
-        );
-        return {h};
+        HANDLE h = CreateFileW(filename.c_str(), 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
+        return { h };
     }
 
     void file_handle::close() {
         if (valid()) {
             CloseHandle(h);
-            h = file_handle{}.h;
+            h = file_handle {}.h;
         }
     }
 
@@ -92,8 +80,8 @@ namespace bee {
                 return fs::path(L"\\\\").concat(path.data() + 8, path.data() + len2);
             }
             // Remove the \\?\ prefix.
-            return fs::path {path.data() + 4, path.data() + len2};
+            return fs::path { path.data() + 4, path.data() + len2 };
         }
-        return fs::path {path.data(), path.data() + len2};
+        return fs::path { path.data(), path.data() + len2 };
     }
 }

@@ -1,17 +1,21 @@
-BasedOnStyle: LLVM
-Language: Cpp
-UseTab: Never
-IndentWidth: 4
-TabWidth: 4
-IndentCaseLabels: false
-ColumnLimit: 0
+BasedOnStyle: Google
 AccessModifierOffset: -4
-FixNamespaceComments: false
-NamespaceIndentation: All
-AlignConsecutiveDeclarations: true
-PointerAlignment: Left
-BreakBeforeBraces: Custom
+AlignAfterOpenBracket: BlockIndent
+AlignConsecutiveAssignments:
+  Enabled: true
 BreakConstructorInitializers: BeforeComma
+BreakInheritanceList: BeforeComma
+ColumnLimit: 0
+Cpp11BracedListStyle: false
+FixNamespaceComments: false
+IndentCaseLabels: false
+IndentPPDirectives: AfterHash
+IndentWidth: 4
+NamespaceIndentation: All
+PackConstructorInitializers: Never
+SortIncludes: Never
+SpaceBeforeCpp11BracedList: true
+
+BreakBeforeBraces: Custom
 BraceWrapping:
-    BeforeCatch: true
-    BeforeElse: true
+  BeforeElse: true

@@ -9,18 +9,18 @@
 #include <string.h>
 #include <signal.h>
 #if defined(_WIN32)
-#include <bee/platform/win/unicode.h>
-#include <fcntl.h>
-#include <io.h>
+#    include <bee/platform/win/unicode.h>
+#    include <fcntl.h>
+#    include <io.h>
 #else
-#include <unistd.h>
+#    include <unistd.h>
 #endif
 
 namespace bee::lua {
     template <>
     struct udata<subprocess::process> {
-        static inline int  nupvalue = 1;
-        static inline auto name = "bee::subprocess";
+        static inline int nupvalue = 1;
+        static inline auto name    = "bee::subprocess";
     };
 }
 
@@ -44,9 +44,9 @@ namespace bee::lua_subprocess {
         }
 
         static int kill(lua_State* L) {
-            auto& self = to(L, 1);
+            auto& self  = to(L, 1);
             auto signum = lua::optinteger<int>(L, 2, SIGTERM, "signum");
-            bool ok = self.kill(signum);
+            bool ok     = self.kill(signum);
             lua_pushboolean(L, ok);
             return 1;
         }
@@ -105,24 +105,24 @@ namespace bee::lua_subprocess {
 
         static void metatable(lua_State* L) {
             static luaL_Reg lib[] = {
-                {"wait", wait},
-                {"kill", kill},
-                {"get_id", get_id},
-                {"is_running", is_running},
-                {"resume", resume},
-                {"native_handle", native_handle},
-                {NULL, NULL}
+                { "wait", wait },
+                { "kill", kill },
+                { "get_id", get_id },
+                { "is_running", is_running },
+                { "resume", resume },
+                { "native_handle", native_handle },
+                { NULL, NULL }
             };
             luaL_newlibtable(L, lib);
             luaL_setfuncs(L, lib, 0);
             lua_pushcclosure(L, mt_index, 1);
             lua_setfield(L, -2, "__index");
             static luaL_Reg mt[] = {
-                {"__newindex", mt_newindex},
+                { "__newindex", mt_newindex },
 #if defined(_WIN32)
-                {"__close", mt_close},
+                { "__close", mt_close },
 #endif
-                {NULL, NULL}
+                { NULL, NULL }
             };
             luaL_setfuncs(L, mt, 0);
         }
@@ -143,8 +143,8 @@ namespace bee::lua_subprocess {
                 return ret;
             }
             case LUA_TUSERDATA: {
-                auto const & path = lua::checkudata<fs::path>(L, -1);
-                auto ret = path.string<lua::string_type::value_type>();
+                auto const& path = lua::checkudata<fs::path>(L, -1);
+                auto ret         = path.string<lua::string_type::value_type>();
                 lua_pop(L, 1);
                 return ret;
             }
@@ -163,7 +163,7 @@ namespace bee::lua_subprocess {
                     args.push(lua::checkstrview(L, -1));
                     break;
                 case LUA_TUSERDATA: {
-                    auto const & path = lua::checkudata<fs::path>(L, -1);
+                    auto const& path = lua::checkudata<fs::path>(L, -1);
                     args.push(path.string<lua::string_type::value_type>());
                     break;
                 }
@@ -185,7 +185,7 @@ namespace bee::lua_subprocess {
         }
 
         static luaL_Stream* get_file(lua_State* L, int idx) {
-            void *p = lua_touserdata(L, idx);
+            void* p = lua_touserdata(L, idx);
             void* r = NULL;
             if (p) {
                 if (lua_getmetatable(L, idx)) {
@@ -246,7 +246,7 @@ namespace bee::lua_subprocess {
                 }
             }
             case LUA_TSTRING: {
-                if (strcmp(name, "stderr") == 0 && strcmp(lua_tostring(L,-1), "stdout") == 0 &&  handle) {
+                if (strcmp(name, "stderr") == 0 && strcmp(lua_tostring(L, -1), "stdout") == 0 && handle) {
                     lua_pop(L, 1);
                     lua_pushvalue(L, -1);
                     return handle;
@@ -345,7 +345,7 @@ namespace bee::lua_subprocess {
 
         static int spawn(lua_State* L) {
             luaL_checktype(L, 1, LUA_TTABLE);
-            subprocess::spawn  spawn;
+            subprocess::spawn spawn;
             subprocess::args_t args = cast_args(L);
             if (args.size() == 0) {
                 return 0;
@@ -357,7 +357,7 @@ namespace bee::lua_subprocess {
             cast_option(L, spawn);
             cast_detached(L, spawn);
 
-            file_handle f_stdin = cast_stdio(L, spawn, "stdin", subprocess::stdio::eInput);
+            file_handle f_stdin  = cast_stdio(L, spawn, "stdin", subprocess::stdio::eInput);
             file_handle f_stdout = cast_stdio(L, spawn, "stdout", subprocess::stdio::eOutput);
             file_handle f_stderr = cast_stdio(L, spawn, "stderr", subprocess::stdio::eError, f_stdout);
             if (!spawn.exec(args, cwd ? cwd->c_str() : 0)) {
@@ -385,7 +385,7 @@ namespace bee::lua_subprocess {
     static int peek(lua_State* L) {
         luaL_Stream* p = spawn::get_file(L, 1);
         if (!p->closef) {
-            auto ec = std::make_error_code(std::errc::broken_pipe);
+            auto ec    = std::make_error_code(std::errc::broken_pipe);
             auto error = std::system_error(ec, "subprocess::peek");
             lua_pushnil(L);
             lua_pushstring(L, error.what());
@@ -404,10 +404,10 @@ namespace bee::lua_subprocess {
 
 #if defined(_WIN32)
     static int filemode(lua_State* L) {
-        luaL_Stream* p = spawn::get_file(L, 1);
+        luaL_Stream* p   = spawn::get_file(L, 1);
         const char* mode = luaL_checkstring(L, 2);
         if (p && p->closef && p->f) {
-            int ok = _setmode(_fileno(p->f), mode[0] == 'b'? _O_BINARY: _O_TEXT);
+            int ok = _setmode(_fileno(p->f), mode[0] == 'b' ? _O_BINARY : _O_TEXT);
             if (ok == -1) {
                 lua_pushnil(L);
                 lua_pushstring(L, make_crterror("_setmode").what());
@@ -425,7 +425,7 @@ namespace bee::lua_subprocess {
 #endif
 
     static int lsetenv(lua_State* L) {
-        const char* name = luaL_checkstring(L, 1);
+        const char* name  = luaL_checkstring(L, 1);
         const char* value = luaL_checkstring(L, 2);
 #if defined(_WIN32)
         lua_pushfstring(L, "%s=%s", name, value);
@@ -458,7 +458,7 @@ namespace bee::lua_subprocess {
         return 1;
     }
 
-static const char script_quotearg[] = R"(
+    static const char script_quotearg[] = R"(
 local s = ...
 if type(s) ~= 'string' then
     s = tostring(s)
@@ -498,7 +498,7 @@ return table.concat(t)
 
     template <size_t N>
     static int lua_pushscript(lua_State* L, const char (&script)[N]) {
-        if (luaL_loadbuffer(L, script, N-1, "=module 'bee.subprocess'") != LUA_OK) {
+        if (luaL_loadbuffer(L, script, N - 1, "=module 'bee.subprocess'") != LUA_OK) {
             return lua_error(L);
         }
         return 1;
@@ -506,13 +506,13 @@ return table.concat(t)
 
     static int luaopen(lua_State* L) {
         static luaL_Reg lib[] = {
-            {"spawn", spawn::spawn},
-            {"peek", peek},
-            {"filemode", filemode},
-            {"setenv", lsetenv},
-            {"get_id", get_id},
-            {"quotearg", NULL},
-            {NULL, NULL}
+            { "spawn", spawn::spawn },
+            { "peek", peek },
+            { "filemode", filemode },
+            { "setenv", lsetenv },
+            { "get_id", get_id },
+            { "quotearg", NULL },
+            { NULL, NULL }
         };
         luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);

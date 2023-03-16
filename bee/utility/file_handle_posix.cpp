@@ -16,17 +16,17 @@ namespace bee {
     }
 
     file_handle file_handle::from_file(FILE* f) {
-        return {fileno(f)};
+        return { fileno(f) };
     }
 
     file_handle file_handle::dup(FILE* f) {
-        return {::dup(from_file(f).value())};
+        return { ::dup(from_file(f).value()) };
     }
 
     void file_handle::close() {
         if (valid()) {
             ::close(h);
-            h = file_handle{}.h;
+            h = file_handle {}.h;
         }
     }
 }

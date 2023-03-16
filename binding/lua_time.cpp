@@ -1,9 +1,9 @@
 #include <binding/binding.h>
 
 #if defined(_WIN32)
-#   include <Windows.h>
+#    include <Windows.h>
 #else
-#   include <time.h>
+#    include <time.h>
 #endif
 
 namespace bee::lua_time {
@@ -22,7 +22,7 @@ namespace bee::lua_time {
         FILETIME f;
         GetSystemTimeAsFileTime(&f);
         uint64_t t = ((uint64_t)f.dwHighDateTime << 32) | f.dwLowDateTime;
-        t = t / (uint64_t)10000 - (uint64_t)11644473600000;
+        t          = t / (uint64_t)10000 - (uint64_t)11644473600000;
         return t;
 #else
         struct timespec ti;
@@ -39,7 +39,7 @@ namespace bee::lua_time {
 #else
         struct timespec now;
         clock_gettime(CLOCK_MONOTONIC, &now);
-        return now.tv_sec*(uint64_t)(1000000000) + now.tv_nsec;
+        return now.tv_sec * (uint64_t)(1000000000) + now.tv_nsec;
 #endif
     }
 
@@ -63,17 +63,17 @@ namespace bee::lua_time {
     }
     static int lcounter(lua_State* L) {
         uint64_t freq = lua_tointeger(L, lua_upvalueindex(1));
-        uint64_t ti = time_counter();
+        uint64_t ti   = time_counter();
         lua_pushnumber(L, (double)ti * 1000 / freq);
         return 1;
     }
 
     static int luaopen(lua_State* L) {
         luaL_Reg lib[] = {
-            {"time", ltime},
-            {"monotonic", lmonotonic},
-            {"counter", NULL},
-            {NULL, NULL},
+            { "time", ltime },
+            { "monotonic", lmonotonic },
+            { "counter", NULL },
+            { NULL, NULL },
         };
         luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);

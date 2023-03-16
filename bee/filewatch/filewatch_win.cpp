@@ -13,6 +13,7 @@ namespace bee::filewatch {
 
     class task : public OVERLAPPED {
         static const size_t kBufSize = 16 * 1024;
+
     public:
         task(watch* watch);
         ~task();
@@ -24,24 +25,23 @@ namespace bee::filewatch {
             zero,
         };
 
-        bool   open(const std::wstring& path);
-        bool   start(bool recursive);
-        void   cancel();
+        bool open(const std::wstring& path);
+        bool start(bool recursive);
+        void cancel();
         result try_read();
         const std::wstring& path() const;
         const std::byte* data() const;
 
     private:
-        std::wstring                    m_path;
-        HANDLE                          m_directory;
+        std::wstring m_path;
+        HANDLE m_directory;
         std::array<std::byte, kBufSize> m_buffer;
     };
 
     task::task(watch* watch)
         : m_path()
         , m_directory(INVALID_HANDLE_VALUE)
-        , m_buffer()
-    {
+        , m_buffer() {
         memset((OVERLAPPED*)this, 0, sizeof(OVERLAPPED));
         hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
     }
@@ -54,14 +54,8 @@ namespace bee::filewatch {
         if (m_directory != INVALID_HANDLE_VALUE) {
             return true;
         }
-        m_path = path;
-        m_directory = ::CreateFileW(m_path.c_str(),
-            FILE_LIST_DIRECTORY,
-            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-            NULL,
-            OPEN_EXISTING,
-            FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
-            NULL);
+        m_path      = path;
+        m_directory = ::CreateFileW(m_path.c_str(), FILE_LIST_DIRECTORY, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, NULL);
         if (m_directory == INVALID_HANDLE_VALUE) {
             return false;
         }
@@ -84,16 +78,16 @@ namespace bee::filewatch {
             return false;
         }
         if (!::ReadDirectoryChangesW(
-            m_directory,
-            &m_buffer[0],
-            static_cast<DWORD>(m_buffer.size()),
-            recursive,
-            FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME |
-            FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_CREATION,
-            NULL,
-            this,
-            NULL))
-        {
+                m_directory,
+                &m_buffer[0],
+                static_cast<DWORD>(m_buffer.size()),
+                recursive,
+                FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME |
+                    FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_CREATION,
+                NULL,
+                this,
+                NULL
+            )) {
             ::CloseHandle(m_directory);
             m_directory = INVALID_HANDLE_VALUE;
             return false;
@@ -103,7 +97,7 @@ namespace bee::filewatch {
 
     task::result task::try_read() {
         DWORD dwNumberOfBytesTransfered;
-        bool ok = GetOverlappedResult(m_directory, this, &dwNumberOfBytesTransfered, FALSE);
+        bool ok           = GetOverlappedResult(m_directory, this, &dwNumberOfBytesTransfered, FALSE);
         DWORD dwErrorCode = ::GetLastError();
         if (!ok) {
             if (dwErrorCode == ERROR_IO_INCOMPLETE) {
@@ -136,8 +130,7 @@ namespace bee::filewatch {
 
     watch::watch()
         : m_notify()
-        , m_tasks()
-    { }
+        , m_tasks() {}
 
     watch::~watch() {
         stop();

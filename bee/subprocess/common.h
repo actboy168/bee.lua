@@ -14,14 +14,11 @@ namespace bee::subprocess {
         using ptr_type = dynarray<value_type>;
         ptr_type v;
         environment(std::nullptr_t)
-            : v()
-        { }
+            : v() {}
         environment(ptr_type&& o)
-            : v(std::move(o))
-        { }
+            : v(std::move(o)) {}
         environment(environment&& o)
-            : v(std::move(o.v))
-        { }
+            : v(std::move(o.v)) {}
         ~environment() {
 #if !defined(_WIN32)
             if (!v.empty()) {
@@ -31,7 +28,7 @@ namespace bee::subprocess {
             }
 #endif
         }
-        environment(const environment&) = delete;
+        environment(const environment&)            = delete;
         environment& operator=(const environment&) = delete;
         environment& operator=(environment&& o) {
             std::swap(v, o.v);
@@ -64,6 +61,6 @@ namespace bee::subprocess {
             operator bool() const { return rd && wr; }
         };
         open_result open();
-        int         peek(FILE* f);
+        int peek(FILE* f);
     }
 }

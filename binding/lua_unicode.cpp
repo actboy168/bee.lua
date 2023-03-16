@@ -16,9 +16,9 @@ namespace bee::lua_unicode {
 
     static int luaopen(lua_State* L) {
         luaL_Reg lib[] = {
-            {"u2a", lu2a},
-            {"a2u", la2u},
-            {NULL, NULL}
+            { "u2a", lu2a },
+            { "a2u", la2u },
+            { NULL, NULL }
         };
         luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);

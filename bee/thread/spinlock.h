@@ -3,9 +3,9 @@
 #include <atomic>
 
 #if defined(_WIN32)
-    #include <windows.h>
+#    include <windows.h>
 #elif defined(__x86_64__) || defined(__i386__)
-    #include <immintrin.h>
+#    include <immintrin.h>
 #endif
 
 namespace bee {
@@ -18,16 +18,19 @@ namespace bee {
         asm volatile("isb");
 #elif defined(__riscv)
         int dummy;
-        asm volatile ("div %0, %0, zero" : "=r" (dummy));
-        asm volatile ("" ::: "memory");
+        asm volatile("div %0, %0, zero"
+                     : "=r"(dummy));
+        asm volatile("" ::
+                         : "memory");
 #elif defined(__powerpc__)
-        asm volatile("ori 0,0,0" ::: "memory");
+        asm volatile("ori 0,0,0" ::
+                         : "memory");
 #else
         std::atomic_thread_fence(std::memory_order_seq_cst);
 #endif
     }
 
-#if defined(__cpp_lib_atomic_flag_test) //c++20
+#if defined(__cpp_lib_atomic_flag_test)  // c++20
     using std::atomic_flag;
 #else
     struct atomic_flag {
@@ -49,7 +52,7 @@ namespace bee {
         void clear(std::memory_order order) volatile noexcept {
             storage.store(false, order);
         }
-        std::atomic<bool> storage = {false};
+        std::atomic<bool> storage = { false };
     };
 #endif
     class spinlock {
@@ -70,6 +73,7 @@ namespace bee {
         bool try_lock() {
             return !l.test(std::memory_order_relaxed) && !l.test_and_set(std::memory_order_acquire);
         }
+
     private:
         atomic_flag l;
     };

@@ -16,20 +16,21 @@ namespace bee::subprocess {
         void set(const std::string& key, const std::string& value);
         void del(const std::string& key);
         environment release();
+
     private:
         std::map<std::string, std::string> set_env_;
-        std::set<std::string>              del_env_;
+        std::set<std::string> del_env_;
     };
 
     class spawn;
     class process {
     public:
         process(spawn& spawn);
-        bool      is_running();
-        bool      kill(int signum);
-        uint32_t  wait();
-        uint32_t  get_id() const;
-        bool      resume();
+        bool is_running();
+        bool kill(int signum);
+        uint32_t wait();
+        uint32_t get_id() const;
+        bool resume();
         uintptr_t native_handle();
 
         int pid;
@@ -55,12 +56,14 @@ namespace bee::subprocess {
         size_t size() const {
             return data_.size();
         }
+
     private:
         std::vector<char*> data_;
     };
 
     class spawn {
         friend class process;
+
     public:
         spawn();
         ~spawn();
@@ -69,11 +72,12 @@ namespace bee::subprocess {
         void redirect(stdio type, file_handle f);
         void env(environment&& env);
         bool exec(args_t& args, const char* cwd);
+
     private:
-        environment                        env_ = nullptr;
-        int                                fds_[3];
-        int                                pid_ = -1;
-        posix_spawnattr_t                  spawnattr_;
-        posix_spawn_file_actions_t         spawnfile_;
+        environment env_ = nullptr;
+        int fds_[3];
+        int pid_ = -1;
+        posix_spawnattr_t spawnattr_;
+        posix_spawn_file_actions_t spawnfile_;
     };
 }

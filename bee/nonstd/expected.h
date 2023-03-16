@@ -1,8 +1,7 @@
 #pragma once
 
-
 #if defined(__cpp_lib_expected)
-#include <expected>
+#    include <expected>
 
 namespace bee {
     using std::expected;
@@ -10,7 +9,7 @@ namespace bee {
 }
 #else
 
-#include <utility>
+#    include <utility>
 
 namespace bee {
     struct in_place_t {};
@@ -33,10 +32,10 @@ namespace bee {
             new (&val) E(std::move(e));
         }
 
-        unexpected(const unexpected&) = default;
-        unexpected(unexpected&&) = default;
+        unexpected(const unexpected&)            = default;
+        unexpected(unexpected&&)                 = default;
         unexpected& operator=(const unexpected&) = default;
-        unexpected& operator=(unexpected&&) = default;
+        unexpected& operator=(unexpected&&)      = default;
 
         const E& value() const& noexcept {
             return val;
@@ -50,6 +49,7 @@ namespace bee {
         E&& value() && noexcept {
             return val;
         }
+
     private:
         E val;
     };
@@ -67,23 +67,23 @@ namespace bee {
                 unex.~error_type();
             }
         }
-        expected() 
+        expected()
             : has_val(true) {
             new (&val) value_type();
         }
-        expected(value_type const & e)
+        expected(value_type const& e)
             : has_val(true) {
             new (&val) value_type(e);
         }
-        expected(value_type && e)
+        expected(value_type&& e)
             : has_val(true) {
             new (&val) value_type(std::move(e));
         }
-        expected(error_type const & e)
+        expected(error_type const& e)
             : has_val(false) {
             new (&unex) error_type(e);
         }
-        expected(error_type && e)
+        expected(error_type&& e)
             : has_val(false) {
             new (&unex) error_type(std::move(e));
         }
@@ -108,43 +108,43 @@ namespace bee {
             new (&unex) error_type(il, std::forward<Args>(args)...);
         }
         template <typename Err = E>
-        expected(const unexpected<Err>& other) 
+        expected(const unexpected<Err>& other)
             : has_val(false) {
             new (&unex) error_type(other.value());
         }
         template <typename Err = E>
-        expected(unexpected<Err>&& other) 
+        expected(unexpected<Err>&& other)
             : has_val(false) {
             new (&unex) error_type(std::move(other.value()));
         }
-        value_type const & value() const & {
+        value_type const& value() const& {
             return val;
         }
-        value_type & value() & {
+        value_type& value() & {
             return val;
         }
-        value_type const && value() const && {
+        value_type const&& value() const&& {
             return std::move(val);
         }
-        value_type && value() && {
+        value_type&& value() && {
             return std::move(val);
         }
-        value_type const * value_ptr() const {
+        value_type const* value_ptr() const {
             return &val;
         }
-        value_type * value_ptr() {
+        value_type* value_ptr() {
             return &val;
         }
-        error_type const & error() const & {
+        error_type const& error() const& {
             return unex;
         }
-        error_type & error() & {
+        error_type& error() & {
             return unex;
         }
-        error_type const && error() const && {
+        error_type const&& error() const&& {
             return std::move(unex);
         }
-        error_type && error() && {
+        error_type&& error() && {
             return std::move(unex);
         }
         operator bool() const {
@@ -153,6 +153,7 @@ namespace bee {
         bool has_value() const {
             return has_val;
         }
+
     private:
         bool has_val;
         union {

@@ -27,8 +27,7 @@ namespace bee::subprocess {
             size_t size;
             node(size_t maxsize)
                 : data(maxsize)
-                , size(0)
-            { }
+                , size(0) {}
             dynarray<char_t> release() {
                 return std::move(data);
             }
@@ -41,14 +40,15 @@ namespace bee::subprocess {
                 return true;
             }
             template <class T, size_t n>
-            void operator +=(T(&str)[n]) {
+            void operator+=(T (&str)[n]) {
                 append(str, n - 1);
             }
-            void operator +=(const std::basic_string_view<char_t>& str) {
+            void operator+=(const std::basic_string_view<char_t>& str) {
                 append(str.data(), str.size());
             }
         };
-        strbuilder() : size(0) { }
+        strbuilder()
+            : size(0) {}
         void clear() {
             size = 0;
             deque.clear();
@@ -67,11 +67,11 @@ namespace bee::subprocess {
             return true;
         }
         template <class T, size_t n>
-        strbuilder& operator +=(T(&str)[n]) {
+        strbuilder& operator+=(T (&str)[n]) {
             append(str, n - 1);
             return *this;
         }
-        strbuilder& operator +=(const std::basic_string_view<char_t>& s) {
+        strbuilder& operator+=(const std::basic_string_view<char_t>& s) {
             append(s.data(), s.size());
             return *this;
         }
@@ -107,13 +107,13 @@ namespace bee::subprocess {
     std::basic_string<char_t> quote_arg(const std::basic_string<char_t>& source) {
         size_t len = source.size();
         if (len == 0) {
-            return {'\"','\"','\0'};
+            return { '\"', '\"', '\0' };
         }
-        if (std::basic_string<char_t>::npos == source.find_first_of({' ','\t','\"'})) {
+        if (std::basic_string<char_t>::npos == source.find_first_of({ ' ', '\t', '\"' })) {
             return source;
         }
-        if (std::basic_string<char_t>::npos == source.find_first_of({'\"','\\'})) {
-            return std::basic_string<char_t>({'\"'}) + source + std::basic_string<char_t>({'\"'});
+        if (std::basic_string<char_t>::npos == source.find_first_of({ '\"', '\\' })) {
+            return std::basic_string<char_t>({ '\"' }) + source + std::basic_string<char_t>({ '\"' });
         }
         std::basic_string<char_t> target;
         target += '"';
@@ -172,15 +172,15 @@ namespace bee::subprocess {
         strbuilder<wchar_t> res;
         wchar_t* escp = es;
         while (*escp != L'\0') {
-            std::wstring str = escp;
+            std::wstring str            = escp;
             std::wstring::size_type pos = str.find(L'=');
-            std::wstring key = str.substr(0, pos);
+            std::wstring key            = str.substr(0, pos);
             if (del_env_.find(key) != del_env_.end()) {
                 escp += str.length() + 1;
                 continue;
             }
             std::wstring val = str.substr(pos + 1, str.length());
-            auto it = set_env_.find(key);
+            auto it          = set_env_.find(key);
             if (it != set_env_.end()) {
                 val = it->second;
                 set_env_.erase(it);
@@ -213,11 +213,7 @@ namespace bee::subprocess {
         JOBOBJECT_EXTENDED_LIMIT_INFORMATION info;
         memset(&info, 0, sizeof info);
         info.BasicLimitInformation.LimitFlags =
-            JOB_OBJECT_LIMIT_BREAKAWAY_OK
-            | JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK
-            | JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
-            | JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION
-            ;
+            JOB_OBJECT_LIMIT_BREAKAWAY_OK | JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK | JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE | JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION;
 
         HANDLE job = CreateJobObjectW(&attr, NULL);
         if (job == NULL) {
@@ -278,9 +274,9 @@ namespace bee::subprocess {
         std::thread thd([=]() {
             PROCESS_INFORMATION cpi;
             cpi.dwProcessId = pi.dwProcessId;
-            cpi.dwThreadId = pi.dwThreadId;
-            cpi.hThread = NULL;
-            cpi.hProcess = hProcess;
+            cpi.dwThreadId  = pi.dwThreadId;
+            cpi.hThread     = NULL;
+            cpi.hProcess    = hProcess;
             process process(std::move(cpi));
             for (;; std::this_thread::sleep_for(std::chrono::milliseconds(10))) {
                 if (!process.is_running()) {
@@ -301,11 +297,11 @@ namespace bee::subprocess {
     spawn::spawn() {
         memset(&si_, 0, sizeof(STARTUPINFOW));
         memset(&pi_, 0, sizeof(PROCESS_INFORMATION));
-        si_.cb = sizeof(STARTUPINFOW);
-        si_.dwFlags = 0;
-        si_.hStdInput = INVALID_HANDLE_VALUE;
+        si_.cb         = sizeof(STARTUPINFOW);
+        si_.dwFlags    = 0;
+        si_.hStdInput  = INVALID_HANDLE_VALUE;
         si_.hStdOutput = INVALID_HANDLE_VALUE;
-        si_.hStdError = INVALID_HANDLE_VALUE;
+        si_.hStdError  = INVALID_HANDLE_VALUE;
     }
 
     spawn::~spawn() {
@@ -318,7 +314,7 @@ namespace bee::subprocess {
     }
 
     void spawn::set_console(console type) {
-		console_ = type;
+        console_ = type;
         flags_ &= ~(CREATE_NO_WINDOW | CREATE_NEW_CONSOLE | DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP);
         switch (type) {
         case console::eInherit:
@@ -413,8 +409,7 @@ namespace bee::subprocess {
     }
 
     process::process(spawn& spawn)
-        : pi_(spawn.pi_)
-    {
+        : pi_(spawn.pi_) {
         memset(&spawn.pi_, 0, sizeof(PROCESS_INFORMATION));
     }
 
@@ -488,14 +483,14 @@ namespace bee::subprocess {
     namespace pipe {
         open_result open() {
             SECURITY_ATTRIBUTES sa;
-            sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-            sa.bInheritHandle = FALSE;
+            sa.nLength              = sizeof(SECURITY_ATTRIBUTES);
+            sa.bInheritHandle       = FALSE;
             sa.lpSecurityDescriptor = NULL;
             HANDLE read_pipe = NULL, write_pipe = NULL;
             if (!::CreatePipe(&read_pipe, &write_pipe, &sa, 0)) {
                 return { {}, {} };
             }
-            return { {read_pipe}, {write_pipe} };
+            return { { read_pipe }, { write_pipe } };
         }
 
         int peek(FILE* f) {

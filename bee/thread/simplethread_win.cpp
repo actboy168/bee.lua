@@ -8,8 +8,8 @@ namespace bee {
         void* ud;
     };
 
-    static unsigned __stdcall thread_function(void *lpParam) {
-        struct simplethread * t = (struct simplethread *)lpParam;
+    static unsigned __stdcall thread_function(void* lpParam) {
+        struct simplethread* t = (struct simplethread*)lpParam;
         t->func(t->ud);
         free(t);
         _endthreadex(0);
@@ -21,8 +21,8 @@ namespace bee {
         if (!thread) {
             return 0;
         }
-        thread->func = func;
-        thread->ud = ud;
+        thread->func         = func;
+        thread->ud           = ud;
         thread_handle handle = (thread_handle)_beginthreadex(NULL, 0, thread_function, (LPVOID)thread, 0, NULL);
         if (handle == NULL) {
             free(thread);

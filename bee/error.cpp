@@ -1,22 +1,23 @@
 #include <bee/error.h>
 #if defined(_WIN32)
-#include <Windows.h>
-#include <bee/platform/win/unicode.h>
-#include <bee/nonstd/format.h>
+#    include <Windows.h>
+#    include <bee/platform/win/unicode.h>
+#    include <bee/nonstd/format.h>
 #else
-#include <errno.h>
+#    include <errno.h>
 #endif
 
 namespace bee {
 #if defined(_WIN32)
     struct errormsg : public std::wstring_view {
         using mybase = std::wstring_view;
-        errormsg(wchar_t* str) : mybase(str) { }
+        errormsg(wchar_t* str)
+            : mybase(str) {}
         ~errormsg() { ::LocalFree(reinterpret_cast<HLOCAL>(const_cast<wchar_t*>(mybase::data()))); }
     };
 
     static std::wstring error_message(int error_code) {
-        wchar_t* message = 0;
+        wchar_t* message     = 0;
         unsigned long result = ::FormatMessageW(
             FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
             NULL,
@@ -24,7 +25,8 @@ namespace bee {
             MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
             reinterpret_cast<LPWSTR>(&message),
             0,
-            NULL);
+            NULL
+        );
 
         if ((result == 0) || !message) {
             return std::format(L"Unable to get an error message for error code: {}.", error_code);

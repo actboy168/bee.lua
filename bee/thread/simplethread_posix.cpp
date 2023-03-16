@@ -9,7 +9,7 @@ namespace bee {
         void* ud;
     };
 
-    static void* thread_function(void * args) {
+    static void* thread_function(void* args) {
         struct simplethread* t = (struct simplethread*)args;
         t->func(t->ud);
         free(t);
@@ -22,7 +22,7 @@ namespace bee {
             return 0;
         }
         thread->func = func;
-        thread->ud = ud;
+        thread->ud   = ud;
         pthread_t id;
         int ret = pthread_create(&id, NULL, thread_function, thread);
         if (ret != 0) {

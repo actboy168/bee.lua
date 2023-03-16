@@ -7,8 +7,8 @@
 namespace bee::lua {
     template <>
     struct udata<filewatch::watch> {
-        static inline int  nupvalue = 1;
-        static inline auto name = "bee::filewatch";
+        static inline int nupvalue = 1;
+        static inline auto name    = "bee::filewatch";
     };
 }
 
@@ -39,7 +39,7 @@ namespace bee::lua_filewatch {
 
     static int set_recursive(lua_State* L) {
         filewatch::watch& self = to(L, 1);
-        bool enable = lua_toboolean(L, 2);
+        bool enable            = lua_toboolean(L, 2);
         self.set_recursive(enable);
         lua_pushboolean(L, 1);
         return 1;
@@ -47,8 +47,8 @@ namespace bee::lua_filewatch {
 
     static int set_follow_symlinks(lua_State* L) {
         filewatch::watch& self = to(L, 1);
-        bool enable = lua_toboolean(L, 2);
-        bool ok = self.set_follow_symlinks(enable);
+        bool enable            = lua_toboolean(L, 2);
+        bool ok                = self.set_follow_symlinks(enable);
         lua_pushboolean(L, ok);
         return 1;
     }
@@ -66,7 +66,7 @@ namespace bee::lua_filewatch {
         if (lua_gettop(thread) > 1) {
             lua_replace(thread, 1);
         }
-        bool ok = self.set_filter([=](const char* path){
+        bool ok = self.set_filter([=](const char* path) {
             lua_pushvalue(thread, 1);
             lua_pushstring(thread, path);
             if (LUA_OK != lua_pcall(thread, 1, 1, 0)) {
@@ -110,19 +110,19 @@ namespace bee::lua_filewatch {
 
     static void metatable(lua_State* L) {
         static luaL_Reg lib[] = {
-            {"add", add},
-            {"set_recursive", set_recursive},
-            {"set_follow_symlinks", set_follow_symlinks},
-            {"set_filter", set_filter},
-            {"select", select},
-            {NULL, NULL}
+            { "add", add },
+            { "set_recursive", set_recursive },
+            { "set_follow_symlinks", set_follow_symlinks },
+            { "set_filter", set_filter },
+            { "select", select },
+            { NULL, NULL }
         };
         luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);
         lua_setfield(L, -2, "__index");
         static luaL_Reg mt[] = {
-            {"__close", mt_close},
-            {NULL, NULL}
+            { "__close", mt_close },
+            { NULL, NULL }
         };
         luaL_setfuncs(L, mt, 0);
     }
@@ -136,9 +136,9 @@ namespace bee::lua_filewatch {
 
     static int luaopen(lua_State* L) {
         static luaL_Reg lib[] = {
-            {"create", create},
-            {"type", NULL},
-            {NULL, NULL}
+            { "create", create },
+            { "type", NULL },
+            { NULL, NULL }
         };
         luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);

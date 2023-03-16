@@ -42,11 +42,11 @@ namespace bee::lua_serialization {
     }
     static int luaopen(lua_State* L) {
         luaL_Reg lib[] = {
-            {"unpack", unpack},
-            {"pack", pack},
-            {"packstring", packstring},
-            {"lightuserdata", lightuserdata},
-            {NULL, NULL}
+            { "unpack", unpack },
+            { "pack", pack },
+            { "packstring", packstring },
+            { "lightuserdata", lightuserdata },
+            { NULL, NULL }
         };
         luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);

@@ -6,14 +6,14 @@
 #include <functional>
 
 #if defined(_WIN32)
-#include <list>
+#    include <list>
 #elif defined(__APPLE__)
-#include <set>
-#   include <CoreServices/CoreServices.h>
+#    include <set>
+#    include <CoreServices/CoreServices.h>
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-#include <map>
+#    include <map>
 #else
-#   error unsupport platform
+#    error unsupport platform
 #endif
 
 struct lua_State;
@@ -26,14 +26,13 @@ namespace bee::filewatch {
             modify,
             rename,
         };
-        flag        flags;
+        flag flags;
         std::string path;
         notify(flag const& flags, std::string const& path)
             : flags(flags)
-            , path(path)
-        { }
+            , path(path) {}
     };
-    
+
     class basic_watch {
     public:
     private:
@@ -53,42 +52,44 @@ namespace bee::filewatch {
         watch();
         ~watch();
 
-        void   stop();
-        void   add(const string_type& path);
-        void   set_recursive(bool enable);
-        bool   set_follow_symlinks(bool enable);
-        bool   set_filter(filter f = DefaultFilter);
-        void   update();
+        void stop();
+        void add(const string_type& path);
+        void set_recursive(bool enable);
+        bool set_follow_symlinks(bool enable);
+        bool set_filter(filter f = DefaultFilter);
+        void update();
         std::optional<notify> select();
 
     private:
 #if defined(_WIN32)
-        bool   event_update(task& task);
+        bool event_update(task& task);
 #elif defined(__APPLE__)
-        bool   create_stream(CFArrayRef cf_paths);
-        void   destroy_stream();
-        void   update_stream();
+        bool create_stream(CFArrayRef cf_paths);
+        void destroy_stream();
+        void update_stream();
+
     public:
-        void   event_update(const char* paths[], const FSEventStreamEventFlags flags[], size_t n);
+        void event_update(const char* paths[], const FSEventStreamEventFlags flags[], size_t n);
+
     private:
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-        void   event_update(void* event);
+        void event_update(void* event);
 #endif
 
     private:
-        std::queue<notify>                      m_notify;
-        bool                                    m_recursive = true;
+        std::queue<notify> m_notify;
+        bool m_recursive = true;
 #if defined(_WIN32)
-        std::list<task>                         m_tasks;
+        std::list<task> m_tasks;
 #elif defined(__APPLE__)
-        std::set<std::string>                   m_paths;
-        FSEventStreamRef                        m_stream;
-        dispatch_queue_t                        m_fsevent_queue;
+        std::set<std::string> m_paths;
+        FSEventStreamRef m_stream;
+        dispatch_queue_t m_fsevent_queue;
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-        std::map<int, std::string>              m_fd_path;
-        int                                     m_inotify_fd;
-        bool                                    m_follow_symlinks = false;
-        filter                                  m_filter = DefaultFilter;
+        std::map<int, std::string> m_fd_path;
+        int m_inotify_fd;
+        bool m_follow_symlinks = false;
+        filter m_filter        = DefaultFilter;
 #endif
     };
 }

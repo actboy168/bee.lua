@@ -9,7 +9,7 @@
 #include <utility>
 
 #if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
-#define BEE_DISABLE_FULLPATH
+#    define BEE_DISABLE_FULLPATH
 #endif
 
 namespace bee::lua {
@@ -43,7 +43,7 @@ namespace bee::lua_filesystem {
     }
 #endif
 
-    template <typename ...Args>
+    template <typename... Args>
     static void lua_pushfmtstring(lua_State* L, std::format_string<Args...> fmt, Args... args) {
         auto str = std::format(fmt, std::forward<Args>(args)...);
         lua_pushlstring(L, str.data(), str.size());
@@ -77,13 +77,12 @@ namespace bee::lua_filesystem {
             }
         }
         constptr(value_type&& v)
-            : has_val {true} {
+            : has_val { true } {
             new (&val) value_type(std::move(v));
         }
         constptr(const value_type* p)
-            : has_val {false}
-            , ptr {p}
-        { }
+            : has_val { false }
+            , ptr { p } {}
         const value_type* operator->() const {
             if (has_val) {
                 return &val;
@@ -100,7 +99,7 @@ namespace bee::lua_filesystem {
                 return *ptr;
             }
         }
-        operator const value_type& () const& {
+        operator const value_type&() const& {
             if (has_val) {
                 return val;
             }
@@ -108,10 +107,11 @@ namespace bee::lua_filesystem {
                 return *ptr;
             }
         }
+
     private:
         bool has_val;
         union {
-            value_type        val;
+            value_type val;
             const value_type* ptr;
         };
     };
@@ -133,7 +133,7 @@ namespace bee::lua_filesystem {
         static void push(lua_State* L, const fs::path& path);
         static void push(lua_State* L, fs::path&& path);
 
-        static int  constructor(lua_State* L) {
+        static int constructor(lua_State* L) {
             if (lua_gettop(L) == 0) {
                 push(L);
             }
@@ -187,7 +187,7 @@ namespace bee::lua_filesystem {
 
         static int replace_filename(lua_State* L) {
             fs::path& self = getpath(L, 1);
-            path_ptr path = getpathptr(L, 2);
+            path_ptr path  = getpathptr(L, 2);
             self.replace_filename(path);
             lua_settop(L, 1);
             return 1;
@@ -195,7 +195,7 @@ namespace bee::lua_filesystem {
 
         static int replace_extension(lua_State* L) {
             fs::path& self = getpath(L, 1);
-            path_ptr path = getpathptr(L, 2);
+            path_ptr path  = getpathptr(L, 2);
             self.replace_extension(path);
             lua_settop(L, 1);
             return 1;
@@ -208,7 +208,7 @@ namespace bee::lua_filesystem {
                 return 1;
             }
             if (ext[0] != '.') {
-                lua_pushboolean(L, path_helper::equal(selfext, fs::path::string_type{'.'} + ext));
+                lua_pushboolean(L, path_helper::equal(selfext, fs::path::string_type { '.' } + ext));
                 return 1;
             }
             lua_pushboolean(L, path_helper::equal(selfext, ext));
@@ -243,45 +243,45 @@ namespace bee::lua_filesystem {
 
         static int mt_eq(lua_State* L) {
             path_ptr self = getpathptr(L, 1);
-            path_ptr rht = getpathptr(L, 2);
+            path_ptr rht  = getpathptr(L, 2);
             lua_pushboolean(L, path_helper::equal(self, rht));
             return 1;
         }
 
         static int mt_tostring(lua_State* L) {
             path_ptr self = getpathptr(L, 1);
-            auto u8str = self->generic_u8string();
-            auto str = u8tostrview(u8str);
+            auto u8str    = self->generic_u8string();
+            auto str      = u8tostrview(u8str);
             lua_pushlstring(L, str.data(), str.size());
             return 1;
         }
 
         static void metatable(lua_State* L) {
             static luaL_Reg lib[] = {
-                {"string", mt_tostring},
-                {"filename", filename},
-                {"parent_path", parent_path},
-                {"stem", stem},
-                {"extension", extension},
-                {"is_absolute", is_absolute},
-                {"is_relative", is_relative},
-                {"remove_filename", remove_filename},
-                {"replace_filename", replace_filename},
-                {"replace_extension", replace_extension},
-                {"equal_extension", equal_extension},
-                {"lexically_normal", lexically_normal},
-                {NULL, NULL},
+                { "string", mt_tostring },
+                { "filename", filename },
+                { "parent_path", parent_path },
+                { "stem", stem },
+                { "extension", extension },
+                { "is_absolute", is_absolute },
+                { "is_relative", is_relative },
+                { "remove_filename", remove_filename },
+                { "replace_filename", replace_filename },
+                { "replace_extension", replace_extension },
+                { "equal_extension", equal_extension },
+                { "lexically_normal", lexically_normal },
+                { NULL, NULL },
             };
             luaL_newlibtable(L, lib);
             luaL_setfuncs(L, lib, 0);
             lua_setfield(L, -2, "__index");
             static luaL_Reg mt[] = {
-                {"__div", mt_div},
-                {"__concat", mt_concat},
-                {"__eq", mt_eq},
-                {"__tostring", mt_tostring},
-                {"__debugger_tostring", mt_tostring},
-                {NULL, NULL},
+                { "__div", mt_div },
+                { "__concat", mt_concat },
+                { "__eq", mt_eq },
+                { "__tostring", mt_tostring },
+                { "__debugger_tostring", mt_tostring },
+                { NULL, NULL },
             };
             luaL_setfuncs(L, mt, 0);
         }
@@ -305,20 +305,31 @@ namespace bee::lua_filesystem {
 
         static const char* filetypename(fs::file_type type) {
             switch (type) {
-            case fs::file_type::none:      return "none";
-            case fs::file_type::not_found: return "not_found";
-            case fs::file_type::regular:   return "regular";
-            case fs::file_type::directory: return "directory";
-            case fs::file_type::symlink:   return "symlink";
-            case fs::file_type::block:     return "block";
-            case fs::file_type::character: return "character";
-            case fs::file_type::fifo:      return "fifo";
-            case fs::file_type::socket:    return "socket";
-    #if defined(BEE_ENABLE_FILESYSTEM) && defined(_MSC_VER)
-            case fs::file_type::junction:  return "junction";
-    #endif
+            case fs::file_type::none:
+                return "none";
+            case fs::file_type::not_found:
+                return "not_found";
+            case fs::file_type::regular:
+                return "regular";
+            case fs::file_type::directory:
+                return "directory";
+            case fs::file_type::symlink:
+                return "symlink";
+            case fs::file_type::block:
+                return "block";
+            case fs::file_type::character:
+                return "character";
+            case fs::file_type::fifo:
+                return "fifo";
+            case fs::file_type::socket:
+                return "socket";
+#if defined(BEE_ENABLE_FILESYSTEM) && defined(_MSC_VER)
+            case fs::file_type::junction:
+                return "junction";
+#endif
             default:
-            case fs::file_type::unknown:   return "unknown";
+            case fs::file_type::unknown:
+                return "unknown";
             }
         }
 
@@ -355,20 +366,20 @@ namespace bee::lua_filesystem {
 
         static void metatable(lua_State* L) {
             static luaL_Reg lib[] = {
-                {"type", type},
-                {"exists", exists},
-                {"is_directory", is_directory},
-                {"is_regular_file", is_regular_file},
-                {NULL, NULL},
+                { "type", type },
+                { "exists", exists },
+                { "is_directory", is_directory },
+                { "is_regular_file", is_regular_file },
+                { NULL, NULL },
             };
             luaL_newlibtable(L, lib);
             luaL_setfuncs(L, lib, 0);
             lua_setfield(L, -2, "__index");
             static luaL_Reg mt[] = {
-                {"__eq", mt_eq},
-                {"__tostring", type},
-                {"__debugger_tostring", type},
-                {NULL, NULL},
+                { "__eq", mt_eq },
+                { "__tostring", type },
+                { "__debugger_tostring", type },
+                { NULL, NULL },
             };
             luaL_setfuncs(L, mt, 0);
         }
@@ -432,22 +443,22 @@ namespace bee::lua_filesystem {
 
         static void metatable(lua_State* L) {
             static luaL_Reg lib[] = {
-                {"path", path},
-                {"status", status},
-                {"symlink_status", symlink_status},
-                {"type", type},
-                {"exists", exists},
-                {"is_directory", is_directory},
-                {"is_regular_file", is_regular_file},
-                {NULL, NULL},
+                { "path", path },
+                { "status", status },
+                { "symlink_status", symlink_status },
+                { "type", type },
+                { "exists", exists },
+                { "is_directory", is_directory },
+                { "is_regular_file", is_regular_file },
+                { NULL, NULL },
             };
             luaL_newlibtable(L, lib);
             luaL_setfuncs(L, lib, 0);
             lua_setfield(L, -2, "__index");
             static luaL_Reg mt[] = {
-                {"__tostring", path},
-                {"__debugger_tostring", path},
-                {NULL, NULL},
+                { "__tostring", path },
+                { "__debugger_tostring", path },
+                { NULL, NULL },
             };
             luaL_setfuncs(L, mt, 0);
         }
@@ -462,7 +473,7 @@ namespace bee::lua_filesystem {
         file_status::push(L, fs::status(p, ec));
         return 1;
     }
-    
+
     static int symlink_status(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
@@ -520,7 +531,7 @@ namespace bee::lua_filesystem {
 
     static int rename(lua_State* L) {
         path_ptr from = getpathptr(L, 1);
-        path_ptr to = getpathptr(L, 2);
+        path_ptr to   = getpathptr(L, 2);
         std::error_code ec;
         fs::rename(from, to, ec);
         if (ec) {
@@ -560,7 +571,7 @@ namespace bee::lua_filesystem {
             fs::path r = fs::current_path(ec);
             if (ec) {
                 pusherror(L, "current_path()", ec);
-            return 0;
+                return 0;
             }
             path::push(L, r);
             return 1;
@@ -575,8 +586,8 @@ namespace bee::lua_filesystem {
     }
 
     static int copy(lua_State* L) {
-        path_ptr from = getpathptr(L, 1);
-        path_ptr to = getpathptr(L, 2);
+        path_ptr from            = getpathptr(L, 1);
+        path_ptr to              = getpathptr(L, 2);
         fs::copy_options options = fs::copy_options::none;
         if (lua_gettop(L) > 2) {
             options = lua::checkinteger<fs::copy_options>(L, 3, "options");
@@ -610,8 +621,7 @@ namespace bee::lua_filesystem {
                 }
             }
             return fs::copy_file(from, to, options);
-        }
-        catch(const fs::filesystem_error& e) {
+        } catch (const fs::filesystem_error& e) {
             ec = e.code();
             return false;
         }
@@ -619,8 +629,8 @@ namespace bee::lua_filesystem {
 #endif
 
     static int copy_file(lua_State* L) {
-        path_ptr from = getpathptr(L, 1);
-        path_ptr to = getpathptr(L, 2);
+        path_ptr from            = getpathptr(L, 1);
+        path_ptr to              = getpathptr(L, 2);
         fs::copy_options options = fs::copy_options::none;
         if (lua_gettop(L) > 2) {
             options = lua::checkinteger<fs::copy_options>(L, 3, "options");
@@ -662,7 +672,7 @@ namespace bee::lua_filesystem {
         path::push(L, r);
         return 1;
     }
- 
+
     static int relative(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
@@ -676,7 +686,7 @@ namespace bee::lua_filesystem {
             return 1;
         }
         path_ptr base = getpathptr(L, 2);
-        fs::path r = fs::relative(p, base, ec);
+        fs::path r    = fs::relative(p, base, ec);
         if (ec) {
             pusherror(L, "relative", ec, p, base);
             return 0;
@@ -714,7 +724,7 @@ namespace bee::lua_filesystem {
         }
         return 0;
     }
-    
+
     static int permissions(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
@@ -738,7 +748,7 @@ namespace bee::lua_filesystem {
             return 0;
         }
         default: {
-            auto perms = fs::perms::mask & lua::checkinteger<fs::perms>(L, 2, "perms");
+            auto perms   = fs::perms::mask & lua::checkinteger<fs::perms>(L, 2, "perms");
             auto options = lua::checkinteger<fs::perm_options>(L, 3, "options");
             fs::permissions(p, perms, options, ec);
             if (ec) {
@@ -749,10 +759,10 @@ namespace bee::lua_filesystem {
         }
         }
     }
-    
+
     static int create_symlink(lua_State* L) {
         path_ptr target = getpathptr(L, 1);
-        path_ptr link = getpathptr(L, 2);
+        path_ptr link   = getpathptr(L, 2);
         std::error_code ec;
         fs::create_symlink(target, link, ec);
         if (ec) {
@@ -764,7 +774,7 @@ namespace bee::lua_filesystem {
 
     static int create_directory_symlink(lua_State* L) {
         path_ptr target = getpathptr(L, 1);
-        path_ptr link = getpathptr(L, 2);
+        path_ptr link   = getpathptr(L, 2);
         std::error_code ec;
         fs::create_directory_symlink(target, link, ec);
         if (ec) {
@@ -776,7 +786,7 @@ namespace bee::lua_filesystem {
 
     static int create_hard_link(lua_State* L) {
         path_ptr target = getpathptr(L, 1);
-        path_ptr link = getpathptr(L, 2);
+        path_ptr link   = getpathptr(L, 2);
         std::error_code ec;
         fs::create_hard_link(target, link, ec);
         if (ec) {
@@ -817,13 +827,13 @@ namespace bee::lua_filesystem {
         }
         static int mt_close(lua_State* L) {
             auto& iter = lua::checkudata<T>(L, 1);
-            iter = {};
+            iter       = {};
             return 0;
         }
         static void metatable(lua_State* L) {
             static luaL_Reg mt[] = {
-                {"__close", mt_close},
-                {NULL, NULL},
+                { "__close", mt_close },
+                { NULL, NULL },
             };
             luaL_setfuncs(L, mt, 0);
         }
@@ -841,7 +851,7 @@ namespace bee::lua_filesystem {
     };
 
     static int pairs(lua_State* L) {
-        path_ptr p = getpathptr(L, 1);
+        path_ptr p        = getpathptr(L, 1);
         const char* flags = luaL_optstring(L, 2, "");
         luaL_argcheck(L, (flags[0] == '\0' || (flags[0] == 'r' && flags[1] == '\0')), 2, "invalid flags");
         if (flags[0] == 'r') {
@@ -860,7 +870,7 @@ namespace bee::lua_filesystem {
         auto r = path_helper::exe_path();
         if (!r) {
             lua_pushnil(L);
-            lua_pushstring(L,  r.error().c_str());
+            lua_pushstring(L, r.error().c_str());
             return 2;
         }
         path::push(L, r.value());
@@ -879,7 +889,7 @@ namespace bee::lua_filesystem {
     }
 
     static int filelock(lua_State* L) {
-        path_ptr self = getpathptr(L, 1);
+        path_ptr self  = getpathptr(L, 1);
         file_handle fd = file_handle::lock(self);
         if (!fd) {
             lua_pushnil(L);
@@ -899,7 +909,7 @@ namespace bee::lua_filesystem {
 
 #if !defined(BEE_DISABLE_FULLPATH)
     static int fullpath(lua_State* L) {
-        path_ptr path = getpathptr(L, 1);
+        path_ptr path  = getpathptr(L, 1);
         file_handle fd = file_handle::open_link(path);
         if (!fd) {
             lua_pushnil(L);
@@ -920,44 +930,44 @@ namespace bee::lua_filesystem {
 
     static int luaopen(lua_State* L) {
         static luaL_Reg lib[] = {
-            {"path", path::constructor},
-            {"status", status},
-            {"symlink_status", symlink_status},
-            {"exists", exists},
-            {"is_directory", is_directory},
-            {"is_regular_file", is_regular_file},
-            {"create_directory", create_directory},
-            {"create_directories", create_directories},
-            {"rename", rename},
-            {"remove", remove},
-            {"remove_all", remove_all},
-            {"current_path", current_path},
-            {"copy", copy},
-            {"copy_file", copy_file},
-            {"absolute", absolute},
-            {"canonical", canonical},
-            {"relative", relative},
-            {"last_write_time", last_write_time},
-            {"permissions", permissions},
-            {"create_symlink", create_symlink},
-            {"create_directory_symlink", create_directory_symlink},
-            {"create_hard_link", create_hard_link},
-            {"temp_directory_path", temp_directory_path},
-            {"pairs", pairs},
-            {"exe_path", exe_path},
-            {"dll_path", dll_path},
-            {"filelock", filelock},
+            { "path", path::constructor },
+            { "status", status },
+            { "symlink_status", symlink_status },
+            { "exists", exists },
+            { "is_directory", is_directory },
+            { "is_regular_file", is_regular_file },
+            { "create_directory", create_directory },
+            { "create_directories", create_directories },
+            { "rename", rename },
+            { "remove", remove },
+            { "remove_all", remove_all },
+            { "current_path", current_path },
+            { "copy", copy },
+            { "copy_file", copy_file },
+            { "absolute", absolute },
+            { "canonical", canonical },
+            { "relative", relative },
+            { "last_write_time", last_write_time },
+            { "permissions", permissions },
+            { "create_symlink", create_symlink },
+            { "create_directory_symlink", create_directory_symlink },
+            { "create_hard_link", create_hard_link },
+            { "temp_directory_path", temp_directory_path },
+            { "pairs", pairs },
+            { "exe_path", exe_path },
+            { "dll_path", dll_path },
+            { "filelock", filelock },
 #if !defined(BEE_DISABLE_FULLPATH)
-            {"fullpath", fullpath},
+            { "fullpath", fullpath },
 #endif
-            {"copy_options", NULL},
-            {"perm_options", NULL},
-            {NULL, NULL},
+            { "copy_options", NULL },
+            { "perm_options", NULL },
+            { NULL, NULL },
         };
         luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);
 
-#define DEF_ENUM(CLASS, MEMBER) \
+#define DEF_ENUM(CLASS, MEMBER)                                      \
     lua_pushinteger(L, static_cast<lua_Integer>(fs::CLASS::MEMBER)); \
     lua_setfield(L, -2, #MEMBER);
 

@@ -13,12 +13,12 @@ namespace bee {
             ::close(fd);
             return {};
         }
-        return {fd};
+        return { fd };
     }
 
     file_handle file_handle::open_link(const fs::path& filename) {
         int fd = ::open(filename.c_str(), O_PATH | O_NOFOLLOW);
-        return {fd};
+        return { fd };
     }
 
     std::optional<fs::path> file_handle::path() const {

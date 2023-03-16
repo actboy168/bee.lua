@@ -6,13 +6,7 @@ namespace bee::filewatch {
         return "fsevent";
     }
 
-    static void event_cb(ConstFSEventStreamRef streamRef,
-        void* info,
-        size_t numEvents,
-        void* eventPaths,
-        const FSEventStreamEventFlags eventFlags[],
-        const FSEventStreamEventId eventIds[])
-    {
+    static void event_cb(ConstFSEventStreamRef streamRef, void* info, size_t numEvents, void* eventPaths, const FSEventStreamEventFlags eventFlags[], const FSEventStreamEventId eventIds[]) {
         (void)streamRef;
         (void)eventIds;
         watch* self = (watch*)info;
@@ -22,8 +16,7 @@ namespace bee::filewatch {
     watch::watch()
         : m_notify()
         , m_paths()
-        , m_stream(NULL)
-    { }
+        , m_stream(NULL) {}
     watch::~watch() {
         stop();
     }
@@ -36,7 +29,7 @@ namespace bee::filewatch {
         if (m_stream) {
             return false;
         }
-        FSEventStreamContext ctx = { 0 , this, NULL , NULL , NULL };
+        FSEventStreamContext ctx = { 0, this, NULL, NULL, NULL };
 
         FSEventStreamRef ref = FSEventStreamCreate(
             NULL,
@@ -106,7 +99,7 @@ namespace bee::filewatch {
             }
             i++;
         }
-        CFArrayRef cf_paths = CFArrayCreate(NULL, (const void **)&paths[0], m_paths.size(), NULL);
+        CFArrayRef cf_paths = CFArrayCreate(NULL, (const void**)&paths[0], m_paths.size(), NULL);
         if (create_stream(cf_paths)) {
             return;
         }
@@ -122,20 +115,13 @@ namespace bee::filewatch {
             if (!m_recursive && path[0] != '\0' && strchr(path + 1, '/') != NULL) {
                 continue;
             }
-            if (flags[i] & (
-                kFSEventStreamEventFlagItemCreated |
-                kFSEventStreamEventFlagItemRemoved |
-                kFSEventStreamEventFlagItemRenamed
-            )) {
+            if (flags[i] & (kFSEventStreamEventFlagItemCreated |
+                            kFSEventStreamEventFlagItemRemoved |
+                            kFSEventStreamEventFlagItemRenamed
+                           )) {
                 m_notify.emplace(notify::flag::rename, path);
             }
-            else if (flags[i] & (
-                kFSEventStreamEventFlagItemFinderInfoMod |
-                kFSEventStreamEventFlagItemModified |
-                kFSEventStreamEventFlagItemInodeMetaMod |
-                kFSEventStreamEventFlagItemChangeOwner |
-                kFSEventStreamEventFlagItemXattrMod
-            )) {
+            else if (flags[i] & (kFSEventStreamEventFlagItemFinderInfoMod | kFSEventStreamEventFlagItemModified | kFSEventStreamEventFlagItemInodeMetaMod | kFSEventStreamEventFlagItemChangeOwner | kFSEventStreamEventFlagItemXattrMod)) {
                 m_notify.emplace(notify::flag::modify, path);
             }
         }

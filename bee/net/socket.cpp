@@ -1,23 +1,23 @@
 #if defined _WIN32
-#   include <winsock2.h>
-#   include <mswsock.h>
-#   include <mstcpip.h>
-#   include <bee/platform/win/unicode.h>
-#   include <bee/platform/win/unlink.h>
-#   include <bee/nonstd/charconv.h>
-#   include <bee/utility/dynarray.h>
-#   include <fstream>
-#   include <limits>
-#   include <array>
+#    include <winsock2.h>
+#    include <mswsock.h>
+#    include <mstcpip.h>
+#    include <bee/platform/win/unicode.h>
+#    include <bee/platform/win/unlink.h>
+#    include <bee/nonstd/charconv.h>
+#    include <bee/utility/dynarray.h>
+#    include <fstream>
+#    include <limits>
+#    include <array>
 #else
-#   include <fcntl.h>
-#   include <netinet/tcp.h>
-#   include <signal.h>
-#   include <netinet/in.h>
-#   include <unistd.h>
-#   if defined(__APPLE__)
-#       include <sys/ioctl.h>
-#   endif
+#    include <fcntl.h>
+#    include <netinet/tcp.h>
+#    include <signal.h>
+#    include <netinet/in.h>
+#    include <unistd.h>
+#    if defined(__APPLE__)
+#        include <sys/ioctl.h>
+#    endif
 #endif
 
 #include <bee/net/socket.h>
@@ -29,18 +29,18 @@
 #define net_success(x) ((x) == 0)
 
 #if defined(__MINGW32__)
-#define WSA_FLAG_NO_HANDLE_INHERIT 0x80
+#    define WSA_FLAG_NO_HANDLE_INHERIT 0x80
 #endif
 
 namespace bee::net::socket {
 #if defined(_WIN32)
     static_assert(sizeof(SOCKET) == sizeof(fd_t));
 
-#if defined(_MSC_VER)
-#define FILENAME(n) win::u2w(n)
-#else
-#define FILENAME(n) (n)
-#endif
+#    if defined(_MSC_VER)
+#        define FILENAME(n) win::u2w(n)
+#    else
+#        define FILENAME(n) (n)
+#    endif
 
     static std::string file_read(const std::string& filename) {
         std::fstream f(FILENAME(filename), std::ios::binary | std::ios::in);
@@ -55,7 +55,7 @@ namespace bee::net::socket {
     }
 
     static bool read_tcp_port(const endpoint& ep, uint16_t& tcpport) {
-        auto[path, type] = ep.info();
+        auto [path, type] = ep.info();
         if (type != (uint16_t)un_format::pathname) {
             return false;
         }
@@ -63,7 +63,7 @@ namespace bee::net::socket {
         if (unixpath.empty()) {
             return false;
         }
-        if (auto[p, ec] = std::from_chars(unixpath.data(), unixpath.data() + unixpath.size(), tcpport); ec != std::errc()) {
+        if (auto [p, ec] = std::from_chars(unixpath.data(), unixpath.data() + unixpath.size(), tcpport); ec != std::errc()) {
             return false;
         }
         if (tcpport <= 0 || tcpport > (std::numeric_limits<uint16_t>::max)()) {
@@ -74,9 +74,9 @@ namespace bee::net::socket {
 
     static bool write_tcp_port(const std::string& path, fd_t s) {
         if (auto ep_opt = socket::getsockname(s)) {
-            auto[ip, tcpport] = ep_opt->info();
+            auto [ip, tcpport] = ep_opt->info();
             std::array<char, 10> portstr;
-            if (auto[p, ec] = std::to_chars(portstr.data(), portstr.data() + portstr.size() - 1, tcpport); ec != std::errc()) {
+            if (auto [p, ec] = std::to_chars(portstr.data(), portstr.data() + portstr.size() - 1, tcpport); ec != std::errc()) {
                 return false;
             }
             else {
@@ -110,7 +110,7 @@ namespace bee::net::socket {
         if (!ok) {
             return ok;
         }
-        auto[path, type] = ep.info();
+        auto [path, type] = ep.info();
         if (type != (uint16_t)un_format::pathname) {
             ::WSASetLastError(WSAENETDOWN);
             return false;
@@ -125,11 +125,11 @@ namespace bee::net::socket {
     static WSAPROTOCOL_INFOW UnixProtocol;
     static bool supportUnixDomainSocket_() {
         static GUID AF_UNIX_PROVIDER_ID = { 0xA00943D9, 0x9C2E, 0x4633, { 0x9B, 0x59, 0x00, 0x57, 0xA3, 0x16, 0x09, 0x94 } };
-        DWORD len = 0;
+        DWORD len                       = 0;
         ::WSAEnumProtocolsW(0, NULL, &len);
         dynarray<std::byte> buf(len);
         LPWSAPROTOCOL_INFOW protocols = (LPWSAPROTOCOL_INFOW)buf.data();
-        int n = ::WSAEnumProtocolsW(0, protocols, &len);
+        int n                         = ::WSAEnumProtocolsW(0, protocols, &len);
         if (n == SOCKET_ERROR) {
             return false;
         }
@@ -164,7 +164,7 @@ namespace bee::net::socket {
             initialized = true;
             struct sigaction sa;
             sa.sa_handler = SIG_IGN;
-            sa.sa_flags = 0;
+            sa.sa_flags   = 0;
             sigemptyset(&sa.sa_mask);
             sigaction(SIGPIPE, &sa, 0);
 #endif
@@ -185,9 +185,9 @@ namespace bee::net::socket {
         switch (errno) {
         case EAGAIN:
         case EINTR:
-#if EAGAIN != EWOULDBLOCK
+#    if EAGAIN != EWOULDBLOCK
         case EWOULDBLOCK:
-#endif
+#    endif
             return true;
         default:
             return false;
@@ -198,7 +198,7 @@ namespace bee::net::socket {
 #if defined(_WIN32)
     static bool no_blocking(fd_t s) {
         unsigned long nonblock = 1;
-        int ok = ::ioctlsocket(s, FIONBIO, &nonblock);
+        int ok                 = ::ioctlsocket(s, FIONBIO, &nonblock);
         return net_success(ok);
     }
     static bool no_inherit(fd_t s) {
@@ -224,7 +224,7 @@ namespace bee::net::socket {
 
     static fd_t createSocket(int af, int type, int protocol) {
 #if defined(_WIN32)
-        fd_t fd = ::WSASocketW(af, type, protocol, af == PF_UNIX? &UnixProtocol: NULL, 0, WSA_FLAG_NO_HANDLE_INHERIT);
+        fd_t fd = ::WSASocketW(af, type, protocol, af == PF_UNIX ? &UnixProtocol : NULL, 0, WSA_FLAG_NO_HANDLE_INHERIT);
         if (fd != retired_fd) {
             if (!no_blocking(fd)) {
                 ::closesocket(fd);
@@ -284,17 +284,25 @@ namespace bee::net::socket {
     bool shutdown(fd_t s, shutdown_flag flag) {
 #if defined(_WIN32)
         switch (flag) {
-        case shutdown_flag::both:  return net_success(::shutdown(s, SD_BOTH));
-        case shutdown_flag::read:  return net_success(::shutdown(s, SD_RECEIVE));
-        case shutdown_flag::write: return net_success(::shutdown(s, SD_SEND));
-        default: std::unreachable();
+        case shutdown_flag::both:
+            return net_success(::shutdown(s, SD_BOTH));
+        case shutdown_flag::read:
+            return net_success(::shutdown(s, SD_RECEIVE));
+        case shutdown_flag::write:
+            return net_success(::shutdown(s, SD_SEND));
+        default:
+            std::unreachable();
         }
 #else
         switch (flag) {
-        case shutdown_flag::both:  return net_success(::shutdown(s, SHUT_RDWR));
-        case shutdown_flag::read:  return net_success(::shutdown(s, SHUT_RD));
-        case shutdown_flag::write: return net_success(::shutdown(s, SHUT_WR));
-        default: std::unreachable();
+        case shutdown_flag::both:
+            return net_success(::shutdown(s, SHUT_RDWR));
+        case shutdown_flag::read:
+            return net_success(::shutdown(s, SHUT_RD));
+        case shutdown_flag::write:
+            return net_success(::shutdown(s, SHUT_WR));
+        default:
+            std::unreachable();
         }
 #endif
     }
@@ -321,7 +329,7 @@ namespace bee::net::socket {
     void udp_connect_reset(fd_t s) {
 #if defined _WIN32
         DWORD byte_retruned = 0;
-        bool new_be = false;
+        bool new_be         = false;
         ::WSAIoctl(s, SIO_UDP_CONNRESET, &new_be, sizeof(new_be), NULL, 0, &byte_retruned, NULL, NULL);
 #else
         (void)s;
@@ -389,7 +397,7 @@ namespace bee::net::socket {
         if (newfd == retired_fd) {
 #if defined _WIN32
             return fdstat::failed;
-#else 
+#else
             if (errno != EAGAIN && errno != ECONNABORTED && errno != EPROTO && errno != EINTR) {
                 return fdstat::failed;
             }
@@ -467,7 +475,7 @@ namespace bee::net::socket {
         if (ep.family() != AF_UNIX) {
             return false;
         }
-        auto[path, type] = ep.info();
+        auto [path, type] = ep.info();
         if (type != (uint16_t)un_format::pathname) {
             return false;
         }
@@ -481,7 +489,7 @@ namespace bee::net::socket {
     int errcode(fd_t s) {
         int err;
         socklen_t errl = sizeof(err);
-        int ok = ::getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&err, &errl);
+        int ok         = ::getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&err, &errl);
         if (net_success(ok)) {
             return err;
         }
@@ -494,7 +502,7 @@ namespace bee::net::socket {
 
 #if !defined(_WIN32)
     bool blockpair(fd_t sv[2]) {
-#if defined(__APPLE__)
+#    if defined(__APPLE__)
         int ok = ::socketpair(PF_UNIX, SOCK_STREAM, 0, sv);
         if (!net_success(ok)) {
             return false;
@@ -510,10 +518,10 @@ namespace bee::net::socket {
             return false;
         }
         return true;
-#else
+#    else
         int ok = ::socketpair(PF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, sv);
         return net_success(ok);
-#endif
+#    endif
     }
 #endif
 

@@ -16,8 +16,7 @@ namespace bee::filewatch {
     watch::watch()
         : m_notify()
         , m_fd_path()
-        , m_inotify_fd(inotify_init1(IN_NONBLOCK | IN_CLOEXEC))
-    {
+        , m_inotify_fd(inotify_init1(IN_NONBLOCK | IN_CLOEXEC)) {
         assert(m_inotify_fd != -1);
     }
 
@@ -25,7 +24,7 @@ namespace bee::filewatch {
         stop();
     }
 
-    void   watch::stop() {
+    void watch::stop() {
         if (m_inotify_fd == -1) {
             return;
         }
@@ -55,21 +54,20 @@ namespace bee::filewatch {
         }
         int desc = inotify_add_watch(m_inotify_fd, path.c_str(), IN_ALL_EVENTS);
         if (desc != -1) {
-            const auto &emplace_result = m_fd_path.emplace(std::make_pair(desc, path.string()));
+            const auto& emplace_result = m_fd_path.emplace(std::make_pair(desc, path.string()));
             if (!emplace_result.second) {
                 return;
             }
-
         }
         if (!m_recursive) {
             return;
         }
         std::error_code ec;
-        fs::directory_iterator iter {path, fs::directory_options::skip_permission_denied, ec };
+        fs::directory_iterator iter { path, fs::directory_options::skip_permission_denied, ec };
         fs::directory_iterator end {};
         for (; !ec && iter != end; iter.increment(ec)) {
             std::error_code file_status_ec;
-            if (fs::is_directory(m_follow_symlinks? iter->status(file_status_ec): iter->symlink_status(file_status_ec))) {
+            if (fs::is_directory(m_follow_symlinks ? iter->status(file_status_ec) : iter->symlink_status(file_status_ec))) {
                 add(iter->path());
             }
         }
@@ -95,7 +93,7 @@ namespace bee::filewatch {
         }
 
         struct pollfd pfd_read;
-        pfd_read.fd = m_inotify_fd;
+        pfd_read.fd     = m_inotify_fd;
         pfd_read.events = POLLIN;
         if (poll(&pfd_read, 1, 0) != 1) {
             return;
@@ -106,8 +104,8 @@ namespace bee::filewatch {
         if (n == 0 || n == -1) {
             return;
         }
-        for (std::byte *p = buf; p < buf + n; ) {
-            auto event = (struct inotify_event *)p;
+        for (std::byte* p = buf; p < buf + n;) {
+            auto event = (struct inotify_event*)p;
             event_update(event);
             p += sizeof(*event) + event->len;
         }

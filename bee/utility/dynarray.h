@@ -7,6 +7,7 @@
 #include <memory.h>
 #include <assert.h>
 
+// clang-format off
 namespace bee {
     template <class T>
     class dynarray {

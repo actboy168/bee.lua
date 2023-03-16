@@ -62,6 +62,7 @@ namespace bee::lua_thread {
             }
             return true;
         }
+
     private:
         std::queue<value_type> queue;
         spinlock mutex;
@@ -72,7 +73,7 @@ namespace bee::lua_thread {
 
     struct rpc {
         std::binary_semaphore trigger = std::binary_semaphore(0);
-        void* data = nullptr;
+        void* data                    = nullptr;
     };
 }
 
@@ -95,7 +96,7 @@ namespace bee::lua_thread {
         }
         bool create(zstring_view name) {
             std::unique_lock<spinlock> lk(mutex);
-            std::string namestr {name.data(), name.size()};
+            std::string namestr { name.data(), name.size() };
             auto it = channels.find(namestr);
             if (it != channels.end()) {
                 return false;
@@ -105,7 +106,7 @@ namespace bee::lua_thread {
         }
         void clear() {
             std::unique_lock<spinlock> lk(mutex);
-            auto                       it = channels.find("errlog");
+            auto it = channels.find("errlog");
             if (it != channels.end()) {
                 auto errlog = it->second;
                 channels.clear();
@@ -117,7 +118,7 @@ namespace bee::lua_thread {
         }
         boxchannel query(zstring_view name) {
             std::unique_lock<spinlock> lk(mutex);
-            std::string namestr {name.data(), name.size()};
+            std::string namestr { name.data(), name.size() };
             auto it = channels.find(namestr);
             if (it != channels.end()) {
                 return it->second;
@@ -130,13 +131,12 @@ namespace bee::lua_thread {
         spinlock mutex;
     };
 
-
-    static channelmgr       g_channel;
+    static channelmgr g_channel;
     static std::atomic<int> g_thread_id = -1;
-    static int       THREADID;
+    static int THREADID;
 
     static int lchannel_push(lua_State* L) {
-        auto& bc = lua::checkudata<boxchannel>(L, 1);
+        auto& bc     = lua::checkudata<boxchannel>(L, 1);
         void* buffer = seri_pack(L, 1, NULL);
         bc->push(buffer);
         return 0;
@@ -180,10 +180,10 @@ namespace bee::lua_thread {
 
     static void metatable(lua_State* L) {
         luaL_Reg lib[] = {
-            {"push", lchannel_push},
-            {"pop", lchannel_pop},
-            {"bpop", lchannel_bpop},
-            {NULL, NULL},
+            { "push", lchannel_push },
+            { "pop", lchannel_pop },
+            { "bpop", lchannel_bpop },
+            { NULL, NULL },
         };
         luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);
@@ -191,7 +191,7 @@ namespace bee::lua_thread {
     }
 
     static int lchannel(lua_State* L) {
-        auto name = lua::checkstrview(L, 1);
+        auto name    = lua::checkstrview(L, 1);
         boxchannel c = g_channel.query(name);
         if (!c) {
             return luaL_error(L, "Can't query channel '%s'", name.data());
@@ -208,8 +208,8 @@ namespace bee::lua_thread {
 
     struct thread_args {
         std::string source;
-        int         id;
-        void*       params;
+        int id;
+        void* params;
     };
 
     static int gen_threadid() {
@@ -262,7 +262,7 @@ namespace bee::lua_thread {
         if (lua_pcall(L, 1, 0, 1) != LUA_OK) {
             boxchannel errlog = g_channel.query("errlog");
             if (errlog) {
-                void* errmsg = seri_pack(L, lua_gettop(L)-1, NULL);
+                void* errmsg = seri_pack(L, lua_gettop(L) - 1, NULL);
                 errlog->push(errmsg);
             }
             else {
@@ -273,10 +273,10 @@ namespace bee::lua_thread {
     }
 
     static int lthread(lua_State* L) {
-        auto source = lua::checkstrview(L, 1);
-        void* params = seri_pack(L, 1, NULL);
-        int id = gen_threadid();
-        thread_args* args = new thread_args { std::string {source.data(), source.size()}, id, params };
+        auto source          = lua::checkstrview(L, 1);
+        void* params         = seri_pack(L, 1, NULL);
+        int id               = gen_threadid();
+        thread_args* args    = new thread_args { std::string { source.data(), source.size() }, id, params };
         thread_handle handle = thread_create(thread_main, args);
         if (!handle) {
             delete args;
@@ -320,13 +320,13 @@ namespace bee::lua_thread {
     }
 
     static int lrpc_wait(lua_State* L) {
-        auto r = lua::checklightud<struct rpc *>(L, 1);
+        auto r = lua::checklightud<struct rpc*>(L, 1);
         r->trigger.acquire();
         return seri_unpackptr(L, r->data);
     }
 
     static int lrpc_return(lua_State* L) {
-        auto r = lua::checklightud<struct rpc *>(L, 1);
+        auto r  = lua::checklightud<struct rpc*>(L, 1);
         r->data = seri_pack(L, 1, NULL);
         r->trigger.release();
         return 0;
@@ -345,19 +345,19 @@ namespace bee::lua_thread {
 
     static int luaopen(lua_State* L) {
         luaL_Reg lib[] = {
-            {"sleep", lsleep},
-            {"thread", lthread},
-            {"newchannel", lnewchannel},
-            {"channel", lchannel},
-            {"reset", lreset},
-            {"wait", lwait},
-            {"setname", lsetname},
-            {"rpc_create", lrpc_create},
-            {"rpc_wait", lrpc_wait},
-            {"rpc_return", lrpc_return},
-            {"preload_module", ::bee::lua::preload_module},
-            {"id", NULL},
-            {NULL, NULL},
+            { "sleep", lsleep },
+            { "thread", lthread },
+            { "newchannel", lnewchannel },
+            { "channel", lchannel },
+            { "reset", lreset },
+            { "wait", lwait },
+            { "setname", lsetname },
+            { "rpc_create", lrpc_create },
+            { "rpc_wait", lrpc_wait },
+            { "rpc_return", lrpc_return },
+            { "preload_module", ::bee::lua::preload_module },
+            { "id", NULL },
+            { NULL, NULL },
         };
         luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);

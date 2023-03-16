@@ -15,17 +15,17 @@
 #include <vector>
 
 #if defined(__APPLE__)
-# include <crt_externs.h>
-# define environ (*_NSGetEnviron())
+#    include <crt_externs.h>
+#    define environ (*_NSGetEnviron())
 #else
-extern char **environ;
+extern char** environ;
 #endif
 
 namespace bee::subprocess {
 
     args_t::~args_t() {
         for (size_t i = 0; i < size(); ++i) {
-            delete[](data_[i]);
+            delete[] (data_[i]);
         }
     }
 
@@ -38,10 +38,10 @@ namespace bee::subprocess {
         data_.emplace_back(tmp.release());
     }
 
-    static void sigalrm_handler (int) {
+    static void sigalrm_handler(int) {
         // Nothing to do
     }
-    static bool wait_with_timeout(pid_t pid, int *status, int timeout) {
+    static bool wait_with_timeout(pid_t pid, int* status, int timeout) {
         assert(pid > 0);
         assert(timeout >= -1);
         if (timeout <= 0) {
@@ -63,7 +63,6 @@ namespace bee::subprocess {
         return err == pid;
     }
 
-
     void envbuilder::set(const std::string& key, const std::string& value) {
         set_env_[key] = value;
     }
@@ -78,13 +77,13 @@ namespace bee::subprocess {
         memcpy(tmp.data(), k.data(), k.size());
         tmp[k.size()] = '=';
         memcpy(tmp.data() + k.size() + 1, v.data(), v.size());
-        tmp[n-1] = '\0';
+        tmp[n - 1] = '\0';
         envs.emplace_back(tmp.release());
     }
 
     static dynarray<char*> env_release(std::vector<char*>& envs) {
         envs.emplace_back(nullptr);
-        return {envs};
+        return { envs };
     }
 
     environment envbuilder::release() {
@@ -94,14 +93,14 @@ namespace bee::subprocess {
         }
         std::vector<char*> envs;
         for (; *es; ++es) {
-            std::string str = *es;
+            std::string str            = *es;
             std::string::size_type pos = str.find(L'=');
-            std::string key = str.substr(0, pos);
+            std::string key            = str.substr(0, pos);
             if (del_env_.find(key) != del_env_.end()) {
                 continue;
             }
             std::string val = str.substr(pos + 1, str.length());
-            auto it = set_env_.find(key);
+            auto it         = set_env_.find(key);
             if (it != set_env_.end()) {
                 val = it->second;
                 set_env_.erase(it);
@@ -123,10 +122,12 @@ namespace bee::subprocess {
         fds_[0] = -1;
         fds_[1] = -1;
         fds_[2] = -1;
-        int r = posix_spawnattr_init(&spawnattr_);
-        (void)r; assert(r == 0);
+        int r   = posix_spawnattr_init(&spawnattr_);
+        (void)r;
+        assert(r == 0);
         r = posix_spawn_file_actions_init(&spawnfile_);
-        (void)r; assert(r == 0);
+        (void)r;
+        assert(r == 0);
     }
 
     spawn::~spawn() {
@@ -152,7 +153,7 @@ namespace bee::subprocess {
 #endif
     }
 
-    void spawn::redirect(stdio type, file_handle h) { 
+    void spawn::redirect(stdio type, file_handle h) {
         switch (type) {
         case stdio::eInput:
             fds_[0] = h.value();
@@ -174,11 +175,11 @@ namespace bee::subprocess {
 
 #if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 101500
 // for posix_spawn_file_actions_addchdir_np
-#define USE_POSIX_SPAWN 1
+#    define USE_POSIX_SPAWN 1
 #endif
 #if defined(__GLIBC__) && __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 29
 // for posix_spawn_file_actions_addchdir_np
-#define USE_POSIX_SPAWN 1
+#    define USE_POSIX_SPAWN 1
 #endif
 
     bool spawn::exec(args_t& args, const char* cwd) {
@@ -217,9 +218,9 @@ namespace bee::subprocess {
             return false;
         }
         if (pid == 0) {
-            //if (detached_) {
-            //    setsid();
-            //}
+            // if (detached_) {
+            //     setsid();
+            // }
             for (int i = 0; i < 3; ++i) {
                 if (fds_[i] > 0) {
                     if (dup2(fds_[i], i) == -1) {
@@ -233,9 +234,9 @@ namespace bee::subprocess {
             if (cwd && chdir(cwd)) {
                 _exit(127);
             }
-            //if (suspended_) {
-            //    ::kill(getpid(), SIGSTOP);
-            //}
+            // if (suspended_) {
+            //     ::kill(getpid(), SIGSTOP);
+            // }
             execvp(args[0], args.data());
             _exit(127);
         }
@@ -250,14 +251,13 @@ namespace bee::subprocess {
     }
 
     process::process(spawn& spawn)
-        : pid(spawn.pid_)
-    { }
+        : pid(spawn.pid_) {}
 
-    bool     process::is_running() {
+    bool process::is_running() {
         return (0 == ::waitpid(pid, 0, WNOHANG));
     }
 
-    bool     process::kill(int signum) {
+    bool process::kill(int signum) {
         if (0 == ::kill(pid, signum)) {
             if (signum == 0) {
                 return true;
@@ -271,8 +271,8 @@ namespace bee::subprocess {
         if (!wait_with_timeout(pid, &status, -1)) {
             return 0;
         }
-        int exit_status = WIFEXITED(status)? WEXITSTATUS(status) : 0;
-        int term_signal = WIFSIGNALED(status)? WTERMSIG(status) : 0;
+        int exit_status = WIFEXITED(status) ? WEXITSTATUS(status) : 0;
+        int term_signal = WIFSIGNALED(status) ? WTERMSIG(status) : 0;
         return (term_signal << 8) | exit_status;
     }
 
@@ -294,7 +294,7 @@ namespace bee::subprocess {
             if (!net::socket::blockpair(fds)) {
                 return { {}, {} };
             }
-            return { {fds[0]}, {fds[1]} };
+            return { { fds[0] }, { fds[1] } };
         }
         int peek(FILE* f) {
             char tmp[256];

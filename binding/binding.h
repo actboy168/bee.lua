@@ -11,7 +11,7 @@
 #include <bee/nonstd/to_underlying.h>
 #include <bee/utility/zstring_view.h>
 #if defined(_WIN32)
-#include <bee/platform/win/unicode.h>
+#    include <bee/platform/win/unicode.h>
 #endif
 
 namespace bee::lua {
@@ -22,7 +22,7 @@ namespace bee::lua {
 #endif
 
     inline zstring_view checkstrview(lua_State* L, int idx) {
-        size_t len = 0;
+        size_t len      = 0;
         const char* buf = luaL_checklstring(L, idx, &len);
         return { buf, len };
     }
@@ -157,8 +157,8 @@ namespace bee::lua {
         return *static_cast<T*>(lua_newuserdatauv(L, sizeof(T), nupvalue));
     }
 
-    template <typename T, typename...Args>
-    T& newudata(lua_State* L, void (*init_metatable)(lua_State*), Args&&...args) {
+    template <typename T, typename... Args>
+    T& newudata(lua_State* L, void (*init_metatable)(lua_State*), Args&&... args) {
         static_assert(udata_has_name<T>::value);
         int nupvalue = 0;
         if constexpr (udata_has_nupvalue<T>::value) {
@@ -189,11 +189,13 @@ namespace bee::lua {
     }
 
     template <typename T>
-    struct global { static inline T v = T(); };
+    struct global {
+        static inline T v = T();
+    };
     using usermodules = global<std::map<std::string, lua_CFunction>>;
 
     struct callfunc {
-        template <typename F, typename ...Args>
+        template <typename F, typename... Args>
         callfunc(F f, Args... args) {
             f(std::forward<Args>(args)...);
         }
@@ -229,4 +231,4 @@ namespace bee::lua {
     int luaopen_bee_##name(lua_State* L) {   \
         return bee::lua_##name ::luaopen(L); \
     }                                        \
-    static ::bee::lua::callfunc _init_##name(::bee::lua::register_module, "bee."#name, luaopen_bee_##name);
+    static ::bee::lua::callfunc _init_##name(::bee::lua::register_module, "bee." #name, luaopen_bee_##name);
