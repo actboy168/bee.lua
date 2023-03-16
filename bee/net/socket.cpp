@@ -1,11 +1,13 @@
 #if defined _WIN32
+//  clang-format off
+#    include <winsock2.h>
+//  clang-format on
 #    include <bee/nonstd/charconv.h>
 #    include <bee/platform/win/unicode.h>
 #    include <bee/platform/win/unlink.h>
 #    include <bee/utility/dynarray.h>
 #    include <mstcpip.h>
 #    include <mswsock.h>
-#    include <winsock2.h>
 
 #    include <array>
 #    include <fstream>
