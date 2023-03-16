@@ -1,0 +1,14 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "Clang Format",
+            "command": "luamake",
+            "args": [
+                "lua",
+                "compile/clang-format.lua",
+            ]
+        }
+    ]
+}
