@@ -1,5 +1,6 @@
 #include <bee/error.h>
 #include <bee/nonstd/filesystem.h>
+#include <bee/utility/assume.h>
 #include <bee/subprocess.h>
 #include <binding/binding.h>
 #include <binding/file.h>
@@ -206,6 +207,7 @@ namespace bee::lua_subprocess {
                 }
             }
             luaL_argexpected(L, r != NULL, idx, LUA_FILEHANDLE);
+            ASSUME(r != NULL);
             return (luaL_Stream*)r;
         }
 

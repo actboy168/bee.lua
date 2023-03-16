@@ -28,32 +28,29 @@ namespace bee {
         static_assert(std::is_trivial_v<value_type>);
 
         dynarray()
-            : data_(nullptr)
+            : data_()
             , size_(0)
         {}
         dynarray(size_type size)
-            : data_(alloc(size))
+            : data_(std::make_unique<value_type[]>(size))
             , size_(size)
         {}
         dynarray(const value_type* data, size_type size)
-            : data_(alloc(size))
-            , size_(size) {
-            memcpy(data_, data, sizeof(value_type) * size);
+            : dynarray(size) {
+            memcpy(data_.get(), data, sizeof(value_type) * size);
         }
         template <typename Vec, typename = std::enable_if_t<std::is_same_v<typename Vec::value_type, value_type>>>
         dynarray(Vec const& vec)
             : dynarray(vec.data(), vec.size())
         {}
-        ~dynarray() {
-            dealloc(data_);
-        }
+        ~dynarray()
+        {}
         dynarray(const dynarray&) = delete;
         dynarray& operator=(const dynarray&) = delete;
         dynarray(dynarray&& right)
-            : data_(right.data())
-            , size_(right.size()) {
-            right.data_ = nullptr;
-            right.size_ = 0;
+            : dynarray() {
+            std::swap(data_, right.data_);
+            std::swap(size_, right.size_);
         }
         dynarray& operator=(dynarray&& right) noexcept {
             if (this != std::addressof(right)) {
@@ -69,46 +66,26 @@ namespace bee {
             }
         }
         void resize(size_t size) noexcept {
-            assert(data_ != nullptr && size <= size_);
+            assert(data_ && size <= size_);
             size_ = size;
         }
         pointer release() noexcept {
-            pointer r = data_;
-            data_ = nullptr;
             size_ = 0;
-            return r;
+            return data_.release();
         }
         bool            empty()                 const noexcept { return size_ == 0; }
-        pointer         data()                        noexcept { return data_; }
-        const_pointer   data()                  const noexcept { return data_; }
+        pointer         data()                        noexcept { return data_.get(); }
+        const_pointer   data()                  const noexcept { return data_.get(); }
         size_type       size()                  const noexcept { return size_; }
-        const_iterator  begin()                 const noexcept { assert(data_ != nullptr); return data_; }
-        iterator        begin()                       noexcept { assert(data_ != nullptr); return data_; }
-        const_iterator  end()                   const noexcept { assert(data_ != nullptr); return data_ + size_; }
-        iterator        end()                         noexcept { assert(data_ != nullptr); return data_ + size_; }
-        const_reference operator[](size_type i) const noexcept { assert(data_ != nullptr && i < size_); return data_[i]; }
-        reference       operator[](size_type i)       noexcept { assert(data_ != nullptr && i < size_); return data_[i]; }
+        const_iterator  begin()                 const noexcept { assert(data_); return data(); }
+        iterator        begin()                       noexcept { assert(data_); return data(); }
+        const_iterator  end()                   const noexcept { assert(data_); return data() + size(); }
+        iterator        end()                         noexcept { assert(data_); return data() + size(); }
+        const_reference operator[](size_type i) const noexcept { assert(data_ && i < size_); return data_[i]; }
+        reference       operator[](size_type i)       noexcept { assert(data_ && i < size_); return data_[i]; }
 
     private:
-        class bad_array_length : public std::bad_alloc {
-        public:
-            bad_array_length() throw() { }
-            virtual ~bad_array_length() throw() { }
-            virtual const char* what() const throw() { 
-                return "bad_array_length"; 
-            }
-        };
-        static pointer alloc(size_type n) { 
-            if (n > (std::numeric_limits<size_type>::max)()/sizeof(T)) {
-                throw bad_array_length();
-            }
-            return reinterpret_cast<pointer>(new std::byte[n*sizeof(T)]); 
-        }
-        static void dealloc(pointer ptr) { 
-            delete[] reinterpret_cast<std::byte*>(ptr);
-        }
-    private:
-        pointer   data_;
-        size_type size_;
+        std::unique_ptr<value_type[]>  data_;
+        size_type                      size_;
     };
 }

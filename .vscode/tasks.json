@@ -4,11 +4,25 @@
         {
             "type": "shell",
             "label": "Clang Format",
+            "icon": {
+                "id": "json"
+            },
             "command": "luamake",
             "args": [
                 "lua",
                 "compile/clang-format.lua",
-            ]
+            ],
+        },
+        {
+            "type": "shell",
+            "label": "Static Analysis",
+            "icon": {
+                "id": "wrench"
+            },
+            "command": "luamake",
+            "args": [
+                "--analyze",
+            ],
         }
     ]
 }

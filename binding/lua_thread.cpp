@@ -93,7 +93,7 @@ namespace bee::lua_thread {
     class channelmgr {
     public:
         channelmgr() {
-            channels.emplace(std::make_pair("errlog", new channel));
+            channels.emplace(std::make_pair("errlog", std::make_shared<channel>()));
         }
         bool create(zstring_view name) {
             std::unique_lock<spinlock> lk(mutex);

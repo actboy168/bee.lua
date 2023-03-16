@@ -40,6 +40,15 @@ end
 lm:source_set "source_bee" {
     includes = ".",
     sources = "bee/**/*.cpp",
+    msvc = lm.analyze and {
+        flags = "/analyze",
+    },
+    gcc = lm.analyze and {
+        flags = {
+            "-fanalyzer",
+            "-Wno-analyzer-use-of-uninitialized-value"
+        },
+    },
     windows = {
         sources = need "win"
     },
@@ -101,6 +110,15 @@ lm:lua_source "source_bee" {
         lm.EXE ~= "lua" and "BEE_STATIC",
     },
     sources = "binding/*.cpp",
+    msvc = lm.analyze and {
+        flags = "/analyze",
+    },
+    gcc = lm.analyze and {
+        flags = {
+            "-fanalyzer",
+            "-Wno-analyzer-use-of-uninitialized-value"
+        },
+    },
     windows = {
         defines = "_CRT_SECURE_NO_WARNINGS",
         links = {
