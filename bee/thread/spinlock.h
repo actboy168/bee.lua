@@ -3,7 +3,7 @@
 #include <atomic>
 
 #if defined(_WIN32)
-#    include <windows.h>
+#    include <Windows.h>
 #elif defined(__x86_64__) || defined(__i386__)
 #    include <immintrin.h>
 #endif

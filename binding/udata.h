@@ -1,7 +1,7 @@
 #pragma once
 
-#include <binding/binding.h>
 #include <bee/nonstd/filesystem.h>
+#include <binding/binding.h>
 
 namespace bee::lua {
     template <>

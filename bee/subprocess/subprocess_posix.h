@@ -1,14 +1,15 @@
 #pragma once
 
-#include <stdint.h>
-#include <string>
-#include <stdio.h>
-#include <map>
-#include <set>
-#include <vector>
 #include <bee/subprocess/common.h>
 #include <bee/utility/zstring_view.h>
 #include <spawn.h>
+
+#include <cstdint>
+#include <cstdio>
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
 
 namespace bee::subprocess {
     class envbuilder {

@@ -1,8 +1,9 @@
 #pragma once
 
-#include <utility>
-#include <bee/utility/file_handle.h>
 #include <bee/utility/dynarray.h>
+#include <bee/utility/file_handle.h>
+
+#include <utility>
 
 namespace bee::subprocess {
     struct environment {

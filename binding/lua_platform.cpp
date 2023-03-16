@@ -1,5 +1,5 @@
-#include <binding/binding.h>
 #include <bee/platform/version.h>
+#include <binding/binding.h>
 
 #define BEE_STRINGIZE(_x) BEE_STRINGIZE_(_x)
 #define BEE_STRINGIZE_(_x) #_x

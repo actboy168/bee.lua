@@ -1,8 +1,8 @@
 #pragma once
 
-#include <string_view>
+#include <cassert>
 #include <string>
-#include <assert.h>
+#include <string_view>
 
 namespace bee {
     template <class CharT, class Traits = std::char_traits<CharT>>

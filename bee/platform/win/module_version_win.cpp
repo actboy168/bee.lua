@@ -1,5 +1,5 @@
-#include <bee/platform/win/module_version.h>
 #include <bee/nonstd/format.h>
+#include <bee/platform/win/module_version.h>
 
 namespace bee::win {
 

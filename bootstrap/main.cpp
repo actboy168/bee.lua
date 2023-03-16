@@ -2,12 +2,13 @@
 #    define _CRT_SECURE_NO_WARNINGS
 #endif
 
+#include <binding/binding.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <signal.h>
+
 #include <lua.hpp>
-#include <binding/binding.h>
 
 #if !defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
 #    define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004

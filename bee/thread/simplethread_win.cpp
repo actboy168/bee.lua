@@ -1,5 +1,5 @@
+#include <Windows.h>
 #include <bee/thread/simplethread.h>
-#include <windows.h>
 #include <process.h>
 
 namespace bee {

@@ -1,5 +1,5 @@
+#include <Windows.h>
 #include <bee/platform/win/unlink.h>
-#include <windows.h>
 
 enum {
     FILE_DISPOSITION_DO_NOT_DELETE             = 0x00,

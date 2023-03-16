@@ -13,7 +13,6 @@ IndentPPDirectives: AfterHash
 IndentWidth: 4
 NamespaceIndentation: All
 PackConstructorInitializers: Never
-SortIncludes: Never
 SpaceBeforeCpp11BracedList: true
 
 BreakBeforeBraces: Custom

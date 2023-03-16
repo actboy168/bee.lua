@@ -1,7 +1,8 @@
-#include <bee/utility/file_handle.h>
 #include <bee/nonstd/unreachable.h>
-#include <stdio.h>
+#include <bee/utility/file_handle.h>
 #include <unistd.h>
+
+#include <cstdio>
 
 namespace bee {
     FILE* file_handle::to_file(mode mode) const {

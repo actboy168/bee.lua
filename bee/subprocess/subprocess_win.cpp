@@ -1,14 +1,15 @@
-#include <bee/subprocess.h>
+#include <Shobjidl.h>
+#include <Windows.h>
 #include <bee/nonstd/format.h>
 #include <bee/nonstd/unreachable.h>
-#include <bee/utility/dynarray.h>
 #include <bee/platform/win/unicode.h>
-#include <Windows.h>
-#include <Shobjidl.h>
+#include <bee/subprocess.h>
+#include <bee/utility/dynarray.h>
+#include <signal.h>
+
+#include <deque>
 #include <memory>
 #include <thread>
-#include <deque>
-#include <signal.h>
 
 #define SIGKILL 9
 

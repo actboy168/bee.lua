@@ -1,7 +1,7 @@
 #include <bee/thread/simplethread.h>
 #include <pthread.h>
-#include <unistd.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 namespace bee {
     struct simplethread {

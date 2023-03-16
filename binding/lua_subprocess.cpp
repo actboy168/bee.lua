@@ -1,13 +1,13 @@
-#include <binding/binding.h>
-#include <binding/udata.h>
-#include <binding/file.h>
 #include <bee/error.h>
 #include <bee/nonstd/filesystem.h>
 #include <bee/subprocess.h>
+#include <binding/binding.h>
+#include <binding/file.h>
+#include <binding/udata.h>
 #include <errno.h>
-#include <optional>
-#include <string.h>
 #include <signal.h>
+
+#include <optional>
 #if defined(_WIN32)
 #    include <bee/platform/win/unicode.h>
 #    include <fcntl.h>

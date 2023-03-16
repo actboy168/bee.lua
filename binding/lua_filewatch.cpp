@@ -1,8 +1,8 @@
 #include <bee/error.h>
 #include <bee/filewatch.h>
-#include <binding/binding.h>
-#include <bee/nonstd/unreachable.h>
 #include <bee/nonstd/filesystem.h>
+#include <bee/nonstd/unreachable.h>
+#include <binding/binding.h>
 
 namespace bee::lua {
     template <>

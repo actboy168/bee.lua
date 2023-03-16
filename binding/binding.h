@@ -1,15 +1,16 @@
 #pragma once
 
+#include <bee/error.h>
+#include <bee/nonstd/bit.h>
+#include <bee/nonstd/to_underlying.h>
+#include <bee/nonstd/unreachable.h>
+#include <bee/utility/zstring_view.h>
+
+#include <cstdint>
+#include <limits>
 #include <lua.hpp>
 #include <map>
 #include <string>
-#include <limits>
-#include <stdint.h>
-#include <bee/error.h>
-#include <bee/nonstd/unreachable.h>
-#include <bee/nonstd/bit.h>
-#include <bee/nonstd/to_underlying.h>
-#include <bee/utility/zstring_view.h>
 #if defined(_WIN32)
 #    include <bee/platform/win/unicode.h>
 #endif

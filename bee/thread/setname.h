@@ -1,7 +1,7 @@
 #pragma once
 
 #if defined(_WIN32)
-#    include <windows.h>
+#    include <Windows.h>
 #    include <bee/platform/win/unicode.h>
 #else
 #    include <pthread.h>

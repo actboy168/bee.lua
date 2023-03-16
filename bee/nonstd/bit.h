@@ -21,9 +21,9 @@ namespace std {
     }
 }
 #else
-#    include <type_traits>
-#    include <memory>
 #    include <cstring>
+#    include <memory>
+#    include <type_traits>
 namespace std {
     template <typename To, typename From, typename = std::enable_if_t<sizeof(To) == sizeof(From) && std::is_trivially_copyable_v<To> && std::is_trivially_copyable_v<From> && std::is_default_constructible_v<To> > >
     To bit_cast(const From& src) noexcept {

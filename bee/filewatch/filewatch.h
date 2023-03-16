@@ -1,15 +1,16 @@
 #pragma once
 
+#include <functional>
 #include <optional>
 #include <queue>
 #include <string>
-#include <functional>
 
 #if defined(_WIN32)
 #    include <list>
 #elif defined(__APPLE__)
-#    include <set>
 #    include <CoreServices/CoreServices.h>
+
+#    include <set>
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
 #    include <map>
 #else

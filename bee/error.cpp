@@ -1,8 +1,8 @@
 #include <bee/error.h>
 #if defined(_WIN32)
 #    include <Windows.h>
-#    include <bee/platform/win/unicode.h>
 #    include <bee/nonstd/format.h>
+#    include <bee/platform/win/unicode.h>
 #else
 #    include <errno.h>
 #endif

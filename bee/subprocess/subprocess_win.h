@@ -1,12 +1,14 @@
 #pragma once
 
 #include <Windows.h>
-#include <map>
-#include <set>
-#include <vector>
-#include <string>
 #include <bee/subprocess/common.h>
 #include <bee/utility/zstring_view.h>
+
+#include <cstdint>
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
 
 namespace bee::subprocess {
     namespace ignore_case {

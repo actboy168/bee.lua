@@ -1,10 +1,11 @@
-#include <binding/binding.h>
-#include <bee/nonstd/semaphore.h>
+#include <bee/error.h>
 #include <bee/nonstd/format.h>
+#include <bee/nonstd/semaphore.h>
+#include <bee/thread/setname.h>
 #include <bee/thread/simplethread.h>
 #include <bee/thread/spinlock.h>
-#include <bee/thread/setname.h>
-#include <bee/error.h>
+#include <binding/binding.h>
+
 #include <atomic>
 #include <functional>
 #include <map>

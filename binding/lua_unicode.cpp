@@ -1,5 +1,5 @@
-#include <binding/binding.h>
 #include <bee/platform/win/unicode.h>
+#include <binding/binding.h>
 
 namespace bee::lua_unicode {
     static int lu2a(lua_State* L) {

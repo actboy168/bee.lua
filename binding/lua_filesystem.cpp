@@ -1,11 +1,12 @@
-#include <binding/binding.h>
-#include <binding/udata.h>
-#include <binding/file.h>
 #include <bee/error.h>
 #include <bee/nonstd/filesystem.h>
 #include <bee/nonstd/format.h>
 #include <bee/utility/file_handle.h>
 #include <bee/utility/path_helper.h>
+#include <binding/binding.h>
+#include <binding/file.h>
+#include <binding/udata.h>
+
 #include <utility>
 
 #if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)

@@ -1,9 +1,10 @@
 #pragma once
 
-#include <string>
-#include <bee/utility/dynarray.h>
-#include <string_view>
 #include <Windows.h>
+#include <bee/utility/dynarray.h>
+
+#include <string>
+#include <string_view>
 
 namespace bee::win {
     class module_version {

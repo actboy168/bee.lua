@@ -1,7 +1,8 @@
 #pragma once
 
-#include <string>
 #include <bee/utility/zstring_view.h>
+
+#include <string>
 
 namespace bee::win {
     std::wstring u2w(zstring_view str);

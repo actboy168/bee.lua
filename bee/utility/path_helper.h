@@ -1,7 +1,7 @@
 #pragma once
 
-#include <bee/nonstd/filesystem.h>
 #include <bee/nonstd/expected.h>
+#include <bee/nonstd/filesystem.h>
 
 namespace bee::path_helper {
     using path_expected = expected<fs::path, std::string>;

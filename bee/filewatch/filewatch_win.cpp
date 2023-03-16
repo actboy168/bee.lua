@@ -1,10 +1,11 @@
-#include <bee/filewatch/filewatch.h>
+#include <Windows.h>
 #include <bee/error.h>
+#include <bee/filewatch/filewatch.h>
 #include <bee/nonstd/unreachable.h>
 #include <bee/platform/win/unicode.h>
+
 #include <array>
-#include <assert.h>
-#include <Windows.h>
+#include <cassert>
 
 namespace bee::filewatch {
     const char* watch::type() {

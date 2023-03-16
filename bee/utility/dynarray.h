@@ -1,11 +1,12 @@
 #pragma once
 
+#include <memory.h>
+
+#include <cassert>
+#include <limits>
 #include <memory>
 #include <new>
-#include <limits>
 #include <type_traits>
-#include <memory.h>
-#include <assert.h>
 
 // clang-format off
 namespace bee {

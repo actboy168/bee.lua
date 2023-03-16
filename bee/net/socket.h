@@ -1,11 +1,12 @@
 #pragma once
 
 #if defined _WIN32
-#    include <stdint.h>
+#    include <cstdint>
 #endif
 
-#include <optional>
 #include <bee/nonstd/expected.h>
+
+#include <optional>
 
 namespace bee::net {
     struct endpoint;

@@ -2,9 +2,9 @@
 #if defined(_WIN32)
 #    include <Ws2tcpip.h>
 #else
+#    include <arpa/inet.h>
 #    include <netdb.h>
 #    include <sys/un.h>
-#    include <arpa/inet.h>
 #    if defined(__FreeBSD__)
 #        include <netinet/in.h>
 #    endif
@@ -12,8 +12,9 @@
 #        define UNIX_PATH_MAX (sizeof(sockaddr_un::sun_path) / sizeof(sockaddr_un::sun_path[0]))
 #    endif
 #endif
-#include <bee/nonstd/charconv.h>
 #include <bee/error.h>
+#include <bee/nonstd/charconv.h>
+
 #include <array>
 #include <limits>
 

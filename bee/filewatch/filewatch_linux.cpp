@@ -1,12 +1,13 @@
-#include <bee/filewatch/filewatch.h>
 #include <bee/error.h>
-#include <bee/nonstd/unreachable.h>
+#include <bee/filewatch/filewatch.h>
 #include <bee/nonstd/filesystem.h>
-#include <assert.h>
-#include <functional>
-#include <unistd.h>
-#include <sys/inotify.h>
+#include <bee/nonstd/unreachable.h>
 #include <poll.h>
+#include <sys/inotify.h>
+#include <unistd.h>
+
+#include <cassert>
+#include <functional>
 
 namespace bee::filewatch {
     const char* watch::type() {

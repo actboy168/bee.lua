@@ -5,6 +5,7 @@
 #    include <Windows.h>
 #endif
 #include <bee/nonstd/filesystem.h>
+
 #include <optional>
 
 namespace bee {

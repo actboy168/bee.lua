@@ -1,9 +1,10 @@
 #pragma once
 
-#include <cstddef>
-#include <string>
 #include <bee/utility/dynarray.h>
 #include <bee/utility/zstring_view.h>
+
+#include <cstddef>
+#include <string>
 
 #if !defined(_WIN32)
 #    include <sys/socket.h>

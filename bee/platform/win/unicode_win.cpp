@@ -1,5 +1,5 @@
-#include <bee/platform/win/unicode.h>
 #include <Windows.h>
+#include <bee/platform/win/unicode.h>
 
 namespace bee::win {
     std::wstring u2w(zstring_view str) {

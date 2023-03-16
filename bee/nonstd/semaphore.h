@@ -4,8 +4,8 @@
 #    include <semaphore>
 #else
 
-#    include <mutex>
 #    include <condition_variable>
+#    include <mutex>
 
 namespace std {
     class binary_semaphore {

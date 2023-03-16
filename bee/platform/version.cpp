@@ -4,14 +4,16 @@
 #    include <objc/message.h>
 #else
 #    if defined(_WIN32)
-#        include <windows.h>
+#        include <Windows.h>
 #        include <bee/platform/win/module_version.h>
 #    else
 #        include <sys/utsname.h>
-#        include <stdio.h>
+
+#        include <cstdio>
 #    endif
-#    include <string_view>
 #    include <bee/nonstd/charconv.h>
+
+#    include <string_view>
 #endif
 
 namespace bee {

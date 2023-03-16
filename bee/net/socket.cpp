@@ -1,30 +1,32 @@
 #if defined _WIN32
-#    include <winsock2.h>
-#    include <mswsock.h>
-#    include <mstcpip.h>
+#    include <bee/nonstd/charconv.h>
 #    include <bee/platform/win/unicode.h>
 #    include <bee/platform/win/unlink.h>
-#    include <bee/nonstd/charconv.h>
 #    include <bee/utility/dynarray.h>
+#    include <mstcpip.h>
+#    include <mswsock.h>
+#    include <winsock2.h>
+
+#    include <array>
 #    include <fstream>
 #    include <limits>
-#    include <array>
 #else
 #    include <fcntl.h>
+#    include <netinet/in.h>
 #    include <netinet/tcp.h>
 #    include <signal.h>
-#    include <netinet/in.h>
 #    include <unistd.h>
 #    if defined(__APPLE__)
 #        include <sys/ioctl.h>
 #    endif
 #endif
 
-#include <bee/net/socket.h>
-#include <bee/net/endpoint.h>
 #include <bee/error.h>
+#include <bee/net/endpoint.h>
+#include <bee/net/socket.h>
 #include <bee/nonstd/unreachable.h>
-#include <assert.h>
+
+#include <cassert>
 
 #define net_success(x) ((x) == 0)
 
