@@ -29,7 +29,7 @@ end
 
 local input, output, dllname, compiler = ...
 local _, export = parse(input)
-local s = {}
+local s = {"// clang-format off"}
 
 if compiler == "msvc" then
     for _, api in ipairs(export) do

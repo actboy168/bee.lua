@@ -100,31 +100,3 @@ if not lm.notest then
         output = "$obj/test.stamp",
     }
 end
-
-if lm.os == "windows" then
-    lm:runlua "forward_lua" {
-        script = "bootstrap/forward_lua.lua",
-        args = {"@3rd/lua/", "$out", "bootstrap.exe", lm.compiler},
-        input = {
-            "bootstrap/forward_lua.lua",
-            "3rd/lua/lua.h",
-            "3rd/lua/lauxlib.h",
-            "3rd/lua/lualib.h",
-        },
-        output = "bootstrap/forward_lua.h",
-    }
-    lm:phony {
-        input = "bootstrap/forward_lua.h",
-        output = "bootstrap/forward_lua.c",
-    }
-    lm:shared_library "lua54" {
-        bindir = lm.EXE_DIR,
-        includes = "bootstrap",
-        sources = "bootstrap/forward_lua.c",
-        ldflags = "$obj/bootstrap.lib",
-        deps = {
-            "forward_lua",
-            "bootstrap",
-        }
-    }
-end
