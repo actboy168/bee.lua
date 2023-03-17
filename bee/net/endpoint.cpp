@@ -131,8 +131,9 @@ namespace bee::net {
         if (needsnolookup(ip)) {
             hint.ai_flags = AI_NUMERICHOST;
         }
-        char portstr[std::numeric_limits<uint16_t>::digits10 + 1];
-        if (auto [p, ec] = std::to_chars(portstr, portstr + std::size(portstr), port); ec != std::errc()) {
+        constexpr auto portn = std::numeric_limits<uint16_t>::digits10 + 1;
+        char portstr[portn + 1];
+        if (auto [p, ec] = std::to_chars(portstr, portstr + portn, port); ec != std::errc()) {
             return from_invalid();
         }
         else {
