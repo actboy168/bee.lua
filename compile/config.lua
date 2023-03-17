@@ -26,7 +26,13 @@ if lm.sanitize then
         ldflags = "-fsanitize=address"
     }
     lm.msvc = {
-        defines = "_DISABLE_STRING_ANNOTATION"
+        defines = "_DISABLE_STRING_ANNOTATION",
+        flags = lm.mode == "release" and {
+            "/wd5072",
+        },
+        ldflags = lm.mode == "release" and {
+            "/ignore:4302",
+        }
     }
 end
 
