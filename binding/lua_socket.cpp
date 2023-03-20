@@ -35,7 +35,7 @@ namespace bee::lua_socket {
             return ep;
         }
         else {
-            auto port = lua::checkinteger<uint16_t>(L, idx + 1, "port");
+            auto port = lua::checkinteger<uint16_t>(L, idx + 1);
             auto ep   = endpoint::from_hostname(ip, port);
             if (!ep.valid()) {
                 luaL_error(L, "invalid address: %s:%d", ip.data(), port);
@@ -64,7 +64,7 @@ namespace bee::lua_socket {
     }
     static int recv(lua_State* L) {
         auto fd  = checkfd(L, 1);
-        auto len = lua::optinteger<int>(L, 2, LUAL_BUFFERSIZE, "bufsize");
+        auto len = lua::optinteger<int>(L, 2, LUAL_BUFFERSIZE);
         luaL_Buffer b;
         luaL_buffinit(L, &b);
         char* buf = luaL_prepbuffsize(&b, (size_t)len);
@@ -104,7 +104,7 @@ namespace bee::lua_socket {
     }
     static int recvfrom(lua_State* L) {
         auto fd  = checkfd(L, 1);
-        auto len = lua::optinteger<int>(L, 2, LUAL_BUFFERSIZE, "bufsize");
+        auto len = lua::optinteger<int>(L, 2, LUAL_BUFFERSIZE);
         luaL_Buffer b;
         luaL_buffinit(L, &b);
         char* buf = luaL_prepbuffsize(&b, (size_t)len);
@@ -135,7 +135,7 @@ namespace bee::lua_socket {
         auto fd   = checkfd(L, 1);
         auto buf  = lua::checkstrview(L, 2);
         auto ip   = lua::checkstrview(L, 3);
-        auto port = lua::checkinteger<uint16_t>(L, 4, "port");
+        auto port = lua::checkinteger<uint16_t>(L, 4);
         auto ep   = endpoint::from_hostname(ip, port);
         if (!ep.valid()) {
             return luaL_error(L, "invalid address: %s:%d", ip, port);
@@ -264,7 +264,7 @@ namespace bee::lua_socket {
         auto fd                         = checkfd(L, 1);
         static const char* const opts[] = { "reuseaddr", "sndbuf", "rcvbuf", NULL };
         auto opt                        = (socket::option)luaL_checkoption(L, 2, NULL, opts);
-        auto value                      = lua::checkinteger<int>(L, 3, "value");
+        auto value                      = lua::checkinteger<int>(L, 3);
         bool ok                         = socket::setoption(fd, opt, value);
         if (!ok) {
             return push_neterror(L, "setsockopt");
@@ -301,7 +301,7 @@ namespace bee::lua_socket {
     static int listen(lua_State* L) {
         static const int kDefaultBackLog = 5;
         auto fd                          = checkfd(L, 1);
-        auto backlog                     = lua::optinteger<int>(L, 2, kDefaultBackLog, "backlog");
+        auto backlog                     = lua::optinteger<int>(L, 2, kDefaultBackLog);
         if (!socket::listen(fd, backlog)) {
             return push_neterror(L, "listen");
         }

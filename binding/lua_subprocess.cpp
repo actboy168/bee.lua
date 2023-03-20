@@ -46,7 +46,7 @@ namespace bee::lua_subprocess {
 
         static int kill(lua_State* L) {
             auto& self  = to(L, 1);
-            auto signum = lua::optinteger<int>(L, 2, SIGTERM, "signum");
+            auto signum = lua::optinteger<int>(L, 2, SIGTERM);
             bool ok     = self.kill(signum);
             lua_pushboolean(L, ok);
             return 1;

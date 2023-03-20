@@ -57,45 +57,51 @@ namespace bee::lua {
     }
 
     template <typename T>
-    T checkinteger(lua_State* L, int arg, const char* symbol) {
+    T checkinteger(lua_State* L, int arg) {
         static_assert(std::is_trivial_v<T>);
         if constexpr (std::is_enum_v<T>) {
             using UT = std::underlying_type_t<T>;
-            return static_cast<T>(checkinteger<UT>(L, arg, symbol));
+            return static_cast<T>(checkinteger<UT>(L, arg));
         }
-        else if constexpr (sizeof(T) == sizeof(lua_Integer)) {
-            return std::bit_cast<T>(luaL_checkinteger(L, arg));
-        }
-        else {
+        else if constexpr (sizeof(T) != sizeof(lua_Integer)) {
             static_assert(std::is_integral_v<T>);
             static_assert(sizeof(T) < sizeof(lua_Integer));
-            lua_Integer r = luaL_checkinteger(L, arg);
+            lua_Integer r = checkinteger<lua_Integer>(L, arg);
             if (checklimit<T>(r)) {
                 return static_cast<T>(r);
             }
-            luaL_error(L, "bad argument '%s' limit exceeded", symbol);
+            luaL_error(L, "bad argument '#%d' limit exceeded", arg);
             std::unreachable();
+        }
+        else if constexpr (!std::is_same_v<T, lua_Integer>) {
+            return std::bit_cast<T>(checkinteger<lua_Integer>(L, arg));
+        }
+        else {
+            return luaL_checkinteger(L, arg);
         }
     }
     template <typename T>
-    T optinteger(lua_State* L, int arg, T def, const char* symbol) {
+    T optinteger(lua_State* L, int arg, T def) {
         static_assert(std::is_trivial_v<T>);
         if constexpr (std::is_enum_v<T>) {
             using UT = std::underlying_type_t<T>;
-            return static_cast<T>(optinteger<UT>(L, arg, std::to_underlying(def), symbol));
+            return static_cast<T>(optinteger<UT>(L, arg, std::to_underlying(def)));
         }
-        else if constexpr (sizeof(T) == sizeof(lua_Integer)) {
-            return std::bit_cast<T>(luaL_optinteger(L, arg, std::bit_cast<lua_Integer>(def)));
-        }
-        else {
+        else if constexpr (sizeof(T) != sizeof(lua_Integer)) {
             static_assert(std::is_integral_v<T>);
             static_assert(sizeof(T) < sizeof(lua_Integer));
-            lua_Integer r = luaL_optinteger(L, arg, static_cast<lua_Integer>(def));
+            lua_Integer r = optinteger<lua_Integer>(L, arg, static_cast<lua_Integer>(def));
             if (checklimit<T>(r)) {
                 return static_cast<T>(r);
             }
-            luaL_error(L, "bad argument '%s' limit exceeded", symbol);
+            luaL_error(L, "bad argument '#%d' limit exceeded", arg);
             std::unreachable();
+        }
+        else if constexpr (!std::is_same_v<T, lua_Integer>) {
+            return std::bit_cast<T>(optinteger<lua_Integer>(L, arg, std::bit_cast<lua_Integer>(def)));
+        }
+        else {
+            return luaL_optinteger(L, arg, def);
         }
     }
 
