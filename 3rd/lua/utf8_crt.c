@@ -1,3 +1,4 @@
+// clang-format off
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
 #endif
@@ -124,6 +125,9 @@ int __cdecl utf8_rename(const char* oldfilename, const char* newfilename)
 
 char* __cdecl utf8_getenv(const char* varname)
 {
+#if defined(__SANITIZE_ADDRESS__)
+    return getenv(varname);
+#else
 	wchar_t* wvarname = u2w(varname);
 	wchar_t* wret = _wgetenv(wvarname);
 	free(wvarname);
@@ -136,6 +140,7 @@ char* __cdecl utf8_getenv(const char* varname)
 	}
 	ret = w2u(wret);
 	return ret;
+#endif
 }
 
 char* __cdecl utf8_tmpnam(char* buffer)
