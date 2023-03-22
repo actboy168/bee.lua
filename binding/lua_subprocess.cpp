@@ -1,7 +1,7 @@
 #include <bee/error.h>
 #include <bee/nonstd/filesystem.h>
-#include <bee/utility/assume.h>
 #include <bee/subprocess.h>
+#include <bee/utility/assume.h>
 #include <binding/binding.h>
 #include <binding/file.h>
 #include <binding/udata.h>

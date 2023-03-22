@@ -18,7 +18,7 @@
 
 namespace bee::lua_platform {
     static int luaopen(lua_State* L) {
-        lua_newtable(L);
+        lua_createtable(L, 0, 16);
 
 #if defined(_WIN32)
         lua_pushstring(L, "Windows");

@@ -972,7 +972,7 @@ namespace bee::lua_filesystem {
     lua_pushinteger(L, static_cast<lua_Integer>(fs::CLASS::MEMBER)); \
     lua_setfield(L, -2, #MEMBER);
 
-        lua_newtable(L);
+        lua_createtable(L, 0, 16);
         DEF_ENUM(copy_options, none);
         DEF_ENUM(copy_options, skip_existing);
         DEF_ENUM(copy_options, overwrite_existing);
@@ -985,7 +985,7 @@ namespace bee::lua_filesystem {
         DEF_ENUM(copy_options, create_hard_links);
         lua_setfield(L, -2, "copy_options");
 
-        lua_newtable(L);
+        lua_createtable(L, 0, 4);
         DEF_ENUM(perm_options, replace);
         DEF_ENUM(perm_options, add);
         DEF_ENUM(perm_options, remove);
