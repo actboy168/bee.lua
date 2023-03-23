@@ -44,7 +44,7 @@ namespace bee::net {
         endpoint_info info() const;
         const sockaddr* addr() const;
         socklen_t addrlen() const;
-        int family() const;
+        unsigned short family() const;
         bool valid() const;
 
         static endpoint from_hostname(zstring_view ip, uint16_t port);

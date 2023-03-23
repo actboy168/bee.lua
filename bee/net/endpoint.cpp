@@ -218,7 +218,7 @@ namespace bee::net {
     socklen_t endpoint::addrlen() const {
         return (socklen_t)m_data.size();
     }
-    int endpoint::family() const {
+    unsigned short endpoint::family() const {
         return addr()->sa_family;
     }
     bool endpoint::valid() const {
