@@ -1,5 +1,9 @@
 #pragma once
 
+#if __has_include(<version>)
+#    include <version>
+#endif
+
 #if defined(__cpp_lib_print)
 #    include <format>
 #elif defined(__cpp_lib_format) && (__cpp_lib_format >= 202200L)  // see https://wg21.link/P2508R1
