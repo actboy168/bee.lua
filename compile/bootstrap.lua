@@ -4,8 +4,6 @@ lm.rootdir = ".."
 require 'config'
 lm:import 'common.lua'
 
-local EXE_DIR = lm.EXE_DIR or "$bin"
-
 lm:source_set "source_bootstrap" {
     deps = { "source_bee", "source_lua" },
     includes = {"3rd/lua", "."},
@@ -42,7 +40,7 @@ lm:source_set "source_bootstrap" {
 }
 
 lm:executable "bootstrap" {
-    bindir = lm.EXE_DIR,
+    bindir = "$bin",
     deps = "source_bootstrap",
     windows = {
         sources = {
@@ -73,7 +71,7 @@ local exe = lm.os == 'windows' and ".exe" or ""
 
 lm:copy "copy_script" {
     input = "bootstrap/main.lua",
-    output = EXE_DIR.."/main.lua",
+    output = "$bin/main.lua",
     deps = "bootstrap",
 }
 
@@ -89,7 +87,7 @@ if not lm.notest then
     table.sort(tests)
 
     lm:rule "test" {
-        EXE_DIR.."/bootstrap"..exe, "@test/test.lua", "--touch", "$out",
+        "$bin/bootstrap"..exe, "@test/test.lua", "--touch", "$out",
         description = "Run test.",
         pool = "console",
     }
