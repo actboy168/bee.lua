@@ -1,5 +1,9 @@
 #pragma once
 
+#if __has_include(<version>)
+#    include <version>
+#endif
+
 #if defined(__cpp_lib_expected)
 #    include <expected>
 
