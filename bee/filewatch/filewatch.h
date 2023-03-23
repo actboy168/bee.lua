@@ -34,11 +34,6 @@ namespace bee::filewatch {
             , path(path) {}
     };
 
-    class basic_watch {
-    public:
-    private:
-    };
-
     class watch {
     public:
 #if defined(_WIN32)
