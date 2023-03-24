@@ -2,6 +2,8 @@ local lm = require 'luamake'
 lm:required_version "1.2"
 
 lm.cxx = 'c++17'
+lm.warnings = "error"
+lm.rtti = "off"
 
 if lm.sanitize then
     lm:config "sanitize" {
@@ -26,8 +28,6 @@ if lm.sanitize then
 end
 
 lm:config "common" {
-    warnings = "error",
-    rtti = "off",
     windows = {
         defines = "_WIN32_WINNT=0x0601",
     },
