@@ -44,7 +44,7 @@ namespace bee {
             return "Windows";
         }
         virtual std::string message(int error_code) const noexcept {
-            return std::move(win::w2u(error_message(error_code)));
+            return win::w2u(error_message(error_code));
         }
         virtual std::error_condition default_error_condition(int error_code) const noexcept {
             const std::error_condition cond = std::system_category().default_error_condition(error_code);

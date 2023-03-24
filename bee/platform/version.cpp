@@ -95,10 +95,12 @@ namespace bee {
         OSVERSIONINFOW osvi      = {};
         osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
 #    if defined(_MSC_VER)
-#        pragma warning(suppress : 4996; suppress : 28159)
+#        pragma warning(push)
+#        pragma warning(disable : 4996; disable : 28159)
+#    endif
         BOOL ok                  = ::GetVersionExW(&osvi);
-#    else
-        BOOL ok = ::GetVersionExW(&osvi);
+#    if defined(_MSC_VER)
+#        pragma warning(pop)
 #    endif
         if (!ok) {
             return { 0, 0, 0 };
