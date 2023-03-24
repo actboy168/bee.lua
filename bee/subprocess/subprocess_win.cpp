@@ -29,43 +29,32 @@ namespace bee::subprocess {
             node(size_t maxsize)
                 : data(maxsize)
                 , size(0) {}
-            dynarray<char_t> release() {
-                return std::move(data);
+            bool has(size_t n) const noexcept {
+                return size + n <= data.size();
             }
-            bool append(const char_t* str, size_t n) {
-                if (size + n > data.size()) {
-                    return false;
-                }
+            void append(const char_t* str, size_t n) noexcept {
+                assert(has(n));
                 memcpy(data.data() + size, str, n * sizeof(char_t));
                 size += n;
-                return true;
-            }
-            template <class T, size_t n>
-            void operator+=(T (&str)[n]) {
-                append(str, n - 1);
-            }
-            void operator+=(const std::basic_string_view<char_t>& str) {
-                append(str.data(), str.size());
             }
         };
         strbuilder()
-            : size(0) {}
-        void clear() {
-            size = 0;
-            deque.clear();
+            : deque()
+            , size(0) {
+            deque.emplace_back(1024);
         }
-        bool append(const char_t* str, size_t n) {
-            if (!deque.empty() && deque.back().append(str, n)) {
-                size += n;
-                return true;
+        void append(const char_t* str, size_t n) {
+            auto& back = deque.back();
+            if (back.has(n)) {
+                back.append(str, n);
             }
-            size_t m = 1024;
-            while (m < n) {
-                m *= 2;
+            else if (n >= 1024) {
+                deque.emplace_back(n).append(str, n);
             }
-            deque.emplace_back(m).append(str, n);
+            else {
+                deque.emplace_back(1024).append(str, n);
+            }
             size += n;
-            return true;
         }
         template <class T, size_t n>
         strbuilder& operator+=(T (&str)[n]) {
@@ -77,13 +66,14 @@ namespace bee::subprocess {
             return *this;
         }
         dynarray<char_t> string() {
-            node r(size + 1);
+            dynarray<char_t> r(size + 1);
+            size_t pos = 0;
             for (auto& s : deque) {
-                r.append(s.data.data(), s.size);
+                memcpy(r.data() + pos, s.data.data(), sizeof(char_t) * s.size);
+                pos += s.size;
             }
-            char_t empty[] = { '\0' };
-            r.append(empty, 1);
-            return r.release();
+            r[pos] = char_t { '\0' };
+            return r;
         }
         std::deque<node> deque;
         size_t size;
