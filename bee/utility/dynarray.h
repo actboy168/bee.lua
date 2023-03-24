@@ -69,6 +69,10 @@ namespace bee {
             assert(data_ && size <= size_);
             size_ = size;
         }
+        pointer release() noexcept {
+            size_ = 0;
+            return data_.release();
+        }
         bool            empty()                 const noexcept { return size_ == 0; }
         pointer         data()                        noexcept { return data_.get(); }
         const_pointer   data()                  const noexcept { return data_.get(); }
