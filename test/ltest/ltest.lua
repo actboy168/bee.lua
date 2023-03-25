@@ -206,6 +206,7 @@ local function execFunction(failures, name, classInstance, methodInstance)
             io.stdout:write(".")
         end
     else
+        ---@cast err -nil
         err.name = name
         err.trace = pretty_trace(name, err.trace)
         if type(err.msg) ~= 'string' then
