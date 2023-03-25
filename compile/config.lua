@@ -17,33 +17,48 @@ if lm.sanitize then
         },
         msvc = {
             defines = "_DISABLE_STRING_ANNOTATION",
-            flags = lm.mode == "release" and {
-                "/wd5072",
-            },
-            ldflags = lm.mode == "release" and {
-                "/ignore:4302",
-            }
         }
     }
 end
 
-lm:config "common" {
-    windows = {
-        defines = "_WIN32_WINNT=0x0601",
-    },
+lm:config "test" {
     msvc = lm.mode == "debug" and lm.arch == "x86_64" and {
         ldflags = "/STACK:" .. 0x160000
+    },
+}
+
+lm:config "prebuilt" {
+    windows = {
+        defines = "_WIN32_WINNT=0x0601",
     },
     macos = {
         flags = "-Wunguarded-availability",
         sys = "macos10.15",
     },
     linux = {
+        crt = "static",
         flags = "-fPIC",
+        ldflags = "-Wl,-E",
+    },
+    netbsd = {
+        crt = "static",
+        ldflags = "-Wl,-E",
+    },
+    freebsd = {
+        crt = "static",
+        ldflags = "-Wl,-E",
+    },
+    openbsd = {
+        crt = "static",
+        ldflags = "-Wl,-E",
+    },
+    android = {
+        ldflags = "-Wl,-E",
     },
 }
 
 lm.configs = {
-    "common",
+    "test",
+    "prebuilt",
     lm.sanitize and "sanitize"
 }

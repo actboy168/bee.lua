@@ -14,27 +14,22 @@ lm:source_set "source_bootstrap" {
     },
     linux = {
         defines = "LUA_USE_LINUX",
-        ldflags = "-Wl,-E",
         links = { "m", "dl" }
     },
     netbsd = {
         defines = "LUA_USE_LINUX",
-        ldflags = "-Wl,-E",
         links = "m",
     },
     freebsd = {
         defines = "LUA_USE_LINUX",
-        ldflags = "-Wl,-E",
         links = "m",
     },
     openbsd = {
         defines = "LUA_USE_LINUX",
-        ldflags = "-Wl,-E",
         links = "m",
     },
     android = {
         defines = "LUA_USE_LINUX",
-        ldflags = "-Wl,-E",
         links = { "m", "dl" }
     }
 }
@@ -42,28 +37,11 @@ lm:source_set "source_bootstrap" {
 lm:executable "bootstrap" {
     bindir = "$bin",
     deps = "source_bootstrap",
-    windows = {
-        sources = {
-            lm.EXE_RESOURCE,
-        }
-    },
     msvc = {
         ldflags = "/IMPLIB:$obj/bootstrap.lib"
     },
     mingw = {
         ldflags = "-Wl,--out-implib,$obj/bootstrap.lib"
-    },
-    linux = {
-        crt = "static",
-    },
-    netbsd = {
-        crt = "static",
-    },
-    freebsd = {
-        crt = "static",
-    },
-    openbsd = {
-        crt = "static",
     },
 }
 

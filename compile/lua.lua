@@ -9,9 +9,6 @@ lm:lua_dll "bee" {
     windows = {
         export_luaopen = "off"
     },
-    linux = {
-        crt = "static",
-    }
 }
 
 if lm.os == "windows" then
@@ -33,14 +30,12 @@ if lm.os == "windows" then
         sources = {
             "3rd/lua/utf8_lua.c",
             "3rd/lua/utf8_crt.c",
-            lm.EXE_RESOURCE,
         }
     }
     lm:executable 'luac' {
         sources = {
             "3rd/lua/onelua.c",
             "3rd/lua/utf8_crt.c",
-            lm.EXE_RESOURCE,
         },
         defines = {
             "MAKE_LUAC",
@@ -58,26 +53,21 @@ lm:executable 'lua' {
     },
     linux = {
         defines = "LUA_USE_LINUX",
-        ldflags = "-Wl,-E",
         links = { "m", "dl" }
     },
     netbsd = {
         defines = "LUA_USE_LINUX",
-        ldflags = "-Wl,-E",
         links = "m",
     },
     freebsd = {
         defines = "LUA_USE_LINUX",
-        ldflags = "-Wl,-E",
         links = "m",
     },
     openbsd = {
         defines = "LUA_USE_LINUX",
-        ldflags = "-Wl,-E",
         links = "m",
     },
     android = {
-        ldflags = "-Wl,-E",
         defines = "LUA_USE_LINUX",
         links = { "m", "dl" },
     }
