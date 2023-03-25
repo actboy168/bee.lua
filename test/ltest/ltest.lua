@@ -189,22 +189,50 @@ local function parseCmdLine(cmdLine)
 end
 local options = parseCmdLine(rawget(_G, "arg") or {})
 
+local output = io.stdout
+
+local function printTestName(name)
+    if options.verbosity then
+        output:write("    ", name, " ... ")
+        output:flush()
+    end
+end
+
+local function printTestSuccess()
+    if options.verbosity then
+        output:write("Ok\n")
+    else
+        output:write(".")
+    end
+    output:flush()
+end
+
+local function printTestFailed(errmsg)
+    if options.verbosity then
+        output:write("FAIL\n", errmsg, "\n")
+    else
+        output:write("F")
+    end
+    output:flush()
+end
+
+local function print(msg)
+    if msg then
+        output:write(msg, "\n")
+    else
+        output:write("\n")
+    end
+end
+
 local function errorHandler(e)
     return { msg = e, trace = string.sub(debug.traceback("", 3), 2) }
 end
 
 local function execFunction(failures, name, classInstance, methodInstance)
-    if options.verbosity then
-        io.stdout:write("    ", name, " ... ")
-        io.stdout:flush()
-    end
+    printTestName(name)
     local ok, err = xpcall(function () methodInstance(classInstance) end, errorHandler)
     if ok then
-        if options.verbosity then
-            io.stdout:write("Ok\n")
-        else
-            io.stdout:write(".")
-        end
+        printTestSuccess()
     else
         ---@cast err -nil
         err.name = name
@@ -213,15 +241,8 @@ local function execFunction(failures, name, classInstance, methodInstance)
             err.msg = stringify(err.msg)
         end
         failures[#failures+1] = err
-        if options.verbosity then
-            io.stdout:write("FAIL\n")
-            io.stdout:write(err.msg)
-            io.stdout:write("\n")
-        else
-            io.stdout:write("F")
-        end
+        printTestFailed(err.msg)
     end
-    io.stdout:flush()
 end
 
 local function matchPattern(expr, patterns)
