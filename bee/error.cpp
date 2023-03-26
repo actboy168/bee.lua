@@ -78,11 +78,11 @@ namespace bee {
 #endif
     }
 
-    static std::error_code make_error_code(int errcode) {
+    const std::error_category& get_error_category() {
 #if defined(_WIN32)
-        return std::error_code(errcode, g_windows_category);
+        return g_windows_category;
 #else
-        return std::error_code(errcode, std::generic_category());
+        return std::generic_category();
 #endif
     }
 
@@ -95,19 +95,15 @@ namespace bee {
         return message;
     }
 
-    std::string make_error(int errcode, std::string_view errmsg) {
-        return make_error(make_error_code(errcode), errmsg);
-    }
-
     std::string make_crterror(std::string_view errmsg) {
         return make_error(std::error_code(last_crterror(), std::generic_category()), errmsg);
     }
 
     std::string make_syserror(std::string_view errmsg) {
-        return make_error(last_syserror(), errmsg);
+        return make_error(std::error_code(last_syserror(), get_error_category()), errmsg);
     }
 
     std::string make_neterror(std::string_view errmsg) {
-        return make_error(last_neterror(), errmsg);
+        return make_error(std::error_code(last_neterror(), get_error_category()), errmsg);
     }
 }

@@ -5,6 +5,7 @@
 #endif
 
 #include <bee/nonstd/expected.h>
+#include <system_error>
 
 #include <optional>
 
@@ -74,6 +75,6 @@ namespace bee::net::socket {
     std::optional<endpoint> getpeername(fd_t s);
     std::optional<endpoint> getsockname(fd_t s);
     bool unlink(const endpoint& ep);
-    int errcode(fd_t s);
+    std::error_code errcode(fd_t s);
     fd_t dup(fd_t s);
 }

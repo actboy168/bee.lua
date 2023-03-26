@@ -216,12 +216,12 @@ namespace bee::lua_socket {
     }
     static int status(lua_State* L) {
         auto fd = checkfd(L, 1);
-        int err = socket::errcode(fd);
-        if (err == 0) {
+        auto ec = socket::errcode(fd);
+        if (!ec) {
             lua_pushboolean(L, 1);
             return 1;
         }
-        auto error = make_error(err, "status");
+        auto error = make_error(ec, "status");
         lua_pushnil(L);
         lua_pushstring(L, error.c_str());
         return 2;

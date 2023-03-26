@@ -490,18 +490,22 @@ namespace bee::net::socket {
 #endif
     }
 
-    int errcode(fd_t s) {
-        int err;
-        socklen_t errl = sizeof(err);
-        int ok         = ::getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&err, &errl);
-        if (net_success(ok)) {
-            return err;
-        }
+    static int last_neterror() {
 #if defined(_WIN32)
         return ::WSAGetLastError();
 #else
         return errno;
 #endif
+    }
+
+    std::error_code errcode(fd_t s) {
+        int err;
+        socklen_t errl = sizeof(err);
+        int ok         = ::getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&err, &errl);
+        if (net_success(ok)) {
+            return std::error_code(err, get_error_category());
+        }
+        return std::error_code(last_neterror(), get_error_category());
     }
 
 #if !defined(_WIN32)
@@ -614,7 +618,7 @@ namespace bee::net::socket {
         if (::select(0, 0, &writefds, &exceptfds, 0) <= 0) {
             goto failed;
         }
-        if (0 != errcode(cfd)) {
+        if (errcode(cfd)) {
             goto failed;
         }
         fd_t newfd;
