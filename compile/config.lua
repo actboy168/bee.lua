@@ -38,7 +38,10 @@ lm:config "prebuilt" {
     linux = {
         crt = "static",
         flags = "-fPIC",
-        ldflags = "-Wl,-E",
+        ldflags = {
+            "-Wl,-E",
+            "-static-libgcc",
+        },
     },
     netbsd = {
         crt = "static",
