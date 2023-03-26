@@ -22,7 +22,7 @@ namespace bee::lua_socket {
     static int push_neterror(lua_State* L, const char* msg) {
         auto error = make_neterror(msg);
         lua_pushnil(L);
-        lua_pushstring(L, error.what());
+        lua_pushstring(L, error.c_str());
         return 2;
     }
     static endpoint read_endpoint(lua_State* L, int idx) {
@@ -223,7 +223,7 @@ namespace bee::lua_socket {
         }
         auto error = make_error(err, "status");
         lua_pushnil(L);
-        lua_pushstring(L, error.what());
+        lua_pushstring(L, error.c_str());
         return 2;
     }
     static int info(lua_State* L) {
@@ -475,7 +475,7 @@ namespace bee::lua_socket {
     }
     static int luaopen(lua_State* L) {
         if (!socket::initialize()) {
-            lua_pushstring(L, make_syserror("initialize").what());
+            lua_pushstring(L, make_syserror("initialize").c_str());
             return lua_error(L);
         }
         luaL_Reg lib[] = {

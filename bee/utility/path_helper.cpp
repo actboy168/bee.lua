@@ -15,7 +15,7 @@ namespace bee::path_helper {
         wchar_t buffer[MAX_PATH];
         DWORD path_len = ::GetModuleFileNameW((HMODULE)module_handle, buffer, _countof(buffer));
         if (path_len == 0) {
-            return unexpected<std::string>(make_syserror("GetModuleFileNameW").what());
+            return unexpected<std::string>(make_syserror("GetModuleFileNameW"));
         }
         if (path_len < _countof(buffer)) {
             return fs::path(buffer, buffer + path_len);
@@ -24,7 +24,7 @@ namespace bee::path_helper {
             dynarray<wchar_t> buf(buf_len);
             path_len = ::GetModuleFileNameW((HMODULE)module_handle, buf.data(), buf_len);
             if (path_len == 0) {
-                return unexpected<std::string>(make_syserror("GetModuleFileNameW").what());
+                return unexpected<std::string>(make_syserror("GetModuleFileNameW"));
             }
             if (path_len < _countof(buffer)) {
                 return fs::path(buf.data(), buf.data() + path_len);
@@ -84,28 +84,28 @@ namespace bee::path_helper {
         size_t length = 1024;
         int error     = sysctl(name, 4, exe, &length, NULL, 0);
         if (error < 0 || length <= 1) {
-            return unexpected<std::string>(make_syserror("exe_path").what());
+            return unexpected<std::string>(make_syserror("exe_path"));
         }
         return fs::path(exe, exe + length - 1);
 #        elif defined(__OpenBSD__)
         int name[] = { CTL_KERN, KERN_PROC_ARGS, getpid(), KERN_PROC_ARGV };
         size_t argc;
         if (sysctl(name, 4, NULL, &argc, NULL, 0) < 0) {
-            return unexpected<std::string>(make_syserror("exe_path").what());
+            return unexpected<std::string>(make_syserror("exe_path"));
         }
         const char** argv = (const char**)malloc(argc);
         if (!argv) {
-            return unexpected<std::string>(make_syserror("exe_path").what());
+            return unexpected<std::string>(make_syserror("exe_path"));
         }
         if (sysctl(name, 4, argv, &argc, NULL, 0) < 0) {
-            return unexpected<std::string>(make_syserror("exe_path").what());
+            return unexpected<std::string>(make_syserror("exe_path"));
         }
         return fs::path(argv[0]);
 #        else
         std::error_code ec;
         auto res = fs::read_symlink("/proc/self/exe", ec);
         if (ec) {
-            return unexpected<std::string>(make_syserror("exe_path").what());
+            return unexpected<std::string>(make_syserror("exe_path"));
         }
         return res;
 #        endif

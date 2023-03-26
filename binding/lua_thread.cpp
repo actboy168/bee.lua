@@ -282,7 +282,7 @@ namespace bee::lua_thread {
         thread_handle handle = thread_create(thread_main, args);
         if (!handle) {
             delete args;
-            lua_pushstring(L, make_syserror("thread_create").what());
+            lua_pushstring(L, make_syserror("thread_create").c_str());
             return lua_error(L);
         }
         lua_pushlightuserdata(L, handle);

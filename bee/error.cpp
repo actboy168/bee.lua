@@ -78,27 +78,36 @@ namespace bee {
 #endif
     }
 
-    static std::error_code make_error_code(int err) {
+    static std::error_code make_error_code(int errcode) {
 #if defined(_WIN32)
-        return std::error_code(err, g_windows_category);
+        return std::error_code(errcode, g_windows_category);
 #else
-        return std::error_code(err, std::generic_category());
+        return std::error_code(errcode, std::generic_category());
 #endif
     }
 
-    std::system_error make_error(int err, const char* message) {
-        return std::system_error(make_error_code(err), message);
+    std::string make_error(std::error_code errcode, std::string_view errmsg) {
+        std::string message(errmsg);
+        if (!message.empty()) {
+            message.append(": ");
+        }
+        message.append(errcode.message());
+        return message;
     }
 
-    std::system_error make_crterror(const char* message) {
-        return std::system_error(std::error_code(last_crterror(), std::generic_category()), message);
+    std::string make_error(int errcode, std::string_view errmsg) {
+        return make_error(make_error_code(errcode), errmsg);
     }
 
-    std::system_error make_syserror(const char* message) {
-        return make_error(last_syserror(), message);
+    std::string make_crterror(std::string_view errmsg) {
+        return make_error(std::error_code(last_crterror(), std::generic_category()), errmsg);
     }
 
-    std::system_error make_neterror(const char* message) {
-        return make_error(last_neterror(), message);
+    std::string make_syserror(std::string_view errmsg) {
+        return make_error(last_syserror(), errmsg);
+    }
+
+    std::string make_neterror(std::string_view errmsg) {
+        return make_error(last_neterror(), errmsg);
     }
 }

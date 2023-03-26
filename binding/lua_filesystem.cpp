@@ -888,13 +888,13 @@ namespace bee::lua_filesystem {
         file_handle fd = file_handle::lock(self);
         if (!fd) {
             lua_pushnil(L);
-            lua_pushstring(L, make_syserror("filelock").what());
+            lua_pushstring(L, make_syserror("filelock").c_str());
             return 2;
         }
         FILE* f = fd.to_file(file_handle::mode::write);
         if (!f) {
             lua_pushnil(L);
-            lua_pushstring(L, make_crterror("filelock").what());
+            lua_pushstring(L, make_crterror("filelock").c_str());
             fd.close();
             return 2;
         }
@@ -908,14 +908,14 @@ namespace bee::lua_filesystem {
         file_handle fd = file_handle::open_link(path);
         if (!fd) {
             lua_pushnil(L);
-            lua_pushstring(L, make_syserror("fullpath").what());
+            lua_pushstring(L, make_syserror("fullpath").c_str());
             return 2;
         }
         auto fullpath = fd.path();
         fd.close();
         if (!fullpath) {
             lua_pushnil(L);
-            lua_pushstring(L, make_syserror("fullpath").what());
+            lua_pushstring(L, make_syserror("fullpath").c_str());
             return 2;
         }
         path::push(L, *fullpath);
