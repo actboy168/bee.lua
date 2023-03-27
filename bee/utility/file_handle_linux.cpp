@@ -1,5 +1,6 @@
 #include <bee/nonstd/format.h>
 #include <bee/utility/file_handle.h>
+#include <fcntl.h>
 #include <sys/file.h>
 #include <unistd.h>
 
