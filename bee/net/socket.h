@@ -5,9 +5,9 @@
 #endif
 
 #include <bee/nonstd/expected.h>
-#include <system_error>
 
 #include <optional>
+#include <system_error>
 
 namespace bee::net {
     struct endpoint;
