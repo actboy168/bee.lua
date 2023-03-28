@@ -108,8 +108,11 @@ namespace bee::lua {
     template <typename T>
     T tolightud(lua_State* L, int arg) {
         if constexpr (std::is_integral_v<T>) {
-            uintptr_t r = std::bit_cast<uintptr_t>(lua_touserdata(L, arg));
-            if constexpr (sizeof(T) == sizeof(uintptr_t)) {
+            uintptr_t r = std::bit_cast<uintptr_t>(tolightud<void*>(L, arg));
+            if constexpr (std::is_same_v<T, uintptr_t>) {
+                return r;
+            }
+            else if constexpr (sizeof(T) == sizeof(uintptr_t)) {
                 return static_cast<T>(r);
             }
             else {
@@ -121,8 +124,14 @@ namespace bee::lua {
                 std::unreachable();
             }
         }
+        else if constexpr (std::is_same_v<T, void*>) {
+            return lua_touserdata(L, arg);
+        }
+        else if constexpr (std::is_pointer_v<T>) {
+            return static_cast<T>(tolightud<void*>(L, arg));
+        }
         else {
-            return std::bit_cast<T>(lua_touserdata(L, arg));
+            return std::bit_cast<T>(tolightud<void*>(L, arg));
         }
     }
 
@@ -134,7 +143,7 @@ namespace bee::lua {
 
     template <typename T>
     T& toudata(lua_State* L, int arg) {
-        return *static_cast<T*>(lua_touserdata(L, arg));
+        return *tolightud<T*>(L, arg);
     }
 
     template <typename T>
