@@ -8,7 +8,7 @@ namespace bee::lua_serialization {
     static int unpack(lua_State* L) {
         switch (lua_type(L, 1)) {
         case LUA_TLIGHTUSERDATA:
-            return seri_unpackptr(L, lua_touserdata(L, 1));
+            return seri_unpackptr(L, lua::tolightud<void*>(L, 1));
         case LUA_TSTRING: {
             return seri_unpack(L);
         default:
@@ -31,10 +31,10 @@ namespace bee::lua_serialization {
     static int lightuserdata(lua_State* L) {
         switch (lua_type(L, 1)) {
         case LUA_TLIGHTUSERDATA:
-            lua_pushinteger(L, (intptr_t)lua_touserdata(L, 1));
+            lua_pushinteger(L, lua::tolightud<lua_Integer>(L, 1));
             return 1;
         case LUA_TNUMBER:
-            lua_pushlightuserdata(L, (void*)(intptr_t)luaL_checkinteger(L, 1));
+            lua_pushlightuserdata(L, (void*)lua::checkinteger<intptr_t>(L, 1));
             return 1;
         default:
             return luaL_error(L, "unsupported type %s", luaL_typename(L, lua_type(L, 1)));

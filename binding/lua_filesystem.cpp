@@ -711,7 +711,7 @@ namespace bee::lua_filesystem {
             lua_pushinteger(L, duration_cast<seconds>(system_time.time_since_epoch()).count());
             return 1;
         }
-        auto file_time = clock_cast<fs::file_time_type::clock>(system_clock::time_point() + seconds(luaL_checkinteger(L, 2)));
+        auto file_time = clock_cast<fs::file_time_type::clock>(system_clock::time_point() + seconds(lua::checkinteger<lua_Integer>(L, 2)));
         fs::last_write_time(p, file_time, ec);
         if (ec) {
             pusherror(L, "last_write_time", ec, p);

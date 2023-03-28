@@ -15,6 +15,7 @@
 #        include <pthread_np.h>
 #    endif
 #endif
+#include <bee/utility/zstring_view.h>
 
 namespace bee {
 
@@ -42,7 +43,7 @@ namespace bee {
     }
 #endif
 
-    inline void thread_setname(const char* name) {
+    inline void thread_setname(zstring_view name) {
 #if defined(_WIN32)
         using SetThreadDescriptionProc = HRESULT(WINAPI*)(HANDLE, PCWSTR);
         if (HMODULE kernel32 = GetModuleHandleW(L"kernel32.dll")) {
@@ -54,21 +55,21 @@ namespace bee {
         if (!IsDebuggerPresent()) {
             return;
         }
-        thread_setname_internal(name);
+        thread_setname_internal(name.data());
 #    endif
 
 #elif defined(__APPLE__)
-        pthread_setname_np(name);
+        pthread_setname_np(name.data());
 #elif defined(__linux__)
 #    if BEE_GLIBC >= 212
-        pthread_setname_np(pthread_self(), name);
+        pthread_setname_np(pthread_self(), name.data());
 #    else
-        prctl(PR_SET_NAME, name, 0, 0, 0);
+        prctl(PR_SET_NAME, name.data(), 0, 0, 0);
 #    endif
 #elif defined(__NetBSD__)
-        pthread_setname_np(pthread_self(), "%s", (void*)name);
+        pthread_setname_np(pthread_self(), "%s", (void*)name.data());
 #elif defined(__FreeBSD__) || defined(__OpenBSD__)
-        pthread_set_name_np(pthread_self(), name);
+        pthread_set_name_np(pthread_self(), name.data());
 #endif
     }
 

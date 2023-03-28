@@ -113,6 +113,7 @@ namespace bee::lua {
                 return static_cast<T>(r);
             }
             else {
+                static_assert(sizeof(T) < sizeof(uintptr_t));
                 if (checklimit<T>(r)) {
                     return static_cast<T>(r);
                 }

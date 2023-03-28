@@ -308,7 +308,7 @@ namespace bee::lua_thread {
     }
 
     static int lsetname(lua_State* L) {
-        thread_setname(luaL_checkstring(L, 1));
+        thread_setname(lua::checkstrview(L, 1));
         return 0;
     }
 

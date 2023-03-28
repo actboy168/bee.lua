@@ -407,7 +407,7 @@ namespace bee::lua_subprocess {
 #if defined(_WIN32)
     static int filemode(lua_State* L) {
         luaL_Stream* p   = spawn::get_file(L, 1);
-        const char* mode = luaL_checkstring(L, 2);
+        auto mode = lua::checkstrview(L, 2);
         if (p && p->closef && p->f) {
             int ok = _setmode(_fileno(p->f), mode[0] == 'b' ? _O_BINARY : _O_TEXT);
             if (ok == -1) {
@@ -427,10 +427,10 @@ namespace bee::lua_subprocess {
 #endif
 
     static int lsetenv(lua_State* L) {
-        const char* name  = luaL_checkstring(L, 1);
-        const char* value = luaL_checkstring(L, 2);
+        auto name  = lua::checkstrview(L, 1);
+        auto value = lua::checkstrview(L, 2);
 #if defined(_WIN32)
-        lua_pushfstring(L, "%s=%s", name, value);
+        lua_pushfstring(L, "%s=%s", name.data(), value.data());
         int ok = ::_putenv(lua_tostring(L, -1));
         if (ok == -1) {
             lua_pushnil(L);
@@ -440,7 +440,7 @@ namespace bee::lua_subprocess {
         lua_pushboolean(L, 1);
         return 1;
 #else
-        int ok = ::setenv(name, value, 1);
+        int ok = ::setenv(name.data(), value.data(), 1);
         if (ok == -1) {
             lua_pushnil(L);
             lua_pushstring(L, make_crterror("setenv").c_str());
