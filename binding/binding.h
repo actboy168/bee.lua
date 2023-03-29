@@ -63,45 +63,58 @@ namespace bee::lua {
             using UT = std::underlying_type_t<T>;
             return static_cast<T>(checkinteger<UT>(L, arg));
         }
-        else if constexpr (sizeof(T) != sizeof(lua_Integer)) {
-            static_assert(std::is_integral_v<T>);
-            static_assert(sizeof(T) < sizeof(lua_Integer));
-            lua_Integer r = checkinteger<lua_Integer>(L, arg);
-            if (checklimit<T>(r)) {
+        else if constexpr (std::is_integral_v<T>) {
+            lua_Integer r = luaL_checkinteger(L, arg);
+            if constexpr (std::is_same_v<T, lua_Integer>) {
+                return r;
+            }
+            else if constexpr (sizeof(T) >= sizeof(lua_Integer)) {
                 return static_cast<T>(r);
             }
-            luaL_error(L, "bad argument '#%d' limit exceeded", arg);
-            std::unreachable();
-        }
-        else if constexpr (!std::is_same_v<T, lua_Integer>) {
-            return std::bit_cast<T>(checkinteger<lua_Integer>(L, arg));
+            else {
+                if (checklimit<T>(r)) {
+                    return static_cast<T>(r);
+                }
+                luaL_error(L, "bad argument '#%d' limit exceeded", arg);
+                std::unreachable();
+            }
         }
         else {
-            return luaL_checkinteger(L, arg);
+            return std::bit_cast<T>(checkinteger<lua_Integer>(L, arg));
         }
     }
-    template <typename T>
-    T optinteger(lua_State* L, int arg, T def) {
+    template <typename T, T def>
+    T optinteger(lua_State* L, int arg) {
         static_assert(std::is_trivial_v<T>);
         if constexpr (std::is_enum_v<T>) {
             using UT = std::underlying_type_t<T>;
-            return static_cast<T>(optinteger<UT>(L, arg, std::to_underlying(def)));
+            return static_cast<T>(optinteger<UT, std::to_underlying(def)>(L, arg));
         }
-        else if constexpr (sizeof(T) != sizeof(lua_Integer)) {
-            static_assert(std::is_integral_v<T>);
-            static_assert(sizeof(T) < sizeof(lua_Integer));
-            lua_Integer r = optinteger<lua_Integer>(L, arg, static_cast<lua_Integer>(def));
-            if (checklimit<T>(r)) {
+        else if constexpr (std::is_integral_v<T>) {
+            if constexpr (std::is_same_v<T, lua_Integer>) {
+                return luaL_optinteger(L, arg, def);
+            }
+            else if constexpr (sizeof(T) == sizeof(lua_Integer)) {
+                lua_Integer r = optinteger<lua_Integer, static_cast<lua_Integer>(def)>(L, arg);
                 return static_cast<T>(r);
             }
-            luaL_error(L, "bad argument '#%d' limit exceeded", arg);
-            std::unreachable();
-        }
-        else if constexpr (!std::is_same_v<T, lua_Integer>) {
-            return std::bit_cast<T>(optinteger<lua_Integer>(L, arg, std::bit_cast<lua_Integer>(def)));
+            else if constexpr (sizeof(T) < sizeof(lua_Integer)) {
+                lua_Integer r = optinteger<lua_Integer, static_cast<lua_Integer>(def)>(L, arg);
+                if (checklimit<T>(r)) {
+                    return static_cast<T>(r);
+                }
+                luaL_error(L, "bad argument '#%d' limit exceeded", arg);
+                std::unreachable();
+            }
+            else {
+                static_assert(checklimit<lua_Integer>(def));
+                lua_Integer r = optinteger<lua_Integer, static_cast<lua_Integer>(def)>(L, arg);
+                return static_cast<T>(r);
+            }
         }
         else {
-            return luaL_optinteger(L, arg, def);
+            // If std::bit_cast were not constexpr, it would fail here, so let it fail.
+            return std::bit_cast<T>(optinteger<lua_Integer, std::bit_cast<lua_Integer>(def)>(L, arg));
         }
     }
 
@@ -112,11 +125,10 @@ namespace bee::lua {
             if constexpr (std::is_same_v<T, uintptr_t>) {
                 return r;
             }
-            else if constexpr (sizeof(T) == sizeof(uintptr_t)) {
+            else if constexpr (sizeof(T) >= sizeof(uintptr_t)) {
                 return static_cast<T>(r);
             }
             else {
-                static_assert(sizeof(T) < sizeof(uintptr_t));
                 if (checklimit<T>(r)) {
                     return static_cast<T>(r);
                 }

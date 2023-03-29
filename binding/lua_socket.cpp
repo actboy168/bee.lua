@@ -64,7 +64,7 @@ namespace bee::lua_socket {
     }
     static int recv(lua_State* L) {
         auto fd  = checkfd(L, 1);
-        auto len = lua::optinteger<int>(L, 2, LUAL_BUFFERSIZE);
+        auto len = lua::optinteger<int, LUAL_BUFFERSIZE>(L, 2);
         luaL_Buffer b;
         luaL_buffinit(L, &b);
         char* buf = luaL_prepbuffsize(&b, (size_t)len);
@@ -104,7 +104,7 @@ namespace bee::lua_socket {
     }
     static int recvfrom(lua_State* L) {
         auto fd  = checkfd(L, 1);
-        auto len = lua::optinteger<int>(L, 2, LUAL_BUFFERSIZE);
+        auto len = lua::optinteger<int, LUAL_BUFFERSIZE>(L, 2);
         luaL_Buffer b;
         luaL_buffinit(L, &b);
         char* buf = luaL_prepbuffsize(&b, (size_t)len);
@@ -299,9 +299,9 @@ namespace bee::lua_socket {
         return 1;
     }
     static int listen(lua_State* L) {
-        static const int kDefaultBackLog = 5;
+        static constexpr int kDefaultBackLog = 5;
         auto fd                          = checkfd(L, 1);
-        auto backlog                     = lua::optinteger<int>(L, 2, kDefaultBackLog);
+        auto backlog                     = lua::optinteger<int, kDefaultBackLog>(L, 2);
         if (!socket::listen(fd, backlog)) {
             return push_neterror(L, "listen");
         }

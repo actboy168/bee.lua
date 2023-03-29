@@ -602,7 +602,7 @@ namespace bee::lua_filesystem {
     static int copy(lua_State* L) {
         path_ptr from            = getpathptr(L, 1);
         path_ptr to              = getpathptr(L, 2);
-        fs::copy_options options = lua::optinteger<fs::copy_options>(L, 3, fs::copy_options::none);
+        fs::copy_options options = lua::optinteger<fs::copy_options, fs::copy_options::none>(L, 3);
         std::error_code ec;
         fs::copy(from, to, options, ec);
         if (ec) {
@@ -642,7 +642,7 @@ namespace bee::lua_filesystem {
     static int copy_file(lua_State* L) {
         path_ptr from            = getpathptr(L, 1);
         path_ptr to              = getpathptr(L, 2);
-        fs::copy_options options = lua::optinteger<fs::copy_options>(L, 3, fs::copy_options::none);
+        fs::copy_options options = lua::optinteger<fs::copy_options, fs::copy_options::none>(L, 3);
         std::error_code ec;
 #if defined(__MINGW32__)
         bool ok = mingw_copy_file(from, to, options, ec);
