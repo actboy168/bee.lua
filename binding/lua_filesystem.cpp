@@ -8,6 +8,7 @@
 #include <binding/udata.h>
 
 #include <utility>
+#include <chrono>
 
 #if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 #    define BEE_DISABLE_FULLPATH
@@ -400,6 +401,17 @@ namespace bee::lua_filesystem {
             return 1;
         }
 
+        static int refresh(lua_State* L) {
+            auto& entry = to(L, 1);
+            std::error_code ec;
+            entry.refresh(ec);
+            if (ec) {
+                pusherror(L, "directory_entry::refresh", ec);
+                return 0;
+            }
+            return 0;
+        }
+
         static int status(lua_State* L) {
             auto const& entry = to(L, 1);
             std::error_code ec;
@@ -445,6 +457,7 @@ namespace bee::lua_filesystem {
         static void metatable(lua_State* L) {
             static luaL_Reg lib[] = {
                 { "path", path },
+                { "refresh", refresh },
                 { "status", status },
                 { "symlink_status", symlink_status },
                 { "type", type },
