@@ -7,8 +7,8 @@
 #include <binding/file.h>
 #include <binding/udata.h>
 
-#include <utility>
 #include <chrono>
+#include <utility>
 
 #if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 #    define BEE_DISABLE_FULLPATH

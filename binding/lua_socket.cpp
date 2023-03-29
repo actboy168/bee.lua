@@ -300,8 +300,8 @@ namespace bee::lua_socket {
     }
     static int listen(lua_State* L) {
         static constexpr int kDefaultBackLog = 5;
-        auto fd                          = checkfd(L, 1);
-        auto backlog                     = lua::optinteger<int, kDefaultBackLog>(L, 2);
+        auto fd                              = checkfd(L, 1);
+        auto backlog                         = lua::optinteger<int, kDefaultBackLog>(L, 2);
         if (!socket::listen(fd, backlog)) {
             return push_neterror(L, "listen");
         }
