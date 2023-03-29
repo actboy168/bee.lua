@@ -9,6 +9,7 @@
 
 #include <chrono>
 #include <utility>
+#include <version>
 
 #if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 #    define BEE_DISABLE_FULLPATH
