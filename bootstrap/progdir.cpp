@@ -2,17 +2,12 @@
 
 #include <lua.hpp>
 #include <string_view>
-#include <version>
 
-#if defined(__cpp_lib_char8_t)
-static std::string_view tostrview(std::u8string const& u8str) {
+template <typename CharT>
+static std::string_view tostrview(std::basic_string<CharT> const& u8str) {
+    static_assert(sizeof(CharT) == sizeof(char));
     return { reinterpret_cast<const char*>(u8str.data()), u8str.size() };
 }
-#else
-static std::string_view tostrview(std::string const& u8str) {
-    return { u8str.data(), u8str.size() };
-}
-#endif
 
 void pushprogdir(lua_State* L) {
     auto r = bee::path_helper::exe_path();

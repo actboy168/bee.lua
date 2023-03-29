@@ -9,7 +9,6 @@
 
 #include <chrono>
 #include <utility>
-#include <version>
 
 #if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 #    define BEE_DISABLE_FULLPATH
@@ -36,15 +35,11 @@ namespace bee::lua {
 }
 
 namespace bee::lua_filesystem {
-#if defined(__cpp_lib_char8_t)
-    static std::string_view u8tostrview(std::u8string const& u8str) {
+    template <typename CharT>
+    static std::string_view u8tostrview(std::basic_string<CharT> const& u8str) {
+        static_assert(sizeof(CharT) == sizeof(char));
         return { reinterpret_cast<const char*>(u8str.data()), u8str.size() };
     }
-#else
-    static std::string_view u8tostrview(std::string const& u8str) {
-        return { u8str.data(), u8str.size() };
-    }
-#endif
 
     template <typename... Args>
     static void lua_pushfmtstring(lua_State* L, std::format_string<Args...> fmt, Args... args) {
