@@ -406,8 +406,8 @@ namespace bee::lua_subprocess {
 
 #if defined(_WIN32)
     static int filemode(lua_State* L) {
-        luaL_Stream* p   = spawn::get_file(L, 1);
-        auto mode = lua::checkstrview(L, 2);
+        luaL_Stream* p = spawn::get_file(L, 1);
+        auto mode      = lua::checkstrview(L, 2);
         if (p && p->closef && p->f) {
             int ok = _setmode(_fileno(p->f), mode[0] == 'b' ? _O_BINARY : _O_TEXT);
             if (ok == -1) {

@@ -1,6 +1,7 @@
 #include <bee/utility/path_helper.h>
 
 #include <lua.hpp>
+#include <string_view>
 
 #if defined(__cpp_lib_char8_t)
 static std::string_view tostrview(std::u8string const& u8str) {
