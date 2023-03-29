@@ -172,8 +172,8 @@ static int luaB_close (lua_State *L) {
   int status = auxstatus(L, co);
   switch (status) {
     case COS_DEAD: case COS_YIELD: {
-        status = lua_resetthread(co, L);
-        if (status == LUA_OK) {
+      status = lua_resetthread(co, L);
+      if (status == LUA_OK) {
         lua_pushboolean(L, 1);
         return 1;
       }
