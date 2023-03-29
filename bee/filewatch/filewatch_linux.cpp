@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include <cassert>
+#include <cstddef>
 #include <functional>
 
 namespace bee::filewatch {
