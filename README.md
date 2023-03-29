@@ -18,6 +18,8 @@ Lua runtime and toolset
 * Remove randomness when traversing the table
 * Add error hook (for debugger)
 * Add resume/yield hook (for debugger)
+* Enable lua_assert in debug mode
+* Disable tail calls in debug mode (for debugger)
 
 ## 3rd Party Libraries
 
