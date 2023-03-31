@@ -7,7 +7,7 @@ namespace bee {
         uint32_t major;
         uint32_t minor;
         uint32_t revision;
-        bool operator<(const version& r) const {
+        bool operator<(const version& r) const noexcept {
             const version& l = *this;
             if (l.major < r.major) {
                 return true;

@@ -9,7 +9,7 @@
 #endif
 
 namespace bee {
-    inline void cpu_relax() {
+    inline void cpu_relax() noexcept {
 #if defined(_WIN32)
         YieldProcessor();
 #elif defined(__x86_64__) || defined(__i386__)
@@ -57,7 +57,7 @@ namespace bee {
 #endif
     class spinlock {
     public:
-        void lock() {
+        void lock() noexcept {
             for (;;) {
                 if (!l.test_and_set(std::memory_order_acquire)) {
                     return;
@@ -67,10 +67,10 @@ namespace bee {
                 }
             }
         }
-        void unlock() {
+        void unlock() noexcept {
             l.clear(std::memory_order_release);
         }
-        bool try_lock() {
+        bool try_lock() noexcept {
             return !l.test(std::memory_order_relaxed) && !l.test_and_set(std::memory_order_acquire);
         }
 

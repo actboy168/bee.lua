@@ -3,21 +3,23 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <new>
+
 namespace bee {
     struct simplethread {
         thread_func func;
         void* ud;
     };
 
-    static void* thread_function(void* args) {
-        struct simplethread* t = (struct simplethread*)args;
+    static void* thread_function(void* args) noexcept {
+        simplethread* t = static_cast<simplethread*>(args);
         t->func(t->ud);
-        free(t);
+        delete t;
         return NULL;
     }
 
-    thread_handle thread_create(thread_func func, void* ud) {
-        struct simplethread* thread = (struct simplethread*)malloc(sizeof(*thread));
+    thread_handle thread_create(thread_func func, void* ud) noexcept {
+        simplethread* thread = new (std::nothrow) simplethread;
         if (!thread) {
             return 0;
         }
@@ -26,18 +28,18 @@ namespace bee {
         pthread_t id;
         int ret = pthread_create(&id, NULL, thread_function, thread);
         if (ret != 0) {
-            free(thread);
+            delete thread;
             return 0;
         }
         return (thread_handle)id;
     }
 
-    void thread_wait(thread_handle handle) {
+    void thread_wait(thread_handle handle) noexcept {
         pthread_t pid = (pthread_t)handle;
         pthread_join(pid, NULL);
     }
 
-    void thread_sleep(int msec) {
+    void thread_sleep(int msec) noexcept {
         usleep(msec * 1000);
     }
 }

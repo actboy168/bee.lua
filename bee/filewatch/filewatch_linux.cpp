@@ -11,11 +11,11 @@
 #include <functional>
 
 namespace bee::filewatch {
-    const char* watch::type() {
+    const char* watch::type() noexcept {
         return "inotify";
     }
 
-    watch::watch()
+    watch::watch() noexcept
         : m_notify()
         , m_fd_path()
         , m_inotify_fd(inotify_init1(IN_NONBLOCK | IN_CLOEXEC)) {
@@ -75,16 +75,16 @@ namespace bee::filewatch {
         }
     }
 
-    void watch::set_recursive(bool enable) {
+    void watch::set_recursive(bool enable) noexcept {
         m_recursive = enable;
     }
 
-    bool watch::set_follow_symlinks(bool enable) {
+    bool watch::set_follow_symlinks(bool enable) noexcept {
         m_follow_symlinks = enable;
         return true;
     }
 
-    bool watch::set_filter(filter f) {
+    bool watch::set_filter(filter f) noexcept {
         m_filter = f;
         return true;
     }

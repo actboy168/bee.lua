@@ -31,14 +31,14 @@ namespace bee {
         constexpr basic_zstring_view& operator=(basic_zstring_view const&) noexcept = default;
         constexpr basic_zstring_view(basic_zstring_view&&) noexcept                 = default;
         constexpr basic_zstring_view& operator=(basic_zstring_view&&) noexcept      = default;
-        basic_zstring_view(CharT const* s)
+        basic_zstring_view(CharT const* s) noexcept
             : string_view_base { s } {}
-        basic_zstring_view(CharT const* s, size_type sz)
+        basic_zstring_view(CharT const* s, size_type sz) noexcept
             : string_view_base { s, sz } { assert(s[sz] == 0); }
-        basic_zstring_view(std::basic_string<CharT, Traits> const& s)
+        basic_zstring_view(std::basic_string<CharT, Traits> const& s) noexcept
             : string_view_base { s } {}
+        ~basic_zstring_view() = default;
 
-    private:
     public:
         using string_view_base::begin;
         using string_view_base::cbegin;

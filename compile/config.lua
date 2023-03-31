@@ -2,8 +2,11 @@ local lm = require 'luamake'
 lm:required_version "1.2"
 
 lm.cxx = 'c++17'
-lm.warnings = "error"
 lm.rtti = "off"
+
+if not lm.analyze then
+    lm.warnings = "error"
+end
 
 if lm.sanitize then
     lm:config "sanitize" {

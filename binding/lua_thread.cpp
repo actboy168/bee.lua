@@ -256,7 +256,7 @@ namespace bee::lua_thread {
         return 1;
     }
 
-    static void thread_main(void* ud) {
+    static void thread_main(void* ud) noexcept {
         lua_State* L = luaL_newstate();
         lua_pushcfunction(L, msghandler);
         lua_pushcfunction(L, thread_luamain);

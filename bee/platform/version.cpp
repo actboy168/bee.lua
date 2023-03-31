@@ -14,17 +14,18 @@
 #    include <bee/nonstd/charconv.h>
 
 #    include <string_view>
+#    include <tuple>
 #endif
 
 namespace bee {
 
 #if !defined(__APPLE__)
-    static uint32_t toint(std::string_view str, uint32_t def = 0) {
-        uint32_t res;
-        auto first = str.data();
-        auto last  = str.data() + str.size();
+    static uint32_t toint(std::string_view str, uint32_t def = 0) noexcept {
+        uint32_t res = def;
+        auto first   = str.data();
+        auto last    = str.data() + str.size();
         if (auto [p, ec] = std::from_chars(first, last, res); ec != std::errc()) {
-            (void)p;
+            std::ignore = p;
             return def;
         }
         return res;
@@ -49,19 +50,19 @@ namespace bee {
         constexpr auto npos = std::basic_string_view<CharT>::npos;
         version v { 0, 0, 0 };
         size_t pos  = 0;
-        size_t next = verstr.find(CharT('.'), pos);
+        size_t next = verstr.find(CharT {'.'}, pos);
         v.major     = toint(verstr.substr(pos, (next == npos) ? npos : (next - pos)));
         if (next == npos) {
             return v;
         }
         pos     = next + 1;
-        next    = verstr.find(CharT('.'), pos);
+        next    = verstr.find(CharT { '.' }, pos);
         v.minor = toint(verstr.substr(pos, (next == npos) ? npos : (next - pos)));
         if (next == npos) {
             return v;
         }
         pos        = next + 1;
-        next       = verstr.find(CharT('.'), pos);
+        next       = verstr.find(CharT { '.' }, pos);
         v.revision = toint(verstr.substr(pos, (next == npos) ? npos : (next - pos)));
         return v;
     }
@@ -98,7 +99,7 @@ namespace bee {
 #        pragma warning(push)
 #        pragma warning(disable : 4996; disable : 28159)
 #    endif
-        BOOL ok                  = ::GetVersionExW(&osvi);
+        const BOOL ok            = ::GetVersionExW(&osvi);
 #    if defined(_MSC_VER)
 #        pragma warning(pop)
 #    endif
@@ -106,7 +107,7 @@ namespace bee {
             return { 0, 0, 0 };
         }
 
-        version v {
+        const version v {
             osvi.dwMajorVersion,
             osvi.dwMinorVersion,
             osvi.dwBuildNumber,
@@ -116,7 +117,7 @@ namespace bee {
             //   http://msdn.microsoft.com/en-us/library/windows/desktop/ms724451(v=vs.85).aspx
             //   http://msdn.microsoft.com/en-us/library/windows/desktop/ms724429(v=vs.85).aspx
             win::module_version mv(L"kernel32.dll");
-            auto wstr = mv.get_value(L"ProductVersion");
+            const auto wstr = mv.get_value(L"ProductVersion");
             return to_version(wstr);
         }
         return v;

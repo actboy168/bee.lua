@@ -34,16 +34,16 @@ struct sockaddr_un {
 namespace bee::net {
     static constexpr socklen_t kMaxEndpointSize = 256;
 
-    endpoint_buf::endpoint_buf()
+    endpoint_buf::endpoint_buf() noexcept
         : m_data((size_t)kMaxEndpointSize)
         , m_size(kMaxEndpointSize) {}
     endpoint_buf::endpoint_buf(size_t size)
         : m_data(size)
         , m_size((socklen_t)size) {}
-    sockaddr* endpoint_buf::addr() {
+    sockaddr* endpoint_buf::addr() noexcept {
         return (sockaddr*)m_data.data();
     }
-    socklen_t* endpoint_buf::addrlen() {
+    socklen_t* endpoint_buf::addrlen() noexcept {
         return &m_size;
     }
 
@@ -66,7 +66,7 @@ namespace bee::net {
         addrinfo* info;
     };
 
-    static bool needsnolookup(zstring_view ip) {
+    static bool needsnolookup(zstring_view ip) noexcept {
         size_t pos = ip.find_first_not_of("0123456789.");
         if (pos == std::string_view::npos) {
             return true;
@@ -158,7 +158,7 @@ namespace bee::net {
         return endpoint();
     }
 
-    endpoint::endpoint()
+    endpoint::endpoint() noexcept
         : m_data() {}
 
     endpoint::endpoint(size_t size)
@@ -212,10 +212,10 @@ namespace bee::net {
         }
         return { "", 0 };
     }
-    const sockaddr* endpoint::addr() const {
+    const sockaddr* endpoint::addr() const noexcept {
         return (const sockaddr*)m_data.data();
     }
-    socklen_t endpoint::addrlen() const {
+    socklen_t endpoint::addrlen() const noexcept {
         return (socklen_t)m_data.size();
     }
     unsigned short endpoint::family() const {

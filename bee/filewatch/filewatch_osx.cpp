@@ -2,7 +2,7 @@
 #include <bee/nonstd/unreachable.h>
 
 namespace bee::filewatch {
-    const char* watch::type() {
+    const char* watch::type() noexcept {
         return "fsevent";
     }
 
@@ -13,7 +13,7 @@ namespace bee::filewatch {
         self->event_update((const char**)eventPaths, eventFlags, numEvents);
     }
 
-    watch::watch()
+    watch::watch() noexcept
         : m_notify()
         , m_paths()
         , m_stream(NULL) {}
@@ -65,16 +65,16 @@ namespace bee::filewatch {
         m_stream = NULL;
     }
 
-    void watch::add(const string_type& path) {
+    void watch::add(const string_type& path) noexcept {
         m_paths.emplace(path);
         update_stream();
     }
 
-    void watch::set_recursive(bool enable) {
+    void watch::set_recursive(bool enable) noexcept {
         m_recursive = enable;
     }
 
-    bool watch::set_follow_symlinks(bool enable) {
+    bool watch::set_follow_symlinks(bool enable) noexcept {
         return false;
     }
 

@@ -6,7 +6,7 @@ namespace bee::win {
         if (str.empty()) {
             return L"";
         }
-        int wlen = ::MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), NULL, 0);
+        const int wlen = ::MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), NULL, 0);
         if (wlen <= 0) {
             return L"";
         }
@@ -19,7 +19,7 @@ namespace bee::win {
         if (wstr.empty()) {
             return "";
         }
-        int len = ::WideCharToMultiByte(CP_UTF8, 0, wstr.data(), (int)wstr.size(), NULL, 0, 0, 0);
+        const int len = ::WideCharToMultiByte(CP_UTF8, 0, wstr.data(), (int)wstr.size(), NULL, 0, 0, 0);
         if (len <= 0) {
             return "";
         }
@@ -32,7 +32,7 @@ namespace bee::win {
         if (str.empty()) {
             return L"";
         }
-        int wlen = ::MultiByteToWideChar(CP_ACP, 0, str.data(), (int)str.size(), NULL, 0);
+        const int wlen = ::MultiByteToWideChar(CP_ACP, 0, str.data(), (int)str.size(), NULL, 0);
         if (wlen <= 0) {
             return L"";
         }
@@ -45,7 +45,7 @@ namespace bee::win {
         if (wstr.empty()) {
             return "";
         }
-        int len = ::WideCharToMultiByte(CP_ACP, 0, wstr.data(), (int)wstr.size(), NULL, 0, 0, 0);
+        const int len = ::WideCharToMultiByte(CP_ACP, 0, wstr.data(), (int)wstr.size(), NULL, 0, 0, 0);
         if (len <= 0) {
             return "";
         }

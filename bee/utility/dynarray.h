@@ -27,7 +27,7 @@ namespace bee {
 
         static_assert(std::is_trivial_v<value_type>);
 
-        dynarray()
+        dynarray() noexcept
             : data_()
             , size_(0)
         {}
@@ -47,7 +47,7 @@ namespace bee {
         {}
         dynarray(const dynarray&) = delete;
         dynarray& operator=(const dynarray&) = delete;
-        dynarray(dynarray&& right)
+        dynarray(dynarray&& right) noexcept
             : dynarray() {
             std::swap(data_, right.data_);
             std::swap(size_, right.size_);

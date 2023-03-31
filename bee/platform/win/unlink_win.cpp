@@ -139,7 +139,7 @@ VOID __stdcall RtlFreeUnicodeString(UNICODE_STRING*);
     }
 
 namespace bee::win {
-    bool unlink(const wchar_t* path) {
+    bool unlink(const wchar_t* path) noexcept {
         UNICODE_STRING uni_path;
         if (!RtlDosPathNameToNtPathName_U(path, &uni_path, NULL, NULL)) {
             SetLastError(ERROR_PATH_NOT_FOUND);
@@ -160,7 +160,7 @@ namespace bee::win {
         if (NT_SUCCESS(status)) {
             return true;
         }
-        DWORD code = RtlNtStatusToDosError(status);
+        const DWORD code = RtlNtStatusToDosError(status);
         SetLastError(code);
         return false;
     }

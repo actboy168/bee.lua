@@ -231,7 +231,7 @@ namespace bee::subprocess {
     }
 
     static HWND console_window(DWORD pid) {
-        DWORD wpid;
+        DWORD wpid = 0;
         HWND wnd = NULL;
         do {
             wnd = FindWindowExW(NULL, wnd, L"ConsoleWindowClass", NULL);
@@ -244,7 +244,7 @@ namespace bee::subprocess {
     }
 
     static bool hide_taskbar(HWND w) {
-        ITaskbarList* taskbar;
+        ITaskbarList* taskbar = nullptr;
         if (!SUCCEEDED(::CoInitializeEx(NULL, COINIT_MULTITHREADED))) {
             return false;
         }
@@ -399,16 +399,16 @@ namespace bee::subprocess {
         env_ = std::move(env);
     }
 
-    process::process(spawn& spawn)
+    process::process(spawn& spawn) noexcept
         : pi_(spawn.pi_) {
         memset(&spawn.pi_, 0, sizeof(PROCESS_INFORMATION));
     }
 
-    process::~process() {
+    process::~process() noexcept {
         close();
     }
 
-    void process::close() {
+    void process::close() noexcept {
         if (pi_.hThread != NULL) {
             ::CloseHandle(pi_.hThread);
             pi_.hThread = NULL;
@@ -419,23 +419,23 @@ namespace bee::subprocess {
         }
     }
 
-    uint32_t process::wait() {
+    uint32_t process::wait() noexcept {
         wait(INFINITE);
         return exit_code();
     }
 
-    bool process::wait(uint32_t timeout) {
+    bool process::wait(uint32_t timeout) noexcept {
         return ::WaitForSingleObject(pi_.hProcess, timeout) == WAIT_OBJECT_0;
     }
 
-    bool process::is_running() {
+    bool process::is_running() noexcept {
         if (exit_code() == STILL_ACTIVE) {
             return !wait(0);
         }
         return false;
     }
 
-    bool process::kill(int signum) {
+    bool process::kill(int signum) noexcept {
         switch (signum) {
         case SIGTERM:
         case SIGKILL:
@@ -451,11 +451,11 @@ namespace bee::subprocess {
         }
     }
 
-    bool process::resume() {
+    bool process::resume() noexcept {
         return (DWORD)-1 != ::ResumeThread(pi_.hThread);
     }
 
-    uint32_t process::exit_code() {
+    uint32_t process::exit_code() noexcept {
         DWORD ret = 0;
         if (!::GetExitCodeProcess(pi_.hProcess, &ret)) {
             return 0;
@@ -463,11 +463,11 @@ namespace bee::subprocess {
         return (uint32_t)ret;
     }
 
-    uint32_t process::get_id() const {
+    uint32_t process::get_id() const noexcept {
         return (uint32_t)pi_.dwProcessId;
     }
 
-    uintptr_t process::native_handle() {
+    uintptr_t process::native_handle() noexcept {
         return (uintptr_t)pi_.hProcess;
     }
 

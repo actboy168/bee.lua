@@ -251,14 +251,14 @@ namespace bee::subprocess {
 #endif
     }
 
-    process::process(spawn& spawn)
+    process::process(spawn& spawn) noexcept
         : pid(spawn.pid_) {}
 
-    bool process::is_running() {
+    bool process::is_running() noexcept {
         return (0 == ::waitpid(pid, 0, WNOHANG));
     }
 
-    bool process::kill(int signum) {
+    bool process::kill(int signum) noexcept {
         if (0 == ::kill(pid, signum)) {
             if (signum == 0) {
                 return true;
@@ -268,7 +268,7 @@ namespace bee::subprocess {
         return false;
     }
 
-    uint32_t process::wait() {
+    uint32_t process::wait() noexcept {
         if (!wait_with_timeout(pid, &status, -1)) {
             return 0;
         }
@@ -277,15 +277,15 @@ namespace bee::subprocess {
         return (term_signal << 8) | exit_status;
     }
 
-    bool process::resume() {
+    bool process::resume() noexcept  {
         return kill(SIGCONT);
     }
 
-    uint32_t process::get_id() const {
+    uint32_t process::get_id() const noexcept {
         return pid;
     }
 
-    uintptr_t process::native_handle() {
+    uintptr_t process::native_handle() noexcept {
         return pid;
     }
 

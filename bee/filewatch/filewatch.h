@@ -42,17 +42,17 @@ namespace bee::filewatch {
         using string_type = std::string;
 #endif
         using filter = std::function<bool(const char*)>;
-        static const char* type();
+        static const char* type() noexcept;
         static inline filter DefaultFilter = [](const char*) { return true; };
 
-        watch();
+        watch() noexcept;
         ~watch();
 
         void stop();
         void add(const string_type& path);
-        void set_recursive(bool enable);
-        bool set_follow_symlinks(bool enable);
-        bool set_filter(filter f = DefaultFilter);
+        void set_recursive(bool enable) noexcept;
+        bool set_follow_symlinks(bool enable) noexcept;
+        bool set_filter(filter f = DefaultFilter) noexcept;
         void update();
         std::optional<notify> select();
 

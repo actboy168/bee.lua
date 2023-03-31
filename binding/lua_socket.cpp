@@ -427,9 +427,9 @@ namespace bee::lua_socket {
         lua_newtable(L);
         lua_Integer rout = 0, wout = 0;
         select_wrap wrap;
-        for (int x = 1; !read_finish || !write_finish; x += FD_SETSIZE) {
+        for (lua_Integer x = 1; !read_finish || !write_finish; x += FD_SETSIZE) {
             wrap.reset();
-            int r = 0, w = 0;
+            lua_Integer r = 0, w = 0;
             for (; !read_finish && r < FD_SETSIZE; ++r) {
                 if (LUA_TNIL == lua_rawgeti(L, 1, x + r)) {
                     read_finish = true;
@@ -450,7 +450,7 @@ namespace bee::lua_socket {
             }
             int ok = wrap.select(timeop);
             if (ok > 0) {
-                for (int i = 0; i < r; ++i) {
+                for (lua_Integer i = 0; i < r; ++i) {
                     if (LUA_TUSERDATA == lua_rawgeti(L, 1, x + i) && FD_ISSET(tofd(L, -1), &wrap.readfds)) {
                         lua_rawseti(L, 4, ++rout);
                     }
@@ -458,7 +458,7 @@ namespace bee::lua_socket {
                         lua_pop(L, 1);
                     }
                 }
-                for (int i = 0; i < w; ++i) {
+                for (lua_Integer i = 0; i < w; ++i) {
                     if (LUA_TUSERDATA == lua_rawgeti(L, 2, x + i) && FD_ISSET(tofd(L, -1), &wrap.writefds)) {
                         lua_rawseti(L, 5, ++wout);
                     }

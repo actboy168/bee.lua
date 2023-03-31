@@ -8,7 +8,7 @@
 #include <cassert>
 
 namespace bee::filewatch {
-    const char* watch::type() {
+    const char* watch::type() noexcept {
         return "windows";
     }
 
@@ -16,7 +16,7 @@ namespace bee::filewatch {
         static const size_t kBufSize = 16 * 1024;
 
     public:
-        task(watch* watch);
+        task(watch* watch) noexcept;
         ~task();
 
         enum class result {
@@ -28,10 +28,10 @@ namespace bee::filewatch {
 
         bool open(const std::wstring& path);
         bool start(bool recursive);
-        void cancel();
+        void cancel() noexcept;
         result try_read();
-        const std::wstring& path() const;
-        const std::byte* data() const;
+        const std::wstring& path() const noexcept;
+        const std::byte* data() const noexcept;
 
     private:
         std::wstring m_path;
@@ -39,7 +39,7 @@ namespace bee::filewatch {
         std::array<std::byte, kBufSize> m_buffer;
     };
 
-    task::task(watch* watch)
+    task::task(watch* watch) noexcept
         : m_path()
         , m_directory(INVALID_HANDLE_VALUE)
         , m_buffer() {
@@ -63,7 +63,7 @@ namespace bee::filewatch {
         return true;
     }
 
-    void task::cancel() {
+    void task::cancel() noexcept {
         if (m_directory != INVALID_HANDLE_VALUE) {
             ::CancelIo(m_directory);
             ::CloseHandle(m_directory);
@@ -98,7 +98,7 @@ namespace bee::filewatch {
 
     task::result task::try_read() {
         DWORD dwNumberOfBytesTransfered;
-        bool ok           = GetOverlappedResult(m_directory, this, &dwNumberOfBytesTransfered, FALSE);
+        const bool ok           = GetOverlappedResult(m_directory, this, &dwNumberOfBytesTransfered, FALSE);
         DWORD dwErrorCode = ::GetLastError();
         if (!ok) {
             if (dwErrorCode == ERROR_IO_INCOMPLETE) {
@@ -121,15 +121,15 @@ namespace bee::filewatch {
         return result::success;
     }
 
-    const std::wstring& task::path() const {
+    const std::wstring& task::path() const noexcept {
         return m_path;
     }
 
-    const std::byte* task::data() const {
+    const std::byte* task::data() const noexcept {
         return m_buffer.data();
     }
 
-    watch::watch()
+    watch::watch() noexcept
         : m_notify()
         , m_tasks() {}
 
@@ -157,15 +157,15 @@ namespace bee::filewatch {
         m_tasks.pop_back();
     }
 
-    void watch::set_recursive(bool enable) {
+    void watch::set_recursive(bool enable) noexcept {
         m_recursive = enable;
     }
 
-    bool watch::set_follow_symlinks(bool enable) {
+    bool watch::set_follow_symlinks(bool enable) noexcept {
         return false;
     }
 
-    bool watch::set_filter(filter f) {
+    bool watch::set_filter(filter f) noexcept {
         return false;
     }
 
@@ -183,7 +183,7 @@ namespace bee::filewatch {
         }
         const std::byte* data = task.data();
         for (;;) {
-            FILE_NOTIFY_INFORMATION& fni = (FILE_NOTIFY_INFORMATION&)*data;
+            const FILE_NOTIFY_INFORMATION& fni = (const FILE_NOTIFY_INFORMATION&)*data;
             std::wstring path(fni.FileName, fni.FileNameLength / sizeof(wchar_t));
             path = task.path() + L"/" + path;
             switch (fni.Action) {

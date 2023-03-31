@@ -29,10 +29,10 @@ namespace bee::net {
     };
 
     struct endpoint_buf {
-        endpoint_buf();
+        endpoint_buf() noexcept;
         endpoint_buf(size_t size);
-        sockaddr* addr();
-        socklen_t* addrlen();
+        sockaddr* addr() noexcept;
+        socklen_t* addrlen() noexcept;
 
     private:
         friend struct endpoint;
@@ -42,8 +42,8 @@ namespace bee::net {
 
     struct endpoint {
         endpoint_info info() const;
-        const sockaddr* addr() const;
-        socklen_t addrlen() const;
+        const sockaddr* addr() const noexcept;
+        socklen_t addrlen() const noexcept;
         unsigned short family() const;
         bool valid() const;
 
@@ -53,7 +53,7 @@ namespace bee::net {
         static endpoint from_invalid();
 
     private:
-        endpoint();
+        endpoint() noexcept;
         endpoint(size_t size);
         endpoint(std::byte const* data, size_t size);
         endpoint(dynarray<std::byte>&& data);

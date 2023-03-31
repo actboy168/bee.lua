@@ -26,13 +26,13 @@ namespace bee::subprocess {
     class spawn;
     class process {
     public:
-        process(spawn& spawn);
-        bool is_running();
-        bool kill(int signum);
-        uint32_t wait();
-        uint32_t get_id() const;
-        bool resume();
-        uintptr_t native_handle();
+        process(spawn& spawn) noexcept;
+        bool is_running() noexcept;
+        bool kill(int signum) noexcept;
+        uint32_t wait() noexcept;
+        uint32_t get_id() const noexcept;
+        bool resume() noexcept;
+        uintptr_t native_handle() noexcept;
 
         int pid;
         int status = 0;
