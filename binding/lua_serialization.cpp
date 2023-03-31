@@ -34,8 +34,13 @@ namespace bee::lua_serialization {
             lua_pushinteger(L, lua::tolightud<lua_Integer>(L, 1));
             return 1;
         case LUA_TNUMBER:
-            lua_pushlightuserdata(L, (void*)lua::checkinteger<intptr_t>(L, 1));
-            return 1;
+            if (lua_isinteger(L, 1)) {
+                lua_pushlightuserdata(L, (void*)lua::checkinteger<intptr_t>(L, 1));
+                return 1;
+            }
+            else {
+                return luaL_error(L, "unsupported type float");
+            }
         default:
             return luaL_error(L, "unsupported type %s", luaL_typename(L, lua_type(L, 1)));
         }
