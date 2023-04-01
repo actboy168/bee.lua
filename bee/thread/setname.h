@@ -20,7 +20,7 @@
 namespace bee {
 
 #if defined(_MSC_VER)
-    inline void thread_setname_internal(const char* name) {
+    inline void thread_setname_internal(const char* name) noexcept {
         constexpr DWORD MS_VC_EXCEPTION = 0x406D1388;
 #    pragma pack(push, 8)
         struct ThreadNameInfo {

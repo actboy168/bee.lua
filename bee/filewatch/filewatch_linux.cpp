@@ -26,7 +26,7 @@ namespace bee::filewatch {
         stop();
     }
 
-    void watch::stop() {
+    void watch::stop() noexcept {
         if (m_inotify_fd == -1) {
             return;
         }
@@ -84,7 +84,7 @@ namespace bee::filewatch {
         return true;
     }
 
-    bool watch::set_filter(filter f) noexcept {
+    bool watch::set_filter(filter f) {
         m_filter = f;
         return true;
     }

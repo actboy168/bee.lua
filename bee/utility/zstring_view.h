@@ -37,7 +37,6 @@ namespace bee {
             : string_view_base { s, sz } { assert(s[sz] == 0); }
         basic_zstring_view(std::basic_string<CharT, Traits> const& s) noexcept
             : string_view_base { s } {}
-        ~basic_zstring_view() = default;
 
     public:
         using string_view_base::begin;

@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 namespace bee {
-    file_handle file_handle::lock(const fs::path& filename) {
+    file_handle file_handle::lock(const fs::path& filename) noexcept {
         int fd = ::open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (fd == -1) {
             return {};

@@ -20,12 +20,12 @@ namespace bee::filewatch {
     watch::~watch() {
         stop();
     }
-    void watch::stop() {
+    void watch::stop() noexcept {
         destroy_stream();
         m_paths.clear();
     }
 
-    bool watch::create_stream(CFArrayRef cf_paths) {
+    bool watch::create_stream(CFArrayRef cf_paths) noexcept {
         if (m_stream) {
             return false;
         }
@@ -54,7 +54,7 @@ namespace bee::filewatch {
         return true;
     }
 
-    void watch::destroy_stream() {
+    void watch::destroy_stream() noexcept {
         if (!m_stream) {
             return;
         }

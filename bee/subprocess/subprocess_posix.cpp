@@ -290,14 +290,14 @@ namespace bee::subprocess {
     }
 
     namespace pipe {
-        open_result open() {
+        open_result open() noexcept {
             int fds[2];
             if (!net::socket::blockpair(fds)) {
                 return { {}, {} };
             }
             return { { fds[0] }, { fds[1] } };
         }
-        int peek(FILE* f) {
+        int peek(FILE* f) noexcept {
             char tmp[256];
             int rc = recv(file_handle::from_file(f).value(), tmp, sizeof(tmp), MSG_PEEK | MSG_DONTWAIT);
             if (rc == 0) {

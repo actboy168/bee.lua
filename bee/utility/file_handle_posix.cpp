@@ -5,7 +5,7 @@
 #include <cstdio>
 
 namespace bee {
-    FILE* file_handle::to_file(mode mode) const {
+    FILE* file_handle::to_file(mode mode) const noexcept {
         switch (mode) {
         case mode::read:
             return fdopen(h, "rb");
@@ -16,15 +16,15 @@ namespace bee {
         }
     }
 
-    file_handle file_handle::from_file(FILE* f) {
+    file_handle file_handle::from_file(FILE* f) noexcept {
         return { fileno(f) };
     }
 
-    file_handle file_handle::dup(FILE* f) {
+    file_handle file_handle::dup(FILE* f) noexcept {
         return { ::dup(from_file(f).value()) };
     }
 
-    void file_handle::close() {
+    void file_handle::close() noexcept {
         if (valid()) {
             ::close(h);
             h = file_handle {}.h;

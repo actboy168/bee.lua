@@ -85,10 +85,10 @@ namespace bee::subprocess {
                 FreeEnvironmentStringsW(str);
             }
         }
-        operator wchar_t*() const {
+        operator wchar_t*() const noexcept {
             return str;
         }
-        operator bool() const {
+        operator bool() const noexcept {
             return !!str;
         }
         wchar_t* str = GetEnvironmentStringsW();
@@ -96,7 +96,7 @@ namespace bee::subprocess {
 
     template <class char_t>
     std::basic_string<char_t> quote_arg(const std::basic_string<char_t>& source) {
-        size_t len = source.size();
+        const size_t len = source.size();
         if (len == 0) {
             return { '\"', '\"', '\0' };
         }
@@ -164,14 +164,14 @@ namespace bee::subprocess {
         wchar_t* escp = es;
         while (*escp != L'\0') {
             std::wstring str            = escp;
-            std::wstring::size_type pos = str.find(L'=');
+            const std::wstring::size_type pos = str.find(L'=');
             std::wstring key            = str.substr(0, pos);
             if (del_env_.find(key) != del_env_.end()) {
                 escp += str.length() + 1;
                 continue;
             }
             std::wstring val = str.substr(pos + 1, str.length());
-            auto it          = set_env_.find(key);
+            const auto it     = set_env_.find(key);
             if (it != set_env_.end()) {
                 val = it->second;
                 set_env_.erase(it);
@@ -196,7 +196,7 @@ namespace bee::subprocess {
         return res.string();
     }
 
-    static HANDLE create_job() {
+    static HANDLE create_job() noexcept {
         SECURITY_ATTRIBUTES attr;
         memset(&attr, 0, sizeof attr);
         attr.bInheritHandle = FALSE;
@@ -216,13 +216,13 @@ namespace bee::subprocess {
         return job;
     }
 
-    static bool join_job(HANDLE process) {
+    static bool join_job(HANDLE process) noexcept {
         static HANDLE job = create_job();
         if (!job) {
             return false;
         }
         if (!AssignProcessToJobObject(job, process)) {
-            DWORD err = GetLastError();
+            const DWORD err = GetLastError();
             if (err != ERROR_ACCESS_DENIED) {
                 return false;
             }
@@ -230,7 +230,7 @@ namespace bee::subprocess {
         return true;
     }
 
-    static HWND console_window(DWORD pid) {
+    static HWND console_window(DWORD pid) noexcept {
         DWORD wpid = 0;
         HWND wnd = NULL;
         do {
@@ -285,7 +285,7 @@ namespace bee::subprocess {
         return true;
     }
 
-    spawn::spawn() {
+    spawn::spawn() noexcept {
         memset(&si_, 0, sizeof(STARTUPINFOW));
         memset(&pi_, 0, sizeof(PROCESS_INFORMATION));
         si_.cb         = sizeof(STARTUPINFOW);
@@ -300,11 +300,11 @@ namespace bee::subprocess {
         ::CloseHandle(pi_.hProcess);
     }
 
-    void spawn::search_path() {
+    void spawn::search_path() noexcept {
         search_path_ = true;
     }
 
-    void spawn::set_console(console type) {
+    void spawn::set_console(console type) noexcept {
         console_ = type;
         flags_ &= ~(CREATE_NO_WINDOW | CREATE_NEW_CONSOLE | DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP);
         switch (type) {
@@ -325,22 +325,22 @@ namespace bee::subprocess {
         }
     }
 
-    bool spawn::hide_window() {
+    bool spawn::hide_window() noexcept {
         si_.dwFlags |= STARTF_USESHOWWINDOW;
         si_.wShowWindow = SW_HIDE;
         return true;
     }
 
-    void spawn::suspended() {
+    void spawn::suspended() noexcept {
         flags_ |= CREATE_SUSPENDED;
     }
 
-    void spawn::detached() {
+    void spawn::detached() noexcept {
         set_console(console::eDetached);
         detached_ = true;
     }
 
-    void spawn::redirect(stdio type, file_handle h) {
+    void spawn::redirect(stdio type, file_handle h) noexcept {
         si_.dwFlags |= STARTF_USESTDHANDLES;
         inherit_handle_ = true;
         switch (type) {
@@ -358,7 +358,7 @@ namespace bee::subprocess {
         }
     }
 
-    void spawn::do_duplicate_shutdown() {
+    void spawn::do_duplicate_shutdown() noexcept {
         ::CloseHandle(si_.hStdInput);
         ::CloseHandle(si_.hStdOutput);
         if (si_.hStdError != INVALID_HANDLE_VALUE && si_.hStdOutput != si_.hStdError) {
@@ -395,7 +395,7 @@ namespace bee::subprocess {
         return true;
     }
 
-    void spawn::env(environment&& env) {
+    void spawn::env(environment&& env) noexcept {
         env_ = std::move(env);
     }
 
@@ -472,7 +472,7 @@ namespace bee::subprocess {
     }
 
     namespace pipe {
-        open_result open() {
+        open_result open() noexcept {
             SECURITY_ATTRIBUTES sa;
             sa.nLength              = sizeof(SECURITY_ATTRIBUTES);
             sa.bInheritHandle       = FALSE;
@@ -484,7 +484,7 @@ namespace bee::subprocess {
             return { { read_pipe }, { write_pipe } };
         }
 
-        int peek(FILE* f) {
+        int peek(FILE* f) noexcept {
             DWORD rlen = 0;
             if (PeekNamedPipe(file_handle::from_file(f).value(), 0, 0, 0, &rlen, 0)) {
                 return rlen;

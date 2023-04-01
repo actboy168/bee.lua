@@ -54,27 +54,27 @@ namespace bee::net::socket {
         rcvbuf,
     };
 
-    bool initialize();
+    bool initialize() noexcept;
     fd_t open(protocol protocol);
     bool pair(fd_t sv[2]);
 #if !defined(_WIN32)
-    bool blockpair(fd_t sv[2]);
+    bool blockpair(fd_t sv[2]) noexcept;
 #endif
-    bool close(fd_t s);
-    bool shutdown(fd_t s, shutdown_flag flag);
-    bool setoption(fd_t s, option opt, int value);
-    void udp_connect_reset(fd_t s);
+    bool close(fd_t s) noexcept;
+    bool shutdown(fd_t s, shutdown_flag flag) noexcept;
+    bool setoption(fd_t s, option opt, int value) noexcept;
+    void udp_connect_reset(fd_t s) noexcept;
     bool bind(fd_t s, const endpoint& ep);
-    bool listen(fd_t s, int backlog);
+    bool listen(fd_t s, int backlog) noexcept;
     fdstat connect(fd_t s, const endpoint& ep);
-    fdstat accept(fd_t s, fd_t& newfd);
-    status recv(fd_t s, int& rc, char* buf, int len);
-    status send(fd_t s, int& rc, const char* buf, int len);
+    fdstat accept(fd_t s, fd_t& newfd) noexcept;
+    status recv(fd_t s, int& rc, char* buf, int len) noexcept;
+    status send(fd_t s, int& rc, const char* buf, int len) noexcept;
     expected<endpoint, status> recvfrom(fd_t s, int& rc, char* buf, int len);
-    status sendto(fd_t s, int& rc, const char* buf, int len, const endpoint& ep);
+    status sendto(fd_t s, int& rc, const char* buf, int len, const endpoint& ep) noexcept;
     std::optional<endpoint> getpeername(fd_t s);
     std::optional<endpoint> getsockname(fd_t s);
     bool unlink(const endpoint& ep);
-    std::error_code errcode(fd_t s);
-    fd_t dup(fd_t s);
+    std::error_code errcode(fd_t s) noexcept;
+    fd_t dup(fd_t s) noexcept;
 }

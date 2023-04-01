@@ -16,7 +16,7 @@ namespace bee::subprocess {
         struct less;
         template <>
         struct less<wchar_t> {
-            bool operator()(const wchar_t& lft, const wchar_t& rht) const {
+            bool operator()(const wchar_t& lft, const wchar_t& rht) const noexcept {
                 return (towlower(static_cast<wint_t>(lft)) < towlower(static_cast<wint_t>(rht)));
             }
         };
@@ -73,13 +73,13 @@ namespace bee::subprocess {
     struct args_t {
         void push(zstring_view v);
         void push(std::wstring&& v);
-        std::wstring& operator[](size_t i) {
+        std::wstring& operator[](size_t i) noexcept {
             return data_[i];
         }
-        std::wstring const& operator[](size_t i) const {
+        std::wstring const& operator[](size_t i) const noexcept {
             return data_[i];
         }
-        size_t size() const {
+        size_t size() const noexcept {
             return data_.size();
         }
 
@@ -91,19 +91,19 @@ namespace bee::subprocess {
         friend class process;
 
     public:
-        spawn();
+        spawn() noexcept;
         ~spawn();
-        void search_path();
-        void set_console(console type);
-        bool hide_window();
-        void suspended();
-        void detached();
-        void redirect(stdio type, file_handle h);
-        void env(environment&& env);
+        void search_path() noexcept;
+        void set_console(console type) noexcept;
+        bool hide_window() noexcept;
+        void suspended() noexcept;
+        void detached() noexcept;
+        void redirect(stdio type, file_handle h) noexcept;
+        void env(environment&& env) noexcept;
         bool exec(const args_t& args, const wchar_t* cwd);
 
     private:
-        void do_duplicate_shutdown();
+        void do_duplicate_shutdown() noexcept;
 
     private:
         environment env_ = nullptr;

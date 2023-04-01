@@ -146,7 +146,7 @@ namespace bee::win {
             return false;
         }
         HANDLE fh = NULL;
-        IO_STATUS_BLOCK io;
+        IO_STATUS_BLOCK io = {};
         OBJECT_ATTRIBUTES attr;
         InitializeObjectAttributes(&attr, &uni_path, 0, NULL, NULL);
         NTSTATUS status = NtOpenFile(&fh, DELETE, &attr, &io, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, FILE_OPEN_FOR_BACKUP_INTENT | FILE_OPEN_REPARSE_POINT);

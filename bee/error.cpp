@@ -11,14 +11,16 @@ namespace bee {
 #if defined(_WIN32)
     struct errormsg : public std::wstring_view {
         using mybase = std::wstring_view;
-        errormsg(wchar_t* str)
+        errormsg(wchar_t* str) noexcept
             : mybase(str) {}
-        ~errormsg() { ::LocalFree(reinterpret_cast<HLOCAL>(const_cast<wchar_t*>(mybase::data()))); }
+        ~errormsg() noexcept {
+            ::LocalFree(reinterpret_cast<HLOCAL>(const_cast<wchar_t*>(mybase::data()))); 
+        }
     };
 
     static std::wstring error_message(int error_code) {
         wchar_t* message     = 0;
-        unsigned long result = ::FormatMessageW(
+        const unsigned long result = ::FormatMessageW(
             FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
             NULL,
             error_code,
@@ -40,13 +42,13 @@ namespace bee {
 
     class winCategory : public std::error_category {
     public:
-        virtual const char* name() const noexcept {
+        const char* name() const noexcept override {
             return "Windows";
         }
-        virtual std::string message(int error_code) const noexcept {
+        std::string message(int error_code) const override {
             return win::w2u(error_message(error_code));
         }
-        virtual std::error_condition default_error_condition(int error_code) const noexcept {
+        std::error_condition default_error_condition(int error_code) const noexcept override {
             const std::error_condition cond = std::system_category().default_error_condition(error_code);
             if (cond.category() == std::generic_category()) {
                 return cond;
@@ -58,11 +60,11 @@ namespace bee {
     static winCategory g_windows_category;
 #endif
 
-    static int last_crterror() {
+    static int last_crterror() noexcept {
         return errno;
     }
 
-    static int last_syserror() {
+    static int last_syserror() noexcept {
 #if defined(_WIN32)
         return ::GetLastError();
 #else
@@ -70,7 +72,7 @@ namespace bee {
 #endif
     }
 
-    static int last_neterror() {
+    static int last_neterror() noexcept {
 #if defined(_WIN32)
         return ::WSAGetLastError();
 #else
@@ -78,7 +80,7 @@ namespace bee {
 #endif
     }
 
-    const std::error_category& get_error_category() {
+    const std::error_category& get_error_category() noexcept {
 #if defined(_WIN32)
         return g_windows_category;
 #else

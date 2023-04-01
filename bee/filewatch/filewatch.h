@@ -48,11 +48,11 @@ namespace bee::filewatch {
         watch() noexcept;
         ~watch();
 
-        void stop();
+        void stop() noexcept;
         void add(const string_type& path);
         void set_recursive(bool enable) noexcept;
         bool set_follow_symlinks(bool enable) noexcept;
-        bool set_filter(filter f = DefaultFilter) noexcept;
+        bool set_filter(filter f = DefaultFilter);
         void update();
         std::optional<notify> select();
 
@@ -60,8 +60,8 @@ namespace bee::filewatch {
 #if defined(_WIN32)
         bool event_update(task& task);
 #elif defined(__APPLE__)
-        bool create_stream(CFArrayRef cf_paths);
-        void destroy_stream();
+        bool create_stream(CFArrayRef cf_paths) noexcept;
+        void destroy_stream() noexcept;
         void update_stream();
 
     public:

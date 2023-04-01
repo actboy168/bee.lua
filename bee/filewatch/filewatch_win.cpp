@@ -27,9 +27,9 @@ namespace bee::filewatch {
         };
 
         bool open(const std::wstring& path);
-        bool start(bool recursive);
+        bool start(bool recursive) noexcept;
         void cancel() noexcept;
-        result try_read();
+        result try_read() noexcept;
         const std::wstring& path() const noexcept;
         const std::byte* data() const noexcept;
 
@@ -71,7 +71,7 @@ namespace bee::filewatch {
         }
     }
 
-    bool task::start(bool recursive) {
+    bool task::start(bool recursive) noexcept {
         if (m_directory == INVALID_HANDLE_VALUE) {
             return false;
         }
@@ -96,10 +96,10 @@ namespace bee::filewatch {
         return true;
     }
 
-    task::result task::try_read() {
+    task::result task::try_read() noexcept {
         DWORD dwNumberOfBytesTransfered;
         const bool ok           = GetOverlappedResult(m_directory, this, &dwNumberOfBytesTransfered, FALSE);
-        DWORD dwErrorCode = ::GetLastError();
+        const DWORD dwErrorCode = ::GetLastError();
         if (!ok) {
             if (dwErrorCode == ERROR_IO_INCOMPLETE) {
                 return result::wait;
@@ -137,7 +137,7 @@ namespace bee::filewatch {
         stop();
     }
 
-    void watch::stop() {
+    void watch::stop() noexcept {
         if (m_tasks.empty()) {
             return;
         }
@@ -165,7 +165,7 @@ namespace bee::filewatch {
         return false;
     }
 
-    bool watch::set_filter(filter f) noexcept {
+    bool watch::set_filter(filter f) {
         return false;
     }
 

@@ -8,7 +8,7 @@ namespace bee::win {
         , translation_()
         , version_info_() {
         DWORD dummy_handle = 0;
-        DWORD size         = ::GetFileVersionInfoSizeW(module_path, &dummy_handle);
+        const DWORD size   = ::GetFileVersionInfoSizeW(module_path, &dummy_handle);
         if (size <= 0) {
             return;
         }
@@ -48,7 +48,7 @@ namespace bee::win {
         return { value, size };
     }
 
-    bool module_version::select_language(WORD langid) {
+    bool module_version::select_language(WORD langid) noexcept {
         for (size_t i = 0; i < translation_.size(); ++i) {
             if (translation_[i].language == langid) {
                 current_ = i;

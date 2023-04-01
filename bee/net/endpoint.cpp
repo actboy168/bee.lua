@@ -34,7 +34,7 @@ struct sockaddr_un {
 namespace bee::net {
     static constexpr socklen_t kMaxEndpointSize = 256;
 
-    endpoint_buf::endpoint_buf() noexcept
+    endpoint_buf::endpoint_buf()
         : m_data((size_t)kMaxEndpointSize)
         , m_size(kMaxEndpointSize) {}
     endpoint_buf::endpoint_buf(size_t size)
@@ -53,16 +53,16 @@ namespace bee::net {
         autorelease_addrinfo(autorelease_addrinfo const&)            = delete;
         autorelease_addrinfo& operator=(autorelease_addrinfo const&) = delete;
         autorelease_addrinfo& operator=(autorelease_addrinfo&&)      = delete;
-        autorelease_addrinfo(addrinfo* i)
+        autorelease_addrinfo(addrinfo* i) noexcept
             : info(i) {}
-        autorelease_addrinfo(autorelease_addrinfo&& o)
+        autorelease_addrinfo(autorelease_addrinfo&& o) noexcept
             : info(o.info) { o.info = 0; }
-        ~autorelease_addrinfo() {
+        ~autorelease_addrinfo() noexcept {
             if (info) ::freeaddrinfo(info);
         }
-        operator bool() const { return !!info; }
-        const addrinfo* operator->() const { return info; }
-        const addrinfo& operator*() const { return *info; }
+        operator bool() const noexcept { return !!info; }
+        const addrinfo* operator->() const noexcept { return info; }
+        const addrinfo& operator*() const noexcept { return *info; }
         addrinfo* info;
     };
 
@@ -88,9 +88,9 @@ namespace bee::net {
         }
         return false;
     }
-    static autorelease_addrinfo gethostaddr(const addrinfo& hint, zstring_view ip, const char* port) {
+    static autorelease_addrinfo gethostaddr(const addrinfo& hint, zstring_view ip, const char* port) noexcept {
         addrinfo* info = 0;
-        int err        = ::getaddrinfo(ip.data(), port, &hint, &info);
+        const int err   = ::getaddrinfo(ip.data(), port, &hint, &info);
         if (err != 0) {
             if (info) ::freeaddrinfo(info);
             info = 0;
@@ -150,11 +150,11 @@ namespace bee::net {
 #endif
     }
 
-    endpoint endpoint::from_buf(endpoint_buf&& buf) {
+    endpoint endpoint::from_buf(endpoint_buf&& buf) noexcept {
         return { std::move(buf.m_data), (size_t)buf.m_size };
     }
 
-    endpoint endpoint::from_invalid() {
+    endpoint endpoint::from_invalid() noexcept {
         return endpoint();
     }
 
@@ -169,10 +169,10 @@ namespace bee::net {
         memcpy(m_data.data(), data, sizeof(std::byte) * size);
     }
 
-    endpoint::endpoint(dynarray<std::byte>&& data)
+    endpoint::endpoint(dynarray<std::byte>&& data) noexcept
         : m_data(std::move(data)) {}
 
-    endpoint::endpoint(dynarray<std::byte>&& data, size_t size)
+    endpoint::endpoint(dynarray<std::byte>&& data, size_t size) noexcept
         : m_data(std::move(data)) {
         m_data.resize(size);
     }
@@ -199,7 +199,7 @@ namespace bee::net {
         }
         else if (sa->sa_family == AF_UNIX) {
             const char* path = ((struct sockaddr_un*)sa)->sun_path;
-            int len          = addrlen() - offsetof(struct sockaddr_un, sun_path) - 1;
+            const int len     = addrlen() - offsetof(struct sockaddr_un, sun_path) - 1;
             if (len > 0 && path[0] != 0) {
                 return { std::string(path, len), (uint16_t)un_format::pathname };
             }
@@ -218,10 +218,10 @@ namespace bee::net {
     socklen_t endpoint::addrlen() const noexcept {
         return (socklen_t)m_data.size();
     }
-    unsigned short endpoint::family() const {
+    unsigned short endpoint::family() const noexcept {
         return addr()->sa_family;
     }
-    bool endpoint::valid() const {
+    bool endpoint::valid() const noexcept {
         return addrlen() != 0;
     }
 }

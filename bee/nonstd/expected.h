@@ -151,10 +151,10 @@ namespace bee {
         error_type&& error() && {
             return std::move(unex);
         }
-        operator bool() const {
+        operator bool() const noexcept {
             return has_val;
         }
-        bool has_value() const {
+        bool has_value() const noexcept {
             return has_val;
         }
 
