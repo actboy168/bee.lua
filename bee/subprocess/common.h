@@ -60,7 +60,7 @@ namespace bee::subprocess {
                 return wr.to_file(file_handle::mode::write);
             }
             operator bool() const noexcept {
-                return rd && wr; 
+                return rd && wr;
             }
         };
         open_result open() noexcept;

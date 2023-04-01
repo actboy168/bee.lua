@@ -37,6 +37,7 @@
 #endif
 
 namespace bee::net::socket {
+    static constexpr socklen_t kMaxEndpointSize = 256;
 #if defined(_WIN32)
     static_assert(sizeof(SOCKET) == sizeof(fd_t));
 
@@ -133,7 +134,7 @@ namespace bee::net::socket {
         ::WSAEnumProtocolsW(0, NULL, &len);
         dynarray<std::byte> buf(len);
         LPWSAPROTOCOL_INFOW protocols = (LPWSAPROTOCOL_INFOW)buf.data();
-        const int n                    = ::WSAEnumProtocolsW(0, protocols, &len);
+        const int n                   = ::WSAEnumProtocolsW(0, protocols, &len);
         if (n == SOCKET_ERROR) {
             return false;
         }
@@ -202,7 +203,7 @@ namespace bee::net::socket {
 #if defined(_WIN32)
     static bool no_blocking(fd_t s) noexcept {
         unsigned long nonblock = 1;
-        const int ok                 = ::ioctlsocket(s, FIONBIO, &nonblock);
+        const int ok           = ::ioctlsocket(s, FIONBIO, &nonblock);
         return net_success(ok);
     }
     static bool no_inherit(fd_t s) noexcept {
@@ -433,7 +434,7 @@ namespace bee::net::socket {
     }
 
     expected<endpoint, status> recvfrom(fd_t s, int& rc, char* buf, int len) {
-        endpoint_buf tmp;
+        endpoint_buf tmp(kMaxEndpointSize);
         rc = ::recvfrom(s, buf, len, 0, tmp.addr(), tmp.addrlen());
         if (rc == 0) {
             return status::close;
@@ -453,7 +454,7 @@ namespace bee::net::socket {
     }
 
     std::optional<endpoint> getpeername(fd_t s) {
-        endpoint_buf tmp;
+        endpoint_buf tmp(kMaxEndpointSize);
         const int ok = ::getpeername(s, tmp.addr(), tmp.addrlen());
         if (!net_success(ok)) {
             return std::nullopt;
@@ -462,7 +463,7 @@ namespace bee::net::socket {
     }
 
     std::optional<endpoint> getsockname(fd_t s) {
-        endpoint_buf tmp;
+        endpoint_buf tmp(kMaxEndpointSize);
         const int ok = ::getsockname(s, tmp.addr(), tmp.addrlen());
         if (!net_success(ok)) {
             return std::nullopt;
@@ -499,9 +500,9 @@ namespace bee::net::socket {
     }
 
     std::error_code errcode(fd_t s) noexcept {
-        int err = 0;
+        int err        = 0;
         socklen_t errl = sizeof(err);
-        const int ok    = ::getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&err, &errl);
+        const int ok   = ::getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&err, &errl);
         if (net_success(ok)) {
             return std::error_code(err, get_error_category());
         }

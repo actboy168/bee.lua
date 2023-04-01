@@ -50,7 +50,7 @@ namespace bee {
         constexpr auto npos = std::basic_string_view<CharT>::npos;
         version v { 0, 0, 0 };
         size_t pos  = 0;
-        size_t next = verstr.find(CharT {'.'}, pos);
+        size_t next = verstr.find(CharT { '.' }, pos);
         v.major     = toint(verstr.substr(pos, (next == npos) ? npos : (next - pos)));
         if (next == npos) {
             return v;

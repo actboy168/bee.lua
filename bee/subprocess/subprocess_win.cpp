@@ -38,21 +38,22 @@ namespace bee::subprocess {
                 size += n;
             }
         };
-        strbuilder()
+        strbuilder(size_t defsize)
             : deque()
-            , size(0) {
-            deque.emplace_back(1024);
+            , size(0)
+            , defsize(defsize) {
+            deque.emplace_back(defsize);
         }
         void append(const char_t* str, size_t n) {
             auto& back = deque.back();
             if (back.has(n)) {
                 back.append(str, n);
             }
-            else if (n >= 1024) {
+            else if (n >= defsize) {
                 deque.emplace_back(n).append(str, n);
             }
             else {
-                deque.emplace_back(1024).append(str, n);
+                deque.emplace_back(defsize).append(str, n);
             }
             size += n;
         }
@@ -77,6 +78,7 @@ namespace bee::subprocess {
         }
         std::deque<node> deque;
         size_t size;
+        size_t defsize;
     };
 
     struct EnvironmentStrings {
@@ -131,7 +133,7 @@ namespace bee::subprocess {
     }
 
     static dynarray<wchar_t> make_args(const args_t& args, std::wstring_view prefix = std::wstring_view()) {
-        strbuilder<wchar_t> res;
+        strbuilder<wchar_t> res(1024);
         if (!prefix.empty()) {
             res += prefix;
         }
@@ -160,18 +162,18 @@ namespace bee::subprocess {
         if (set_env_.empty() && del_env_.empty()) {
             return nullptr;
         }
-        strbuilder<wchar_t> res;
+        strbuilder<wchar_t> res(1024);
         wchar_t* escp = es;
         while (*escp != L'\0') {
-            std::wstring str            = escp;
+            std::wstring str                  = escp;
             const std::wstring::size_type pos = str.find(L'=');
-            std::wstring key            = str.substr(0, pos);
+            std::wstring key                  = str.substr(0, pos);
             if (del_env_.find(key) != del_env_.end()) {
                 escp += str.length() + 1;
                 continue;
             }
             std::wstring val = str.substr(pos + 1, str.length());
-            const auto it     = set_env_.find(key);
+            const auto it    = set_env_.find(key);
             if (it != set_env_.end()) {
                 val = it->second;
                 set_env_.erase(it);
@@ -232,7 +234,7 @@ namespace bee::subprocess {
 
     static HWND console_window(DWORD pid) noexcept {
         DWORD wpid = 0;
-        HWND wnd = NULL;
+        HWND wnd   = NULL;
         do {
             wnd = FindWindowExW(NULL, wnd, L"ConsoleWindowClass", NULL);
             if (wnd == NULL) {

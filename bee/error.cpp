@@ -14,12 +14,12 @@ namespace bee {
         errormsg(wchar_t* str) noexcept
             : mybase(str) {}
         ~errormsg() noexcept {
-            ::LocalFree(reinterpret_cast<HLOCAL>(const_cast<wchar_t*>(mybase::data()))); 
+            ::LocalFree(reinterpret_cast<HLOCAL>(const_cast<wchar_t*>(mybase::data())));
         }
     };
 
     static std::wstring error_message(int error_code) {
-        wchar_t* message     = 0;
+        wchar_t* message           = 0;
         const unsigned long result = ::FormatMessageW(
             FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
             NULL,

@@ -277,7 +277,7 @@ namespace bee::subprocess {
         return (term_signal << 8) | exit_status;
     }
 
-    bool process::resume() noexcept  {
+    bool process::resume() noexcept {
         return kill(SIGCONT);
     }
 

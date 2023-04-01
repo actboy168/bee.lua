@@ -145,7 +145,7 @@ namespace bee::win {
             SetLastError(ERROR_PATH_NOT_FOUND);
             return false;
         }
-        HANDLE fh = NULL;
+        HANDLE fh          = NULL;
         IO_STATUS_BLOCK io = {};
         OBJECT_ATTRIBUTES attr;
         InitializeObjectAttributes(&attr, &uni_path, 0, NULL, NULL);

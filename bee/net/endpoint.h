@@ -29,7 +29,6 @@ namespace bee::net {
     };
 
     struct endpoint_buf {
-        endpoint_buf();
         endpoint_buf(size_t size);
         sockaddr* addr() noexcept;
         socklen_t* addrlen() noexcept;

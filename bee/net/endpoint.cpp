@@ -32,11 +32,6 @@ struct sockaddr_un {
 #endif
 
 namespace bee::net {
-    static constexpr socklen_t kMaxEndpointSize = 256;
-
-    endpoint_buf::endpoint_buf()
-        : m_data((size_t)kMaxEndpointSize)
-        , m_size(kMaxEndpointSize) {}
     endpoint_buf::endpoint_buf(size_t size)
         : m_data(size)
         , m_size((socklen_t)size) {}
@@ -90,7 +85,7 @@ namespace bee::net {
     }
     static autorelease_addrinfo gethostaddr(const addrinfo& hint, zstring_view ip, const char* port) noexcept {
         addrinfo* info = 0;
-        const int err   = ::getaddrinfo(ip.data(), port, &hint, &info);
+        const int err  = ::getaddrinfo(ip.data(), port, &hint, &info);
         if (err != 0) {
             if (info) ::freeaddrinfo(info);
             info = 0;
@@ -199,7 +194,7 @@ namespace bee::net {
         }
         else if (sa->sa_family == AF_UNIX) {
             const char* path = ((struct sockaddr_un*)sa)->sun_path;
-            const int len     = addrlen() - offsetof(struct sockaddr_un, sun_path) - 1;
+            const size_t len = m_data.size() - offsetof(struct sockaddr_un, sun_path) - 1;
             if (len > 0 && path[0] != 0) {
                 return { std::string(path, len), (uint16_t)un_format::pathname };
             }

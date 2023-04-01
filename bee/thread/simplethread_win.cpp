@@ -1,6 +1,7 @@
 #include <Windows.h>
 #include <bee/thread/simplethread.h>
 #include <process.h>
+
 #include <new>
 
 namespace bee {

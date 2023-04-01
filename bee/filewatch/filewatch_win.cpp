@@ -97,9 +97,9 @@ namespace bee::filewatch {
     }
 
     task::result task::try_read() noexcept {
-        DWORD dwNumberOfBytesTransfered;
-        const bool ok           = GetOverlappedResult(m_directory, this, &dwNumberOfBytesTransfered, FALSE);
-        const DWORD dwErrorCode = ::GetLastError();
+        DWORD dwNumberOfBytesTransfered = 0;
+        const bool ok                   = GetOverlappedResult(m_directory, this, &dwNumberOfBytesTransfered, FALSE);
+        const DWORD dwErrorCode         = ::GetLastError();
         if (!ok) {
             if (dwErrorCode == ERROR_IO_INCOMPLETE) {
                 return result::wait;

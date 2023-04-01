@@ -11,9 +11,9 @@
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
 namespace bee::path_helper {
-    path_expected dll_path(void* module_handle) {
+    static path_expected dll_path(HMODULE module_handle) {
         wchar_t buffer[MAX_PATH];
-        DWORD path_len = ::GetModuleFileNameW((HMODULE)module_handle, buffer, _countof(buffer));
+        DWORD path_len = ::GetModuleFileNameW(module_handle, buffer, _countof(buffer));
         if (path_len == 0) {
             return unexpected<std::string>(make_syserror("GetModuleFileNameW"));
         }
@@ -22,7 +22,7 @@ namespace bee::path_helper {
         }
         for (DWORD buf_len = 0x200; buf_len <= 0x10000; buf_len <<= 1) {
             dynarray<wchar_t> buf(buf_len);
-            path_len = ::GetModuleFileNameW((HMODULE)module_handle, buf.data(), buf_len);
+            path_len = ::GetModuleFileNameW(module_handle, buf.data(), buf_len);
             if (path_len == 0) {
                 return unexpected<std::string>(make_syserror("GetModuleFileNameW"));
             }
@@ -38,7 +38,7 @@ namespace bee::path_helper {
     }
 
     path_expected dll_path() {
-        return dll_path(reinterpret_cast<void*>(&__ImageBase));
+        return dll_path(reinterpret_cast<HMODULE>(&__ImageBase));
     }
 }
 
@@ -117,7 +117,7 @@ namespace bee::path_helper {
 #    if defined(BEE_DISABLE_DLOPEN)
 
 namespace bee::path_helper {
-    path_expected dll_path(void* module_handle) {
+    static path_expected dll_path(void* module_handle) {
         return unexpected<std::string>("disable dl.");
     }
     path_expected dll_path() {
@@ -130,7 +130,7 @@ namespace bee::path_helper {
 #        include <dlfcn.h>
 
 namespace bee::path_helper {
-    path_expected dll_path(void* module_handle) {
+    static path_expected dll_path(void* module_handle) {
         ::Dl_info dl_info;
         dl_info.dli_fname = 0;
         int const ret     = ::dladdr(module_handle, &dl_info);
