@@ -65,7 +65,7 @@ namespace bee::filewatch {
         m_stream = NULL;
     }
 
-    void watch::add(const string_type& path) noexcept {
+    void watch::add(const string_type& path) {
         m_paths.emplace(path);
         update_stream();
     }
