@@ -13,7 +13,7 @@ namespace bee {
         return { fd };
     }
 
-    std::optional<fs::path> file_handle::path() const noexcept {
+    std::optional<fs::path> file_handle::path() const {
         if (!valid()) {
             return std::nullopt;
         }
