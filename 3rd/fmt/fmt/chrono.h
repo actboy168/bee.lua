@@ -1168,10 +1168,13 @@ void write_floating_seconds(memory_buffer& buf, Duration duration,
   auto val = duration.count();
 
   if (num_fractional_digits < 0) {
+    // For `std::round` with fallback to `round`:
+    // On some toolchains `std::round` is not available (e.g. GCC 6).
+    using namespace std;
     num_fractional_digits =
         count_fractional_digits<Duration::period::num,
                                 Duration::period::den>::value;
-    if (num_fractional_digits < 6 && static_cast<rep>(std::round(val)) != val)
+    if (num_fractional_digits < 6 && static_cast<rep>(round(val)) != val)
       num_fractional_digits = 6;
   }
 
@@ -1621,10 +1624,9 @@ class tm_writer {
     write2(tm_min());
   }
   void on_iso_time() {
-    char buf[8];
-    write_digit2_separated(buf, to_unsigned(tm_hour()), to_unsigned(tm_min()),
-                           to_unsigned(tm_sec()), ':');
-    out_ = copy_str<Char>(std::begin(buf), std::end(buf), out_);
+    on_24_hour_time();
+    *out_++ = ':';
+    on_second(numeric_system::standard, pad_type::unspecified);
   }
 
   void on_am_pm() {
