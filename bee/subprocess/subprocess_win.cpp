@@ -443,7 +443,7 @@ namespace bee::subprocess {
         case SIGKILL:
         case SIGINT:
             if (TerminateProcess(pi_.hProcess, (signum << 8))) {
-                return wait(5000);
+                return true;
             }
             return false;
         case 0:

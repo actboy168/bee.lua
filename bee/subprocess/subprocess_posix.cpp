@@ -39,10 +39,6 @@ namespace bee::subprocess {
         data_.emplace_back(tmp.release());
     }
 
-    static void sigalrm_handler(int) {
-        // Nothing to do
-    }
-
     void envbuilder::set(const std::string& key, const std::string& value) {
         set_env_[key] = value;
     }
@@ -238,22 +234,7 @@ namespace bee::subprocess {
     }
 
     bool process::kill(int signum) noexcept {
-        if (0 == ::kill(pid, signum)) {
-            if (signum == 0) {
-                return true;
-            }
-            struct sigaction sa, old_sa;
-            sa.sa_handler = sigalrm_handler;
-            sigemptyset(&sa.sa_mask);
-            sa.sa_flags = 0;
-            ::sigaction(SIGALRM, &sa, &old_sa);
-            ::alarm(5);
-            pid_t err = ::waitpid(pid, &status, 0);
-            ::alarm(0);
-            ::sigaction(SIGALRM, &old_sa, NULL);
-            return err == pid;
-        }
-        return false;
+        return 0 == ::kill(pid, signum);
     }
 
     uint32_t process::wait() noexcept {
