@@ -42,27 +42,6 @@ namespace bee::subprocess {
     static void sigalrm_handler(int) {
         // Nothing to do
     }
-    static bool wait_with_timeout(pid_t pid, int* status, int timeout) {
-        assert(pid > 0);
-        assert(timeout >= -1);
-        if (timeout <= 0) {
-            if (timeout == -1) {
-                ::waitpid(pid, status, 0);
-            }
-            return 0 != ::waitpid(pid, status, WNOHANG);
-        }
-        pid_t err;
-        struct sigaction sa, old_sa;
-        sa.sa_handler = sigalrm_handler;
-        sigemptyset(&sa.sa_mask);
-        sa.sa_flags = 0;
-        ::sigaction(SIGALRM, &sa, &old_sa);
-        ::alarm(timeout);
-        err = ::waitpid(pid, status, 0);
-        ::alarm(0);
-        ::sigaction(SIGALRM, &old_sa, NULL);
-        return err == pid;
-    }
 
     void envbuilder::set(const std::string& key, const std::string& value) {
         set_env_[key] = value;
@@ -263,13 +242,24 @@ namespace bee::subprocess {
             if (signum == 0) {
                 return true;
             }
-            return wait_with_timeout(pid, &status, 5);
+            struct sigaction sa, old_sa;
+            sa.sa_handler = sigalrm_handler;
+            sigemptyset(&sa.sa_mask);
+            sa.sa_flags = 0;
+            ::sigaction(SIGALRM, &sa, &old_sa);
+            ::alarm(5);
+            int status;
+            pid_t err = ::waitpid(pid, &status, 0);
+            ::alarm(0);
+            ::sigaction(SIGALRM, &old_sa, NULL);
+            return err == pid;
         }
         return false;
     }
 
     uint32_t process::wait() noexcept {
-        if (!wait_with_timeout(pid, &status, -1)) {
+        int status;
+        if (!::waitpid(pid, &status, 0)) {
             return 0;
         }
         int exit_status = WIFEXITED(status) ? WEXITSTATUS(status) : 0;

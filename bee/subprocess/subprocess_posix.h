@@ -35,7 +35,6 @@ namespace bee::subprocess {
         uintptr_t native_handle() noexcept;
 
         int pid;
-        int status = 0;
     };
 
     struct args_t {
