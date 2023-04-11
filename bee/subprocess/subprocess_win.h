@@ -56,15 +56,11 @@ namespace bee::subprocess {
         void close() noexcept;
         bool is_running() noexcept;
         bool kill(int signum) noexcept;
-        uint32_t wait() noexcept;
+        std::optional<uint32_t> wait() noexcept;
         uint32_t get_id() const noexcept;
         bool resume() noexcept;
-        uintptr_t native_handle() noexcept;
+        uintptr_t native_handle() const noexcept;
         PROCESS_INFORMATION const& info() const noexcept { return pi_; }
-
-    private:
-        bool wait(uint32_t timeout) noexcept;
-        uint32_t exit_code() noexcept;
 
     private:
         PROCESS_INFORMATION pi_;

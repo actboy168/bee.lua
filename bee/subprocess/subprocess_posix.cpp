@@ -229,33 +229,57 @@ namespace bee::subprocess {
     process::process(spawn& spawn) noexcept
         : pid(spawn.pid_) {}
 
-    bool process::is_running() noexcept {
-        return (0 == ::waitpid(pid, 0, WNOHANG));
+    uint32_t process::get_id() const noexcept {
+        return pid;
+    }
+
+    uintptr_t process::native_handle() const noexcept {
+        return pid;
     }
 
     bool process::kill(int signum) noexcept {
         return 0 == ::kill(pid, signum);
     }
 
-    uint32_t process::wait() noexcept {
-        if (0 == ::waitpid(pid, &status, 0)) {
-            return 0;
-        }
+    static uint32_t make_status(int status) {
         int exit_status = WIFEXITED(status) ? WEXITSTATUS(status) : 0;
         int term_signal = WIFSIGNALED(status) ? WTERMSIG(status) : 0;
         return (term_signal << 8) | exit_status;
     }
 
+    bool process::is_running() noexcept {
+        if (status) {
+            return false;
+        }
+        int stat;
+        int r = ::waitpid(pid, &stat, WNOHANG);
+        if (r == 0) {
+            return true;
+        }
+        if (r == -1) {
+            return false;
+        }
+        status = make_status(stat);
+        return false;
+    }
+
+    std::optional<uint32_t> process::wait() noexcept {
+        if (status) {
+            return status;
+        }
+        int r, stat;
+        do
+            r = ::waitpid(pid, &stat, 0);
+        while (r == -1 && errno == EINTR);
+        if (r == -1) {
+            return std::nullopt;
+        }
+        status = make_status(stat);
+        return status;
+    }
+
     bool process::resume() noexcept {
         return kill(SIGCONT);
-    }
-
-    uint32_t process::get_id() const noexcept {
-        return pid;
-    }
-
-    uintptr_t process::native_handle() noexcept {
-        return pid;
     }
 
     namespace pipe {

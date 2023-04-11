@@ -40,8 +40,15 @@ namespace bee::lua_subprocess {
 
         static int wait(lua_State* L) {
             auto& self = to(L, 1);
-            lua_pushinteger(L, (lua_Integer)self.wait());
-            return 1;
+            auto status = self.wait();
+            if (status) {
+                lua_pushinteger(L, (lua_Integer)*status);
+                return 1;
+            }
+            auto error = make_syserror("subprocess::wait");
+            lua_pushnil(L);
+            lua_pushstring(L, error.c_str());
+            return 2;
         }
 
         static int kill(lua_State* L) {

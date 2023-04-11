@@ -421,20 +421,21 @@ namespace bee::subprocess {
         }
     }
 
-    uint32_t process::wait() noexcept {
-        wait(INFINITE);
-        return exit_code();
-    }
-
-    bool process::wait(uint32_t timeout) noexcept {
-        return ::WaitForSingleObject(pi_.hProcess, timeout) == WAIT_OBJECT_0;
+    std::optional<uint32_t> process::wait() noexcept {
+        ::WaitForSingleObject(pi_.hProcess, INFINITE);
+        DWORD status = 0;
+        if (!::GetExitCodeProcess(pi_.hProcess, &status)) {
+            return std::nullopt;
+        }
+        return (uint32_t)status;
     }
 
     bool process::is_running() noexcept {
-        if (exit_code() == STILL_ACTIVE) {
-            return !wait(0);
+        DWORD status = 0;
+        if (!::GetExitCodeProcess(pi_.hProcess, &status) || status != STILL_ACTIVE) {
+            return false;
         }
-        return false;
+        return ::WaitForSingleObject(pi_.hProcess, 0) != WAIT_OBJECT_0;
     }
 
     bool process::kill(int signum) noexcept {
@@ -457,19 +458,11 @@ namespace bee::subprocess {
         return (DWORD)-1 != ::ResumeThread(pi_.hThread);
     }
 
-    uint32_t process::exit_code() noexcept {
-        DWORD ret = 0;
-        if (!::GetExitCodeProcess(pi_.hProcess, &ret)) {
-            return 0;
-        }
-        return (uint32_t)ret;
-    }
-
     uint32_t process::get_id() const noexcept {
         return (uint32_t)pi_.dwProcessId;
     }
 
-    uintptr_t process::native_handle() noexcept {
+    uintptr_t process::native_handle() const noexcept {
         return (uintptr_t)pi_.hProcess;
     }
 

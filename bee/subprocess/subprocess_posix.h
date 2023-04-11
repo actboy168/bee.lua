@@ -27,15 +27,14 @@ namespace bee::subprocess {
     class process {
     public:
         process(spawn& spawn) noexcept;
-        bool is_running() noexcept;
-        bool kill(int signum) noexcept;
-        uint32_t wait() noexcept;
         uint32_t get_id() const noexcept;
+        uintptr_t native_handle() const noexcept;
+        bool kill(int signum) noexcept;
+        bool is_running() noexcept;
+        std::optional<uint32_t> wait() noexcept;
         bool resume() noexcept;
-        uintptr_t native_handle() noexcept;
-
         int pid;
-        int status = 0;
+        std::optional<uint32_t> status;
     };
 
     struct args_t {
