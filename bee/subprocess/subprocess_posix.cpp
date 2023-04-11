@@ -259,7 +259,8 @@ namespace bee::subprocess {
 
     uint32_t process::wait() noexcept {
         int status;
-        if (!::waitpid(pid, &status, 0)) {
+        ::waitpid(pid, &status, 0);
+        if (0 == ::waitpid(pid, &status, WNOHANG)) {
             return 0;
         }
         int exit_status = WIFEXITED(status) ? WEXITSTATUS(status) : 0;
