@@ -248,7 +248,6 @@ namespace bee::subprocess {
             sa.sa_flags = 0;
             ::sigaction(SIGALRM, &sa, &old_sa);
             ::alarm(5);
-            int status;
             pid_t err = ::waitpid(pid, &status, 0);
             ::alarm(0);
             ::sigaction(SIGALRM, &old_sa, NULL);
@@ -258,9 +257,7 @@ namespace bee::subprocess {
     }
 
     uint32_t process::wait() noexcept {
-        int status;
-        ::waitpid(pid, &status, 0);
-        if (0 == ::waitpid(pid, &status, WNOHANG)) {
+        if (0 == ::waitpid(pid, &status, 0)) {
             return 0;
         }
         int exit_status = WIFEXITED(status) ? WEXITSTATUS(status) : 0;
