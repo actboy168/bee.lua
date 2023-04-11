@@ -542,10 +542,10 @@ namespace bee::net::socket {
         for (;;) {
             switch (bind_try++) {
             case 0:
-                GetTempPath(MAX_PATH, tmpdir);
+                GetTempPathA(MAX_PATH, tmpdir);
                 break;
             case 1: {
-                UINT n = GetWindowsDirectory(tmpdir, MAX_PATH);
+                UINT n = GetWindowsDirectoryA(tmpdir, MAX_PATH);
                 snprintf(tmpdir + n, MAX_PATH - n, "\\Temp\\");
                 break;
             }
