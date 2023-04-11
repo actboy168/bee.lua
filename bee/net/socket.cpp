@@ -437,10 +437,11 @@ namespace bee::net::socket {
         endpoint_buf tmp(kMaxEndpointSize);
         rc = ::recvfrom(s, buf, len, 0, tmp.addr(), tmp.addrlen());
         if (rc == 0) {
-            return status::close;
+            return unexpected(status::close);
         }
         if (rc < 0) {
-            return wait_finish() ? status::wait : status::failed;
+            return wait_finish() ? unexpected(status::wait)
+                                 : unexpected(status::failed);
         }
         return endpoint::from_buf(std::move(tmp));
     }

@@ -31,8 +31,7 @@ namespace bee {
         unexpected(std::initializer_list<U> il, Args&&... args) {
             new (&val) E(il, std::forward<Args>(args)...);
         }
-        template <typename Err = E>
-        unexpected(Err&& e) {
+        unexpected(E&& e) {
             new (&val) E(std::move(e));
         }
 
@@ -90,6 +89,14 @@ namespace bee {
         expected(error_type&& e)
             : has_val(false) {
             new (&unex) error_type(std::move(e));
+        }
+        expected(unexpected<error_type> const& e)
+            : has_val(false) {
+            new (&unex) error_type(e.value());
+        }
+        expected(unexpected<error_type>&& e)
+            : has_val(false) {
+            new (&unex) error_type(std::move(e.value()));
         }
         template <class... Args>
         expected(in_place_t, Args&&... args)
