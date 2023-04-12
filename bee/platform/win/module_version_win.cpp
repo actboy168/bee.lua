@@ -1,3 +1,4 @@
+#include <Windows.h>
 #include <bee/nonstd/format.h>
 #include <bee/platform/win/module_version.h>
 
@@ -24,14 +25,14 @@ namespace bee::win {
         if (fixed_file_info->dwSignature != VS_FFI_SIGNATURE) {
             return;
         }
-        TRANSLATION* translate_ptr = nullptr;
+        translation* translate_ptr = nullptr;
         if (!::VerQueryValueW(version_info_.data(), L"\\VarFileInfo\\Translation", (LPVOID*)&translate_ptr, &length)) {
             return;
         }
-        if (length < sizeof(TRANSLATION)) {
+        if (length < sizeof(translation)) {
             return;
         }
-        translation_ = dynarray<TRANSLATION>(translate_ptr, length / sizeof(TRANSLATION));
+        translation_ = dynarray<translation>(translate_ptr, length / sizeof(translation));
         select_language(::GetUserDefaultLangID());
     }
 
@@ -48,7 +49,7 @@ namespace bee::win {
         return { value, size };
     }
 
-    bool module_version::select_language(WORD langid) noexcept {
+    bool module_version::select_language(uint16_t langid) noexcept {
         for (size_t i = 0; i < translation_.size(); ++i) {
             if (translation_[i].language == langid) {
                 current_ = i;

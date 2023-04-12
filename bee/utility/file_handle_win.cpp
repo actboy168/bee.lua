@@ -3,6 +3,7 @@
 #include <bee/utility/file_handle.h>
 #include <fcntl.h>
 #include <io.h>
+#include <Windows.h>
 
 namespace bee {
     static FILE* handletofile(HANDLE h, int flags, const char* mode) noexcept {

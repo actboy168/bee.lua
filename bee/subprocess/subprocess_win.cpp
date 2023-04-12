@@ -1,5 +1,4 @@
 #include <Shobjidl.h>
-#include <Windows.h>
 #include <bee/net/socket.h>
 #include <bee/nonstd/bit.h>
 #include <bee/nonstd/format.h>

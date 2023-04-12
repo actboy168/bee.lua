@@ -60,7 +60,6 @@ namespace bee::subprocess {
         uint32_t get_id() const noexcept;
         bool resume() noexcept;
         uintptr_t native_handle() const noexcept;
-        PROCESS_INFORMATION const& info() const noexcept { return pi_; }
 
     private:
         PROCESS_INFORMATION pi_;

@@ -1,18 +1,18 @@
 #pragma once
 
-#include <string>
 #if defined(_WIN32)
-#    include <Windows.h>
+#    include <cstdint>
 #endif
 #include <bee/nonstd/filesystem.h>
 
 #include <optional>
+#include <string>
 
 namespace bee {
     class file_handle {
     public:
 #if defined(_WIN32)
-        using value_type = HANDLE;
+        using value_type = void*;
 #else
         using value_type = int;
 #endif
