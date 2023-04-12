@@ -260,23 +260,17 @@ namespace bee::subprocess {
         return false;
     }
 
-    static bool hide_console(PROCESS_INFORMATION& pi) {
-        HANDLE hProcess = NULL;
-        if (!::DuplicateHandle(::GetCurrentProcess(), pi.hProcess, ::GetCurrentProcess(), &hProcess, 0, FALSE, DUPLICATE_SAME_ACCESS)) {
-            return false;
-        }
-        std::thread thd([=]() {
-            PROCESS_INFORMATION cpi;
-            cpi.dwProcessId = pi.dwProcessId;
-            cpi.dwThreadId  = pi.dwThreadId;
-            cpi.hThread     = NULL;
-            cpi.hProcess    = hProcess;
-            process process(std::move(cpi));
+    static void hide_console(process& proc) {
+        std::thread thd([&]() {
+            auto dup_proc = proc.dup();
+            if (!dup_proc) {
+                return;
+            }
             for (;; std::this_thread::sleep_for(std::chrono::milliseconds(10))) {
-                if (!process.is_running()) {
+                if (!dup_proc->is_running()) {
                     return;
                 }
-                HWND wnd = console_window(process.get_id());
+                HWND wnd = console_window(dup_proc->get_id());
                 if (wnd) {
                     SetWindowPos(wnd, NULL, -10000, -10000, 0, 0, SWP_HIDEWINDOW);
                     hide_taskbar(wnd);
@@ -285,12 +279,10 @@ namespace bee::subprocess {
             }
         });
         thd.detach();
-        return true;
     }
 
     spawn::spawn() noexcept {
         memset(&si_, 0, sizeof(STARTUPINFOW));
-        memset(&pi_, 0, sizeof(PROCESS_INFORMATION));
         si_.cb         = sizeof(STARTUPINFOW);
         si_.dwFlags    = 0;
         si_.hStdInput  = INVALID_HANDLE_VALUE;
@@ -299,8 +291,6 @@ namespace bee::subprocess {
     }
 
     spawn::~spawn() {
-        ::CloseHandle(pi_.hThread);
-        ::CloseHandle(pi_.hProcess);
     }
 
     void spawn::search_path() noexcept {
@@ -384,13 +374,13 @@ namespace bee::subprocess {
         ::SetHandleInformation(si_.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
         ::SetHandleInformation(si_.hStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
         ::SetHandleInformation(si_.hStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
-        if (!::CreateProcessW(application, command_line.data(), NULL, NULL, inherit_handle_, flags_ | NORMAL_PRIORITY_CLASS, env_, cwd, &si_, &pi_)) {
+        if (!::CreateProcessW(application, command_line.data(), NULL, NULL, inherit_handle_, flags_ | NORMAL_PRIORITY_CLASS, env_, cwd, &si_, (LPPROCESS_INFORMATION)&pi_)) {
             do_duplicate_shutdown();
             return false;
         }
         do_duplicate_shutdown();
         if (!detached_) {
-            join_job(pi_.hProcess);
+            join_job(pi_.native_handle());
         }
         if (console_ == console::eHide) {
             hide_console(pi_);
@@ -402,30 +392,55 @@ namespace bee::subprocess {
         env_ = std::move(env);
     }
 
-    process::process(spawn& spawn) noexcept
-        : pi_(spawn.pi_) {
-        memset(&spawn.pi_, 0, sizeof(PROCESS_INFORMATION));
+    static_assert(sizeof(PROCESS_INFORMATION) == sizeof(process));
+
+    process::process() noexcept
+        : hProcess(NULL)
+        , hThread(NULL)
+        , dwProcessId(0)
+        , dwThreadId(0) {}
+
+    process::process(process&& o) noexcept
+        : process() {
+        std::swap(hProcess, o.hProcess);
+        std::swap(hThread, o.hThread);
+        std::swap(dwProcessId, o.dwProcessId);
+        std::swap(dwThreadId, o.dwThreadId);
     }
+
+    process::process(spawn& spawn) noexcept
+        : process(std::move(spawn.pi_)) {}
 
     process::~process() noexcept {
         close();
     }
 
-    void process::close() noexcept {
-        if (pi_.hThread != NULL) {
-            ::CloseHandle(pi_.hThread);
-            pi_.hThread = NULL;
+    std::optional<process> process::dup() noexcept {
+        HANDLE hProcess = NULL;
+        if (!::DuplicateHandle(::GetCurrentProcess(), native_handle(), ::GetCurrentProcess(), &hProcess, 0, FALSE, DUPLICATE_SAME_ACCESS)) {
+            return std::nullopt;
         }
-        if (pi_.hProcess != NULL) {
-            ::CloseHandle(pi_.hProcess);
-            pi_.hProcess = NULL;
+        process proc;
+        proc.hProcess    = hProcess;
+        proc.dwProcessId = get_id();
+        return proc;
+    }
+
+    void process::close() noexcept {
+        if (hThread != NULL) {
+            ::CloseHandle(hThread);
+            hThread = NULL;
+        }
+        if (hProcess != NULL) {
+            ::CloseHandle(hProcess);
+            hProcess = NULL;
         }
     }
 
     std::optional<uint32_t> process::wait() noexcept {
-        ::WaitForSingleObject(pi_.hProcess, INFINITE);
+        ::WaitForSingleObject(hProcess, INFINITE);
         DWORD status = 0;
-        if (!::GetExitCodeProcess(pi_.hProcess, &status)) {
+        if (!::GetExitCodeProcess(hProcess, &status)) {
             return std::nullopt;
         }
         return (uint32_t)status;
@@ -433,10 +448,10 @@ namespace bee::subprocess {
 
     bool process::is_running() noexcept {
         DWORD status = 0;
-        if (!::GetExitCodeProcess(pi_.hProcess, &status) || status != STILL_ACTIVE) {
+        if (!::GetExitCodeProcess(hProcess, &status) || status != STILL_ACTIVE) {
             return false;
         }
-        return ::WaitForSingleObject(pi_.hProcess, 0) != WAIT_OBJECT_0;
+        return ::WaitForSingleObject(hProcess, 0) != WAIT_OBJECT_0;
     }
 
     bool process::kill(int signum) noexcept {
@@ -444,7 +459,7 @@ namespace bee::subprocess {
         case SIGTERM:
         case SIGKILL:
         case SIGINT:
-            if (TerminateProcess(pi_.hProcess, (signum << 8))) {
+            if (TerminateProcess(hProcess, (signum << 8))) {
                 return true;
             }
             return false;
@@ -456,15 +471,15 @@ namespace bee::subprocess {
     }
 
     bool process::resume() noexcept {
-        return (DWORD)-1 != ::ResumeThread(pi_.hThread);
+        return (DWORD)-1 != ::ResumeThread(hThread);
     }
 
     process_id process::get_id() const noexcept {
-        return pi_.dwProcessId;
+        return dwProcessId;
     }
 
     process_handle process::native_handle() const noexcept {
-        return pi_.hProcess;
+        return hProcess;
     }
 
     namespace pipe {

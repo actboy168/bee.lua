@@ -53,9 +53,11 @@ namespace bee::subprocess {
     class spawn;
     class process {
     public:
+        process() noexcept;
+        process(process&& o) noexcept;
         process(spawn& spawn) noexcept;
-        process(PROCESS_INFORMATION&& pi) noexcept { pi_ = std::move(pi); }
         ~process() noexcept;
+        std::optional<process> dup() noexcept;
         process_id get_id() const noexcept;
         process_handle native_handle() const noexcept;
         void close() noexcept;
@@ -65,7 +67,10 @@ namespace bee::subprocess {
         bool resume() noexcept;
 
     private:
-        PROCESS_INFORMATION pi_;
+        process_handle hProcess;
+        process_handle hThread;
+        process_id dwProcessId;
+        process_id dwThreadId;
     };
 
     struct args_t {
@@ -106,7 +111,7 @@ namespace bee::subprocess {
     private:
         environment env_ = nullptr;
         STARTUPINFOW si_;
-        PROCESS_INFORMATION pi_;
+        process pi_;
         DWORD flags_         = 0;
         console console_     = console::eInherit;
         bool inherit_handle_ = false;
