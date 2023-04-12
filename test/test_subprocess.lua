@@ -77,7 +77,7 @@ function test_subprocess:test_is_running()
 end
 
 function test_subprocess:test_is_running_2()
-    local process = shell:runlua('io.read "a"', { stdin = true })
+    local process = shell:runlua('io.read "a";os.exit(13)', { stdin = true })
     lt.assertEquals(process:is_running(), true)
     lt.assertIsUserdata(process.stdin)
     process.stdin:close()
@@ -85,7 +85,7 @@ function test_subprocess:test_is_running_2()
         thread.sleep(1)
     end
     lt.assertEquals(process:is_running(), false)
-    lt.assertEquals(process:wait(), 0)
+    lt.assertEquals(process:wait(), 13)
 end
 
 function test_subprocess:test_kill()

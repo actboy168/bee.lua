@@ -5,6 +5,7 @@
 #include <bee/platform/win/unicode.h>
 #include <bee/subprocess.h>
 #include <bee/utility/dynarray.h>
+#include <bee/nonstd/bit.h>
 #include <signal.h>
 
 #include <deque>
@@ -459,11 +460,11 @@ namespace bee::subprocess {
     }
 
     uint32_t process::get_id() const noexcept {
-        return (uint32_t)pi_.dwProcessId;
+        return static_cast<uint32_t>(pi_.dwProcessId);
     }
 
     uintptr_t process::native_handle() const noexcept {
-        return (uintptr_t)pi_.hProcess;
+        return std::bit_cast<uintptr_t>(pi_.hProcess);
     }
 
     namespace pipe {

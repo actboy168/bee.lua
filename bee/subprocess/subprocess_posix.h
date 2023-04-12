@@ -33,7 +33,7 @@ namespace bee::subprocess {
         bool is_running() noexcept;
         std::optional<uint32_t> wait() noexcept;
         bool resume() noexcept;
-        int pid;
+        pid_t pid;
         std::optional<uint32_t> status;
     };
 
@@ -76,7 +76,7 @@ namespace bee::subprocess {
     private:
         environment env_ = nullptr;
         int fds_[3];
-        int pid_ = -1;
+        pid_t pid_ = -1;
         posix_spawnattr_t spawnattr_;
         posix_spawn_file_actions_t spawnfile_;
     };

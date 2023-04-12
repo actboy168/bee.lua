@@ -230,11 +230,11 @@ namespace bee::subprocess {
         : pid(spawn.pid_) {}
 
     uint32_t process::get_id() const noexcept {
-        return pid;
+        return static_cast<uint32_t>(pid);
     }
 
     uintptr_t process::native_handle() const noexcept {
-        return pid;
+        return static_cast<uintptr_t>(pid);
     }
 
     bool process::kill(int signum) noexcept {
@@ -242,9 +242,13 @@ namespace bee::subprocess {
     }
 
     static uint32_t make_status(int status) {
-        int exit_status = WIFEXITED(status) ? WEXITSTATUS(status) : 0;
-        int term_signal = WIFSIGNALED(status) ? WTERMSIG(status) : 0;
-        return (term_signal << 8) | exit_status;
+        if (WIFEXITED(status)) {
+            return WEXITSTATUS(status);
+        }
+        if (WIFSIGNALED(status)) {
+            return WTERMSIG(status) << 8;
+        }
+        return 0;
     }
 
     bool process::is_running() noexcept {
