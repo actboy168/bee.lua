@@ -213,10 +213,20 @@ namespace bee::net::socket {
         return true;
     }
 #elif defined(__APPLE__)
-    static bool no_blocking(fd_t s) noexcept {
-        const int flags = ::fcntl(s, F_GETFL, 0);
-        const int ok = ::fcntl(s, F_SETFL, flags | O_NONBLOCK);
-        return net_success(ok);
+    static bool no_blocking(int fd) noexcept {
+        int r;
+        do
+            r = ::fcntl(fd, F_GETFL);
+        while (!net_success(r) && errno == EINTR);
+        if (!net_success(r))
+            return false;
+        if (r & O_NONBLOCK)
+            return 0;
+        int flags = r | O_NONBLOCK;
+        do
+            r = ::fcntl(fd, F_SETFL, flags);
+        while (!net_success(r) && errno == EINTR);
+        return net_success(r);
     }
     static bool no_inherit(fd_t s) noexcept {
         int ok;
