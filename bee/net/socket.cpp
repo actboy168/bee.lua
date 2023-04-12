@@ -242,6 +242,39 @@ namespace bee::net::socket {
     }
 #endif
 
+    bool close(fd_t s) noexcept {
+#if defined _WIN32
+        const int ok = ::closesocket(s);
+#else
+        const int ok = ::close(s);
+#endif
+        return net_success(ok);
+    }
+
+    static int get_error() noexcept {
+#if defined(_WIN32)
+        return ::WSAGetLastError();
+#else
+        return errno;
+#endif
+    }
+
+#if defined(_WIN32) || defined(__APPLE__)
+    static void set_error(int err) noexcept {
+#    if defined(_WIN32)
+        ::WSASetLastError(err);
+#    else
+        errno = err;
+#    endif
+    }
+
+    static void internal_close(fd_t s) noexcept {
+        const int saved_errno = get_error();
+        close(s);
+        set_error(saved_errno);
+    }
+#endif
+
     static fd_t createSocket(int af, int type, int protocol, fd_flags fd_flags) noexcept {
 #if defined(_WIN32)
         const fd_t fd = ::WSASocketW(af, type, protocol, af == PF_UNIX ? &UnixProtocol : NULL, 0, WSA_FLAG_NO_HANDLE_INHERIT);
@@ -295,39 +328,6 @@ namespace bee::net::socket {
             std::unreachable();
         }
     }
-
-    bool close(fd_t s) noexcept {
-#if defined _WIN32
-        const int ok = ::closesocket(s);
-#else
-        const int ok = ::close(s);
-#endif
-        return net_success(ok);
-    }
-
-    static int get_error() noexcept {
-#if defined(_WIN32)
-        return ::WSAGetLastError();
-#else
-        return errno;
-#endif
-    }
-
-#if defined(_WIN32) || defined(__APPLE__)
-    static void set_error(int err) noexcept {
-#    if defined(_WIN32)
-        ::WSASetLastError(err);
-#    else
-        errno = err;
-#    endif
-    }
-
-    static void internal_close(fd_t s) noexcept {
-        const int saved_errno = get_error();
-        close(s);
-        set_error(saved_errno);
-    }
-#endif
 
     bool shutdown(fd_t s, shutdown_flag flag) noexcept {
 #if defined(_WIN32)
