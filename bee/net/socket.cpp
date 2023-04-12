@@ -217,11 +217,11 @@ namespace bee::net::socket {
         int r;
         do
             r = ::fcntl(fd, F_GETFL);
-        while (!net_success(r) && errno == EINTR);
-        if (!net_success(r))
+        while (r == -1 && errno == EINTR);
+        if (r == -1)
             return false;
         if (r & O_NONBLOCK)
-            return 0;
+            return true;
         int flags = r | O_NONBLOCK;
         do
             r = ::fcntl(fd, F_SETFL, flags);
