@@ -256,11 +256,11 @@ namespace bee::net::socket {
         const fd_t fd = ::socket(af, type, protocol);
         if (fd != retired_fd) {
             if (!set_cloexec(fd, true)) {
-                socket::close(fd);
+                internal_close(fd);
                 return retired_fd;
             }
             if (!set_nonblock(fd, fd_flags == fd_flags::nonblock)) {
-                socket::close(fd);
+                internal_close(fd);
                 return retired_fd;
             }
         }
@@ -304,6 +304,30 @@ namespace bee::net::socket {
 #endif
         return net_success(ok);
     }
+
+    static int get_error() noexcept {
+#if defined(_WIN32)
+        return ::WSAGetLastError();
+#else
+        return errno;
+#endif
+    }
+
+#if defined(_WIN32) || defined(__APPLE__)
+    static void set_error(int err) noexcept {
+#    if defined(_WIN32)
+        ::WSASetLastError(err);
+#    else
+        errno = err;
+#    endif
+    }
+
+    static void internal_close(fd_t s) noexcept {
+        const int saved_errno = get_error();
+        close(s);
+        set_error(saved_errno);
+    }
+#endif
 
     bool shutdown(fd_t s, shutdown_flag flag) noexcept {
 #if defined(_WIN32)
@@ -402,11 +426,11 @@ namespace bee::net::socket {
         const fd_t fd = ::accept(s, addr, addrlen);
         if (fd != retired_fd) {
             if (!set_cloexec(fd, true)) {
-                socket::close(fd);
+                internal_close(fd);
                 return retired_fd;
             }
             if (!set_nonblock(fd, fd_flags == fd_flags::nonblock)) {
-                socket::close(fd);
+                internal_close(fd);
                 return retired_fd;
             }
         }
@@ -515,14 +539,6 @@ namespace bee::net::socket {
 #endif
     }
 
-    static int last_neterror() noexcept {
-#if defined(_WIN32)
-        return ::WSAGetLastError();
-#else
-        return errno;
-#endif
-    }
-
     std::error_code errcode(fd_t s) noexcept {
         int err        = 0;
         socklen_t errl = sizeof(err);
@@ -530,7 +546,7 @@ namespace bee::net::socket {
         if (net_success(ok)) {
             return std::error_code(err, get_error_category());
         }
-        return std::error_code(last_neterror(), get_error_category());
+        return std::error_code(get_error(), get_error_category());
     }
 
 #if defined(_WIN32)
@@ -582,29 +598,21 @@ namespace bee::net::socket {
             return false;
         }
         if (!unnamed_unix_bind(sfd)) {
-            const int err = ::WSAGetLastError();
-            socket::close(sfd);
-            ::WSASetLastError(err);
+            internal_close(sfd);
             return false;
         }
         if (!socket::listen(sfd, 5)) {
-            const int err = ::WSAGetLastError();
-            socket::close(sfd);
-            ::WSASetLastError(err);
+            internal_close(sfd);
             return false;
         }
         auto cep = getsockname(sfd);
         if (!cep) {
-            const int err = ::WSAGetLastError();
-            socket::close(sfd);
-            ::WSASetLastError(err);
+            internal_close(sfd);
             return false;
         }
         const fd_t cfd = open(protocol::unix, fd_flags);
         if (cfd == retired_fd) {
-            const int err = ::WSAGetLastError();
-            socket::close(sfd);
-            ::WSASetLastError(err);
+            internal_close(sfd);
             return false;
         }
         do {
@@ -631,15 +639,13 @@ namespace bee::net::socket {
             if (fdstat::success != accept(sfd, newfd, fd_flags)) {
                 break;
             }
-            socket::close(sfd);
+            internal_close(sfd);
             sv[0] = newfd;
             sv[1] = cfd;
             return true;
         } while (false);
-        const int err = ::WSAGetLastError();
-        socket::close(sfd);
-        socket::close(cfd);
-        ::WSASetLastError(err);
+        internal_close(sfd);
+        internal_close(cfd);
         return false;
 #elif defined(__APPLE__)
         int temp[2];
@@ -663,10 +669,8 @@ namespace bee::net::socket {
         sv[1] = temp[1];
         return true;
     fail:
-        int saved_errno = errno;
-        socket::close(temp[0]);
-        socket::close(temp[1]);
-        errno = saved_errno;
+        internal_close(temp[0]);
+        internal_close(temp[1]);
         return false;
 #else
         int flags = SOCK_STREAM | SOCK_CLOEXEC;
@@ -717,10 +721,8 @@ namespace bee::net::socket {
         sv[1] = temp[1];
         return true;
     fail:
-        int saved_errno = errno;
-        socket::close(temp[0]);
-        socket::close(temp[1]);
-        errno = saved_errno;
+        internal_close(temp[0]);
+        internal_close(temp[1]);
         return false;
 #else
         int flags = O_CLOEXEC;
