@@ -128,11 +128,14 @@ namespace bee::filewatch {
     }
 
     std::optional<notify> watch::select() {
-        if (m_notify.empty()) {
-            return std::nullopt;
-        }
-        auto n = m_notify.front();
-        m_notify.pop();
-        return n;
+        __block std::optional<notify> retval;
+        dispatch_sync(m_fsevent_queue, ^{
+          if (!m_notify.empty()) {
+              auto n = m_notify.front();
+              m_notify.pop();
+              retval = n;
+          }
+        });
+        return retval;
     }
 }
