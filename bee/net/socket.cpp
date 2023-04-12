@@ -233,7 +233,7 @@ namespace bee::net::socket {
         while (!net_success(r) && errno == EINTR);
         return net_success(r);
     }
-    static bool set_cloexec(fd_t s, bool set) noexcept {
+    static bool set_cloexec(fd_t fd, bool set) noexcept {
         int ok;
         do
             ok = ::ioctl(fd, set ? FIOCLEX : FIONCLEX);
