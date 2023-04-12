@@ -653,10 +653,10 @@ namespace bee::net::socket {
         if (!net_success(ok)) {
             return false;
         }
-        if (!set_cloexec(temp[0], true) {
+        if (!set_cloexec(temp[0], true)) {
             goto fail;
         }
-        if (!set_cloexec(temp[1], true) {
+        if (!set_cloexec(temp[1], true)) {
             goto fail;
         }
         if (!set_nonblock(temp[0], fd_flags == fd_flags::nonblock)) {
