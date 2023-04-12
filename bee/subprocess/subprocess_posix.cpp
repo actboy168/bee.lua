@@ -288,11 +288,11 @@ namespace bee::subprocess {
 
     namespace pipe {
         open_result open() noexcept {
-            int fds[2];
-            if (!net::socket::blockpair(fds)) {
+            net::socket::fd_t fds[2];
+            if (!net::socket::pair(fds, net::socket::fd_flags::cloexec)) {
                 return { {}, {} };
             }
-            return { { fds[0] }, { fds[1] } };
+            return { { (bee::file_handle::value_type)fds[0] }, { (bee::file_handle::value_type)fds[1] } };
         }
         int peek(FILE* f) noexcept {
             char tmp[256];

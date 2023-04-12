@@ -54,12 +54,15 @@ namespace bee::net::socket {
         rcvbuf,
     };
 
+    enum class fd_flags {
+        nonblock = 1,
+        cloexec  = 2,
+    };
+
     bool initialize() noexcept;
     fd_t open(protocol protocol);
-    bool pair(fd_t sv[2]);
-#if !defined(_WIN32)
-    bool blockpair(fd_t sv[2]) noexcept;
-#endif
+    bool pair(fd_t sv[2], fd_flags flags);
+    bool pipe(fd_t sv[2], fd_flags flags);
     bool close(fd_t s) noexcept;
     bool shutdown(fd_t s, shutdown_flag flag) noexcept;
     bool setoption(fd_t s, option opt, int value) noexcept;
@@ -77,4 +80,33 @@ namespace bee::net::socket {
     bool unlink(const endpoint& ep);
     std::error_code errcode(fd_t s) noexcept;
     fd_t dup(fd_t s) noexcept;
+
+#define BEE_ENABLE_BITOPS(EnumTy)                                                      \
+    constexpr EnumTy operator&(EnumTy lft, EnumTy rht) noexcept {                      \
+        using IntTy = std::underlying_type_t<EnumTy>;                                  \
+        return static_cast<EnumTy>(static_cast<IntTy>(lft) & static_cast<IntTy>(rht)); \
+    }                                                                                  \
+    constexpr EnumTy operator|(EnumTy lft, EnumTy rht) noexcept {                      \
+        using IntTy = std::underlying_type_t<EnumTy>;                                  \
+        return static_cast<EnumTy>(static_cast<IntTy>(lft) | static_cast<IntTy>(rht)); \
+    }                                                                                  \
+    constexpr EnumTy operator^(EnumTy lft, EnumTy rht) noexcept {                      \
+        using IntTy = std::underlying_type_t<EnumTy>;                                  \
+        return static_cast<EnumTy>(static_cast<IntTy>(lft) ^ static_cast<IntTy>(rht)); \
+    }                                                                                  \
+    constexpr EnumTy& operator&=(EnumTy& lft, EnumTy rht) noexcept {                   \
+        return lft = lft & rht;                                                        \
+    }                                                                                  \
+    constexpr EnumTy& operator|=(EnumTy& lft, EnumTy rht) noexcept {                   \
+        return lft = lft | rht;                                                        \
+    }                                                                                  \
+    constexpr EnumTy& operator^=(EnumTy& lft, EnumTy rht) noexcept {                   \
+        return lft = lft ^ rht;                                                        \
+    }                                                                                  \
+    constexpr EnumTy operator~(EnumTy lft) noexcept {                                  \
+        using IntTy = std::underlying_type_t<EnumTy>;                                  \
+        return static_cast<EnumTy>(~static_cast<IntTy>(lft));                          \
+    }
+    BEE_ENABLE_BITOPS(fd_flags)
+#undef BEE_ENABLE_BITOPS
 }

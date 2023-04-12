@@ -343,7 +343,7 @@ namespace bee::lua_socket {
     }
     static int pair(lua_State* L) {
         socket::fd_t sv[2];
-        if (!socket::pair(sv)) {
+        if (!socket::pair(sv, socket::fd_flags::nonblock | socket::fd_flags::cloexec)) {
             return push_neterror(L, "socketpair");
         }
         pushfd(L, sv[0]);

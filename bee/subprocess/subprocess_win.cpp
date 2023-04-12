@@ -1,11 +1,12 @@
 #include <Shobjidl.h>
 #include <Windows.h>
+#include <bee/net/socket.h>
+#include <bee/nonstd/bit.h>
 #include <bee/nonstd/format.h>
 #include <bee/nonstd/unreachable.h>
 #include <bee/platform/win/unicode.h>
 #include <bee/subprocess.h>
 #include <bee/utility/dynarray.h>
-#include <bee/nonstd/bit.h>
 #include <signal.h>
 
 #include <deque>
@@ -469,15 +470,11 @@ namespace bee::subprocess {
 
     namespace pipe {
         open_result open() noexcept {
-            SECURITY_ATTRIBUTES sa;
-            sa.nLength              = sizeof(SECURITY_ATTRIBUTES);
-            sa.bInheritHandle       = FALSE;
-            sa.lpSecurityDescriptor = NULL;
-            HANDLE read_pipe = NULL, write_pipe = NULL;
-            if (!::CreatePipe(&read_pipe, &write_pipe, &sa, 0)) {
+            net::socket::fd_t fds[2];
+            if (!net::socket::pipe(fds, net::socket::fd_flags::cloexec)) {
                 return { {}, {} };
             }
-            return { { read_pipe }, { write_pipe } };
+            return { { (bee::file_handle::value_type)fds[0] }, { (bee::file_handle::value_type)fds[1] } };
         }
 
         int peek(FILE* f) noexcept {
