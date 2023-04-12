@@ -47,19 +47,22 @@ namespace bee::subprocess {
         std::set<std::wstring, less> del_env_;
     };
 
+    using process_id = uint32_t;
+    using process_handle = void*;
+
     class spawn;
     class process {
     public:
         process(spawn& spawn) noexcept;
         process(PROCESS_INFORMATION&& pi) noexcept { pi_ = std::move(pi); }
         ~process() noexcept;
+        process_id get_id() const noexcept;
+        process_handle native_handle() const noexcept;
         void close() noexcept;
         bool is_running() noexcept;
         bool kill(int signum) noexcept;
         std::optional<uint32_t> wait() noexcept;
-        uint32_t get_id() const noexcept;
         bool resume() noexcept;
-        uintptr_t native_handle() const noexcept;
 
     private:
         PROCESS_INFORMATION pi_;

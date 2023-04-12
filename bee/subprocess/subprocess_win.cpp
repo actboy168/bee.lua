@@ -459,12 +459,12 @@ namespace bee::subprocess {
         return (DWORD)-1 != ::ResumeThread(pi_.hThread);
     }
 
-    uint32_t process::get_id() const noexcept {
-        return static_cast<uint32_t>(pi_.dwProcessId);
+    process_id process::get_id() const noexcept {
+        return pi_.dwProcessId;
     }
 
-    uintptr_t process::native_handle() const noexcept {
-        return std::bit_cast<uintptr_t>(pi_.hProcess);
+    process_handle process::native_handle() const noexcept {
+        return pi_.hProcess;
     }
 
     namespace pipe {

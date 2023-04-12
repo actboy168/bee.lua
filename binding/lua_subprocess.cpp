@@ -39,7 +39,7 @@ namespace bee::lua_subprocess {
 #endif
 
         static int wait(lua_State* L) {
-            auto& self = to(L, 1);
+            auto& self  = to(L, 1);
             auto status = self.wait();
             if (status) {
                 lua_pushinteger(L, (lua_Integer)*status);
@@ -61,7 +61,7 @@ namespace bee::lua_subprocess {
 
         static int get_id(lua_State* L) {
             auto& self = to(L, 1);
-            lua_pushinteger(L, (lua_Integer)self.get_id());
+            lua_pushinteger(L, static_cast<lua_Integer>(self.get_id()));
             return 1;
         }
 
@@ -79,7 +79,11 @@ namespace bee::lua_subprocess {
 
         static int native_handle(lua_State* L) {
             auto& self = to(L, 1);
-            lua_pushinteger(L, self.native_handle());
+#if defined(_WIN32)
+            lua_pushlightuserdata(L, self.native_handle());
+#else
+            lua_pushlightuserdata(L, (void*)(intptr_t)self.native_handle());
+#endif
             return 1;
         }
 

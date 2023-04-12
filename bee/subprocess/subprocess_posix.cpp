@@ -229,12 +229,12 @@ namespace bee::subprocess {
     process::process(spawn& spawn) noexcept
         : pid(spawn.pid_) {}
 
-    uint32_t process::get_id() const noexcept {
-        return static_cast<uint32_t>(pid);
+    process_id process::get_id() const noexcept {
+        return pid;
     }
 
-    uintptr_t process::native_handle() const noexcept {
-        return static_cast<uintptr_t>(pid);
+    process_handle process::native_handle() const noexcept {
+        return pid;
     }
 
     bool process::kill(int signum) noexcept {
