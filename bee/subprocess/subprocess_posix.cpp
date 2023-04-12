@@ -289,7 +289,7 @@ namespace bee::subprocess {
     namespace pipe {
         open_result open() noexcept {
             net::socket::fd_t fds[2];
-            if (!net::socket::pair(fds, net::socket::fd_flags::cloexec)) {
+            if (!net::socket::pair(fds, net::socket::fd_flags::none)) {
                 return { {}, {} };
             }
             return { { (bee::file_handle::value_type)fds[0] }, { (bee::file_handle::value_type)fds[1] } };

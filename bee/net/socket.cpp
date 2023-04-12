@@ -242,11 +242,11 @@ namespace bee::net::socket {
     }
 #endif
 
-    static fd_t createSocket(int af, int type, int protocol) noexcept {
+    static fd_t createSocket(int af, int type, int protocol, fd_flags fd_flags) noexcept {
 #if defined(_WIN32)
         const fd_t fd = ::WSASocketW(af, type, protocol, af == PF_UNIX ? &UnixProtocol : NULL, 0, WSA_FLAG_NO_HANDLE_INHERIT);
         if (fd != retired_fd) {
-            if (!set_nonblock(fd, true)) {
+            if (!set_nonblock(fd, fd_flags == fd_flags::nonblock)) {
                 ::closesocket(fd);
                 return retired_fd;
             }
@@ -259,34 +259,38 @@ namespace bee::net::socket {
                 socket::close(fd);
                 return retired_fd;
             }
-            if (!set_nonblock(fd, true)) {
+            if (!set_nonblock(fd, fd_flags == fd_flags::nonblock)) {
                 socket::close(fd);
                 return retired_fd;
             }
         }
         return fd;
 #else
-        return ::socket(af, type | SOCK_NONBLOCK | SOCK_CLOEXEC, protocol);
+        int flags = type | SOCK_CLOEXEC;
+        if (fd_flags == fd_flags::nonblock) {
+            flags |= SOCK_NONBLOCK;
+        }
+        return ::socket(af, flags, protocol);
 #endif
     }
 
-    fd_t open(protocol protocol) {
+    fd_t open(protocol protocol, fd_flags flags) {
         switch (protocol) {
         case protocol::tcp:
-            return createSocket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+            return createSocket(PF_INET, SOCK_STREAM, IPPROTO_TCP, flags);
         case protocol::udp:
-            return createSocket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+            return createSocket(PF_INET, SOCK_DGRAM, IPPROTO_UDP, flags);
         case protocol::tcp6:
-            return createSocket(PF_INET6, SOCK_STREAM, IPPROTO_TCP);
+            return createSocket(PF_INET6, SOCK_STREAM, IPPROTO_TCP, flags);
         case protocol::udp6:
-            return createSocket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+            return createSocket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP, flags);
         case protocol::unix:
 #if defined _WIN32
             if (!supportUnixDomainSocket()) {
-                return createSocket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+                return createSocket(PF_INET, SOCK_STREAM, IPPROTO_TCP, flags);
             }
 #endif
-            return createSocket(PF_UNIX, SOCK_STREAM, 0);
+            return createSocket(PF_UNIX, SOCK_STREAM, 0, flags);
         default:
             std::unreachable();
         }
@@ -393,7 +397,7 @@ namespace bee::net::socket {
         return fdstat::failed;
     }
 
-    static fd_t acceptEx(fd_t s, struct sockaddr* addr, socklen_t* addrlen) noexcept {
+    static fd_t acceptEx(fd_t s, fd_flags fd_flags, struct sockaddr* addr, socklen_t* addrlen) noexcept {
 #if defined(_WIN32) || defined(__APPLE__)
         const fd_t fd = ::accept(s, addr, addrlen);
         if (fd != retired_fd) {
@@ -401,19 +405,23 @@ namespace bee::net::socket {
                 socket::close(fd);
                 return retired_fd;
             }
-            if (!set_nonblock(fd, true)) {
+            if (!set_nonblock(fd, fd_flags == fd_flags::nonblock)) {
                 socket::close(fd);
                 return retired_fd;
             }
         }
         return fd;
 #else
-        return ::accept4(s, addr, addrlen, SOCK_NONBLOCK | SOCK_CLOEXEC);
+        int flags = SOCK_CLOEXEC;
+        if (fd_flags == fd_flags::nonblock) {
+            flags |= SOCK_NONBLOCK;
+        }
+        return ::accept4(s, addr, addrlen, flags);
 #endif
     }
 
-    fdstat accept(fd_t s, fd_t& newfd) noexcept {
-        newfd = acceptEx(s, NULL, NULL);
+    fdstat accept(fd_t s, fd_t& newfd, fd_flags fd_flags) noexcept {
+        newfd = acceptEx(s, fd_flags, NULL, NULL);
         if (newfd == retired_fd) {
 #if defined _WIN32
             return fdstat::failed;
@@ -569,7 +577,7 @@ namespace bee::net::socket {
 
     bool pair(fd_t sv[2], fd_flags fd_flags) {
 #if defined(_WIN32)
-        const fd_t sfd = open(protocol::unix);
+        const fd_t sfd = open(protocol::unix, fd_flags);
         if (sfd == retired_fd) {
             return false;
         }
@@ -592,7 +600,7 @@ namespace bee::net::socket {
             ::WSASetLastError(err);
             return false;
         }
-        const fd_t cfd = open(protocol::unix);
+        const fd_t cfd = open(protocol::unix, fd_flags);
         if (cfd == retired_fd) {
             const int err = ::WSAGetLastError();
             socket::close(sfd);
@@ -620,7 +628,7 @@ namespace bee::net::socket {
                 break;
             }
             fd_t newfd;
-            if (fdstat::success != accept(sfd, newfd)) {
+            if (fdstat::success != accept(sfd, newfd, fd_flags)) {
                 break;
             }
             socket::close(sfd);
@@ -639,16 +647,16 @@ namespace bee::net::socket {
         if (!net_success(ok)) {
             return false;
         }
-        if (!set_cloexec(temp[0], (fd_flags & fd_flags::cloexec) == fd_flags::cloexec)) {
+        if (!set_cloexec(temp[0], true) {
             goto fail;
         }
-        if (!set_cloexec(temp[1], (fd_flags & fd_flags::cloexec) == fd_flags::cloexec)) {
+        if (!set_cloexec(temp[1], true) {
             goto fail;
         }
-        if (!set_nonblock(temp[0], (fd_flags & fd_flags::nonblock) == fd_flags::nonblock)) {
+        if (!set_nonblock(temp[0], fd_flags == fd_flags::nonblock)) {
             goto fail;
         }
-        if (!set_nonblock(temp[1], (fd_flags & fd_flags::nonblock) == fd_flags::nonblock)) {
+        if (!set_nonblock(temp[1], fd_flags == fd_flags::nonblock)) {
             goto fail;
         }
         sv[0] = temp[0];
@@ -661,12 +669,9 @@ namespace bee::net::socket {
         errno = saved_errno;
         return false;
 #else
-        int flags = SOCK_STREAM;
-        if ((fd_flags & fd_flags::nonblock) == fd_flags::nonblock) {
+        int flags = SOCK_STREAM | SOCK_CLOEXEC;
+        if (fd_flags == fd_flags::nonblock) {
             flags |= SOCK_NONBLOCK;
-        }
-        if ((fd_flags & fd_flags::cloexec) == fd_flags::cloexec) {
-            flags |= SOCK_CLOEXEC;
         }
         const int ok = ::socketpair(PF_UNIX, flags, 0, sv);
         return net_success(ok);
@@ -675,13 +680,13 @@ namespace bee::net::socket {
 
     bool pipe(fd_t sv[2], fd_flags fd_flags) {
 #if defined(_WIN32)
-        if ((fd_flags & fd_flags::nonblock) == fd_flags::nonblock) {
+        if (fd_flags == fd_flags::nonblock) {
             SetLastError(ERROR_INVALID_PARAMETER);
             return false;
         }
         SECURITY_ATTRIBUTES sa;
         sa.nLength              = sizeof(SECURITY_ATTRIBUTES);
-        sa.bInheritHandle       = ((fd_flags & fd_flags::cloexec) == fd_flags::cloexec) ? FALSE : TRUE;
+        sa.bInheritHandle       = FALSE;
         sa.lpSecurityDescriptor = NULL;
         HANDLE rd = NULL, wr = NULL;
         if (!::CreatePipe(&rd, &wr, &sa, 0)) {
@@ -696,16 +701,16 @@ namespace bee::net::socket {
         if (!net_success(ok)) {
             return false;
         }
-        if (!set_cloexec(temp[0], (fd_flags & fd_flags::cloexec) == fd_flags::cloexec)) {
+        if (!set_cloexec(temp[0], true) {
             goto fail;
         }
-        if (!set_cloexec(temp[1], (fd_flags & fd_flags::cloexec) == fd_flags::cloexec)) {
+        if (!set_cloexec(temp[1], true) {
             goto fail;
         }
-        if (!set_nonblock(temp[0], (fd_flags & fd_flags::nonblock) == fd_flags::nonblock)) {
+        if (!set_nonblock(temp[0], fd_flags == fd_flags::nonblock)) {
             goto fail;
         }
-        if (!set_nonblock(temp[1], (fd_flags & fd_flags::nonblock) == fd_flags::nonblock)) {
+        if (!set_nonblock(temp[1], fd_flags == fd_flags::nonblock)) {
             goto fail;
         }
         sv[0] = temp[0];
@@ -718,12 +723,9 @@ namespace bee::net::socket {
         errno = saved_errno;
         return false;
 #else
-        int flags = 0;
-        if ((fd_flags & fd_flags::nonblock) == fd_flags::nonblock) {
+        int flags = O_CLOEXEC;
+        if (fd_flags == fd_flags::nonblock) {
             flags |= O_NONBLOCK;
-        }
-        if ((fd_flags & fd_flags::cloexec) == fd_flags::cloexec) {
-            flags |= O_CLOEXEC;
         }
         const int ok = ::pipe2(sv, flags);
         return net_success(ok);

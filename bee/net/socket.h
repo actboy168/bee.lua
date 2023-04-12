@@ -55,14 +55,14 @@ namespace bee::net::socket {
     };
 
     enum class fd_flags {
-        nonblock = 1,
-        cloexec  = 2,
+        none,
+        nonblock,
     };
 
     bool initialize() noexcept;
-    fd_t open(protocol protocol);
-    bool pair(fd_t sv[2], fd_flags flags);
-    bool pipe(fd_t sv[2], fd_flags flags);
+    fd_t open(protocol protocol, fd_flags flags = fd_flags::nonblock);
+    bool pair(fd_t sv[2], fd_flags flags = fd_flags::nonblock);
+    bool pipe(fd_t sv[2], fd_flags flags = fd_flags::nonblock);
     bool close(fd_t s) noexcept;
     bool shutdown(fd_t s, shutdown_flag flag) noexcept;
     bool setoption(fd_t s, option opt, int value) noexcept;
@@ -70,7 +70,7 @@ namespace bee::net::socket {
     bool bind(fd_t s, const endpoint& ep);
     bool listen(fd_t s, int backlog) noexcept;
     fdstat connect(fd_t s, const endpoint& ep);
-    fdstat accept(fd_t s, fd_t& newfd) noexcept;
+    fdstat accept(fd_t s, fd_t& newfd, fd_flags flags = fd_flags::nonblock) noexcept;
     status recv(fd_t s, int& rc, char* buf, int len) noexcept;
     status send(fd_t s, int& rc, const char* buf, int len) noexcept;
     expected<endpoint, status> recvfrom(fd_t s, int& rc, char* buf, int len);
@@ -80,33 +80,4 @@ namespace bee::net::socket {
     bool unlink(const endpoint& ep);
     std::error_code errcode(fd_t s) noexcept;
     fd_t dup(fd_t s) noexcept;
-
-#define BEE_ENABLE_BITOPS(EnumTy)                                                      \
-    constexpr EnumTy operator&(EnumTy lft, EnumTy rht) noexcept {                      \
-        using IntTy = std::underlying_type_t<EnumTy>;                                  \
-        return static_cast<EnumTy>(static_cast<IntTy>(lft) & static_cast<IntTy>(rht)); \
-    }                                                                                  \
-    constexpr EnumTy operator|(EnumTy lft, EnumTy rht) noexcept {                      \
-        using IntTy = std::underlying_type_t<EnumTy>;                                  \
-        return static_cast<EnumTy>(static_cast<IntTy>(lft) | static_cast<IntTy>(rht)); \
-    }                                                                                  \
-    constexpr EnumTy operator^(EnumTy lft, EnumTy rht) noexcept {                      \
-        using IntTy = std::underlying_type_t<EnumTy>;                                  \
-        return static_cast<EnumTy>(static_cast<IntTy>(lft) ^ static_cast<IntTy>(rht)); \
-    }                                                                                  \
-    constexpr EnumTy& operator&=(EnumTy& lft, EnumTy rht) noexcept {                   \
-        return lft = lft & rht;                                                        \
-    }                                                                                  \
-    constexpr EnumTy& operator|=(EnumTy& lft, EnumTy rht) noexcept {                   \
-        return lft = lft | rht;                                                        \
-    }                                                                                  \
-    constexpr EnumTy& operator^=(EnumTy& lft, EnumTy rht) noexcept {                   \
-        return lft = lft ^ rht;                                                        \
-    }                                                                                  \
-    constexpr EnumTy operator~(EnumTy lft) noexcept {                                  \
-        using IntTy = std::underlying_type_t<EnumTy>;                                  \
-        return static_cast<EnumTy>(~static_cast<IntTy>(lft));                          \
-    }
-    BEE_ENABLE_BITOPS(fd_flags)
-#undef BEE_ENABLE_BITOPS
 }
