@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <memory.h>
 #include <signal.h>
+#include <spawn.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -95,34 +96,19 @@ namespace bee::subprocess {
         fds_[0] = -1;
         fds_[1] = -1;
         fds_[2] = -1;
-        int r   = posix_spawnattr_init(&spawnattr_);
-        (void)r;
-        assert(r == 0);
-        r = posix_spawn_file_actions_init(&spawnfile_);
-        (void)r;
-        assert(r == 0);
-    }
-
-    spawn::~spawn() {
-        posix_spawnattr_destroy(&spawnattr_);
-        posix_spawn_file_actions_destroy(&spawnfile_);
     }
 
     void spawn::suspended() {
 #if defined(POSIX_SPAWN_START_SUSPENDED)
         // apple extension
-        short flags = 0;
-        posix_spawnattr_getflags(&spawnattr_, &flags);
-        posix_spawnattr_setflags(&spawnattr_, flags | POSIX_SPAWN_START_SUSPENDED);
+        spawnattr_ |= POSIX_SPAWN_START_SUSPENDED;
 #endif
     }
 
     void spawn::detached() {
 #if defined(POSIX_SPAWN_SETSID)
         // since glibc 2.26
-        short flags = 0;
-        posix_spawnattr_getflags(&spawnattr_, &flags);
-        posix_spawnattr_setflags(&spawnattr_, flags | POSIX_SPAWN_SETSID);
+        spawnattr_ |= POSIX_SPAWN_SETSID;
 #endif
     }
 
@@ -161,23 +147,49 @@ namespace bee::subprocess {
         }
         args.push(nullptr);
 #if defined(USE_POSIX_SPAWN)
+        posix_spawn_file_actions_t actions;
+        if (int err = posix_spawn_file_actions_init(&actions)) {
+            errno = err;
+            return false;
+        }
         char** arguments = args.data();
         if (cwd) {
-            posix_spawn_file_actions_addchdir_np(&spawnfile_, cwd);
+            if (int err = posix_spawn_file_actions_addchdir_np(&actions, cwd)) {
+                posix_spawn_file_actions_destroy(&actions);
+                errno = err;
+                return false;
+            }
         }
         pid_t pid;
         for (int i = 0; i < 3; ++i) {
             if (fds_[i] > 0) {
-                if (posix_spawn_file_actions_adddup2(&spawnfile_, fds_[i], i)) {
+                if (int err = posix_spawn_file_actions_adddup2(&actions, fds_[i], i)) {
+                    posix_spawn_file_actions_destroy(&actions);
+                    errno = err;
                     return false;
                 }
             }
         }
-        int ec = posix_spawnp(&pid, arguments[0], &spawnfile_, &spawnattr_, arguments, env_);
-        if (ec != 0) {
-            errno = ec;
+        posix_spawnattr_t attr;
+        if (int err = posix_spawnattr_init(&attr)) {
+            posix_spawn_file_actions_destroy(&actions);
+            errno = err;
             return false;
         }
+        if (int err = posix_spawnattr_setflags(&attr, spawnattr_)) {
+            posix_spawn_file_actions_destroy(&actions);
+            posix_spawnattr_destroy(&attr);
+            errno = err;
+            return false;
+        }
+        if (int err = posix_spawnp(&pid, arguments[0], &actions, &attr, arguments, env_)) {
+            posix_spawn_file_actions_destroy(&actions);
+            posix_spawnattr_destroy(&attr);
+            errno = err;
+            return false;
+        }
+        posix_spawn_file_actions_destroy(&actions);
+        posix_spawnattr_destroy(&attr);
         pid_ = pid;
         for (int i = 0; i < 3; ++i) {
             if (fds_[i] > 0) {

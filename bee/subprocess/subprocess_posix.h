@@ -2,7 +2,6 @@
 
 #include <bee/subprocess/common.h>
 #include <bee/utility/zstring_view.h>
-#include <spawn.h>
 
 #include <cstdint>
 #include <map>
@@ -68,7 +67,6 @@ namespace bee::subprocess {
 
     public:
         spawn();
-        ~spawn();
         void suspended();
         void detached();
         void redirect(stdio type, file_handle f);
@@ -79,7 +77,6 @@ namespace bee::subprocess {
         environment env_ = nullptr;
         int fds_[3];
         pid_t pid_ = -1;
-        posix_spawnattr_t spawnattr_;
-        posix_spawn_file_actions_t spawnfile_;
+        short spawnattr_ = 0;
     };
 }
