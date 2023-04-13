@@ -5,7 +5,6 @@
 #include <spawn.h>
 
 #include <cstdint>
-#include <cstdio>
 #include <map>
 #include <string>
 #include <vector>

@@ -6,15 +6,13 @@
 #include <cstddef>
 #include <string>
 
-#if !defined(_WIN32)
-#    include <sys/socket.h>
-#endif
-
 struct sockaddr;
 
 namespace bee::net {
 #if defined(_WIN32)
     using socklen_t = int;
+#else
+    using socklen_t = unsinged int;
 #endif
 
     enum class un_format : uint16_t {

@@ -1,8 +1,8 @@
 #include <bee/thread/simplethread.h>
 #include <pthread.h>
-#include <stdlib.h>
 #include <unistd.h>
 
+#include <cstdlib>
 #include <new>
 
 namespace bee {
