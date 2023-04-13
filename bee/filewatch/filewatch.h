@@ -1,10 +1,10 @@
 #pragma once
 
 #include <functional>
+#include <mutex>
 #include <optional>
 #include <queue>
 #include <string>
-#include <mutex>
 
 #if defined(_WIN32)
 #    include <list>

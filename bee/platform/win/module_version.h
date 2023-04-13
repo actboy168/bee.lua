@@ -2,9 +2,9 @@
 
 #include <bee/utility/dynarray.h>
 
+#include <cstdint>
 #include <string>
 #include <string_view>
-#include <cstdint>
 
 namespace bee::win {
     class module_version {
