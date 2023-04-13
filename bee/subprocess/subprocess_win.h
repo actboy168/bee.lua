@@ -5,7 +5,6 @@
 
 #include <cstdint>
 #include <map>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -42,8 +41,7 @@ namespace bee::subprocess {
 
     private:
         using less = ignore_case::less<std::wstring>;
-        std::map<std::wstring, std::wstring, less> set_env_;
-        std::set<std::wstring, less> del_env_;
+        std::map<std::wstring, std::optional<std::wstring>, less> set_env_;
     };
 
     using os_handle      = void*;

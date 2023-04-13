@@ -153,7 +153,14 @@ namespace bee::subprocess {
     }
 
     void envbuilder::del(const std::wstring& key) {
-        del_env_.insert(key);
+        set_env_[key] = std::nullopt;
+    }
+
+    static void env_append(strbuilder<wchar_t>& envs, const std::wstring& k, const std::wstring& v) {
+        envs += k;
+        envs += L"=";
+        envs += v;
+        envs += L"\0";
     }
 
     environment envbuilder::release() {
@@ -161,41 +168,33 @@ namespace bee::subprocess {
         if (!es) {
             return nullptr;
         }
-        if (set_env_.empty() && del_env_.empty()) {
+        if (set_env_.empty()) {
             return nullptr;
         }
         strbuilder<wchar_t> res(1024);
         wchar_t* escp = es;
         while (*escp != L'\0') {
-            std::wstring str                  = escp;
-            const std::wstring::size_type pos = str.find(L'=');
-            std::wstring key                  = str.substr(0, pos);
-            if (del_env_.find(key) != del_env_.end()) {
-                escp += str.length() + 1;
-                continue;
-            }
+            std::wstring str = escp;
+            auto pos         = str.find(L'=');
+            std::wstring key = str.substr(0, pos);
             std::wstring val = str.substr(pos + 1, str.length());
             const auto it    = set_env_.find(key);
-            if (it != set_env_.end()) {
-                val = it->second;
+            if (it == set_env_.end()) {
+                env_append(res, key, val);
+            }
+            else {
+                if (it->second.has_value()) {
+                    env_append(res, key, *it->second);
+                }
                 set_env_.erase(it);
             }
-            res += key;
-            res += L"=";
-            res += val;
-            res += L"\0";
             escp += str.length() + 1;
         }
         for (auto& e : set_env_) {
             const std::wstring& key = e.first;
-            const std::wstring& val = e.second;
-            if (del_env_.find(key) != del_env_.end()) {
-                continue;
+            if (e.second.has_value()) {
+                env_append(res, key, *e.second);
             }
-            res += key;
-            res += L"=";
-            res += val;
-            res += L"\0";
         }
         return res.string();
     }

@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <cstdio>
 #include <map>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -19,8 +18,7 @@ namespace bee::subprocess {
         environment release();
 
     private:
-        std::map<std::string, std::string> set_env_;
-        std::set<std::string> del_env_;
+        std::map<std::string, std::optional<std::string>> set_env_;
     };
 
     using process_id     = pid_t;

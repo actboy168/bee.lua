@@ -44,7 +44,7 @@ namespace bee::subprocess {
     }
 
     void envbuilder::del(const std::string& key) {
-        del_env_.insert(key);
+        set_env_[key] = std::nullopt;
     }
 
     static void env_append(std::vector<char*>& envs, const std::string& k, const std::string& v) {
@@ -69,27 +69,26 @@ namespace bee::subprocess {
         }
         std::vector<char*> envs;
         for (; *es; ++es) {
-            std::string str            = *es;
-            std::string::size_type pos = str.find(L'=');
-            std::string key            = str.substr(0, pos);
-            if (del_env_.find(key) != del_env_.end()) {
-                continue;
-            }
+            std::string str = *es;
+            auto pos        = str.find(L'=');
+            std::string key = str.substr(0, pos);
             std::string val = str.substr(pos + 1, str.length());
             auto it         = set_env_.find(key);
-            if (it != set_env_.end()) {
-                val = it->second;
+            if (it == set_env_.end()) {
+                env_append(envs, key, val);
+            }
+            else {
+                if (it->second.has_value()) {
+                    env_append(envs, key, *it->second);
+                }
                 set_env_.erase(it);
             }
-            env_append(envs, key, val);
         }
         for (auto& e : set_env_) {
             const std::string& key = e.first;
-            const std::string& val = e.second;
-            if (del_env_.find(key) != del_env_.end()) {
-                continue;
+            if (e.second.has_value()) {
+                env_append(envs, key, *e.second);
             }
-            env_append(envs, key, val);
         }
         return env_release(envs);
     }
