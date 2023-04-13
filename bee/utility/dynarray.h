@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory.h>
+
 #include <cassert>
 #include <memory>
 #include <type_traits>
