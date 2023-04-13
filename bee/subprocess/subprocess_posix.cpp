@@ -229,6 +229,14 @@ namespace bee::subprocess {
     process::process(spawn& spawn) noexcept
         : pid(spawn.pid_) {}
 
+    process::~process() noexcept {
+        detach();
+    }
+
+    bool process::detach() noexcept {
+        return !is_running();
+    }
+
     process_id process::get_id() const noexcept {
         return pid;
     }

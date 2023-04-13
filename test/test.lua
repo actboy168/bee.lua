@@ -19,6 +19,8 @@ package.cpath = ('%s/?.%s'):format(__Target__, __EXT__)
 local platform = require 'bee.platform'
 local lt = require 'ltest'
 
+warn "@on"
+
 if not lt.options.list then
     local v = platform.os_version
     print("OS:       ", ("%s %d.%d.%d"):format(platform.os, v.major, v.minor, v.revision))

@@ -412,7 +412,19 @@ namespace bee::subprocess {
         : process(std::move(spawn.pi_)) {}
 
     process::~process() noexcept {
-        close();
+        detach();
+    }
+
+    bool process::detach() noexcept {
+        if (hThread != NULL) {
+            ::CloseHandle(hThread);
+            hThread = NULL;
+        }
+        if (hProcess != NULL) {
+            ::CloseHandle(hProcess);
+            hProcess = NULL;
+        }
+        return true;
     }
 
     std::optional<process> process::dup() noexcept {
@@ -424,17 +436,6 @@ namespace bee::subprocess {
         proc.hProcess    = hProcess;
         proc.dwProcessId = get_id();
         return proc;
-    }
-
-    void process::close() noexcept {
-        if (hThread != NULL) {
-            ::CloseHandle(hThread);
-            hThread = NULL;
-        }
-        if (hProcess != NULL) {
-            ::CloseHandle(hProcess);
-            hProcess = NULL;
-        }
     }
 
     std::optional<uint32_t> process::wait() noexcept {

@@ -196,11 +196,11 @@ namespace bee::lua {
         T* o = static_cast<T*>(lua_newuserdatauv(L, sizeof(T), nupvalue));
         new (o) T(std::forward<Args>(args)...);
         if (luaL_newmetatable(L, udata<T>::name)) {
-            init_metatable(L);
             if constexpr (!std::is_trivially_destructible<T>::value) {
                 lua_pushcfunction(L, destroyudata<T>);
                 lua_setfield(L, -2, "__gc");
             }
+            init_metatable(L);
         }
         lua_setmetatable(L, -2);
         return *o;

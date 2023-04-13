@@ -30,13 +30,27 @@ namespace bee::lua_subprocess {
         static auto& to(lua_State* L, int idx) {
             return lua::checkudata<subprocess::process>(L, idx);
         }
-#if defined(_WIN32)
+
+        static void process_detach(lua_State* L, subprocess::process& process) {
+            if (!process.detach()) {
+                lua_pushfstring(L, "subprocess(%d) may become a zombie process", process.get_id());
+                lua_warning(L, lua_tostring(L, -1), 0);
+                lua_pop(L, 1);
+            }
+        }
+
         static int mt_close(lua_State* L) {
             auto& self = to(L, 1);
-            self.close();
+            process_detach(L, self);
             return 0;
         }
-#endif
+
+        static int mt_gc(lua_State* L) {
+            auto& self = to(L, 1);
+            process_detach(L, self);
+            self.~process();
+            return 0;
+        }
 
         static int wait(lua_State* L) {
             auto& self  = to(L, 1);
@@ -131,9 +145,8 @@ namespace bee::lua_subprocess {
             lua_setfield(L, -2, "__index");
             static luaL_Reg mt[] = {
                 { "__newindex", mt_newindex },
-#if defined(_WIN32)
                 { "__close", mt_close },
-#endif
+                { "__gc", mt_gc },
                 { NULL, NULL }
             };
             luaL_setfuncs(L, mt, 0);

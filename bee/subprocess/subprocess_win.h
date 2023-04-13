@@ -57,10 +57,10 @@ namespace bee::subprocess {
         process(process&& o) noexcept;
         process(spawn& spawn) noexcept;
         ~process() noexcept;
+        bool detach() noexcept;
         std::optional<process> dup() noexcept;
         process_id get_id() const noexcept;
         process_handle native_handle() const noexcept;
-        void close() noexcept;
         bool is_running() noexcept;
         bool kill(int signum) noexcept;
         std::optional<uint32_t> wait() noexcept;

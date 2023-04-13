@@ -32,25 +32,29 @@ end
 local test_subprocess = lt.test "subprocess"
 
 function test_subprocess:test_spawn()
-    shell:runlua ' '
+    local process = shell:runlua ' '
+    lt.assertEquals(process:wait(), 0)
 
     local process = shell:runlua(' ', { stdin = true })
     lt.assertIsUserdata(process)
     lt.assertIsUserdata(process.stdin)
     lt.assertEquals(process.stdout, nil)
     lt.assertEquals(process.stderr, nil)
+    lt.assertEquals(process:wait(), 0)
 
     local process = shell:runlua(' ', { stdout = true })
     lt.assertIsUserdata(process)
     lt.assertEquals(process.stdin, nil)
     lt.assertIsUserdata(process.stdout)
     lt.assertEquals(process.stderr, nil)
+    lt.assertEquals(process:wait(), 0)
 
     local process = shell:runlua(' ', { stderr = true })
     lt.assertIsUserdata(process)
     lt.assertEquals(process.stdin, nil)
     lt.assertEquals(process.stdout, nil)
     lt.assertIsUserdata(process.stderr)
+    lt.assertEquals(process:wait(), 0)
 end
 
 function test_subprocess:test_wait()

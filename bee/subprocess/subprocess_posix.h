@@ -30,6 +30,8 @@ namespace bee::subprocess {
     class process {
     public:
         process(spawn& spawn) noexcept;
+        ~process() noexcept;
+        bool detach() noexcept;
         process_id get_id() const noexcept;
         process_handle native_handle() const noexcept;
         bool kill(int signum) noexcept;
