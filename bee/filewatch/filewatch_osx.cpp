@@ -110,6 +110,7 @@ namespace bee::filewatch {
     }
 
     void watch::event_update(const char* paths[], const FSEventStreamEventFlags flags[], size_t n) {
+        std::unique_lock<std::mutex> lock(m_mutex);
         for (size_t i = 0; i < n; ++i) {
             const char* path = paths[i];
             if (!m_recursive && path[0] != '\0' && strchr(path + 1, '/') != NULL) {
@@ -128,14 +129,12 @@ namespace bee::filewatch {
     }
 
     std::optional<notify> watch::select() {
-        __block std::optional<notify> retval;
-        dispatch_sync(m_fsevent_queue, ^{
-          if (!m_notify.empty()) {
-              auto n = m_notify.front();
-              m_notify.pop();
-              retval = n;
-          }
-        });
-        return retval;
+        std::unique_lock<std::mutex> lock(m_mutex);
+        if (m_notify.empty()) {
+            return std::nullopt;
+        }
+        auto n = m_notify.front();
+        m_notify.pop();
+        return n;
     }
 }

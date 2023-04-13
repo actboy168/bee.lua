@@ -4,6 +4,7 @@
 #include <optional>
 #include <queue>
 #include <string>
+#include <mutex>
 
 #if defined(_WIN32)
 #    include <list>
@@ -78,6 +79,7 @@ namespace bee::filewatch {
 #if defined(_WIN32)
         std::list<task> m_tasks;
 #elif defined(__APPLE__)
+        std::mutex m_mutex;
         std::set<std::string> m_paths;
         FSEventStreamRef m_stream;
         dispatch_queue_t m_fsevent_queue;
