@@ -12,7 +12,7 @@ namespace bee::net {
 #if defined(_WIN32)
     using socklen_t = int;
 #else
-    using socklen_t = unsinged int;
+    using socklen_t = unsigned int;
 #endif
 
     enum class un_format : uint16_t {
