@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Windows.h>
 #include <bee/subprocess/common.h>
 #include <bee/utility/zstring_view.h>
 
@@ -47,8 +46,9 @@ namespace bee::subprocess {
         std::set<std::wstring, less> del_env_;
     };
 
-    using process_id = uint32_t;
-    using process_handle = void*;
+    using os_handle      = void*;
+    using process_id     = uint32_t;
+    using process_handle = os_handle;
 
     class spawn;
     class process {
@@ -68,7 +68,7 @@ namespace bee::subprocess {
 
     private:
         process_handle hProcess;
-        process_handle hThread;
+        os_handle hThread;
         process_id dwProcessId;
         process_id dwThreadId;
     };
@@ -106,16 +106,14 @@ namespace bee::subprocess {
         bool exec(const args_t& args, const wchar_t* cwd);
 
     private:
-        void do_duplicate_shutdown() noexcept;
-
-    private:
         environment env_ = nullptr;
-        STARTUPINFOW si_;
         process pi_;
-        DWORD flags_         = 0;
+        os_handle fds_[3];
+        uint32_t flags_      = 0;
         console console_     = console::eInherit;
         bool inherit_handle_ = false;
         bool search_path_    = false;
         bool detached_       = false;
+        bool hide_window_    = false;
     };
 }

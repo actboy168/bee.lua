@@ -1,4 +1,5 @@
 #include <Shobjidl.h>
+#include <Windows.h>
 #include <bee/net/socket.h>
 #include <bee/nonstd/bit.h>
 #include <bee/nonstd/format.h>
@@ -282,12 +283,9 @@ namespace bee::subprocess {
     }
 
     spawn::spawn() noexcept {
-        memset(&si_, 0, sizeof(STARTUPINFOW));
-        si_.cb         = sizeof(STARTUPINFOW);
-        si_.dwFlags    = 0;
-        si_.hStdInput  = INVALID_HANDLE_VALUE;
-        si_.hStdOutput = INVALID_HANDLE_VALUE;
-        si_.hStdError  = INVALID_HANDLE_VALUE;
+        fds_[0] = INVALID_HANDLE_VALUE;
+        fds_[1] = INVALID_HANDLE_VALUE;
+        fds_[2] = INVALID_HANDLE_VALUE;
     }
 
     spawn::~spawn() {
@@ -319,8 +317,7 @@ namespace bee::subprocess {
     }
 
     bool spawn::hide_window() noexcept {
-        si_.dwFlags |= STARTF_USESHOWWINDOW;
-        si_.wShowWindow = SW_HIDE;
+        hide_window_ = true;
         return true;
     }
 
@@ -334,28 +331,27 @@ namespace bee::subprocess {
     }
 
     void spawn::redirect(stdio type, file_handle h) noexcept {
-        si_.dwFlags |= STARTF_USESTDHANDLES;
         inherit_handle_ = true;
         switch (type) {
         case stdio::eInput:
-            si_.hStdInput = h.value();
+            fds_[0] = h.value();
             break;
         case stdio::eOutput:
-            si_.hStdOutput = h.value();
+            fds_[1] = h.value();
             break;
         case stdio::eError:
-            si_.hStdError = h.value();
+            fds_[2] = h.value();
             break;
         default:
             std::unreachable();
         }
     }
 
-    void spawn::do_duplicate_shutdown() noexcept {
-        ::CloseHandle(si_.hStdInput);
-        ::CloseHandle(si_.hStdOutput);
-        if (si_.hStdError != INVALID_HANDLE_VALUE && si_.hStdOutput != si_.hStdError) {
-            ::CloseHandle(si_.hStdError);
+    static void startupinfo_release(STARTUPINFOW& si) noexcept {
+        ::CloseHandle(si.hStdInput);
+        ::CloseHandle(si.hStdOutput);
+        if (si.hStdError != INVALID_HANDLE_VALUE && si.hStdOutput != si.hStdError) {
+            ::CloseHandle(si.hStdError);
         }
     }
 
@@ -371,14 +367,28 @@ namespace bee::subprocess {
         if (env_) {
             flags_ |= CREATE_UNICODE_ENVIRONMENT;
         }
-        ::SetHandleInformation(si_.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
-        ::SetHandleInformation(si_.hStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
-        ::SetHandleInformation(si_.hStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
-        if (!::CreateProcessW(application, command_line.data(), NULL, NULL, inherit_handle_, flags_ | NORMAL_PRIORITY_CLASS, env_, cwd, &si_, (LPPROCESS_INFORMATION)&pi_)) {
-            do_duplicate_shutdown();
+        STARTUPINFOW si;
+        memset(&si, 0, sizeof(STARTUPINFOW));
+        si.cb      = sizeof(STARTUPINFOW);
+        si.dwFlags = 0;
+        if (inherit_handle_) {
+            si.dwFlags |= STARTF_USESTDHANDLES;
+            si.hStdInput  = fds_[0];
+            si.hStdOutput = fds_[1];
+            si.hStdError  = fds_[2];
+            ::SetHandleInformation(si.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+            ::SetHandleInformation(si.hStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+            ::SetHandleInformation(si.hStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+        }
+        if (hide_window_) {
+            si.dwFlags |= STARTF_USESHOWWINDOW;
+            si.wShowWindow = SW_HIDE;
+        }
+        if (!::CreateProcessW(application, command_line.data(), NULL, NULL, inherit_handle_, flags_ | NORMAL_PRIORITY_CLASS, env_, cwd, &si, (LPPROCESS_INFORMATION)&pi_)) {
+            startupinfo_release(si);
             return false;
         }
-        do_duplicate_shutdown();
+        startupinfo_release(si);
         if (!detached_) {
             join_job(pi_.native_handle());
         }

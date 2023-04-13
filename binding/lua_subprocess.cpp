@@ -10,6 +10,7 @@
 
 #include <optional>
 #if defined(_WIN32)
+#    include <Windows.h>
 #    include <bee/platform/win/unicode.h>
 #    include <fcntl.h>
 #    include <io.h>
