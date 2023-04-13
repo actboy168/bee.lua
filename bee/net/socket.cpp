@@ -208,7 +208,7 @@ namespace bee::net::socket {
     }
     static bool set_cloexec(fd_t s, bool set) noexcept {
         if (set) {
-            const DWORD flags = 0;
+            DWORD flags = 0;
             (void)flags;
             assert(::GetHandleInformation((HANDLE)s, &flags) && (flags & HANDLE_FLAG_INHERIT) == 0);
             return true;
