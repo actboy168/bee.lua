@@ -116,10 +116,7 @@ namespace bee::filewatch {
             if (!m_recursive && path[0] != '\0' && strchr(path + 1, '/') != NULL) {
                 continue;
             }
-            if (flags[i] & (kFSEventStreamEventFlagItemCreated |
-                            kFSEventStreamEventFlagItemRemoved |
-                            kFSEventStreamEventFlagItemRenamed
-                           )) {
+            if (flags[i] & (kFSEventStreamEventFlagItemCreated | kFSEventStreamEventFlagItemRemoved | kFSEventStreamEventFlagItemRenamed)) {
                 m_notify.emplace(notify::flag::rename, path);
             }
             else if (flags[i] & (kFSEventStreamEventFlagItemFinderInfoMod | kFSEventStreamEventFlagItemModified | kFSEventStreamEventFlagItemInodeMetaMod | kFSEventStreamEventFlagItemChangeOwner | kFSEventStreamEventFlagItemXattrMod)) {
