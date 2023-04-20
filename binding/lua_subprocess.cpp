@@ -1,6 +1,7 @@
 #include <bee/error.h>
 #include <bee/nonstd/filesystem.h>
 #include <bee/subprocess.h>
+#include <bee/subprocess/process_select.h>
 #include <bee/utility/assume.h>
 #include <binding/binding.h>
 #include <binding/file.h>
@@ -409,6 +410,21 @@ namespace bee::lua_subprocess {
         }
     }
 
+    static int select(lua_State* L) {
+        luaL_checktype(L, 1, LUA_TTABLE);
+        lua_Integer n = luaL_len(L, 1);
+        dynarray<subprocess::process*> set(static_cast<size_t>(n));
+        for (int i = 0; i < static_cast<int>(n); ++i) {
+            lua_geti(L, 1, i + 1);
+            auto& p = lua::checkudata<subprocess::process>(L, -1);
+            set[i] = &p;
+            lua_pop(L, 1);
+        }
+        bool ok = subprocess::process_select(set);
+        lua_pushboolean(L, ok);
+        return 1;
+    }
+
     static int peek(lua_State* L) {
         luaL_Stream* p = spawn::get_file(L, 1);
         if (!p->closef) {
@@ -534,6 +550,7 @@ return table.concat(t)
     static int luaopen(lua_State* L) {
         static luaL_Reg lib[] = {
             { "spawn", spawn::spawn },
+            { "select", select },
             { "peek", peek },
             { "filemode", filemode },
             { "setenv", lsetenv },

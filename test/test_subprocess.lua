@@ -328,7 +328,6 @@ function test_subprocess:test_encoding()
 end
 
 function test_subprocess:test_cwd()
-    local fs = require "bee.filesystem"
     local path = fs.absolute(fs.path("test_cwd"))
     fs.create_directories(path)
     local process = shell:runlua([[
@@ -341,4 +340,25 @@ function test_subprocess:test_cwd()
     lt.assertEquals(process.stderr:read 'a', '')
     lt.assertEquals(process:wait(), 0)
     fs.remove_all(path)
+end
+
+function test_subprocess:test_select()
+    local process_set = {}
+    for i = 1, 10 do
+        process_set[i] = shell:runlua [[
+        ]]
+    end
+    while #process_set > 0 do
+        local ok = subprocess.select(process_set)
+        lt.assertEquals(ok, true)
+        local i  = 1
+        while i <= #process_set do
+            local process = process_set[i]
+            if process:is_running() then
+                i = i + 1
+            else
+                table.remove(process_set, i)
+            end
+        end
+    end
 end
