@@ -412,6 +412,7 @@ namespace bee::lua_subprocess {
 
     static int select(lua_State* L) {
         luaL_checktype(L, 1, LUA_TTABLE);
+        auto timeout = lua::optinteger<int, -1>(L, 2);
         lua_Integer n = luaL_len(L, 1);
         dynarray<subprocess::process*> set(static_cast<size_t>(n));
         for (int i = 0; i < static_cast<int>(n); ++i) {
@@ -420,9 +421,22 @@ namespace bee::lua_subprocess {
             set[i] = &p;
             lua_pop(L, 1);
         }
-        bool ok = subprocess::process_select(set);
-        lua_pushboolean(L, ok);
-        return 1;
+        switch (subprocess::process_select(set, timeout)) {
+        case subprocess::status::success:
+            lua_pushboolean(L, 1);
+            return 1;
+        case subprocess::status::timeout:
+            lua_pushboolean(L, 1);
+            return 1;
+        case subprocess::status::failed: {
+            auto error = make_syserror("process_select");
+            lua_pushnil(L);
+            lua_pushstring(L, error.c_str());
+            return 2;
+        }
+        default:
+            std::unreachable();
+        }
     }
 
     static int peek(lua_State* L) {

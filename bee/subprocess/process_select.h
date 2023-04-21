@@ -4,6 +4,11 @@
 
 namespace bee::subprocess {
     class process;
-    bool process_select(dynarray<process*> const& set);
+    enum class status {
+        success,
+        timeout,
+        failed,
+    };
+    status process_select(dynarray<process*> const& set, int timeout);
 }
 
