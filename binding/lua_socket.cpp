@@ -402,7 +402,7 @@ namespace bee::lua_socket {
             write_finish = false;
         else if (!lua_isnoneornil(L, 2))
             luaL_typeerror(L, 2, lua_typename(L, LUA_TTABLE));
-        double timeo = luaL_optnumber(L, 3, -1);
+        lua_Number timeo = luaL_optnumber(L, 3, -1);
         if (read_finish && write_finish) {
             if (timeo < 0) {
                 return luaL_error(L, "no open sockets to check and no timeout set");
