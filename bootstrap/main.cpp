@@ -2,6 +2,9 @@
 #    define _CRT_SECURE_NO_WARNINGS
 #endif
 
+#include <bee/nonstd/filesystem.h>
+#include <bee/nonstd/unreachable.h>
+#include <bee/utility/path_helper.h>
 #include <binding/binding.h>
 #include <signal.h>
 #include <stdio.h>
@@ -9,6 +12,7 @@
 #include <string.h>
 
 #include <lua.hpp>
+#include <string_view>
 
 #if !defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
 #    define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
@@ -126,17 +130,32 @@ static int pushargs(lua_State *L) {
     return n;
 }
 
-void pushprogdir(lua_State *L);
+template <typename CharT>
+static std::string_view tostrview(std::basic_string<CharT> const &u8str) {
+    static_assert(sizeof(CharT) == sizeof(char));
+    return { reinterpret_cast<const char *>(u8str.data()), u8str.size() };
+}
+
+static fs::path pushprogdir(lua_State *L) {
+    auto r = bee::path_helper::exe_path();
+    if (!r) {
+        luaL_error(L, "unable to get progdir: %s\n", r.error().c_str());
+        std::unreachable();
+    }
+    return r.value().remove_filename();
+}
 
 static void init_cpath(lua_State *L) {
     lua_getglobal(L, "package");
-    pushprogdir(L);
+    auto progdir = pushprogdir(L);
 #if defined(_WIN32)
-    lua_pushstring(L, "?.dll");
+    progdir /= L"?.dll";
 #else
-    lua_pushstring(L, "?.so");
+    progdir /= L"?.so";
 #endif
-    lua_concat(L, 2);
+    auto str     = progdir.generic_u8string();
+    auto strview = tostrview(str);
+    lua_pushlstring(L, strview.data(), strview.size());
     lua_setfield(L, -2, "cpath");
     lua_pop(L, 1);
 }
@@ -172,17 +191,20 @@ static int errfile(lua_State *L, const char *what, int fnameindex) {
     return LUA_ERRFILE;
 }
 
-static int loadfile(lua_State *L, const char *filename, const char *chunkname) {
+static int loadfile(lua_State *L, const fs::path& filename, const char *chunkname) {
     LoadF lf;
     int status, readstatus;
     int fnameindex = lua_gettop(L) + 1; /* index of filename on the stack */
     lua_pushstring(L, chunkname);
-    lf.f = fopen(filename, "r");
+#if defined(_WIN32)
+    lf.f = _wfopen(filename.c_str(), L"r");
+#else
+    lf.f = fopen(filename.c_str(), "r");
+#endif
     if (lf.f == NULL) return errfile(L, "open", fnameindex);
     lf.n       = 0;
     status     = lua_load(L, getF, &lf, lua_tostring(L, -1), "t");
     readstatus = ferror(lf.f);
-    if (filename) fclose(lf.f); /* close file (even in case of errors) */
     if (readstatus) {
         lua_settop(L, fnameindex); /* ignore results from 'lua_load' */
         return errfile(L, "read", fnameindex);
@@ -192,10 +214,8 @@ static int loadfile(lua_State *L, const char *filename, const char *chunkname) {
 }
 
 static int handle_script(lua_State *L) {
-    pushprogdir(L);
-    lua_pushstring(L, "main.lua");
-    lua_concat(L, 2);
-    int status = loadfile(L, lua_tostring(L, -1), "=(bootstrap.lua)");
+    auto progdir = pushprogdir(L);
+    int status = loadfile(L, progdir / "main.lua", "=(bootstrap.lua)");
     if (status == LUA_OK) {
         int n  = pushargs(L); /* push arguments to script */
         status = docall(L, n, LUA_MULTRET);
