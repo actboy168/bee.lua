@@ -11,4 +11,3 @@ namespace bee::subprocess {
     };
     status process_select(dynarray<process*> const& set, int timeout);
 }
-

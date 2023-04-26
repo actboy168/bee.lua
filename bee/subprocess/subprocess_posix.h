@@ -76,7 +76,7 @@ namespace bee::subprocess {
     private:
         environment env_ = nullptr;
         int fds_[3];
-        pid_t pid_ = -1;
+        pid_t pid_       = -1;
         short spawnattr_ = 0;
     };
 }

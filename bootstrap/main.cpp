@@ -191,7 +191,7 @@ static int errfile(lua_State *L, const char *what, int fnameindex) {
     return LUA_ERRFILE;
 }
 
-static int loadfile(lua_State *L, const fs::path& filename, const char *chunkname) {
+static int loadfile(lua_State *L, const fs::path &filename, const char *chunkname) {
     LoadF lf;
     int status, readstatus;
     int fnameindex = lua_gettop(L) + 1; /* index of filename on the stack */
@@ -215,7 +215,7 @@ static int loadfile(lua_State *L, const fs::path& filename, const char *chunknam
 
 static int handle_script(lua_State *L) {
     auto progdir = pushprogdir(L);
-    int status = loadfile(L, progdir / "main.lua", "=(bootstrap.lua)");
+    int status   = loadfile(L, progdir / "main.lua", "=(bootstrap.lua)");
     if (status == LUA_OK) {
         int n  = pushargs(L); /* push arguments to script */
         status = docall(L, n, LUA_MULTRET);
