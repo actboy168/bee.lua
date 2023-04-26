@@ -131,7 +131,7 @@ static int pushargs(lua_State *L) {
 }
 
 template <typename CharT>
-static std::string_view tostrview(std::basic_string<CharT> const &u8str) {
+static std::string_view tostrview(const std::basic_string<CharT> &u8str) {
     static_assert(sizeof(CharT) == sizeof(char));
     return { reinterpret_cast<const char *>(u8str.data()), u8str.size() };
 }

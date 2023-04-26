@@ -133,7 +133,7 @@ namespace bee::path_helper {
     static path_expected dll_path(void* module_handle) {
         ::Dl_info dl_info;
         dl_info.dli_fname = 0;
-        int const ret     = ::dladdr(module_handle, &dl_info);
+        const int ret     = ::dladdr(module_handle, &dl_info);
         if (0 != ret && dl_info.dli_fname != NULL) {
             return fs::absolute(dl_info.dli_fname).lexically_normal();
         }
@@ -151,7 +151,7 @@ namespace bee::path_helper {
 
 namespace bee::path_helper {
 #if defined(_WIN32)
-    bool equal(fs::path const& lhs, fs::path const& rhs) {
+    bool equal(const fs::path& lhs, const fs::path& rhs) {
         fs::path lpath = lhs.lexically_normal();
         fs::path rpath = rhs.lexically_normal();
         const fs::path::value_type* l(lpath.c_str());
@@ -163,7 +163,7 @@ namespace bee::path_helper {
         return *l == *r;
     }
 #elif defined(__APPLE__)
-    bool equal(fs::path const& lhs, fs::path const& rhs) {
+    bool equal(const fs::path& lhs, const fs::path& rhs) {
         fs::path lpath = lhs.lexically_normal();
         fs::path rpath = rhs.lexically_normal();
         const fs::path::value_type* l(lpath.c_str());
@@ -175,7 +175,7 @@ namespace bee::path_helper {
         return *l == *r;
     }
 #else
-    bool equal(fs::path const& lhs, fs::path const& rhs) {
+    bool equal(const fs::path& lhs, const fs::path& rhs) {
         return lhs.lexically_normal() == rhs.lexically_normal();
     }
 #endif

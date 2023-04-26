@@ -74,7 +74,7 @@ namespace bee {
             : has_val(true) {
             new (&val) value_type();
         }
-        expected(value_type const& e)
+        expected(const value_type& e)
             : has_val(true) {
             new (&val) value_type(e);
         }
@@ -82,7 +82,7 @@ namespace bee {
             : has_val(true) {
             new (&val) value_type(std::move(e));
         }
-        expected(error_type const& e)
+        expected(const error_type& e)
             : has_val(false) {
             new (&unex) error_type(e);
         }
@@ -90,7 +90,7 @@ namespace bee {
             : has_val(false) {
             new (&unex) error_type(std::move(e));
         }
-        expected(unexpected<error_type> const& e)
+        expected(const unexpected<error_type>& e)
             : has_val(false) {
             new (&unex) error_type(e.value());
         }
@@ -128,31 +128,31 @@ namespace bee {
             : has_val(false) {
             new (&unex) error_type(std::move(other.value()));
         }
-        value_type const& value() const& {
+        const value_type& value() const& {
             return val;
         }
         value_type& value() & {
             return val;
         }
-        value_type const&& value() const&& {
+        const value_type&& value() const&& {
             return std::move(val);
         }
         value_type&& value() && {
             return std::move(val);
         }
-        value_type const* value_ptr() const {
+        const value_type* value_ptr() const {
             return &val;
         }
         value_type* value_ptr() {
             return &val;
         }
-        error_type const& error() const& {
+        const error_type& error() const& {
             return unex;
         }
         error_type& error() & {
             return unex;
         }
-        error_type const&& error() const&& {
+        const error_type&& error() const&& {
             return std::move(unex);
         }
         error_type&& error() && {

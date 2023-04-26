@@ -52,7 +52,7 @@ namespace bee::net {
     private:
         endpoint() noexcept;
         endpoint(size_t size);
-        endpoint(std::byte const* data, size_t size);
+        endpoint(const std::byte* data, size_t size);
         endpoint(dynarray<std::byte>&& data) noexcept;
         endpoint(dynarray<std::byte>&& data, size_t size) noexcept;
         dynarray<std::byte> m_data;

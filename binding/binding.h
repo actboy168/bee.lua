@@ -236,7 +236,7 @@ namespace bee::lua {
 
     inline int preload_module(lua_State* L) {
         luaL_getsubtable(L, LUA_REGISTRYINDEX, "_PRELOAD");
-        for (auto const& m : usermodules::v) {
+        for (const auto& m : usermodules::v) {
             lua_pushcfunction(L, m.second);
             lua_setfield(L, -2, m.first.c_str());
         }

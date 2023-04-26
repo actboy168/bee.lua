@@ -170,7 +170,7 @@ namespace bee::lua_subprocess {
                 return ret;
             }
             case LUA_TUSERDATA: {
-                auto const& path = lua::checkudata<fs::path>(L, -1);
+                const auto& path = lua::checkudata<fs::path>(L, -1);
                 auto ret         = path.string<lua::string_type::value_type>();
                 lua_pop(L, 1);
                 return ret;
@@ -190,7 +190,7 @@ namespace bee::lua_subprocess {
                     args.push(lua::checkstrview(L, -1));
                     break;
                 case LUA_TUSERDATA: {
-                    auto const& path = lua::checkudata<fs::path>(L, -1);
+                    const auto& path = lua::checkudata<fs::path>(L, -1);
                     args.push(path.string<lua::string_type::value_type>());
                     break;
                 }

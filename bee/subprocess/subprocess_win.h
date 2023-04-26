@@ -77,7 +77,7 @@ namespace bee::subprocess {
         std::wstring& operator[](size_t i) noexcept {
             return data_[i];
         }
-        std::wstring const& operator[](size_t i) const noexcept {
+        const std::wstring& operator[](size_t i) const noexcept {
             return data_[i];
         }
         size_t size() const noexcept {

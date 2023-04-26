@@ -45,8 +45,8 @@ namespace bee::net {
 #if defined(__linux__) && defined(BEE_DISABLE_DLOPEN)
 #else
     struct autorelease_addrinfo {
-        autorelease_addrinfo(autorelease_addrinfo const&)            = delete;
-        autorelease_addrinfo& operator=(autorelease_addrinfo const&) = delete;
+        autorelease_addrinfo(const autorelease_addrinfo&)            = delete;
+        autorelease_addrinfo& operator=(const autorelease_addrinfo&) = delete;
         autorelease_addrinfo& operator=(autorelease_addrinfo&&)      = delete;
         autorelease_addrinfo(addrinfo* i) noexcept
             : info(i) {}
@@ -111,13 +111,13 @@ namespace bee::net {
             sa4.sin_family = AF_INET;
             sa4.sin_port   = htons(port);
             sa4.sin_port   = htons(port);
-            return { (std::byte const*)sa4, sizeof(sa4) };
+            return { (const std::byte*)sa4, sizeof(sa4) };
         }
         struct sockaddr_in6 sa6;
         if (1 == inet_pton(AF_INET6, ip.data(), &sa6.sin6_addr)) {
             sa4.sin_family = AF_INET6;
             sa6.sin6_port  = htons(port);
-            return { (std::byte const*)sa6, sizeof(sa6) };
+            return { (const std::byte*)sa6, sizeof(sa6) };
         }
         return from_invalid();
 #else
@@ -141,7 +141,7 @@ namespace bee::net {
         else if (info->ai_family != AF_INET && info->ai_family != AF_INET6) {
             return from_invalid();
         }
-        return { (std::byte const*)info->ai_addr, (size_t)info->ai_addrlen };
+        return { (const std::byte*)info->ai_addr, (size_t)info->ai_addrlen };
 #endif
     }
 
@@ -159,7 +159,7 @@ namespace bee::net {
     endpoint::endpoint(size_t size)
         : m_data(size) {}
 
-    endpoint::endpoint(std::byte const* data, size_t size)
+    endpoint::endpoint(const std::byte* data, size_t size)
         : m_data(size) {
         memcpy(m_data.data(), data, sizeof(std::byte) * size);
     }

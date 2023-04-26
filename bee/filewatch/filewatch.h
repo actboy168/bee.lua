@@ -30,7 +30,7 @@ namespace bee::filewatch {
         };
         flag flags;
         std::string path;
-        notify(flag const& flags, std::string const& path)
+        notify(const flag& flags, const std::string& path)
             : flags(flags)
             , path(path) {}
     };

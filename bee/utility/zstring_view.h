@@ -27,15 +27,15 @@ namespace bee {
 
     public:
         constexpr basic_zstring_view() noexcept                                     = default;
-        constexpr basic_zstring_view(basic_zstring_view const&) noexcept            = default;
-        constexpr basic_zstring_view& operator=(basic_zstring_view const&) noexcept = default;
+        constexpr basic_zstring_view(const basic_zstring_view&) noexcept            = default;
+        constexpr basic_zstring_view& operator=(const basic_zstring_view&) noexcept = default;
         constexpr basic_zstring_view(basic_zstring_view&&) noexcept                 = default;
         constexpr basic_zstring_view& operator=(basic_zstring_view&&) noexcept      = default;
-        basic_zstring_view(CharT const* s) noexcept
+        basic_zstring_view(const CharT* s) noexcept
             : string_view_base { s } {}
-        basic_zstring_view(CharT const* s, size_type sz) noexcept
+        basic_zstring_view(const CharT* s, size_type sz) noexcept
             : string_view_base { s, sz } { assert(s[sz] == 0); }
-        basic_zstring_view(std::basic_string<CharT, Traits> const& s) noexcept
+        basic_zstring_view(const std::basic_string<CharT, Traits>& s) noexcept
             : string_view_base { s } {}
 
     public:
@@ -65,11 +65,11 @@ namespace bee {
         using string_view_base::size;
     };
     template <class CharT, class Traits>
-    constexpr bool operator==(basic_zstring_view<CharT, Traits> const& lhs, basic_zstring_view<CharT, Traits> const& rhs) noexcept {
+    constexpr bool operator==(const basic_zstring_view<CharT, Traits>& lhs, const basic_zstring_view<CharT, Traits>& rhs) noexcept {
         return lhs.compare(rhs) == 0;
     }
     template <class CharT, class Traits, size_t N>
-    constexpr bool operator==(basic_zstring_view<CharT, Traits> const& lhs, CharT const (&rhs)[N]) noexcept {
+    constexpr bool operator==(const basic_zstring_view<CharT, Traits>& lhs, CharT const (&rhs)[N]) noexcept {
         static_assert(N > 0);
         return lhs.size() == (N - 1) && Traits::compare(lhs.data(), rhs, (N - 1)) == 0;
     }

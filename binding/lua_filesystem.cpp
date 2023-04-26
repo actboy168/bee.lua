@@ -36,7 +36,7 @@ namespace bee::lua {
 
 namespace bee::lua_filesystem {
     template <typename CharT>
-    static std::string_view u8tostrview(std::basic_string<CharT> const& u8str) {
+    static std::string_view u8tostrview(const std::basic_string<CharT>& u8str) {
         static_assert(sizeof(CharT) == sizeof(char));
         return { reinterpret_cast<const char*>(u8str.data()), u8str.size() };
     }
@@ -200,7 +200,7 @@ namespace bee::lua_filesystem {
         }
 
         static int equal_extension(lua_State* L, const fs::path& self, const fs::path::string_type& ext) {
-            auto const& selfext = self.extension();
+            const auto& selfext = self.extension();
             if (selfext.empty()) {
                 lua_pushboolean(L, ext.empty());
                 return 1;
@@ -332,32 +332,32 @@ namespace bee::lua_filesystem {
         }
 
         static int type(lua_State* L) {
-            auto const& status = to(L, 1);
+            const auto& status = to(L, 1);
             lua_pushstring(L, filetypename(status.type()));
             return 1;
         }
 
         static int exists(lua_State* L) {
-            auto const& status = to(L, 1);
+            const auto& status = to(L, 1);
             lua_pushboolean(L, fs::exists(status));
             return 1;
         }
 
         static int is_directory(lua_State* L) {
-            auto const& status = to(L, 1);
+            const auto& status = to(L, 1);
             lua_pushboolean(L, fs::is_directory(status));
             return 1;
         }
 
         static int is_regular_file(lua_State* L) {
-            auto const& status = to(L, 1);
+            const auto& status = to(L, 1);
             lua_pushboolean(L, fs::is_regular_file(status));
             return 1;
         }
 
         static int mt_eq(lua_State* L) {
-            auto const& l = to(L, 1);
-            auto const& r = to(L, 2);
+            const auto& l = to(L, 1);
+            const auto& r = to(L, 2);
             lua_pushboolean(L, l.type() == r.type() && l.permissions() == r.permissions());
             return 1;
         }
@@ -392,7 +392,7 @@ namespace bee::lua_filesystem {
         }
 
         static int path(lua_State* L) {
-            auto const& entry = to(L, 1);
+            const auto& entry = to(L, 1);
             path::push(L, entry.path());
             return 1;
         }
@@ -409,42 +409,42 @@ namespace bee::lua_filesystem {
         }
 
         static int status(lua_State* L) {
-            auto const& entry = to(L, 1);
+            const auto& entry = to(L, 1);
             std::error_code ec;
             file_status::push(L, entry.status(ec));
             return 1;
         }
 
         static int symlink_status(lua_State* L) {
-            auto const& entry = to(L, 1);
+            const auto& entry = to(L, 1);
             std::error_code ec;
             file_status::push(L, entry.symlink_status(ec));
             return 1;
         }
 
         static int type(lua_State* L) {
-            auto const& entry = to(L, 1);
+            const auto& entry = to(L, 1);
             std::error_code ec;
             lua_pushstring(L, file_status::filetypename(entry.status(ec).type()));
             return 1;
         }
 
         static int exists(lua_State* L) {
-            auto const& entry = to(L, 1);
+            const auto& entry = to(L, 1);
             std::error_code ec;
             lua_pushboolean(L, entry.exists(ec));
             return 1;
         }
 
         static int is_directory(lua_State* L) {
-            auto const& entry = to(L, 1);
+            const auto& entry = to(L, 1);
             std::error_code ec;
             lua_pushboolean(L, entry.is_directory(ec));
             return 1;
         }
 
         static int is_regular_file(lua_State* L) {
-            auto const& entry = to(L, 1);
+            const auto& entry = to(L, 1);
             std::error_code ec;
             lua_pushboolean(L, entry.is_regular_file(ec));
             return 1;
@@ -472,7 +472,7 @@ namespace bee::lua_filesystem {
             };
             luaL_setfuncs(L, mt, 0);
         }
-        static void push(lua_State* L, fs::directory_entry const& entry) {
+        static void push(lua_State* L, const fs::directory_entry& entry) {
             lua::newudata<fs::directory_entry>(L, metatable, entry);
         }
     }
