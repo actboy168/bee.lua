@@ -34,12 +34,14 @@ end
 require 'test_serialization'
 require 'test_filesystem'
 require 'test_thread'
-require 'test_subprocess'
-require 'test_socket'
-require 'test_filewatch'
+if platform.os ~= "emscripten" then
+    require 'test_subprocess'
+    require 'test_socket'
+    require 'test_filewatch'
+end
 require 'test_time'
 
-do
+if platform.os ~= "emscripten" then
     local fs = require 'bee.filesystem'
     if lt.options.touch then
         lt.options.touch = fs.absolute(lt.options.touch):string()

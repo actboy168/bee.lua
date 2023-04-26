@@ -47,6 +47,9 @@ namespace bee::lua_platform {
 #elif defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)
         lua_pushstring(L, "macOS");
         lua_pushstring(L, "macos");
+#elif defined(__EMSCRIPTEN__)
+        lua_pushstring(L, "Emscripten");
+        lua_pushstring(L, "emscripten");
 #else
         lua_pushstring(L, "unknown");
         lua_pushstring(L, "unknown");
@@ -114,6 +117,8 @@ namespace bee::lua_platform {
         lua_pushstring(L, "arm");
 #elif defined(__riscv)
         lua_pushstring(L, "riscv");
+#elif defined(__EMSCRIPTEN__)
+        lua_pushstring(L, "wasm32");
 #else
         lua_pushstring(L, "unknown");
 #endif

@@ -16,7 +16,15 @@ function feature.symlink()
 end
 
 function feature.hardlink()
-    return platform.os ~= 'android'
+    return platform.os ~= 'android' and platform.os ~= 'emscripten'
+end
+
+function feature.subprocess()
+    return platform.os ~= 'emscripten'
+end
+
+function feature.shell()
+    return platform.os ~= 'emscripten'
 end
 
 local mt = {}
