@@ -4,8 +4,16 @@ local lt = require 'ltest'
 local supported = require 'supported'
 
 local isWindows = platform.os == 'windows'
-local isMingw = os.getenv 'MSYSTEM' ~= nil
-local isWindowsShell = (isWindows) and (not isMingw)
+
+local isWindowsShell; do
+    local isEmscripten = platform.os == 'emscripten'
+    if isEmscripten then
+        isWindowsShell = not platform.wasm_posix_host
+    else
+        local isMingw = os.getenv 'MSYSTEM' ~= nil
+        isWindowsShell = (isWindows) and (not isMingw)
+    end
+end
 
 local function runshell(command)
     local p <close> = assert(io.popen(command))
@@ -38,16 +46,10 @@ function shell:del_readonly(filename)
     end
 end
 
-function shell:pwd()
-    local command = isWindows and 'echo %cd%' or 'pwd -P'
-    return runshell(command):gsub('[\n\r]*$', '')
-end
-
-function shell:path()
-    if isWindowsShell then
-        return 'cmd', '/c'
-    else
-        return '/bin/sh', '-c'
+if supported "popen" then
+    function shell:pwd()
+        local command = isWindows and 'echo %cd%' or 'pwd -P'
+        return runshell(command):gsub('[\n\r]*$', '')
     end
 end
 
@@ -88,7 +90,6 @@ if supported "subprocess" then
     end
 end
 
-shell.isMingw = isMingw
 shell.isWindowsShell = isWindowsShell
 shell.isWSL2 = isWSL2()
 

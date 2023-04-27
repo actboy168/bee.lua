@@ -5,7 +5,7 @@ local m = {}
 local feature = {}
 
 function feature.symlink()
-    if platform.os ~= 'windows' then
+    if platform.os ~= 'windows' and platform.os ~= 'emscripten' then
         return true
     end
     -- see https://blogs.windows.com/windowsdeveloper/2016/12/02/symlinks-windows-10/
@@ -23,7 +23,7 @@ function feature.subprocess()
     return platform.os ~= 'emscripten'
 end
 
-function feature.shell()
+function feature.popen()
     return platform.os ~= 'emscripten'
 end
 

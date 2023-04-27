@@ -210,11 +210,9 @@ function test_fs:test_get_permissions()
     local filename = 'temp.txt'
     create_file(filename)
     lt.assertEquals(fs.permissions(fs.path(filename)) & USER_WRITE, USER_WRITE)
-    if supported "shell" then
-        shell:add_readonly(filename)
-        lt.assertEquals(fs.permissions(fs.path(filename)) & USER_WRITE, 0)
-        shell:del_readonly(filename)
-    end
+    shell:add_readonly(filename)
+    lt.assertEquals(fs.permissions(fs.path(filename)) & USER_WRITE, 0)
+    shell:del_readonly(filename)
     fs.remove(filename)
 end
 
@@ -531,7 +529,7 @@ function test_fs:test_rename()
 end
 
 function test_fs:test_current_path()
-    if supported "shell" then
+    if supported "popen" then
         lt.assertEquals(fs.current_path(), fs.path(shell:pwd()))
     end
 end
