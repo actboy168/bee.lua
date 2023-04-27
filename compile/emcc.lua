@@ -71,7 +71,7 @@ if not lm.notest then
     table.sort(tests)
 
     lm:rule "test" {
-        "node", "$bin/lua.js", "@test/test.lua",
+        "node", "$bin/lua.js", "@test/test.lua", "--touch", "$out",
         description = "Run test.",
         pool = "console",
     }
@@ -79,5 +79,6 @@ if not lm.notest then
         rule = "test",
         deps = "lua",
         input = tests,
+        output = "$obj/test.stamp",
     }
 end
