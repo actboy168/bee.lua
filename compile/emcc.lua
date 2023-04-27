@@ -8,6 +8,7 @@ lm.flags = {
     "-pthread",
 }
 lm.ldflags = {
+    "-sENVIRONMENT=node",
     "-pthread",
 }
 
