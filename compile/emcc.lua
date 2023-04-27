@@ -7,10 +7,6 @@ lm.rtti = "off"
 lm.flags = {
     "-pthread",
 }
-lm.ldflags = {
-    "-sENVIRONMENT=node",
-    "-pthread",
-}
 
 lm:lua_source "source_bee" {
     sources = "3rd/lua-seri/lua-seri.c",
@@ -53,6 +49,8 @@ lm:exe "lua" {
     ldflags = {
         "-lnodefs.js",
         "-lnoderawfs.js",
+        "-sENVIRONMENT=node",
+        "-pthread",
     },
     sources = {
         "3rd/lua/onelua.c",
