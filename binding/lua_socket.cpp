@@ -43,9 +43,6 @@ namespace bee::lua_socket {
             return ep;
         }
     }
-    static socket::fd_t tofd(lua_State* L, int idx) {
-        return lua::toudata<socket::fd_t>(L, idx);
-    }
     static socket::fd_t& checkfdref(lua_State* L, int idx) {
         return lua::checkudata<socket::fd_t>(L, idx);
     }
@@ -368,30 +365,46 @@ namespace bee::lua_socket {
         pushfd(L, fd);
         return 1;
     }
-    struct select_wrap {
-        select_wrap() { reset(); }
 #if defined(_WIN32)
-        void reset() {
-            FD_ZERO(&readfds);
-            FD_ZERO(&writefds);
+    struct socket_set {
+        struct storage {
+            uint32_t count;
+            SOCKET array[1];
+        };
+        socket_set()
+            : instack()
+            , inheap(nullptr) {
+            FD_ZERO(&instack);
         }
-        void set_fd(socket::fd_t fd, fd_set& set) { FD_SET(fd, &set); }
-        int select(struct timeval* timeop) { return ::select(0, &readfds, &writefds, &writefds, timeop); }
-#else
-        void reset() {
-            FD_ZERO(&readfds);
-            FD_ZERO(&writefds);
-            maxfd = 0;
+        socket_set(uint32_t n) {
+            if (n > FD_SETSIZE) {
+                inheap        = reinterpret_cast<storage*>(new uint8_t[sizeof(uint32_t) + sizeof(SOCKET) * n]);
+                inheap->count = n;
+            }
+            else {
+                FD_ZERO(&instack);
+                inheap = nullptr;
+            }
         }
-        void set_fd(socket::fd_t fd, fd_set& set) {
-            FD_SET(fd, &set);
-            maxfd = std::max(maxfd, fd);
+        ~socket_set() {
+            delete[] (reinterpret_cast<uint8_t*>(inheap));
         }
-        int select(struct timeval* timeop) { return ::select(maxfd + 1, &readfds, &writefds, NULL, timeop); }
-        int maxfd;
-#endif
-        fd_set readfds, writefds;
+        fd_set* operator&() {
+            if (inheap) {
+                return reinterpret_cast<fd_set*>(inheap);
+            }
+            return &instack;
+        }
+        void set(SOCKET fd, lua_Integer i) {
+            fd_set* set                    = &*this;
+            set->fd_array[set->fd_count++] = fd;
+            map[fd]                        = i;
+        }
+        fd_set instack;
+        storage* inheap;
+        std::map<SOCKET, lua_Integer> map;
     };
+
     static int select(lua_State* L) {
         bool read_finish = true, write_finish = true;
         if (lua_type(L, 1) == LUA_TTABLE)
@@ -423,56 +436,147 @@ namespace bee::lua_socket {
             timeout.tv_usec = (long)((timeo - timeout.tv_sec) * 1000000);
         }
         lua_settop(L, 3);
-        lua_newtable(L);
-        lua_newtable(L);
-        lua_Integer rout = 0, wout = 0;
-        select_wrap wrap;
-        for (lua_Integer x = 1; !read_finish || !write_finish; x += FD_SETSIZE) {
-            wrap.reset();
-            lua_Integer r = 0, w = 0;
-            for (; !read_finish && r < FD_SETSIZE; ++r) {
-                if (LUA_TNIL == lua_rawgeti(L, 1, x + r)) {
-                    read_finish = true;
-                    lua_pop(L, 1);
-                    break;
-                }
-                wrap.set_fd(checkfd(L, -1), wrap.readfds);
-                lua_pop(L, 1);
-            }
-            for (; !write_finish && w < FD_SETSIZE; ++w) {
-                if (LUA_TNIL == lua_rawgeti(L, 2, x + w)) {
-                    write_finish = true;
-                    lua_pop(L, 1);
-                    break;
-                }
-                wrap.set_fd(checkfd(L, -1), wrap.writefds);
-                lua_pop(L, 1);
-            }
-            int ok = wrap.select(timeop);
-            if (ok > 0) {
-                for (lua_Integer i = 0; i < r; ++i) {
-                    if (LUA_TUSERDATA == lua_rawgeti(L, 1, x + i) && FD_ISSET(tofd(L, -1), &wrap.readfds)) {
-                        lua_rawseti(L, 4, ++rout);
-                    }
-                    else {
-                        lua_pop(L, 1);
-                    }
-                }
-                for (lua_Integer i = 0; i < w; ++i) {
-                    if (LUA_TUSERDATA == lua_rawgeti(L, 2, x + i) && FD_ISSET(tofd(L, -1), &wrap.writefds)) {
-                        lua_rawseti(L, 5, ++wout);
-                    }
-                    else {
-                        lua_pop(L, 1);
-                    }
+        lua_Integer read_n  = read_finish ? 0 : luaL_len(L, 1);
+        lua_Integer write_n = write_finish ? 0 : luaL_len(L, 2);
+        socket_set readfds(static_cast<uint32_t>(read_n));
+        socket_set writefds(static_cast<uint32_t>(write_n));
+        for (lua_Integer i = 1; i <= read_n; ++i) {
+            lua_rawgeti(L, 1, i);
+            readfds.set(checkfd(L, -1), i);
+            lua_pop(L, 1);
+        }
+        for (lua_Integer i = 1; i <= write_n; ++i) {
+            lua_rawgeti(L, 2, i);
+            writefds.set(checkfd(L, -1), i);
+            lua_pop(L, 1);
+        }
+        int ok = ::select(0, &readfds, &writefds, &writefds, timeop);
+        if (ok < 0) {
+            return push_neterror(L, "select");
+        }
+        else if (ok == 0) {
+            lua_newtable(L);
+            lua_newtable(L);
+            return 2;
+        }
+        else {
+            {
+                lua_newtable(L);
+                auto set        = &readfds;
+                lua_Integer out = 0;
+                for (uint32_t i = 0; i < set->fd_count; ++i) {
+                    SOCKET fd         = set->fd_array[i];
+                    lua_Integer index = readfds.map[fd];
+                    lua_rawgeti(L, 1, index);
+                    lua_rawseti(L, 4, ++out);
                 }
             }
-            else if (ok < 0) {
-                return push_neterror(L, "select");
+            {
+                lua_newtable(L);
+                auto set        = &writefds;
+                lua_Integer out = 0;
+                for (uint32_t i = 0; i < set->fd_count; ++i) {
+                    SOCKET fd         = set->fd_array[i];
+                    lua_Integer index = writefds.map[fd];
+                    lua_rawgeti(L, 2, index);
+                    lua_rawseti(L, 5, ++out);
+                }
+            }
+            return 2;
+        }
+    }
+#else
+    static int select(lua_State* L) {
+        bool read_finish = true, write_finish = true;
+        if (lua_type(L, 1) == LUA_TTABLE)
+            read_finish = false;
+        else if (!lua_isnoneornil(L, 1))
+            luaL_typeerror(L, 1, lua_typename(L, LUA_TTABLE));
+        if (lua_type(L, 2) == LUA_TTABLE)
+            write_finish = false;
+        else if (!lua_isnoneornil(L, 2))
+            luaL_typeerror(L, 2, lua_typename(L, LUA_TTABLE));
+        lua_Number timeo = luaL_optnumber(L, 3, -1);
+        if (read_finish && write_finish) {
+            if (timeo < 0) {
+                return luaL_error(L, "no open sockets to check and no timeout set");
+            }
+            else {
+                thread_sleep(static_cast<int>(timeo * 1000));
+                lua_newtable(L);
+                lua_newtable(L);
+                return 2;
             }
         }
-        return 2;
+        struct timeval timeout, *timeop = &timeout;
+        if (timeo < 0) {
+            timeop = NULL;
+        }
+        else {
+            timeout.tv_sec  = (long)timeo;
+            timeout.tv_usec = (long)((timeo - timeout.tv_sec) * 1000000);
+        }
+        lua_settop(L, 3);
+        int maxfd = 0;
+        fd_set readfds;
+        fd_set writefds;
+        FD_ZERO(&readfds);
+        FD_ZERO(&writefds);
+        lua_Integer read_n  = read_finish ? 0 : luaL_len(L, 1);
+        lua_Integer write_n = write_finish ? 0 : luaL_len(L, 2);
+        if (!read_finish) {
+            for (lua_Integer i = 1; i <= read_n; ++i) {
+                lua_rawgeti(L, 1, i);
+                auto fd = checkfd(L, -1);
+                FD_SET(fd, &readfds);
+                maxfd = std::max(maxfd, fd);
+                lua_pop(L, 1);
+            }
+        }
+        if (!write_finish) {
+            for (lua_Integer i = 1; i <= write_n; ++i) {
+                lua_rawgeti(L, 2, i);
+                auto fd = checkfd(L, -1);
+                FD_SET(fd, &writefds);
+                maxfd = std::max(maxfd, fd);
+                lua_pop(L, 1);
+            }
+        }
+        int ok = ::select(maxfd + 1, &readfds, &writefds, NULL, timeop);
+        if (ok < 0) {
+            return push_neterror(L, "select");
+        }
+        else if (ok == 0) {
+            lua_newtable(L);
+            lua_newtable(L);
+            return 2;
+        }
+        else {
+            lua_Integer rout = 0, wout = 0;
+            lua_newtable(L);
+            lua_newtable(L);
+            for (lua_Integer i = 1; i <= read_n; ++i) {
+                lua_rawgeti(L, 1, i);
+                if (FD_ISSET(lua::toudata<socket::fd_t>(L, -1), &readfds)) {
+                    lua_rawseti(L, 4, ++rout);
+                }
+                else {
+                    lua_pop(L, 1);
+                }
+            }
+            for (lua_Integer i = 1; i <= write_n; ++i) {
+                lua_rawgeti(L, 2, i);
+                if (FD_ISSET(lua::toudata<socket::fd_t>(L, -1), &writefds)) {
+                    lua_rawseti(L, 5, ++wout);
+                }
+                else {
+                    lua_pop(L, 1);
+                }
+            }
+            return 2;
+        }
     }
+#endif
     static int luaopen(lua_State* L) {
         if (!socket::initialize()) {
             lua_pushstring(L, make_syserror("initialize").c_str());

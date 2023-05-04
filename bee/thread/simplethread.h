@@ -6,4 +6,5 @@ namespace bee {
     thread_handle thread_create(thread_func func, void* ud) noexcept;
     void thread_wait(thread_handle handle) noexcept;
     void thread_sleep(int msec) noexcept;
+    void thread_yield() noexcept;
 }

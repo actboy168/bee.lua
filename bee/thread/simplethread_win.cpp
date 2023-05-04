@@ -42,4 +42,8 @@ namespace bee {
     void thread_sleep(int msec) noexcept {
         Sleep(msec);
     }
+
+    void thread_yield() noexcept {
+        SwitchToThread();
+    }
 }

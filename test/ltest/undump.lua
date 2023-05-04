@@ -1,4 +1,4 @@
-local unpack_buf = ''
+local unpack_buf = ""
 local unpack_pos = 1
 local function unpack_setpos(...)
     unpack_pos = select(-1, ...)
@@ -9,23 +9,23 @@ local function unpack(fmt)
 end
 
 local function LoadByte()
-    return unpack 'B'
+    return unpack "B"
 end
 
 local function LoadInteger()
-    return unpack 'j'
+    return unpack "j"
 end
 
 local function LoadNumber()
-    return unpack 'n'
+    return unpack "n"
 end
 
 local function LoadSize()
-    return unpack 'T'
+    return unpack "T"
 end
 
 local function LoadCharN(n)
-    return unpack('c' .. tostring(n))
+    return unpack("c"..tostring(n))
 end
 
 local function LoadLength53()
@@ -47,7 +47,7 @@ local function LoadLength54()
 end
 
 local function LoadRawInt()
-    return unpack 'i'
+    return unpack "i"
 end
 
 local Version
@@ -61,7 +61,7 @@ local function LoadString()
     if size == 0 then
         return nil
     end
-    return LoadCharN(size-1)
+    return LoadCharN(size - 1)
 end
 
 local function LoadCode(f)
@@ -97,26 +97,26 @@ local function LoadConstants53(f)
         elseif t == LUA_TLNGSTR then
             f.k[i] = LoadString()
         else
-            error("unknown type: " .. t)
+            error("unknown type: "..t)
         end
     end
 end
 
 local function LoadConstants54(f)
-    local function makevariant(t,v) return t | (v << 4) end
-    local LUA_TNIL = 0
+    local function makevariant(t, v) return t | (v << 4) end
+    local LUA_TNIL     = 0
     local LUA_TBOOLEAN = 1
-    local LUA_TNUMBER = 3
-    local LUA_TSTRING = 4
-    local LUA_VNIL	  = makevariant(LUA_TNIL, 0)
-    local LUA_VFALSE  = makevariant(LUA_TBOOLEAN, 0)
-    local LUA_VTRUE   = makevariant(LUA_TBOOLEAN, 1)
-    local LUA_VNUMINT = makevariant(LUA_TNUMBER, 0)
-    local LUA_VNUMFLT = makevariant(LUA_TNUMBER, 1)
-    local LUA_VSHRSTR = makevariant(LUA_TSTRING, 0)
-    local LUA_VLNGSTR = makevariant(LUA_TSTRING, 1)
-    f.sizek = LoadInt()
-    f.k = {}
+    local LUA_TNUMBER  = 3
+    local LUA_TSTRING  = 4
+    local LUA_VNIL     = makevariant(LUA_TNIL, 0)
+    local LUA_VFALSE   = makevariant(LUA_TBOOLEAN, 0)
+    local LUA_VTRUE    = makevariant(LUA_TBOOLEAN, 1)
+    local LUA_VNUMINT  = makevariant(LUA_TNUMBER, 0)
+    local LUA_VNUMFLT  = makevariant(LUA_TNUMBER, 1)
+    local LUA_VSHRSTR  = makevariant(LUA_TSTRING, 0)
+    local LUA_VLNGSTR  = makevariant(LUA_TSTRING, 1)
+    f.sizek            = LoadInt()
+    f.k                = {}
     for i = 1, f.sizek do
         local t = LoadByte()
         if t == LUA_VNIL then
@@ -131,7 +131,7 @@ local function LoadConstants54(f)
         elseif t == LUA_VSHRSTR or t == LUA_VLNGSTR then
             f.k[i] = LoadString()
         else
-            error("unknown type: " .. t)
+            error("unknown type: "..t)
         end
     end
 end
@@ -190,7 +190,7 @@ end
 function LoadFunction(f, psource)
     f.source = LoadString()
     if not f.source then
-      f.source = psource
+        f.source = psource
     end
     f.linedefined = LoadInt()
     f.lastlinedefined = LoadInt()
@@ -217,7 +217,7 @@ local function InitCompat()
     if Version == 0x54 then
         LoadLength = LoadLength54
         LoadInt = LoadLength54
-        LoadLineInfo = function () return unpack 'b' end
+        LoadLineInfo = function () return unpack "b" end
         LoadConstants = LoadConstants54
         return
     end
@@ -225,22 +225,22 @@ local function InitCompat()
 end
 
 local function CheckHeader()
-    assert(LoadCharN(4) == '\x1bLua')
+    assert(LoadCharN(4) == "\x1bLua")
     InitCompat()
     assert(LoadByte() == 0)
-    assert(LoadCharN(6) == '\x19\x93\r\n\x1a\n')
+    assert(LoadCharN(6) == "\x19\x93\r\n\x1a\n")
     if Version < 0x54 then
         -- int
-        assert(string.packsize 'i' == LoadByte())
+        assert(string.packsize "i" == LoadByte())
         -- size_t
-        assert(string.packsize 'T' == LoadByte())
+        assert(string.packsize "T" == LoadByte())
     end
     -- Instruction
     assert(LoadByte() == 4)
     -- lua_Integer
-    assert(string.packsize 'j' == LoadByte())
+    assert(string.packsize "j" == LoadByte())
     -- lua_Number
-    assert(string.packsize 'n' == LoadByte())
+    assert(string.packsize "n" == LoadByte())
     assert(LoadInteger() == 0x5678)
     assert(LoadNumber() == 370.5)
 end

@@ -37,4 +37,6 @@ namespace bee {
     private:
         atomic_flag l;
     };
+
+    void cpu_relax() noexcept;
 }

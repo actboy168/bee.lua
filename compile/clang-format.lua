@@ -16,7 +16,7 @@ local function scan(dir)
         else
             local ext = path:extension():string():lower()
             if EXTENSION[ext] then
-                sourcefile[#sourcefile + 1] = path:string()
+                sourcefile[#sourcefile+1] = path:string()
             end
         end
     end

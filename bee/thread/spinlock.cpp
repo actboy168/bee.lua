@@ -7,7 +7,7 @@
 #endif
 
 namespace bee {
-    static void cpu_relax() noexcept {
+    void cpu_relax() noexcept {
 #if defined(_WIN32)
         YieldProcessor();
 #elif defined(__x86_64__) || defined(__i386__)

@@ -1,4 +1,4 @@
-local lm = require 'luamake'
+local lm = require "luamake"
 
 lm:lua_source "source_bee" {
     sources = "3rd/lua-seri/lua-seri.c",
@@ -131,6 +131,7 @@ lm:lua_source "source_bee" {
             "oleAut32",
             "shell32",
             "ntdll",
+            "synchronization",
         },
     },
     mingw = {
@@ -188,11 +189,11 @@ lm:lua_source "source_bee" {
     },
 }
 
-lm:source_set 'source_lua' {
+lm:source_set "source_lua" {
     sources = "3rd/lua/utf8_crt.c",
 }
 
-lm:source_set 'source_lua' {
+lm:source_set "source_lua" {
     sources = {
         "3rd/lua/onelua.c",
         "3rd/lua/linit.c",
