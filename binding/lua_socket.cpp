@@ -43,9 +43,6 @@ namespace bee::lua_socket {
             return ep;
         }
     }
-    static socket::fd_t tofd(lua_State* L, int idx) {
-        return lua::toudata<socket::fd_t>(L, idx);
-    }
     static socket::fd_t& checkfdref(lua_State* L, int idx) {
         return lua::checkudata<socket::fd_t>(L, idx);
     }
@@ -560,7 +557,7 @@ namespace bee::lua_socket {
             lua_newtable(L);
             for (lua_Integer i = 1; i <= read_n; ++i) {
                 lua_rawgeti(L, 1, i);
-                if (FD_ISSET(tofd(L, -1), &readfds)) {
+                if (FD_ISSET(lua::toudata<socket::fd_t>(L, -1), &readfds)) {
                     lua_rawseti(L, 4, ++rout);
                 }
                 else {
@@ -569,7 +566,7 @@ namespace bee::lua_socket {
             }
             for (lua_Integer i = 1; i <= write_n; ++i) {
                 lua_rawgeti(L, 2, i);
-                if (FD_ISSET(tofd(L, -1), &writefds)) {
+                if (FD_ISSET(lua::toudata<socket::fd_t>(L, -1), &writefds)) {
                     lua_rawseti(L, 5, ++wout);
                 }
                 else {
