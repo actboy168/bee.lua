@@ -1,4 +1,4 @@
-local lt = require 'ltest'
+local lt = require "ltest"
 
 local time = require "bee.time"
 

@@ -9,15 +9,15 @@ local function getTestDir()
     return arg[0]:match("(.+)[/\\][%w_.-]+$")
 end
 __Target__ = getProcDir()
-__EXT__ = package.cpath:match '[/\\]%?%.([a-z]+)'
+__EXT__ = package.cpath:match "[/\\]%?%.([a-z]+)"
 package.path = table.concat({
-    getTestDir() .. '/?.lua',
-    getTestDir() .. '/ltest/?.lua',
+    getTestDir().."/?.lua",
+    getTestDir().."/ltest/?.lua",
 }, ";")
-package.cpath = ('%s/?.%s'):format(__Target__, __EXT__)
+package.cpath = ("%s/?.%s"):format(__Target__, __EXT__)
 
-local platform = require 'bee.platform'
-local lt = require 'ltest'
+local platform = require "bee.platform"
+local lt = require "ltest"
 
 warn "@on"
 
@@ -31,18 +31,18 @@ if not lt.options.list then
 end
 
 --require 'test_lua'
-require 'test_serialization'
-require 'test_filesystem'
-require 'test_thread'
+require "test_serialization"
+require "test_filesystem"
+require "test_thread"
 if platform.os ~= "emscripten" then
-    require 'test_subprocess'
-    require 'test_socket'
-    require 'test_filewatch'
+    require "test_subprocess"
+    require "test_socket"
+    require "test_filewatch"
 end
-require 'test_time'
+require "test_time"
 
 do
-    local fs = require 'bee.filesystem'
+    local fs = require "bee.filesystem"
     if lt.options.touch then
         lt.options.touch = fs.absolute(lt.options.touch):string()
         if platform.os == "emscripten" then

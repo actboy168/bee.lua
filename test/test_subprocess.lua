@@ -1,16 +1,16 @@
-local lt = require 'ltest'
+local lt = require "ltest"
 
-local subprocess = require 'bee.subprocess'
-local thread = require 'bee.thread'
-local platform = require 'bee.platform'
-local fs = require 'bee.filesystem'
-local shell = require 'shell'
+local subprocess = require "bee.subprocess"
+local thread = require "bee.thread"
+local platform = require "bee.platform"
+local fs = require "bee.filesystem"
+local shell = require "shell"
 
 local function testArgs(...)
     local args = table.pack(...)
     local s = {}
     for _, v in ipairs(args) do
-        s[#s+1] = ('%q'):format(v)
+        s[#s+1] = ("%q"):format(v)
     end
     local process = shell:runlua(([[
         local function eq(a, b, offset)
@@ -21,35 +21,35 @@ local function testArgs(...)
         end
         local t = {%s}
         eq(arg, t, 0)
-    ]]):format(table.concat(s, ',')), {'_', args, stderr = true})
+    ]]):format(table.concat(s, ",")), { "_", args, stderr = true })
 
     lt.assertIsUserdata(process)
     lt.assertIsUserdata(process.stderr)
-    lt.assertEquals(process.stderr:read 'a', '')
+    lt.assertEquals(process.stderr:read "a", "")
     lt.assertEquals(process:wait(), 0)
 end
 
 local test_subprocess = lt.test "subprocess"
 
 function test_subprocess:test_spawn()
-    local process = shell:runlua ' '
+    local process = shell:runlua " "
     lt.assertEquals(process:wait(), 0)
 
-    local process = shell:runlua(' ', { stdin = true })
+    local process = shell:runlua(" ", { stdin = true })
     lt.assertIsUserdata(process)
     lt.assertIsUserdata(process.stdin)
     lt.assertEquals(process.stdout, nil)
     lt.assertEquals(process.stderr, nil)
     lt.assertEquals(process:wait(), 0)
 
-    local process = shell:runlua(' ', { stdout = true })
+    local process = shell:runlua(" ", { stdout = true })
     lt.assertIsUserdata(process)
     lt.assertEquals(process.stdin, nil)
     lt.assertIsUserdata(process.stdout)
     lt.assertEquals(process.stderr, nil)
     lt.assertEquals(process:wait(), 0)
 
-    local process = shell:runlua(' ', { stderr = true })
+    local process = shell:runlua(" ", { stderr = true })
     lt.assertIsUserdata(process)
     lt.assertEquals(process.stdin, nil)
     lt.assertEquals(process.stdout, nil)
@@ -58,16 +58,16 @@ function test_subprocess:test_spawn()
 end
 
 function test_subprocess:test_wait()
-    local process = shell:runlua ' '
+    local process = shell:runlua " "
     lt.assertEquals(process:wait(), 0)
 
-    local process = shell:runlua 'os.exit(true)'
+    local process = shell:runlua "os.exit(true)"
     lt.assertEquals(process:wait(), 0)
 
-    local process = shell:runlua 'os.exit(false)'
+    local process = shell:runlua "os.exit(false)"
     lt.assertEquals(process:wait(), 1)
 
-    local process = shell:runlua 'os.exit(197)'
+    local process = shell:runlua "os.exit(197)"
     lt.assertEquals(process:wait(), 197)
 end
 
@@ -141,21 +141,21 @@ function test_subprocess:test_stdio_1()
 end
 
 function test_subprocess:test_stdio_2()
-    fs.remove 'temp.txt'
-    local f = lt.assertIsUserdata(io.open('temp.txt', 'w'))
+    fs.remove "temp.txt"
+    local f = lt.assertIsUserdata(io.open("temp.txt", "w"))
     ---@cast f file*
     local process = shell:runlua('io.write "ok"', { stdout = f })
     lt.assertEquals(process.stdout, f)
     f:close()
     lt.assertEquals(process:wait(), 0)
-    local f = lt.assertIsUserdata(io.open('temp.txt', 'r'))
+    local f = lt.assertIsUserdata(io.open("temp.txt", "r"))
     ---@cast f file*
-    lt.assertEquals(f:read 'a', "ok")
+    lt.assertEquals(f:read "a", "ok")
     f:close()
 
-    fs.remove 'temp.txt'
-    local wr = io.open('temp.txt', 'w')
-    local rd = io.open('temp.txt', 'r')
+    fs.remove "temp.txt"
+    local wr = io.open("temp.txt", "w")
+    local rd = io.open("temp.txt", "r")
     lt.assertIsUserdata(wr)
     lt.assertIsUserdata(rd)
     ---@cast wr file*
@@ -164,15 +164,15 @@ function test_subprocess:test_stdio_2()
     wr:close()
     lt.assertEquals(process.stdout, wr)
     lt.assertEquals(process:wait(), 0)
-    lt.assertEquals(rd:read 'a', "ok")
+    lt.assertEquals(rd:read "a", "ok")
     rd:close()
-    fs.remove 'temp.txt'
+    fs.remove "temp.txt"
 
     local process1 = shell:runlua('io.write "ok"', { stdout = true })
     local process2 = shell:runlua('io.write(io.read "a")', { stdin = process1.stdout, stdout = true })
     lt.assertEquals(process1:wait(), 0)
     lt.assertEquals(process2:wait(), 0)
-    lt.assertEquals(process2.stdout:read 'a', "ok")
+    lt.assertEquals(process2.stdout:read "a", "ok")
 end
 
 function test_subprocess:test_stdio_3()
@@ -251,7 +251,7 @@ function test_subprocess:test_peek()
 end
 
 function test_subprocess:test_filemode()
-    if platform.os == 'windows' then
+    if platform.os == "windows" then
         local process = shell:runlua([[
             assert(io.read "a" == "\n")
         ]], { stdin = true, stderr = true })
@@ -273,27 +273,27 @@ end
 
 function test_subprocess:test_env()
     local function test_env(cond, env)
-        local script = ('assert(%s)'):format(cond)
+        local script = ("assert(%s)"):format(cond)
         local process = shell:runlua(
             script,
-            {env = env}
+            { env = env }
         )
         lt.assertEquals(process:wait(), 0)
     end
     test_env('os.getenv "BEE_TEST" == nil', {})
-    test_env('os.getenv "BEE_TEST" == "ok"', { BEE_TEST = 'ok' })
+    test_env('os.getenv "BEE_TEST" == "ok"', { BEE_TEST = "ok" })
 
     subprocess.setenv("BEE_TEST_ENV_1", "OK")
-    lt.assertEquals(os.getenv 'BEE_TEST_ENV_1', "OK")
+    lt.assertEquals(os.getenv "BEE_TEST_ENV_1", "OK")
     test_env('os.getenv "BEE_TEST_ENV_1" == "OK"', {})
-    test_env('os.getenv "BEE_TEST_ENV_1" == nil', {BEE_TEST_ENV_1=false})
+    test_env('os.getenv "BEE_TEST_ENV_1" == nil', { BEE_TEST_ENV_1 = false })
 end
 
 function test_subprocess:test_args()
-    testArgs('A')
-    testArgs('A', 'B')
-    testArgs('A B')
-    testArgs('A', 'B C')
+    testArgs("A")
+    testArgs("A", "B")
+    testArgs("A B")
+    testArgs("A", "B C")
     testArgs([["A"]])
     testArgs([["A]])
     testArgs([["A\]])
@@ -336,8 +336,8 @@ function test_subprocess:test_cwd()
     ]], { "_", path:string(), cwd = path, stdout = true, stderr = true })
     lt.assertIsUserdata(process)
     lt.assertIsUserdata(process.stderr)
-    print(process.stdout:read 'a')
-    lt.assertEquals(process.stderr:read 'a', '')
+    print(process.stdout:read "a")
+    lt.assertEquals(process.stderr:read "a", "")
     lt.assertEquals(process:wait(), 0)
     fs.remove_all(path)
 end
@@ -351,7 +351,7 @@ function test_subprocess:test_select()
     while #process_set > 0 do
         local ok = subprocess.select(process_set)
         lt.assertEquals(ok, true)
-        local i  = 1
+        local i = 1
         while i <= #process_set do
             local process = process_set[i]
             if process:is_running() then

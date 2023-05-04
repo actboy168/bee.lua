@@ -1,6 +1,6 @@
 local function split(str)
     local r = {}
-    str:gsub('[^%.]+', function (w) r[#r+1] = w end)
+    str:gsub("[^%.]+", function (w) r[#r+1] = w end)
     return r
 end
 

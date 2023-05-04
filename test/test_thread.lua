@@ -1,4 +1,4 @@
-local lt = require 'ltest'
+local lt = require "ltest"
 
 local thread = require "bee.thread"
 local fs = require "bee.filesystem"
@@ -22,7 +22,7 @@ local test_thread = lt.test "thread"
 
 function test_thread:test_thread_1()
     local function file_exists(filename)
-        local f = io.open(filename, 'r')
+        local f = io.open(filename, "r")
         if f then
             f:close()
             return true
@@ -30,14 +30,14 @@ function test_thread:test_thread_1()
         return false
     end
     assertNotThreadError()
-    fs.remove('temp.txt')
-    lt.assertEquals(file_exists('temp.txt'), false)
+    fs.remove("temp.txt")
+    lt.assertEquals(file_exists("temp.txt"), false)
     local thd = createThread [[
         io.open('temp.txt', 'w'):close()
     ]]
     thread.wait(thd)
-    lt.assertEquals(file_exists('temp.txt'), true)
-    fs.remove('temp.txt')
+    lt.assertEquals(file_exists("temp.txt"), true)
+    fs.remove("temp.txt")
     assertNotThreadError()
 end
 
@@ -65,7 +65,7 @@ function test_thread:test_thread_3()
         error 'Test thread error.'
     ]]
     thread.wait(thd)
-    assertHasThreadError('Test thread error.')
+    assertHasThreadError("Test thread error.")
     assertNotThreadError()
 end
 
@@ -81,17 +81,17 @@ end
 
 function test_thread:test_channel_1()
     thread.reset()
-    lt.assertErrorMsgEquals("Can't query channel 'test'", thread.channel, 'test')
-    thread.newchannel 'test'
-    lt.assertIsUserdata(thread.channel 'test')
-    lt.assertIsUserdata(thread.channel 'test')
+    lt.assertErrorMsgEquals("Can't query channel 'test'", thread.channel, "test")
+    thread.newchannel "test"
+    lt.assertIsUserdata(thread.channel "test")
+    lt.assertIsUserdata(thread.channel "test")
     thread.reset()
 end
 
 function test_thread:test_channel_2()
     thread.reset()
-    thread.newchannel 'test'
-    lt.assertErrorMsgEquals("Duplicate channel 'test'", thread.newchannel, 'test')
+    thread.newchannel "test"
+    lt.assertErrorMsgEquals("Duplicate channel 'test'", thread.newchannel, "test")
     thread.reset()
 end
 
@@ -121,13 +121,13 @@ end
 
 function test_thread:test_reset_1()
     thread.reset()
-    lt.assertErrorMsgEquals("Can't query channel 'test'", thread.channel, 'test')
-    thread.newchannel 'test'
-    lt.assertIsUserdata(thread.channel 'test')
+    lt.assertErrorMsgEquals("Can't query channel 'test'", thread.channel, "test")
+    thread.newchannel "test"
+    lt.assertIsUserdata(thread.channel "test")
     thread.reset()
-    lt.assertErrorMsgEquals("Can't query channel 'test'", thread.channel, 'test')
-    thread.newchannel 'test'
-    lt.assertIsUserdata(thread.channel 'test')
+    lt.assertErrorMsgEquals("Can't query channel 'test'", thread.channel, "test")
+    thread.newchannel "test"
+    lt.assertIsUserdata(thread.channel "test")
     thread.reset()
 end
 
@@ -138,27 +138,27 @@ function test_thread:test_reset_2()
         thread.reset()
     ]]
     thread.wait(thd)
-    assertHasThreadError('reset must call from main thread')
+    assertHasThreadError("reset must call from main thread")
     assertNotThreadError()
 end
 
 local function TestSuit(f)
     f(1)
     f(0.0001)
-    f('TEST')
+    f("TEST")
     f(true)
     f(false)
     f({})
-    f({1, 2})
-    f(1, {1, 2})
-    f(1, 2, {A={B={C='D'}}})
+    f({ 1, 2 })
+    f(1, { 1, 2 })
+    f(1, 2, { A = { B = { C = "D" } } })
     f(1, nil, 2)
 end
 
 function test_thread:test_pop_1()
     thread.reset()
-    thread.newchannel 'test'
-    local channel = thread.channel 'test'
+    thread.newchannel "test"
+    local channel = thread.channel "test"
     local function pack_pop(ok, ...)
         lt.assertEquals(ok, true)
         return table.pack(...)
@@ -175,8 +175,8 @@ end
 
 function test_thread:test_pop_2()
     thread.reset()
-    thread.newchannel 'test'
-    local channel = thread.channel 'test'
+    thread.newchannel "test"
+    local channel = thread.channel "test"
 
     local function assertIs(expected)
         local ok, v = channel:pop()
@@ -217,8 +217,8 @@ end
 function test_thread:test_thread_bpop()
     assertNotThreadError()
     thread.reset()
-    thread.newchannel 'testReq'
-    thread.newchannel 'testRes'
+    thread.newchannel "testReq"
+    thread.newchannel "testRes"
     local thd = createThread [[
         local thread = require "bee.thread"
         local req = thread.channel 'testReq'
@@ -232,14 +232,14 @@ function test_thread:test_thread_bpop()
         while not dispatch(req:bpop()) do
         end
     ]]
-    local req = thread.channel 'testReq'
-    local res = thread.channel 'testRes'
+    local req = thread.channel "testReq"
+    local res = thread.channel "testRes"
     local function test_ok(...)
         req:push(...)
         lt.assertEquals(table.pack(res:bpop()), table.pack(...))
     end
     TestSuit(test_ok)
-    req:push 'exit'
+    req:push "exit"
     thread.wait(thd)
     assertNotThreadError()
 end
@@ -247,8 +247,8 @@ end
 function test_thread:test_thread_pop()
     assertNotThreadError()
     thread.reset()
-    thread.newchannel 'testReq'
-    thread.newchannel 'testRes'
+    thread.newchannel "testReq"
+    thread.newchannel "testRes"
     local thd = createThread [[
         local thread = require "bee.thread"
         local req = thread.channel 'testReq'
@@ -266,8 +266,8 @@ function test_thread:test_thread_pop()
         while not dispatch(req:pop()) do
         end
     ]]
-    local req = thread.channel 'testReq'
-    local res = thread.channel 'testRes'
+    local req = thread.channel "testReq"
+    local res = thread.channel "testRes"
     local function pack_pop(ok, ...)
         if not ok then
             return
@@ -287,14 +287,14 @@ function test_thread:test_thread_pop()
         lt.assertEquals(t, table.pack(...))
     end
     TestSuit(test_ok)
-    req:push 'exit'
+    req:push "exit"
     thread.wait(thd)
     assertNotThreadError()
 end
 
 function test_thread:test_rpc()
     thread.reset()
-    thread.newchannel 'test'
+    thread.newchannel "test"
     local thd = createThread [[
         local thread = require "bee.thread"
         local c = thread.channel 'test'
@@ -320,8 +320,8 @@ function test_thread:test_rpc()
         c:push(r, ...)
         return thread.rpc_wait(r)
     end
-    lt.assertEquals(call("add", 1, 2) , 3)
-    lt.assertEquals(call("exit") ,"ok")
+    lt.assertEquals(call("add", 1, 2), 3)
+    lt.assertEquals(call("exit"), "ok")
     thread.wait(thd)
     assertNotThreadError()
     thread.reset()

@@ -1,11 +1,11 @@
-local platform = require 'bee.platform'
+local platform = require "bee.platform"
 
 local m = {}
 
 local feature = {}
 
 function feature.symlink()
-    if platform.os ~= 'windows' and platform.os ~= 'emscripten' then
+    if platform.os ~= "windows" and platform.os ~= "emscripten" then
         return true
     end
     -- see https://blogs.windows.com/windowsdeveloper/2016/12/02/symlinks-windows-10/
@@ -16,15 +16,15 @@ function feature.symlink()
 end
 
 function feature.hardlink()
-    return platform.os ~= 'android' and platform.os ~= 'emscripten'
+    return platform.os ~= "android" and platform.os ~= "emscripten"
 end
 
 function feature.subprocess()
-    return platform.os ~= 'emscripten'
+    return platform.os ~= "emscripten"
 end
 
 function feature.popen()
-    return platform.os ~= 'emscripten'
+    return platform.os ~= "emscripten"
 end
 
 local mt = {}
@@ -32,7 +32,7 @@ local mt = {}
 function mt:__index(what)
     local initfunc = feature[what]
     if initfunc == nil then
-        error("undefined feature:" .. what)
+        error("undefined feature:"..what)
     end
     local res = initfunc()
     m[what] = res
