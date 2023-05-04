@@ -2,6 +2,7 @@
 #include <bee/nonstd/format.h>
 #include <bee/nonstd/print.h>
 #include <bee/nonstd/semaphore.h>
+#include <bee/thread/atomic_semaphore.h>
 #include <bee/thread/setname.h>
 #include <bee/thread/simplethread.h>
 #include <bee/thread/spinlock.h>
@@ -74,8 +75,8 @@ namespace bee::lua_thread {
     using boxchannel = std::shared_ptr<channel>;
 
     struct rpc {
-        std::binary_semaphore trigger = std::binary_semaphore(0);
-        void* data                    = nullptr;
+        atomic_semaphore sem;
+        void* data = nullptr;
     };
 }
 
@@ -323,14 +324,14 @@ namespace bee::lua_thread {
 
     static int lrpc_wait(lua_State* L) {
         auto r = lua::checklightud<struct rpc*>(L, 1);
-        r->trigger.acquire();
+        r->sem.acquire();
         return seri_unpackptr(L, r->data);
     }
 
     static int lrpc_return(lua_State* L) {
         auto r  = lua::checklightud<struct rpc*>(L, 1);
         r->data = seri_pack(L, 1, NULL);
-        r->trigger.release();
+        r->sem.release();
         return 0;
     }
 

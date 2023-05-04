@@ -131,6 +131,7 @@ lm:lua_source "source_bee" {
             "oleAut32",
             "shell32",
             "ntdll",
+            "synchronization",
         },
     },
     mingw = {

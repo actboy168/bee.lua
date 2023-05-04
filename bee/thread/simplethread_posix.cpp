@@ -1,5 +1,6 @@
 #include <bee/thread/simplethread.h>
 #include <pthread.h>
+#include <sched.h>
 #include <unistd.h>
 
 #include <cstdlib>
@@ -41,5 +42,9 @@ namespace bee {
 
     void thread_sleep(int msec) noexcept {
         usleep(msec * 1000);
+    }
+
+    void thread_yield() noexcept {
+        sched_yield();
     }
 }
