@@ -71,7 +71,7 @@ namespace bee::lua_filesystem {
     }
     uintmax_t wasm_remove_all(const fs::path& path, std::error_code& ec) {
         const auto npos = static_cast<uintmax_t>(-1);
-        auto st = fs::symlink_status(path, ec);
+        auto st         = fs::symlink_status(path, ec);
         if (ec) {
             return npos;
         }
