@@ -7,7 +7,7 @@ lm:import "common.lua"
 lm:source_set "source_bootstrap" {
     deps = { "source_bee", "source_lua" },
     includes = { "3rd/lua", "." },
-    sources = "bootstrap/*.cpp",
+    sources = "bootstrap/main.cpp",
     macos = {
         defines = "LUA_USE_MACOSX",
         links = { "m", "dl" },

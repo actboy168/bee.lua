@@ -16,6 +16,20 @@
 #    endif
 #endif
 
+#if defined(__EMSCRIPTEN__)
+#    include <emscripten.h>
+namespace bee::lua_platform {
+    int wasm_posix_host() {
+        return EM_ASM_INT({
+            if (NODEFS.isWindows) {
+                return 0;
+            }
+            return 1;
+        });
+    }
+}
+#endif
+
 namespace bee::lua_platform {
     static int luaopen(lua_State* L) {
         lua_createtable(L, 0, 16);
@@ -47,12 +61,20 @@ namespace bee::lua_platform {
 #elif defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)
         lua_pushstring(L, "macOS");
         lua_pushstring(L, "macos");
+#elif defined(__EMSCRIPTEN__)
+        lua_pushstring(L, "Emscripten");
+        lua_pushstring(L, "emscripten");
 #else
         lua_pushstring(L, "unknown");
         lua_pushstring(L, "unknown");
 #endif
         lua_setfield(L, -3, "os");
         lua_setfield(L, -2, "OS");
+
+#if defined(__EMSCRIPTEN__)
+        lua_pushboolean(L, wasm_posix_host());
+        lua_setfield(L, -2, "wasm_posix_host");
+#endif
 
 #if defined(__clang__)
         // clang defines __GNUC__ or _MSC_VER
@@ -114,6 +136,10 @@ namespace bee::lua_platform {
         lua_pushstring(L, "arm");
 #elif defined(__riscv)
         lua_pushstring(L, "riscv");
+#elif defined(__wasm32__)
+        lua_pushstring(L, "wasm32");
+#elif defined(__wasm64__)
+        lua_pushstring(L, "wasm64");
 #else
         lua_pushstring(L, "unknown");
 #endif

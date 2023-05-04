@@ -34,19 +34,26 @@ end
 require 'test_serialization'
 require 'test_filesystem'
 require 'test_thread'
-require 'test_subprocess'
-require 'test_socket'
-require 'test_filewatch'
+if platform.os ~= "emscripten" then
+    require 'test_subprocess'
+    require 'test_socket'
+    require 'test_filewatch'
+end
 require 'test_time'
 
 do
     local fs = require 'bee.filesystem'
     if lt.options.touch then
         lt.options.touch = fs.absolute(lt.options.touch):string()
+        if platform.os == "emscripten" then
+            lt.options.shell = platform.wasm_posix_host and "sh" or "cmd"
+        end
     end
-    local tmpdir = fs.temp_directory_path() / "test_bee"
-    fs.create_directories(tmpdir)
-    fs.current_path(tmpdir)
+    if platform.os ~= "emscripten" then
+        local tmpdir = fs.temp_directory_path() / "test_bee"
+        fs.create_directories(tmpdir)
+        fs.current_path(tmpdir)
+    end
 end
 
 os.exit(lt.run(), true)

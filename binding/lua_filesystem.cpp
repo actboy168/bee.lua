@@ -34,6 +34,72 @@ namespace bee::lua {
 
 }
 
+#if defined(__EMSCRIPTEN__)
+#    include <emscripten.h>
+namespace bee::lua_filesystem {
+    fs::path wasm_current_path() {
+        char* cwd = (char*)EM_ASM_PTR({
+            var cwd              = FS.cwd();
+            var cwdLengthInBytes = lengthBytesUTF8(cwd) + 1;
+            var cwdOnWasmHeap    = _malloc(cwdLengthInBytes);
+            stringToUTF8(cwd, cwdOnWasmHeap, cwdLengthInBytes);
+            return cwdOnWasmHeap;
+        });
+        fs::path r(cwd);
+        free(cwd);
+        return r;
+    }
+    int wasm_remove(const fs::path& path) {
+        return EM_ASM_INT(
+            {
+                try {
+                    var path = UTF8ToString($0);
+                    var st   = FS.lstat(path);
+                    if (st.isDirectory()) {
+                        FS.rmdir(path);
+                    }
+                    else {
+                        FS.unlink(path);
+                    }
+                    return 0;
+                } catch (e) {
+                    return e.errno;
+                }
+            },
+            path.c_str()
+        );
+    }
+    uintmax_t wasm_remove_all(const fs::path& path, std::error_code& ec) {
+        const auto npos = static_cast<uintmax_t>(-1);
+        auto st = fs::symlink_status(path, ec);
+        if (ec) {
+            return npos;
+        }
+        uintmax_t count = 0;
+        if (fs::is_directory(st)) {
+            for (fs::directory_iterator it(path, ec); !ec && it != fs::directory_iterator(); it.increment(ec)) {
+                auto other_count = wasm_remove_all(it->path(), ec);
+                if (ec) {
+                    return npos;
+                }
+                count += other_count;
+            }
+        }
+        int err = wasm_remove(path);
+        if (err) {
+            if (err != ENOENT && err != ENOTDIR) {
+                ec.assign(err, std::generic_category());
+                return npos;
+            }
+        }
+        else {
+            count += 1;
+        }
+        return count;
+    }
+}
+#endif
+
 namespace bee::lua_filesystem {
     template <typename CharT>
     static std::string_view u8tostrview(const std::basic_string<CharT>& u8str) {
@@ -553,6 +619,19 @@ namespace bee::lua_filesystem {
 
     static int remove(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
+#if defined(__EMSCRIPTEN__)
+        int err = wasm_remove(p);
+        if (err) {
+            if (err == ENOENT || err == ENOTDIR) {
+                lua_pushboolean(L, 0);
+                return 1;
+            }
+            pusherror(L, "remove", std::make_error_code((std::errc)err), p);
+            return 0;
+        }
+        lua_pushboolean(L, 1);
+        return 1;
+#else
         std::error_code ec;
         bool r = fs::remove(p, ec);
         if (ec) {
@@ -561,11 +640,25 @@ namespace bee::lua_filesystem {
         }
         lua_pushboolean(L, r);
         return 1;
+#endif
     }
 
     static int remove_all(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
+#if defined(__EMSCRIPTEN__)
+        uintmax_t r = wasm_remove_all(p, ec);
+        if (ec) {
+            if (ec == std::errc::no_such_file_or_directory) {
+                lua_pushinteger(L, 0);
+                return 1;
+            }
+            pusherror(L, "remove_all", ec, p);
+            return 0;
+        }
+        lua_pushinteger(L, static_cast<lua_Integer>(r));
+        return 1;
+#else
         uintmax_t r = fs::remove_all(p, ec);
         if (ec) {
             pusherror(L, "remove_all", ec, p);
@@ -573,17 +666,22 @@ namespace bee::lua_filesystem {
         }
         lua_pushinteger(L, static_cast<lua_Integer>(r));
         return 1;
+#endif
     }
 
     static int current_path(lua_State* L) {
         std::error_code ec;
         if (lua_gettop(L) == 0) {
+#if defined(__EMSCRIPTEN__)
+            path::push(L, wasm_current_path());
+#else
             fs::path r = fs::current_path(ec);
             if (ec) {
                 pusherror(L, "current_path()", ec);
                 return 0;
             }
             path::push(L, r);
+#endif
             return 1;
         }
         path_ptr p = getpathptr(L, 1);
@@ -643,7 +741,7 @@ namespace bee::lua_filesystem {
 #if defined(__MINGW32__)
         bool ok = mingw_copy_file(from, to, options, ec);
 #else
-        bool ok = fs::copy_file(from, to, options, ec);
+        bool ok    = fs::copy_file(from, to, options, ec);
 #endif
         if (ec) {
             pusherror(L, "copy_file", ec, from, to);
@@ -656,7 +754,11 @@ namespace bee::lua_filesystem {
     static int absolute(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
+#if defined(__EMSCRIPTEN__)
+        fs::path r = wasm_current_path() / p;
+#else
         fs::path r = fs::absolute(p, ec);
+#endif
         if (ec) {
             pusherror(L, "absolute", ec, p);
             return 0;
@@ -891,7 +993,7 @@ namespace bee::lua_filesystem {
         path::push(L, r.value());
         return 1;
     }
-
+#if !defined(__EMSCRIPTEN__)
     static int filelock(lua_State* L) {
         path_ptr self  = getpathptr(L, 1);
         file_handle fd = file_handle::lock(self);
@@ -911,7 +1013,7 @@ namespace bee::lua_filesystem {
         return 1;
     }
 
-#if !defined(BEE_DISABLE_FULLPATH)
+#    if !defined(BEE_DISABLE_FULLPATH)
     static int fullpath(lua_State* L) {
         path_ptr path  = getpathptr(L, 1);
         file_handle fd = file_handle::open_link(path);
@@ -930,6 +1032,7 @@ namespace bee::lua_filesystem {
         path::push(L, *fullpath);
         return 1;
     }
+#    endif
 #endif
 
     static int luaopen(lua_State* L) {
@@ -960,9 +1063,11 @@ namespace bee::lua_filesystem {
             { "pairs", pairs },
             { "exe_path", exe_path },
             { "dll_path", dll_path },
+#if !defined(__EMSCRIPTEN__)
             { "filelock", filelock },
-#if !defined(BEE_DISABLE_FULLPATH)
+#    if !defined(BEE_DISABLE_FULLPATH)
             { "fullpath", fullpath },
+#    endif
 #endif
             { "copy_options", NULL },
             { "perm_options", NULL },

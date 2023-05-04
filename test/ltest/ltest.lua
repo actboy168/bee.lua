@@ -356,6 +356,23 @@ local function touch(file)
     end
 end
 
+local function touch(file)
+    local isWindowsShell; do
+        if options.shell then
+            isWindowsShell = options.shell ~= "sh"
+        else
+            local isWindows = package.config:sub(1, 1) == "\\"
+            local isMingw = os.getenv 'MSYSTEM' ~= nil
+            isWindowsShell = (isWindows) and (not isMingw)
+        end
+    end
+    if isWindowsShell then
+        os.execute('type nul > ' .. file)
+    else
+        os.execute('touch ' .. file)
+    end
+end
+
 function m.run()
     local lst = {}
     for _, name in ipairs(instanceSet) do
