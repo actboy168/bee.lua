@@ -144,17 +144,6 @@ for _, name in ipairs {'Nil', 'Number', 'String', 'Table', 'Boolean', 'Function'
     end
 end
 
-local function touch(file)
-    local isWindows = package.config:sub(1,1) == "\\"
-    local isMingw = os.getenv 'MSYSTEM' ~= nil
-    local isWindowsShell = (isWindows) and (not isMingw)
-    if isWindowsShell then
-        os.execute('type nul > '..file)
-    else
-        os.execute('touch '..file)
-    end
-end
-
 local function parseCmdLine(cmdLine)
     local result = {}
     local i = 1
@@ -346,6 +335,23 @@ end
 
 function m.format(className, methodName)
     return className..'.'..methodName
+end
+
+local function touch(file)
+    local isWindowsShell; do
+        if options.shell then
+            isWindowsShell = options.shell ~= "sh"
+        else
+            local isWindows = package.config:sub(1, 1) == "\\"
+            local isMingw = os.getenv 'MSYSTEM' ~= nil
+            isWindowsShell = (isWindows) and (not isMingw)
+        end
+    end
+    if isWindowsShell then
+        os.execute('type nul > ' .. file)
+    else
+        os.execute('touch ' .. file)
+    end
 end
 
 function m.run()
