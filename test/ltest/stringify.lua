@@ -4,34 +4,40 @@ local visited
 local putValue
 
 local escape_char = {
-    [ "\\" .. string.byte "\a" ] = "\\".."a",
-    [ "\\" .. string.byte "\b" ] = "\\".."b",
-    [ "\\" .. string.byte "\f" ] = "\\".."f",
-    [ "\\" .. string.byte "\n" ] = "\\".."n",
-    [ "\\" .. string.byte "\r" ] = "\\".."r",
-    [ "\\" .. string.byte "\t" ] = "\\".."t",
-    [ "\\" .. string.byte "\v" ] = "\\".."v",
-    [ "\\" .. string.byte "\\" ] = "\\".."\\",
-    [ "\\" .. string.byte "\"" ] = "\\".."\"",
+    ["\\"..string.byte "\a"] = "\\".."a",
+    ["\\"..string.byte "\b"] = "\\".."b",
+    ["\\"..string.byte "\f"] = "\\".."f",
+    ["\\"..string.byte "\n"] = "\\".."n",
+    ["\\"..string.byte "\r"] = "\\".."r",
+    ["\\"..string.byte "\t"] = "\\".."t",
+    ["\\"..string.byte "\v"] = "\\".."v",
+    ["\\"..string.byte "\\"] = "\\".."\\",
+    ["\\"..string.byte "\""] = "\\".."\"",
 }
 
 local function quoted(s)
-    return ("%q"):format(s):sub(2,-2):gsub("\\[1-9][0-9]?", escape_char):gsub("\\\n", "\\n")
+    return ("%q"):format(s):sub(2, -2):gsub("\\[1-9][0-9]?", escape_char):gsub("\\\n", "\\n")
 end
 
 local function isIdentifier(str)
-    return type(str) == 'string' and str:match "^[_%a][_%a%d]*$"
+    return type(str) == "string" and str:match "^[_%a][_%a%d]*$"
 end
 
 local typeOrders = {
-    ['number']   = 1, ['boolean']  = 2, ['string'] = 3, ['table'] = 4,
-    ['function'] = 5, ['userdata'] = 6, ['thread'] = 7, ['nil']   = 8,
+    ["number"] = 1,
+    ["boolean"] = 2,
+    ["string"] = 3,
+    ["table"] = 4,
+    ["function"] = 5,
+    ["userdata"] = 6,
+    ["thread"] = 7,
+    ["nil"] = 8,
 }
 
 local function sortKeys(a, b)
     local ta, tb = type(a), type(b)
     if ta == tb then
-        if ta == 'string' or ta == 'number' then
+        if ta == "string" or ta == "number" then
             return a < b
         end
         return false
@@ -58,8 +64,8 @@ local function down(f)
 end
 
 local function tabify()
-    puts '\n'
-    puts(string.rep('  ', level))
+    puts "\n"
+    puts(string.rep("  ", level))
 end
 
 local function alreadyVisited(t)
@@ -79,62 +85,62 @@ end
 
 local function putTable(t)
     if alreadyVisited(t) then
-        puts '<table>'
+        puts "<table>"
         return
     end
     local keys = {}
     local length = getLength(t)
     for k in next, t do
-        if math.type(k) ~= 'integer' or k < 1 or k > length then
+        if math.type(k) ~= "integer" or k < 1 or k > length then
             keys[#keys+1] = k
         end
     end
     table.sort(keys, sortKeys)
     local mt = getmetatable(t)
-    puts '{'
-    down(function()
+    puts "{"
+    down(function ()
         local first = true
         for i = 1, length do
-            if not first then puts ',' end
-            puts ' '
+            if not first then puts "," end
+            puts " "
             putValue(rawget(t, i))
             first = false
         end
         for _, k in ipairs(keys) do
-            if not first then puts ',' end
+            if not first then puts "," end
             tabify()
             putKey(k)
-            puts ' = '
+            puts " = "
             putValue(rawget(t, k))
             first = false
         end
-        if type(mt) == 'table' then
-            if not first then puts ',' end
+        if type(mt) == "table" then
+            if not first then puts "," end
             tabify()
-            puts '<metatable> = '
+            puts "<metatable> = "
             putValue(mt)
         end
     end)
-    if #keys > 0 or type(mt) == 'table' then
+    if #keys > 0 or type(mt) == "table" then
         tabify()
     elseif length > 0 then
-        puts ' '
+        puts " "
     end
-    puts '}'
+    puts "}"
 end
 
 local function putTostring(v)
-    puts '<'
+    puts "<"
     puts(tostring(v))
-    puts '>'
+    puts ">"
 end
 
 local function putUserdata(u)
     local mt = debug.getmetatable(u)
     if mt and mt.__tostring then
-        puts '<userdata:'
+        puts "<userdata:"
         puts(tostring(u))
-        puts '>'
+        puts ">"
     else
         putTostring(u)
     end
@@ -146,39 +152,39 @@ end
 
 local function putFunction(f)
     local info = debug.getinfo(f, "S")
-    local type = info.source:sub(1,1)
+    local type = info.source:sub(1, 1)
     if type == "@" then
-        puts '<function:'
+        puts "<function:"
         puts(info.source:sub(2))
-        puts '>'
+        puts ">"
     elseif type == "=" then
         putTostring(f)
     else
-        puts '<function:'
+        puts "<function:"
         if #info.source > 64 then
-            puts(info.source:sub(1,64))
-            puts '...'
+            puts(info.source:sub(1, 64))
+            puts "..."
         else
             puts(info.source)
         end
-        puts '>'
+        puts ">"
     end
 end
 
 function putValue(v)
     local tv = type(v)
-    if tv == 'string' then
+    if tv == "string" then
         puts(quoted(v))
-    elseif tv == 'number' or tv == 'boolean' or tv == 'nil' then
+    elseif tv == "number" or tv == "boolean" or tv == "nil" then
         puts(tostring(v))
-    elseif tv == 'table' then
+    elseif tv == "table" then
         putTable(v)
-    elseif tv == 'userdata' then
+    elseif tv == "userdata" then
         putUserdata(v)
-    elseif tv == 'function' then
+    elseif tv == "function" then
         putFunction(v)
     else
-        assert(tv == 'thread')
+        assert(tv == "thread")
         putThread(v)
     end
 end

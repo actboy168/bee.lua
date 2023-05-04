@@ -1,7 +1,7 @@
 local subprocess = require "bee.subprocess"
 local thread = require "bee.thread"
 
-local luaexe = (function()
+local luaexe = (function ()
     local i = 0
     while arg[i] ~= nil do
         i = i - 1

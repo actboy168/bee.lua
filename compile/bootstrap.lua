@@ -1,12 +1,12 @@
 local lm = require "luamake"
 lm.rootdir = ".."
 
-require 'config'
-lm:import 'common.lua'
+require "config"
+lm:import "common.lua"
 
 lm:source_set "source_bootstrap" {
     deps = { "source_bee", "source_lua" },
-    includes = {"3rd/lua", "."},
+    includes = { "3rd/lua", "." },
     sources = "bootstrap/*.cpp",
     macos = {
         defines = "LUA_USE_MACOSX",
@@ -45,7 +45,7 @@ lm:executable "bootstrap" {
     },
 }
 
-local exe = lm.os == 'windows' and ".exe" or ""
+local exe = lm.os == "windows" and ".exe" or ""
 
 lm:copy "copy_script" {
     input = "bootstrap/main.lua",

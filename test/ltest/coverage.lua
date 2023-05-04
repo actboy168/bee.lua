@@ -1,5 +1,5 @@
 local debug_getinfo = debug.getinfo
-local undump = require 'undump'
+local undump = require "undump"
 local include = {}
 
 local function calc_actives_54(proto, actives)
@@ -10,7 +10,7 @@ local function calc_actives_54(proto, actives)
     end
     for i, line in ipairs(proto.lineinfo) do
         if line == -128 then
-            n = assert(abs[i-1])
+            n = assert(abs[i - 1])
         else
             n = n + line
         end
@@ -31,7 +31,7 @@ local function calc_actives_53(proto, actives)
 end
 
 local function get_actives(source)
-    local prefix = source:sub(1,1)
+    local prefix = source:sub(1, 1)
     if prefix == "=" then
         return {}
     end
@@ -121,7 +121,7 @@ function m.result()
                 lines[#lines+1] = tostring(i)
             end
         end
-        str[#str+1] = string.format("coverage: %02.02f%% (%d/%d) %s", pass/total*100, pass, total, file.name)
+        str[#str+1] = string.format("coverage: %02.02f%% (%d/%d) %s", pass / total * 100, pass, total, file.name)
         if #lines > 0 then
             str[#str+1] = table.concat(lines, " ")
             str[#str+1] = table.concat(status)

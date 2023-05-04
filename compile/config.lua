@@ -1,7 +1,7 @@
-local lm = require 'luamake'
+local lm = require "luamake"
 lm:required_version "1.2"
 
-lm.cxx = 'c++17'
+lm.cxx = "c++17"
 lm.rtti = "off"
 
 if not lm.analyze then
@@ -26,7 +26,7 @@ end
 
 lm:config "test" {
     msvc = lm.mode == "debug" and lm.arch == "x86_64" and {
-        ldflags = "/STACK:" .. 0x160000
+        ldflags = "/STACK:"..0x160000
     },
 }
 

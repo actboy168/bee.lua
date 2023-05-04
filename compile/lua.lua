@@ -1,8 +1,8 @@
 local lm = require "luamake"
 lm.rootdir = ".."
 
-require 'config'
-lm:import 'common.lua'
+require "config"
+lm:import "common.lua"
 
 lm:lua_dll "bee" {
     deps = "source_bee",
@@ -12,10 +12,10 @@ lm:lua_dll "bee" {
 }
 
 if lm.os == "windows" then
-    lm:source_set 'lua54' {
+    lm:source_set "lua54" {
         sources = "3rd/lua/utf8_crt.c",
     }
-    lm:shared_library 'lua54' {
+    lm:shared_library "lua54" {
         sources = {
             "3rd/lua/onelua.c",
             "3rd/lua/linit.c",
@@ -25,14 +25,14 @@ if lm.os == "windows" then
             "LUA_BUILD_AS_DLL",
         }
     }
-    lm:executable 'lua' {
+    lm:executable "lua" {
         deps = "lua54",
         sources = {
             "3rd/lua/utf8_lua.c",
             "3rd/lua/utf8_crt.c",
         }
     }
-    lm:executable 'luac' {
+    lm:executable "luac" {
         sources = {
             "3rd/lua/onelua.c",
             "3rd/lua/utf8_crt.c",
@@ -44,7 +44,7 @@ if lm.os == "windows" then
     return
 end
 
-lm:executable 'lua' {
+lm:executable "lua" {
     deps = "source_lua",
     sources = "3rd/lua/lua.c",
     macos = {
