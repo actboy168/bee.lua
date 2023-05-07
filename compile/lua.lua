@@ -17,12 +17,15 @@ if lm.os == "windows" then
     }
     lm:shared_library "lua54" {
         sources = {
-            "3rd/lua/onelua.c",
+            "3rd/lua/onelua.cpp",
             "3rd/lua/linit.c",
         },
         defines = {
             "MAKE_LIB",
             "LUA_BUILD_AS_DLL",
+        },
+        msvc = {
+            flags = "/wd4334"
         }
     }
     lm:executable "lua" {
@@ -34,11 +37,14 @@ if lm.os == "windows" then
     }
     lm:executable "luac" {
         sources = {
-            "3rd/lua/onelua.c",
+            "3rd/lua/onelua.cpp",
             "3rd/lua/utf8_crt.c",
         },
         defines = {
             "MAKE_LUAC",
+        },
+        msvc = {
+            flags = "/wd4334"
         }
     }
     return
