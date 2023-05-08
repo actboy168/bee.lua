@@ -17,7 +17,7 @@ if lm.os == "windows" then
     }
     lm:shared_library "lua54" {
         sources = {
-            "3rd/lua/onelua.cpp",
+            "3rd/lua/onelua.c",
             "3rd/lua/linit.c",
         },
         defines = {
@@ -37,7 +37,7 @@ if lm.os == "windows" then
     }
     lm:executable "luac" {
         sources = {
-            "3rd/lua/onelua.cpp",
+            "3rd/lua/onelua.c",
             "3rd/lua/utf8_crt.c",
         },
         defines = {
