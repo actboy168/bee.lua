@@ -318,7 +318,8 @@ namespace bee::net::socket {
 #endif
 
 #ifdef SO_NOSIGPIPE
-        if (!setoption(SOL_SOCKET, SO_NOSIGPIPE, enable)) {
+        const int enable = 1;
+        if (!setoption(fd, SOL_SOCKET, SO_NOSIGPIPE, enable)) {
             internal_close(fd);
             return retired_fd;
         }
