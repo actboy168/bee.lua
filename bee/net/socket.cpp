@@ -167,11 +167,13 @@ namespace bee::net::socket {
             initialized = rc == 0;
 #else
             initialized = true;
+#    if !defined(MSG_NOSIGNA) && !defined(SO_NOSIGPIPE)
             struct sigaction sa;
             sa.sa_handler = SIG_IGN;
             sa.sa_flags   = 0;
             sigemptyset(&sa.sa_mask);
             sigaction(SIGPIPE, &sa, 0);
+#    endif
 #endif
         }
         return initialized;
@@ -275,36 +277,53 @@ namespace bee::net::socket {
     }
 #endif
 
+    template <typename T>
+    static bool setoption(fd_t s, int level, int optname, T& v) noexcept {
+        const int ok = ::setsockopt(s, level, optname, (char*)&v, sizeof(T));
+        return net_success(ok);
+    }
+
     static fd_t createSocket(int af, int type, int protocol, fd_flags fd_flags) noexcept {
 #if defined(_WIN32)
         const fd_t fd = ::WSASocketW(af, type, protocol, af == PF_UNIX ? &UnixProtocol : NULL, 0, WSA_FLAG_NO_HANDLE_INHERIT);
-        if (fd != retired_fd) {
-            if (!set_nonblock(fd, fd_flags == fd_flags::nonblock)) {
-                ::closesocket(fd);
-                return retired_fd;
-            }
+        if (fd == retired_fd) {
+            return retired_fd;
         }
-        return fd;
+        if (!set_nonblock(fd, fd_flags == fd_flags::nonblock)) {
+            ::closesocket(fd);
+            return retired_fd;
+        }
 #elif defined(__APPLE__)
         const fd_t fd = ::socket(af, type, protocol);
-        if (fd != retired_fd) {
-            if (!set_cloexec(fd, true)) {
-                internal_close(fd);
-                return retired_fd;
-            }
-            if (!set_nonblock(fd, fd_flags == fd_flags::nonblock)) {
-                internal_close(fd);
-                return retired_fd;
-            }
+        if (fd == retired_fd) {
+            return retired_fd;
         }
-        return fd;
+        if (!set_cloexec(fd, true)) {
+            internal_close(fd);
+            return retired_fd;
+        }
+        if (!set_nonblock(fd, fd_flags == fd_flags::nonblock)) {
+            internal_close(fd);
+            return retired_fd;
+        }
 #else
         int flags = type | SOCK_CLOEXEC;
         if (fd_flags == fd_flags::nonblock) {
             flags |= SOCK_NONBLOCK;
         }
-        return ::socket(af, flags, protocol);
+        const fd_t fd = ::socket(af, flags, protocol);
+        if (fd == retired_fd) {
+            return retired_fd;
+        }
 #endif
+
+#ifdef SO_NOSIGPIPE
+        if (!setoption(SOL_SOCKET, SO_NOSIGPIPE, enable)) {
+            internal_close(fd);
+            return retired_fd;
+        }
+#endif
+        return fd;
     }
 
     fd_t open(protocol protocol, fd_flags flags) {
@@ -353,12 +372,6 @@ namespace bee::net::socket {
             std::unreachable();
         }
 #endif
-    }
-
-    template <typename T>
-    static bool setoption(fd_t s, int level, int optname, T& v) noexcept {
-        const int ok = ::setsockopt(s, level, optname, (char*)&v, sizeof(T));
-        return net_success(ok);
     }
 
     bool setoption(fd_t s, option opt, int value) noexcept {
@@ -473,7 +486,11 @@ namespace bee::net::socket {
     }
 
     status send(fd_t s, int& rc, const char* buf, int len) noexcept {
-        rc = ::send(s, buf, len, 0);
+        int flags = 0;
+#ifdef MSG_NOSIGNAL
+        flags |= MSG_NOSIGNAL;
+#endif
+        rc = ::send(s, buf, len, flags);
         if (rc < 0) {
             return wait_finish() ? status::wait : status::failed;
         }
@@ -494,7 +511,11 @@ namespace bee::net::socket {
     }
 
     status sendto(fd_t s, int& rc, const char* buf, int len, const endpoint& ep) noexcept {
-        rc = ::sendto(s, buf, len, 0, ep.addr(), ep.addrlen());
+        int flags = 0;
+#ifdef MSG_NOSIGNAL
+        flags |= MSG_NOSIGNAL;
+#endif
+        rc = ::sendto(s, buf, len, flags, ep.addr(), ep.addrlen());
         if (rc < 0) {
             return wait_finish() ? status::wait : status::failed;
         }

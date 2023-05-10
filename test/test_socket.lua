@@ -344,3 +344,19 @@ function test_socket:test_dump()
     end
     server:close()
 end
+
+function test_socket:test_SIGPIPE()
+    local server = lt.assertIsUserdata(socket "tcp")
+    lt.assertIsBoolean(server:bind("127.0.0.1", 0))
+    lt.assertIsBoolean(server:listen())
+    local address, port = server:info("socket")
+    lt.assertIsString(address)
+    lt.assertIsNumber(port)
+    local client = lt.assertIsUserdata(socket "tcp")
+    lt.assertIsBoolean(client:connect("127.0.0.1", port))
+    server:close()
+    for _ = 1, 10 do
+        syncSend(client, "test")
+    end
+    client:close()
+end
