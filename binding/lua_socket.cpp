@@ -547,7 +547,20 @@ namespace bee::lua_socket {
                 lua_pop(L, 1);
             }
         }
-        int ok = ::select(maxfd + 1, &readfds, &writefds, NULL, timeop);
+        int ok;
+        if (timeop == NULL) {
+            do
+                ok = ::select(maxfd + 1, &readfds, &writefds, NULL, NULL);
+            while (ok == -1 && errno == EINTR);
+        }
+        else {
+            ok = ::select(maxfd + 1, &readfds, &writefds, NULL, timeop);
+            if (ok == -1 && errno == EINTR) {
+                lua_newtable(L);
+                lua_newtable(L);
+                return 2;
+            }
+        }
         if (ok < 0) {
             return push_neterror(L, "select");
         }
