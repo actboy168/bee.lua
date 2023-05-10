@@ -19,7 +19,7 @@ namespace bee::lua {
 
 namespace bee::lua_socket {
     using namespace bee::net;
-    static int push_neterror(lua_State* L, const char* msg) {
+    static int push_neterror(lua_State* L, std::string_view msg) {
         auto error = make_neterror(msg);
         lua_pushnil(L);
         lua_pushstring(L, error.c_str());

@@ -1,7 +1,8 @@
 #include <bee/error.h>
+#include <bee/nonstd/format.h>
+
 #if defined(_WIN32)
 #    include <Windows.h>
-#    include <bee/nonstd/format.h>
 #    include <bee/platform/win/unicode.h>
 #else
 #    include <errno.h>
@@ -88,13 +89,8 @@ namespace bee {
 #endif
     }
 
-    std::string make_error(std::error_code errcode, std::string_view errmsg) {
-        std::string message(errmsg);
-        if (!message.empty()) {
-            message.append(": ");
-        }
-        message.append(errcode.message());
-        return message;
+    std::string make_error(std::error_code ec, std::string_view errmsg) {
+        return std::format("{}: ({}:{}){}", errmsg, ec.category().name(), ec.value(), ec.message());
     }
 
     std::string make_crterror(std::string_view errmsg) {
