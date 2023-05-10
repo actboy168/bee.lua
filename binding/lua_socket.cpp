@@ -43,11 +43,12 @@ namespace bee::lua_socket {
             return ep;
         }
     }
-    static socket::fd_t& checkfdref(lua_State* L, int idx) {
-        return lua::checkudata<socket::fd_t>(L, idx);
-    }
     static socket::fd_t checkfd(lua_State* L, int idx) {
-        return lua::checkudata<socket::fd_t>(L, idx);
+        socket::fd_t fd = lua::checkudata<socket::fd_t>(L, idx);
+        if (fd == socket::retired_fd) {
+            luaL_error(L, "socket is already closed.");
+        }
+        return fd;
     }
     static void pushfd(lua_State* L, socket::fd_t fd);
     static int accept(lua_State* L) {
@@ -152,7 +153,7 @@ namespace bee::lua_socket {
         }
     }
     static bool socket_destroy(lua_State* L) {
-        auto& fd = checkfdref(L, 1);
+        auto& fd = lua::checkudata<socket::fd_t>(L, 1);
         if (fd == socket::retired_fd) {
             return true;
         }
@@ -192,7 +193,7 @@ namespace bee::lua_socket {
         }
     }
     static int mt_tostring(lua_State* L) {
-        auto fd = checkfd(L, 1);
+        auto fd = lua::checkudata<socket::fd_t>(L, 1);
         if (fd == socket::retired_fd) {
             lua_pushstring(L, "socket (closed)");
             return 1;
@@ -205,7 +206,7 @@ namespace bee::lua_socket {
         return 0;
     }
     static int mt_gc(lua_State* L) {
-        auto fd = checkfd(L, 1);
+        auto fd = lua::checkudata<socket::fd_t>(L, 1);
         if (fd != socket::retired_fd) {
             socket::close(fd);
         }
@@ -252,7 +253,11 @@ namespace bee::lua_socket {
         return 1;
     }
     static int detach(lua_State* L) {
-        auto& fd = checkfdref(L, 1);
+        auto& fd = lua::checkudata<socket::fd_t>(L, 1);
+        if (fd == socket::retired_fd) {
+            luaL_error(L, "socket is already closed.");
+            return 0;
+        }
         lua_pushlightuserdata(L, (void*)(intptr_t)fd);
         fd = socket::retired_fd;
         return 1;
