@@ -111,7 +111,7 @@ struct basic_ostream_formatter : formatter<basic_string_view<Char>, Char> {
   auto format(const T& value, basic_format_context<OutputIt, Char>& ctx) const
       -> OutputIt {
     auto buffer = basic_memory_buffer<Char>();
-    format_value(buffer, value, ctx.locale());
+    detail::format_value(buffer, value, ctx.locale());
     return formatter<basic_string_view<Char>, Char>::format(
         {buffer.data(), buffer.size()}, ctx);
   }
@@ -193,7 +193,7 @@ void print(std::wostream& os,
 
 FMT_MODULE_EXPORT template <typename... T>
 void println(std::ostream& os, format_string<T...> fmt, T&&... args) {
-  print(os, "{}\n", fmt::format(fmt, std::forward<T>(args)...));
+  fmt::print(os, "{}\n", fmt::format(fmt, std::forward<T>(args)...));
 }
 
 FMT_MODULE_EXPORT

@@ -663,7 +663,7 @@ template <typename T> class is_container_adaptor_like {
 template <typename Container> struct all {
   const Container& c;
   auto begin() const -> typename Container::const_iterator { return c.begin(); }
-  auto end() const -> typename Container::const_iterator { return c.end(); };
+  auto end() const -> typename Container::const_iterator { return c.end(); }
 };
 }  // namespace detail
 
@@ -683,7 +683,7 @@ struct formatter<T, Char,
   }
 };
 
-FMT_MODULE_EXPORT_BEGIN
+FMT_BEGIN_EXPORT
 
 /**
   \rst
@@ -726,7 +726,7 @@ auto join(std::initializer_list<T> list, string_view sep)
   return join(std::begin(list), std::end(list), sep);
 }
 
-FMT_MODULE_EXPORT_END
+FMT_END_EXPORT
 FMT_END_NAMESPACE
 
 #endif  // FMT_RANGES_H_

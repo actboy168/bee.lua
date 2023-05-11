@@ -14,7 +14,7 @@
 #include "format.h"
 
 FMT_BEGIN_NAMESPACE
-FMT_MODULE_EXPORT_BEGIN
+FMT_BEGIN_EXPORT
 
 template <typename T> struct printf_formatter { printf_formatter() = delete; };
 
@@ -599,7 +599,7 @@ inline auto vsprintf(
     basic_format_args<basic_printf_context_t<type_identity_t<Char>>> args)
     -> std::basic_string<Char> {
   auto buf = basic_memory_buffer<Char>();
-  vprintf(buf, detail::to_string_view(fmt), args);
+  detail::vprintf(buf, detail::to_string_view(fmt), args);
   return to_string(buf);
 }
 
@@ -626,7 +626,7 @@ inline auto vfprintf(
     basic_format_args<basic_printf_context_t<type_identity_t<Char>>> args)
     -> int {
   auto buf = basic_memory_buffer<Char>();
-  vprintf(buf, detail::to_string_view(fmt), args);
+  detail::vprintf(buf, detail::to_string_view(fmt), args);
   size_t size = buf.size();
   return std::fwrite(buf.data(), sizeof(Char), size, f) < size
              ? -1
@@ -673,7 +673,7 @@ inline auto printf(const S& fmt, const T&... args) -> int {
       fmt::make_format_args<basic_printf_context_t<char_t<S>>>(args...));
 }
 
-FMT_MODULE_EXPORT_END
+FMT_END_EXPORT
 FMT_END_NAMESPACE
 
 #endif  // FMT_PRINTF_H_
