@@ -16,7 +16,7 @@ namespace bee::filewatch {
         static const size_t kBufSize = 16 * 1024;
 
     public:
-        task(watch* watch) noexcept;
+        task() noexcept;
         ~task();
 
         enum class result {
@@ -39,7 +39,7 @@ namespace bee::filewatch {
         std::array<std::byte, kBufSize> m_buffer;
     };
 
-    task::task(watch* watch) noexcept
+    task::task() noexcept
         : m_path()
         , m_directory(INVALID_HANDLE_VALUE)
         , m_buffer() {
@@ -148,7 +148,7 @@ namespace bee::filewatch {
     }
 
     void watch::add(const string_type& path) {
-        auto& t = m_tasks.emplace_back(this);
+        auto& t = m_tasks.emplace_back();
         if (t.open(path)) {
             if (t.start(m_recursive)) {
                 return;

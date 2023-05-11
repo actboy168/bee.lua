@@ -437,12 +437,12 @@ namespace bee::subprocess {
     }
 
     std::optional<process> process::dup() noexcept {
-        HANDLE hProcess = NULL;
-        if (!::DuplicateHandle(::GetCurrentProcess(), native_handle(), ::GetCurrentProcess(), &hProcess, 0, FALSE, DUPLICATE_SAME_ACCESS)) {
+        HANDLE handle = NULL;
+        if (!::DuplicateHandle(::GetCurrentProcess(), native_handle(), ::GetCurrentProcess(), &handle, 0, FALSE, DUPLICATE_SAME_ACCESS)) {
             return std::nullopt;
         }
         process proc;
-        proc.hProcess    = hProcess;
+        proc.hProcess    = handle;
         proc.dwProcessId = get_id();
         return proc;
     }
