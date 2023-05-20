@@ -231,7 +231,7 @@ lm:source_set "source_lua" {
             "/wd4267",
             "/wd4334",
         },
-        sources = "3rd/lua/fast_setjmp_"..lm.arch..".s"
+        sources = ("3rd/lua/fast_setjmp_%s.s"):format(lm.arch)
     },
     gcc = {
         flags = "-Wno-maybe-uninitialized",
