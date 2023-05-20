@@ -96,4 +96,15 @@
 #define l_randomizePivot() (*(unsigned int*)"Lua\0Lua\0")
 #define luai_makeseed(L) (getenv("LUA_SEED")? (unsigned int)atoi(getenv("LUA_SEED")): l_randomizePivot())
 
+
+#if defined(_MSC_VER)
+
+#include "fast_setjmp.h"
+
+#define LUAI_THROW(L,c) fast_longjmp((c)->b, 1)
+#define LUAI_TRY(L,c,a) if (fast_setjmp((c)->b) == 0) { a }
+#define luai_jmpbuf     jmp_buf
+
+#endif
+
 #endif

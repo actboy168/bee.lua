@@ -230,7 +230,8 @@ lm:source_set "source_lua" {
         flags = {
             "/wd4267",
             "/wd4334",
-        }
+        },
+        sources = "3rd/lua/fast_setjmp_"..lm.arch..".s"
     },
     gcc = {
         flags = "-Wno-maybe-uninitialized",

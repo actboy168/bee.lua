@@ -25,7 +25,8 @@ if lm.os == "windows" then
             "LUA_BUILD_AS_DLL",
         },
         msvc = {
-            flags = "/wd4334"
+            flags = "/wd4334",
+            sources = "3rd/lua/fast_setjmp_"..lm.arch..".s"
         }
     }
     lm:executable "lua" {
@@ -39,6 +40,7 @@ if lm.os == "windows" then
         sources = {
             "3rd/lua/onelua.c",
             "3rd/lua/utf8_crt.c",
+            "3rd/lua/fast_setjmp_"..lm.arch..".s"
         },
         defines = {
             "MAKE_LUAC",
