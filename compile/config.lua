@@ -14,10 +14,11 @@ if lm.sanitize then
         },
         clang = {
             ldflags = "-fsanitize=address"
-        },
-        msvc = {
-            defines = "_DISABLE_STRING_ANNOTATION",
         }
+    }
+    lm:msvc_copydll "sanitize-dll" {
+        type = "asan",
+        output = "$bin"
     }
 end
 
