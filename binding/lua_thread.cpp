@@ -235,6 +235,7 @@ namespace bee::lua_thread {
         ::bee::lua::preload_module(L);
         lua_gc(L, LUA_GCGEN, 0, 0);
         if (luaL_loadbuffer(L, args->source.data(), args->source.size(), args->source.c_str()) != LUA_OK) {
+            free(args->params);
             delete args;
             return lua_error(L);
         }
@@ -282,6 +283,7 @@ namespace bee::lua_thread {
         thread_args* args    = new thread_args { std::string { source.data(), source.size() }, id, params };
         thread_handle handle = thread_create(thread_main, args);
         if (!handle) {
+            free(params);
             delete args;
             lua_pushstring(L, make_syserror("thread_create").c_str());
             return lua_error(L);

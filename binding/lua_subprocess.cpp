@@ -376,7 +376,9 @@ namespace bee::lua_subprocess {
             subprocess::spawn spawn;
             subprocess::args_t args = cast_args(L);
             if (args.size() == 0) {
-                return 0;
+                lua_pushnil(L);
+                lua_pushstring(L, "no process");
+                return 2;
             }
 
             auto cwd = cast_cwd(L);

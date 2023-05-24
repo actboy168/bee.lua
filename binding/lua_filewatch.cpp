@@ -26,8 +26,9 @@ namespace bee::lua_filewatch {
 
     static int add(lua_State* L) {
         filewatch::watch& self = to(L, 1);
+        auto path              = lua::checkstring(L, 2);
         std::error_code ec;
-        fs::path abspath = fs::absolute(lua::checkstring(L, 2), ec);
+        fs::path abspath = fs::absolute(path, ec);
         if (ec) {
             lua_pushstring(L, make_error(ec, "fs::absolute").c_str());
             lua_error(L);
