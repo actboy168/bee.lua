@@ -138,20 +138,19 @@ namespace bee::lua_filesystem {
         };
 
     public:
-        using value_type = fs::path;
         ~path_ptr() {
             switch (st) {
             case status::ptr:
             case status::str:
                 break;
             case status::val:
-                val.~value_type();
+                val.~path();
                 break;
             default:
                 std::unreachable();
             }
         }
-        path_ptr(const value_type* p)
+        path_ptr(const fs::path* p)
             : st { status::ptr }
             , ptr { p } {}
         path_ptr(zstring_view s)
@@ -159,11 +158,11 @@ namespace bee::lua_filesystem {
             , str { s } {
             new (&str) zstring_view(s);
         }
-        path_ptr(value_type&& v)
+        path_ptr(fs::path&& v)
             : st { status::val } {
-            new (&val) value_type(std::move(v));
+            new (&val) fs::path(std::move(v));
         }
-        const value_type* operator->() {
+        const fs::path* operator->() {
             switch (st) {
             case status::ptr:
                 return ptr;
@@ -176,7 +175,7 @@ namespace bee::lua_filesystem {
                 std::unreachable();
             }
         }
-        const value_type& operator*() {
+        const fs::path& operator*() {
             switch (st) {
             case status::ptr:
                 return *ptr;
@@ -189,7 +188,7 @@ namespace bee::lua_filesystem {
                 std::unreachable();
             }
         }
-        operator const value_type&() {
+        operator const fs::path&() {
             switch (st) {
             case status::ptr:
                 return *ptr;
@@ -206,17 +205,17 @@ namespace bee::lua_filesystem {
     private:
         void conv_val() {
 #if defined(_WIN32)
-            new (&val) value_type { win::u2w(str) };
+            new (&val) fs::path { win::u2w(str) };
 #else
-            new (&val) value_type { std::string { str.data(), str.size() } };
+            new (&val) fs::path { std::string { str.data(), str.size() } };
 #endif
             st = status::val;
         }
         status st;
         union {
-            const value_type* ptr;
+            const fs::path* ptr;
             zstring_view str;
-            value_type val;
+            fs::path val;
         };
     };
 
