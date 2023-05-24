@@ -186,6 +186,32 @@ namespace bee::lua {
         return *static_cast<T*>(lua_newuserdatauv(L, sizeof(T), nupvalue));
     }
 
+    namespace cxx {
+        struct status {
+            int n;
+            bool err;
+            status(int n) noexcept
+                : n(n)
+                , err(false) {}
+            status() noexcept
+                : n(0)
+                , err(true) {}
+            explicit operator bool() const noexcept {
+                return !err;
+            }
+        };
+        static inline status error = {};
+        using func                 = status (*)(lua_State* L);
+        template <func f>
+        static int cfunc(lua_State* L) {
+            status s = f(L);
+            if (!s.err) {
+                return s.n;
+            }
+            return lua_error(L);
+        }
+    }
+
     template <typename T, typename... Args>
     T& newudata(lua_State* L, void (*init_metatable)(lua_State*), Args&&... args) {
         static_assert(udata_has_name<T>::value);
