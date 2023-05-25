@@ -14,7 +14,7 @@ namespace bee::net {
     using socklen_t = unsigned int;
 #endif
 
-    static constexpr socklen_t kMaxEndpointSize = 256;
+    constexpr socklen_t kMaxEndpointSize = 256;
 
     enum class un_format : uint16_t {
         pathname = 0,
