@@ -37,7 +37,6 @@
 #endif
 
 namespace bee::net::socket {
-    static constexpr socklen_t kMaxEndpointSize = 256;
 #if defined(_WIN32)
     static_assert(sizeof(SOCKET) == sizeof(fd_t));
 
