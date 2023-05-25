@@ -1,6 +1,5 @@
 #pragma once
 
-#include <bee/utility/dynarray.h>
 #include <bee/utility/zstring_view.h>
 
 #include <cstddef>
@@ -15,6 +14,8 @@ namespace bee::net {
     using socklen_t = unsigned int;
 #endif
 
+    static constexpr socklen_t kMaxEndpointSize = 256;
+
     enum class un_format : uint16_t {
         pathname = 0,
         abstract,
@@ -26,35 +27,25 @@ namespace bee::net {
         uint16_t port;
     };
 
-    struct endpoint_buf {
-        endpoint_buf(size_t size);
-        sockaddr* addr() noexcept;
-        socklen_t* addrlen() noexcept;
-
-    private:
-        friend struct endpoint;
-        dynarray<std::byte> m_data;
-        socklen_t m_size = 0;
-    };
-
     struct endpoint {
+        endpoint() noexcept;
         endpoint_info info() const;
         const sockaddr* addr() const noexcept;
         socklen_t addrlen() const noexcept;
         unsigned short family() const noexcept;
         bool valid() const noexcept;
+        sockaddr* out_addr() noexcept;
+        socklen_t* out_addrlen() noexcept;
 
-        static endpoint from_hostname(zstring_view ip, uint16_t port);
-        static endpoint from_unixpath(zstring_view path);
-        static endpoint from_buf(endpoint_buf&& buf) noexcept;
-        static endpoint from_invalid() noexcept;
+        static endpoint from_hostname(zstring_view ip, uint16_t port) noexcept;
+        static endpoint from_unixpath(zstring_view path) noexcept;
 
     private:
-        endpoint() noexcept;
-        endpoint(size_t size);
-        endpoint(const std::byte* data, size_t size);
-        endpoint(dynarray<std::byte>&& data) noexcept;
-        endpoint(dynarray<std::byte>&& data, size_t size) noexcept;
-        dynarray<std::byte> m_data;
+        endpoint(const std::byte* data, size_t size) noexcept;
+
+    private:
+        std::byte m_data[kMaxEndpointSize];
+        socklen_t m_size;
     };
+    static_assert(std::is_trivially_destructible_v<endpoint>);
 }

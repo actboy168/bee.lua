@@ -24,7 +24,7 @@ namespace bee::lua_socket {
         lua_pushstring(L, error.c_str());
         return 2;
     }
-    static net::endpoint read_endpoint(lua_State* L, int idx) {
+    static net::endpoint check_endpoint(lua_State* L, int idx) {
         auto ip = lua::checkstrview(L, idx);
         if (lua_isnoneornil(L, idx + 1)) {
             auto ep = net::endpoint::from_unixpath(ip);
@@ -275,7 +275,7 @@ namespace bee::lua_socket {
     }
     static int connect(lua_State* L) {
         auto fd = checkfd(L, 1);
-        auto ep = read_endpoint(L, 2);
+        auto ep = check_endpoint(L, 2);
         switch (net::socket::connect(fd, ep)) {
         case net::socket::fdstat::success:
             lua_pushboolean(L, 1);
@@ -291,7 +291,7 @@ namespace bee::lua_socket {
     }
     static int bind(lua_State* L) {
         auto fd = checkfd(L, 1);
-        auto ep = read_endpoint(L, 2);
+        auto ep = check_endpoint(L, 2);
         net::socket::unlink(ep);
         if (!net::socket::bind(fd, ep)) {
             return push_neterror(L, "bind");

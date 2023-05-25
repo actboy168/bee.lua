@@ -499,8 +499,8 @@ namespace bee::net::socket {
     }
 
     expected<endpoint, status> recvfrom(fd_t s, int& rc, char* buf, int len) {
-        endpoint_buf tmp(kMaxEndpointSize);
-        rc = ::recvfrom(s, buf, len, 0, tmp.addr(), tmp.addrlen());
+        endpoint ep;
+        rc = ::recvfrom(s, buf, len, 0, ep.out_addr(), ep.out_addrlen());
         if (rc == 0) {
             return unexpected(status::close);
         }
@@ -508,7 +508,7 @@ namespace bee::net::socket {
             return wait_finish() ? unexpected(status::wait)
                                  : unexpected(status::failed);
         }
-        return endpoint::from_buf(std::move(tmp));
+        return ep;
     }
 
     status sendto(fd_t s, int& rc, const char* buf, int len, const endpoint& ep) noexcept {
@@ -524,21 +524,21 @@ namespace bee::net::socket {
     }
 
     std::optional<endpoint> getpeername(fd_t s) {
-        endpoint_buf tmp(kMaxEndpointSize);
-        const int ok = ::getpeername(s, tmp.addr(), tmp.addrlen());
+        endpoint ep;
+        const int ok = ::getpeername(s, ep.out_addr(), ep.out_addrlen());
         if (!net_success(ok)) {
             return std::nullopt;
         }
-        return endpoint::from_buf(std::move(tmp));
+        return ep;
     }
 
     std::optional<endpoint> getsockname(fd_t s) {
-        endpoint_buf tmp(kMaxEndpointSize);
-        const int ok = ::getsockname(s, tmp.addr(), tmp.addrlen());
+        endpoint ep;
+        const int ok = ::getsockname(s, ep.out_addr(), ep.out_addrlen());
         if (!net_success(ok)) {
             return std::nullopt;
         }
-        return endpoint::from_buf(std::move(tmp));
+        return ep;
     }
 
     bool unlink(const endpoint& ep) {
