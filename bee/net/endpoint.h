@@ -3,6 +3,7 @@
 #include <bee/utility/zstring_view.h>
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
 
 struct sockaddr;
