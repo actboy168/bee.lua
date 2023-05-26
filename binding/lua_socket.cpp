@@ -1,6 +1,8 @@
 ﻿#include <binding/binding.h>
 #if defined _WIN32
 #    include <winsock.h>
+
+#    include <map>
 #else
 #    include <sys/select.h>
 #endif
