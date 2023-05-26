@@ -9,8 +9,8 @@
 #include <cstdint>
 #include <limits>
 #include <lua.hpp>
-#include <map>
 #include <string>
+#include <vector>
 #if defined(_WIN32)
 #    include <bee/platform/win/unicode.h>
 #endif
@@ -243,12 +243,6 @@ namespace bee::lua {
         }
     }
 
-    template <typename T>
-    struct global {
-        static inline T v = T();
-    };
-    using usermodules = global<std::map<std::string, lua_CFunction>>;
-
     struct callfunc {
         template <typename F, typename... Args>
         callfunc(F f, Args... args) {
@@ -256,15 +250,20 @@ namespace bee::lua {
         }
     };
 
-    inline bool register_module(const char* name, lua_CFunction func) {
-        return usermodules::v.insert(std::pair(name, func)).second;
+    inline auto& usermodules() {
+        static std::vector<luaL_Reg> v;
+        return v;
+    }
+
+    inline void register_module(const char* name, lua_CFunction func) {
+        usermodules().emplace_back(luaL_Reg { name, func });
     }
 
     inline int preload_module(lua_State* L) {
         luaL_getsubtable(L, LUA_REGISTRYINDEX, "_PRELOAD");
-        for (const auto& m : usermodules::v) {
-            lua_pushcfunction(L, m.second);
-            lua_setfield(L, -2, m.first.c_str());
+        for (const auto& m : usermodules()) {
+            lua_pushcfunction(L, m.func);
+            lua_setfield(L, -2, m.name);
         }
         lua_pop(L, 1);
         return 0;
