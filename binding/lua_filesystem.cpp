@@ -823,13 +823,6 @@ namespace bee::lua_filesystem {
         return 1;
     }
 
-#if !defined(__cpp_lib_chrono) || __cpp_lib_chrono < 201907
-    template <class DestClock, class SourceClock, class Duration>
-    static auto clock_cast(const std::chrono::time_point<SourceClock, Duration>& t) {
-        return DestClock::now() + (t - SourceClock::now());
-    }
-#endif
-
     static lua::cxx::status last_write_time(lua_State* L) {
         using namespace std::chrono;
         path_ptr p = getpathptr(L, 1);
@@ -839,11 +832,20 @@ namespace bee::lua_filesystem {
             if (ec) {
                 return pusherror(L, "last_write_time", ec, p);
             }
+#if !defined(__cpp_lib_chrono) || __cpp_lib_chrono < 201907
+            auto system_time = time;
+#else
             auto system_time = clock_cast<system_clock>(time);
+#endif
             lua_pushinteger(L, duration_cast<seconds>(system_time.time_since_epoch()).count());
             return 1;
         }
-        auto file_time = clock_cast<fs::file_time_type::clock>(system_clock::time_point() + seconds(lua::checkinteger<lua_Integer>(L, 2)));
+        auto sec = seconds(lua::checkinteger<lua_Integer>(L, 2));
+#if !defined(__cpp_lib_chrono) || __cpp_lib_chrono < 201907
+        auto file_time = fs::file_time_type::clock::time_point() + sec;
+#else
+        auto file_time = clock_cast<fs::file_time_type::clock>(system_clock::time_point() + sec);
+#endif
         std::error_code ec;
         fs::last_write_time(p, file_time, ec);
         if (ec) {
