@@ -348,6 +348,10 @@ function test_fs:test_exists()
 
     create_file(filename)
     is_exists(filename, true)
+    if not isMinGW then
+        -- TODO: mingw bug
+        is_exists(filename.."/", false)
+    end
     is_exists(filename.."/"..filename, false)
 
     fs.remove(filename)
