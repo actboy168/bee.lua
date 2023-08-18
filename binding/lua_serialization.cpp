@@ -9,13 +9,14 @@ namespace bee::lua_serialization {
         switch (lua_type(L, 1)) {
         case LUA_TLIGHTUSERDATA:
             return seri_unpackptr(L, lua::tolightud<void*>(L, 1));
-        case LUA_TSTRING: {
-            return seri_unpack(L);
+        case LUA_TSTRING:
+            lua_settop(L, 1);
+            return seri_unpack(L, (void*)luaL_checkstring(L, 1));
         default:
             return luaL_error(L, "unsupported type %s", luaL_typename(L, lua_type(L, 1)));
         }
-        }
     }
+
     static int pack(lua_State* L) {
         void* data = seri_pack(L, 0, NULL);
         lua_pushlightuserdata(L, data);
