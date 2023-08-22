@@ -16,6 +16,7 @@ Lua runtime and toolset
 * Enable ansi escape code on windows
 * String encoding on windows using utf8
 * Remove randomness when traversing the table
+* Fast setjmp on windows
 * Add error hook (for debugger)
 * Add resume/yield hook (for debugger)
 * Enable lua_assert in debug mode
