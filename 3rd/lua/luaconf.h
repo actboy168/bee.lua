@@ -289,20 +289,12 @@
 #if defined(LUA_CORE) || defined(LUA_LIB)	/* { */
 #define LUA_API __declspec(dllexport)
 #else						/* }{ */
-#ifdef __cplusplus
-#define LUA_API __declspec(dllimport) extern "C"
-#else
 #define LUA_API __declspec(dllimport)
-#endif
 #endif						/* } */
 
 #else				/* }{ */
 
-#ifdef __cplusplus
-#define LUA_API		extern "C"
-#else
 #define LUA_API		extern
-#endif
 
 #endif				/* } */
 
