@@ -20,6 +20,8 @@
 #    include <unistd.h>
 #    if defined(__APPLE__)
 #        include <sys/ioctl.h>
+#    elif defined(__FreeBSD__)
+#        include <sys/socket.h>
 #    endif
 #endif
 
@@ -260,7 +262,7 @@ namespace bee::net::socket {
 #endif
     }
 
-#if defined(_WIN32) || defined(__APPLE__)
+#if defined(_WIN32) || defined(__APPLE__) || defined(__FreeBSD__)
     static void set_error(int err) noexcept {
 #    if defined(_WIN32)
         ::WSASetLastError(err);
