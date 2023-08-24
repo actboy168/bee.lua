@@ -7,6 +7,7 @@
 #    include <sys/un.h>
 #    if defined(__FreeBSD__)
 #        include <netinet/in.h>
+#        include <sys/socket.h>
 #    endif
 #    ifndef UNIX_PATH_MAX
 #        define UNIX_PATH_MAX (sizeof(sockaddr_un::sun_path) / sizeof(sockaddr_un::sun_path[0]))
