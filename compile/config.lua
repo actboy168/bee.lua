@@ -32,6 +32,9 @@ lm:config "prebuilt" {
     windows = {
         defines = "_WIN32_WINNT=0x0601",
     },
+    msvc = {
+        flags = "/utf-8",
+    },
     macos = {
         flags = "-Wunguarded-availability",
         sys = "macos10.15",
