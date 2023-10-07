@@ -930,3 +930,10 @@ function test_fs:test_hard_link()
     lt.assertEquals(read_file(target), content)
     test_remove(target, link)
 end
+
+function test_fs:test_file_size()
+    fs.remove_all "temp1.txt"
+    create_file("temp1.txt", "1234567890")
+    lt.assertEquals(fs.file_size "temp1.txt", 10)
+    fs.remove_all "temp1.txt"
+end

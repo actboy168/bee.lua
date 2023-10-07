@@ -618,6 +618,17 @@ namespace bee::lua_filesystem {
         return 1;
     }
 
+    static lua::cxx::status file_size(lua_State* L) {
+        path_ptr p = getpathptr(L, 1);
+        std::error_code ec;
+        auto size = fs::file_size(p, ec);
+        if (ec) {
+            return pusherror(L, "file_size", ec, p);
+        }
+        lua_pushinteger(L, static_cast<lua_Integer>(size));
+        return 1;
+    }
+
     static lua::cxx::status create_directory(lua_State* L) {
         path_ptr p = getpathptr(L, 1);
         std::error_code ec;
@@ -1070,6 +1081,7 @@ namespace bee::lua_filesystem {
             { "exists", exists },
             { "is_directory", is_directory },
             { "is_regular_file", is_regular_file },
+            { "file_size", lua::cxx::cfunc<file_size> },
             { "create_directory", lua::cxx::cfunc<create_directory> },
             { "create_directories", lua::cxx::cfunc<create_directories> },
             { "rename", lua::cxx::cfunc<rename> },
