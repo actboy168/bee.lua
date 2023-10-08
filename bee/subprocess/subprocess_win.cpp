@@ -492,6 +492,10 @@ namespace bee::subprocess {
         return hProcess;
     }
 
+    os_handle process::thread_handle() const noexcept {
+        return hThread;
+    }
+
     namespace pipe {
         open_result open() noexcept {
             net::fd_t fds[2];
