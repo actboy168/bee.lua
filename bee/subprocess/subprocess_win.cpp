@@ -484,18 +484,6 @@ namespace bee::subprocess {
         return (DWORD)-1 != ::ResumeThread(hThread);
     }
 
-    process_id process::get_id() const noexcept {
-        return dwProcessId;
-    }
-
-    process_handle process::native_handle() const noexcept {
-        return hProcess;
-    }
-
-    os_handle process::thread_handle() const noexcept {
-        return hThread;
-    }
-
     namespace pipe {
         open_result open() noexcept {
             net::fd_t fds[2];
