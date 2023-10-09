@@ -341,8 +341,38 @@ namespace bee::lua_socket {
         };
         luaL_setfuncs(L, mt, 0);
     }
+    static void metatable_no_ownership(lua_State* L) {
+        luaL_Reg lib[] = {
+            { "connect", connect },
+            { "bind", bind },
+            { "listen", listen },
+            { "accept", accept },
+            { "recv", recv },
+            { "send", send },
+            { "recvfrom", recvfrom },
+            { "sendto", sendto },
+            { "shutdown", shutdown },
+            { "status", status },
+            { "info", info },
+            { "handle", handle },
+            { "detach", detach },
+            { "option", option },
+            { NULL, NULL },
+        };
+        luaL_newlibtable(L, lib);
+        luaL_setfuncs(L, lib, 0);
+        lua_setfield(L, -2, "__index");
+        luaL_Reg mt[] = {
+            { "__tostring", mt_tostring },
+            { NULL, NULL },
+        };
+        luaL_setfuncs(L, mt, 0);
+    }
     static void pushfd(lua_State* L, net::fd_t fd) {
         lua::newudata<net::fd_t>(L, metatable, fd);
+    }
+    static void pushfd_no_ownership(lua_State* L, net::fd_t fd) {
+        lua::newudata<net::fd_t>(L, metatable_no_ownership, fd);
     }
     static int pair(lua_State* L) {
         net::fd_t sv[2];
@@ -354,8 +384,14 @@ namespace bee::lua_socket {
         return 2;
     }
     static int fd(lua_State* L) {
-        auto fd = lua::checklightud<net::fd_t>(L, 1);
-        pushfd(L, fd);
+        auto fd           = lua::checklightud<net::fd_t>(L, 1);
+        bool no_ownership = lua_toboolean(L, 2);
+        if (no_ownership) {
+            pushfd_no_ownership(L, fd);
+        }
+        else {
+            pushfd(L, fd);
+        }
         return 1;
     }
     static int mt_call(lua_State* L) {
