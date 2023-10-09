@@ -232,6 +232,25 @@ namespace bee::lua {
         return *o;
     }
 
+    template <typename T, typename... Args>
+    T& newudata(lua_State* L, const char* name, void (*init_metatable)(lua_State*), Args&&... args) {
+        int nupvalue = 0;
+        if constexpr (udata_has_nupvalue<T>::value) {
+            nupvalue = udata<T>::nupvalue;
+        }
+        T* o = static_cast<T*>(lua_newuserdatauv(L, sizeof(T), nupvalue));
+        new (o) T(std::forward<Args>(args)...);
+        if (luaL_newmetatable(L, name)) {
+            if constexpr (!std::is_trivially_destructible<T>::value) {
+                lua_pushcfunction(L, destroyudata<T>);
+                lua_setfield(L, -2, "__gc");
+            }
+            init_metatable(L);
+        }
+        lua_setmetatable(L, -2);
+        return *o;
+    }
+
     template <typename T>
     T& checkudata(lua_State* L, int arg) {
         if constexpr (udata_has_name<T>::value) {

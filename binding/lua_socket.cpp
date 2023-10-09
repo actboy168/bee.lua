@@ -12,13 +12,6 @@
 #include <bee/nonstd/unreachable.h>
 #include <bee/thread/simplethread.h>
 
-namespace bee::lua {
-    template <>
-    struct udata<net::fd_t> {
-        static inline auto name = "bee::net::fd";
-    };
-}
-
 namespace bee::lua_socket {
     static int push_neterror(lua_State* L, std::string_view msg) {
         auto error = make_neterror(msg);
@@ -369,10 +362,10 @@ namespace bee::lua_socket {
         luaL_setfuncs(L, mt, 0);
     }
     static void pushfd(lua_State* L, net::fd_t fd) {
-        lua::newudata<net::fd_t>(L, metatable, fd);
+        lua::newudata<net::fd_t>(L, "bee::net::fd", metatable, fd);
     }
     static void pushfd_no_ownership(lua_State* L, net::fd_t fd) {
-        lua::newudata<net::fd_t>(L, metatable_no_ownership, fd);
+        lua::newudata<net::fd_t>(L, "bee::net::fd (no ownership)", metatable_no_ownership, fd);
     }
     static int pair(lua_State* L) {
         net::fd_t sv[2];
