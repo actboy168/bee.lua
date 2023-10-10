@@ -146,6 +146,32 @@ FMT_END_NAMESPACE
 
 FMT_BEGIN_NAMESPACE
 FMT_EXPORT
+template <std::size_t N, typename Char>
+struct formatter<std::bitset<N>, Char> : nested_formatter<string_view> {
+ private:
+  // Functor because C++11 doesn't support generic lambdas.
+  struct writer {
+    const std::bitset<N>& bs;
+
+    template <typename OutputIt>
+    FMT_CONSTEXPR OutputIt operator()(OutputIt out) {
+      for (auto pos = N; pos > 0; --pos) {
+        out = detail::write<Char>(out, bs[pos - 1] ? Char('1') : Char('0'));
+      }
+
+      return out;
+    }
+  };
+
+ public:
+  template <typename FormatContext>
+  auto format(const std::bitset<N>& bs, FormatContext& ctx) const
+      -> decltype(ctx.out()) {
+    return write_padded(ctx, writer{bs});
+  }
+};
+
+FMT_EXPORT
 template <typename Char>
 struct formatter<std::thread::id, Char> : basic_ostream_formatter<Char> {};
 FMT_END_NAMESPACE
@@ -447,6 +473,19 @@ struct formatter<std::atomic<T>, Char,
     return formatter<T, Char>::format(v.load(), ctx);
   }
 };
+
+#ifdef __cpp_lib_atomic_flag_test
+FMT_EXPORT
+template <typename Char>
+struct formatter<std::atomic_flag, Char>
+    : formatter<bool, Char> {
+  template <typename FormatContext>
+  auto format(const std::atomic_flag& v, FormatContext& ctx) const
+      -> decltype(ctx.out()) {
+    return formatter<bool, Char>::format(v.test(), ctx);
+  }
+};
+#endif // __cpp_lib_atomic_flag_test
 
 FMT_END_NAMESPACE
 #endif  // FMT_STD_H_

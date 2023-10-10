@@ -18,7 +18,7 @@
 #include <type_traits>
 
 // The fmt library version in the form major * 10000 + minor * 100 + patch.
-#define FMT_VERSION 100100
+#define FMT_VERSION 100101
 
 #if defined(__clang__) && !defined(__ibmxl__)
 #  define FMT_CLANG_VERSION (__clang_major__ * 100 + __clang_minor__)
@@ -185,18 +185,20 @@
 #  define FMT_END_EXPORT
 #endif
 
+#if FMT_GCC_VERSION || FMT_CLANG_VERSION
+#  define FMT_VISIBILITY(value) __attribute__((visibility(value)))
+#else
+#  define FMT_VISIBILITY(value)
+#endif
+
 #if !defined(FMT_HEADER_ONLY) && defined(_WIN32)
-#  ifdef FMT_LIB_EXPORT
+#  if defined(FMT_LIB_EXPORT)
 #    define FMT_API __declspec(dllexport)
 #  elif defined(FMT_SHARED)
 #    define FMT_API __declspec(dllimport)
 #  endif
-#else
-#  if defined(FMT_LIB_EXPORT) || defined(FMT_SHARED)
-#    if defined(__GNUC__) || defined(__clang__)
-#      define FMT_API __attribute__((visibility("default")))
-#    endif
-#  endif
+#elif defined(FMT_LIB_EXPORT) || defined(FMT_SHARED)
+#  define FMT_API FMT_VISIBILITY("default")
 #endif
 #ifndef FMT_API
 #  define FMT_API
@@ -1420,9 +1422,8 @@ template <typename Context> struct arg_mapper {
       FMT_ENABLE_IF(
           std::is_pointer<T>::value || std::is_member_pointer<T>::value ||
           std::is_function<typename std::remove_pointer<T>::type>::value ||
-          (std::is_convertible<const T&, const void*>::value &&
-           !std::is_convertible<const T&, const char_type*>::value &&
-           !has_formatter<T, Context>::value))>
+          (std::is_array<T>::value &&
+           !std::is_convertible<T, const char_type*>::value))>
   FMT_CONSTEXPR auto map(const T&) -> unformattable_pointer {
     return {};
   }
@@ -1662,7 +1663,6 @@ template <typename Context> class basic_format_arg {
   \endrst
  */
 // DEPRECATED!
-FMT_EXPORT
 template <typename Visitor, typename Context>
 FMT_CONSTEXPR FMT_INLINE auto visit_format_arg(
     Visitor&& vis, const basic_format_arg<Context>& arg) -> decltype(vis(0)) {
@@ -2302,9 +2302,12 @@ FMT_CONSTEXPR FMT_INLINE auto parse_format_specs(
     dynamic_format_specs<Char>& specs;
     type arg_type;
 
-    FMT_CONSTEXPR auto operator()(pres type, int set) -> const Char* {
-      if (!in(arg_type, set)) throw_format_error("invalid format specifier");
-      specs.type = type;
+    FMT_CONSTEXPR auto operator()(pres pres_type, int set) -> const Char* {
+      if (!in(arg_type, set)) {
+        if (arg_type == type::none_type) return begin;
+        throw_format_error("invalid format specifier");
+      }
+      specs.type = pres_type;
       return begin + 1;
     }
   } parse_presentation_type{begin, specs, arg_type};
@@ -2321,6 +2324,7 @@ FMT_CONSTEXPR FMT_INLINE auto parse_format_specs(
     case '+':
     case '-':
     case ' ':
+      if (arg_type == type::none_type) return begin;
       enter_state(state::sign, in(arg_type, sint_set | float_set));
       switch (c) {
       case '+':
@@ -2336,14 +2340,17 @@ FMT_CONSTEXPR FMT_INLINE auto parse_format_specs(
       ++begin;
       break;
     case '#':
+      if (arg_type == type::none_type) return begin;
       enter_state(state::hash, is_arithmetic_type(arg_type));
       specs.alt = true;
       ++begin;
       break;
     case '0':
       enter_state(state::zero);
-      if (!is_arithmetic_type(arg_type))
+      if (!is_arithmetic_type(arg_type)) {
+        if (arg_type == type::none_type) return begin;
         throw_format_error("format specifier requires numeric argument");
+      }
       if (specs.align == align::none) {
         // Ignore 0 if align is specified for compatibility with std::format.
         specs.align = align::numeric;
@@ -2365,12 +2372,14 @@ FMT_CONSTEXPR FMT_INLINE auto parse_format_specs(
       begin = parse_dynamic_spec(begin, end, specs.width, specs.width_ref, ctx);
       break;
     case '.':
+      if (arg_type == type::none_type) return begin;
       enter_state(state::precision,
                   in(arg_type, float_set | string_set | cstring_set));
       begin = parse_precision(begin, end, specs.precision, specs.precision_ref,
                               ctx);
       break;
     case 'L':
+      if (arg_type == type::none_type) return begin;
       enter_state(state::locale, is_arithmetic_type(arg_type));
       specs.localized = true;
       ++begin;
@@ -2543,8 +2552,8 @@ FMT_CONSTEXPR auto parse_format_specs(ParseContext& ctx)
       decltype(arg_mapper<context>().map(std::declval<const T&>())),
       typename strip_named_arg<T>::type>;
 #if defined(__cpp_if_constexpr)
-  if constexpr (std::is_default_constructible_v<
-                    formatter<mapped_type, char_type>>) {
+  if constexpr (std::is_default_constructible<
+                    formatter<mapped_type, char_type>>::value) {
     return formatter<mapped_type, char_type>().parse(ctx);
   } else {
     type_is_unformattable_for<T, char_type> _;

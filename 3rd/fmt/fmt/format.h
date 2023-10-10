@@ -83,7 +83,8 @@
 #  if FMT_CPLUSPLUS >= 202002L
 #    if FMT_HAS_CPP_ATTRIBUTE(no_unique_address)
 #      define FMT_NO_UNIQUE_ADDRESS [[no_unique_address]]
-#    elif FMT_MSC_VERSION >= 1929  // VS2019 v16.10 and later
+// VS2019 v16.10 and later except clang-cl (https://reviews.llvm.org/D110485)
+#    elif (FMT_MSC_VERSION >= 1929) && !FMT_CLANG_VERSION
 #      define FMT_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
 #    endif
 #  endif
@@ -92,10 +93,11 @@
 #  define FMT_NO_UNIQUE_ADDRESS
 #endif
 
-#if FMT_GCC_VERSION || defined(__clang__)
-#  define FMT_VISIBILITY(value) __attribute__((visibility(value)))
+// Visibility when compiled as a shared library/object.
+#if defined(FMT_LIB_EXPORT) || defined(FMT_SHARED)
+#  define FMT_SO_VISIBILITY(value) FMT_VISIBILITY(value)
 #else
-#  define FMT_VISIBILITY(value)
+#  define FMT_SO_VISIBILITY(value)
 #endif
 
 #ifdef __has_builtin
@@ -151,7 +153,10 @@ FMT_END_NAMESPACE
 
 #ifndef FMT_USE_USER_DEFINED_LITERALS
 // EDG based compilers (Intel, NVIDIA, Elbrus, etc), GCC and MSVC support UDLs.
-#  if (FMT_HAS_FEATURE(cxx_user_literals) || FMT_GCC_VERSION >= 407 || \
+//
+// GCC before 4.9 requires a space in `operator"" _a` which is invalid in later
+// compiler versions.
+#  if (FMT_HAS_FEATURE(cxx_user_literals) || FMT_GCC_VERSION >= 409 || \
        FMT_MSC_VERSION >= 1900) &&                                     \
       (!defined(__EDG_VERSION__) || __EDG_VERSION__ >= /* UDL feature */ 480)
 #    define FMT_USE_USER_DEFINED_LITERALS 1
@@ -367,8 +372,6 @@ inline auto is_big_endian() -> bool {
 class uint128_fallback {
  private:
   uint64_t lo_, hi_;
-
-  friend uint128_fallback umul128(uint64_t x, uint64_t y) noexcept;
 
  public:
   constexpr uint128_fallback(uint64_t hi, uint64_t lo) : lo_(lo), hi_(hi) {}
@@ -1038,6 +1041,7 @@ namespace detail {
 FMT_API bool write_console(std::FILE* f, string_view text);
 FMT_API void print(std::FILE*, string_view);
 }  // namespace detail
+
 FMT_BEGIN_EXPORT
 
 // Suppress a misleading warning in older versions of clang.
@@ -1046,7 +1050,7 @@ FMT_BEGIN_EXPORT
 #endif
 
 /** An error reported from a formatting function. */
-class FMT_VISIBILITY("default") format_error : public std::runtime_error {
+class FMT_SO_VISIBILITY("default") format_error : public std::runtime_error {
  public:
   using std::runtime_error::runtime_error;
 };
@@ -1394,7 +1398,7 @@ FMT_CONSTEXPR inline auto format_uint(It out, UInt value, int num_digits,
     return out;
   }
   // Buffer should be large enough to hold all digits (digits / BASE_BITS + 1).
-  char buffer[num_bits<UInt>() / BASE_BITS + 1];
+  char buffer[num_bits<UInt>() / BASE_BITS + 1] = {};
   format_uint<BASE_BITS>(buffer, value, num_digits, upper);
   return detail::copy_str_noinline<Char>(buffer, buffer + num_digits, out);
 }
@@ -1453,7 +1457,7 @@ template <typename WChar, typename Buffer = memory_buffer> class to_utf8 {
         ++p;
         if (p == s.end() || (c & 0xfc00) != 0xd800 || (*p & 0xfc00) != 0xdc00) {
           if (policy == to_utf8_error_policy::abort) return false;
-          buf.append(string_view("�"));
+          buf.append(string_view("\xEF\xBF\xBD"));
           --p;
         } else {
           c = (c << 10) + static_cast<uint32_t>(*p) - 0x35fdc00;
@@ -1486,9 +1490,9 @@ inline uint128_fallback umul128(uint64_t x, uint64_t y) noexcept {
   auto p = static_cast<uint128_opt>(x) * static_cast<uint128_opt>(y);
   return {static_cast<uint64_t>(p >> 64), static_cast<uint64_t>(p)};
 #elif defined(_MSC_VER) && defined(_M_X64)
-  auto result = uint128_fallback();
-  result.lo_ = _umul128(x, y, &result.hi_);
-  return result;
+  auto hi = uint64_t();
+  auto lo = _umul128(x, y, &hi);
+  return {hi, lo};
 #else
   const uint64_t mask = static_cast<uint64_t>(max_value<uint32_t>());
 
@@ -1735,29 +1739,6 @@ FMT_CONSTEXPR inline uint64_t multiply(uint64_t lhs, uint64_t rhs) {
 FMT_CONSTEXPR inline fp operator*(fp x, fp y) {
   return {multiply(x.f, y.f), x.e + y.e + 64};
 }
-
-template <typename T = void> struct basic_data {
-  // For checking rounding thresholds.
-  // The kth entry is chosen to be the smallest integer such that the
-  // upper 32-bits of 10^(k+1) times it is strictly bigger than 5 * 10^k.
-  static constexpr uint32_t fractional_part_rounding_thresholds[8] = {
-      2576980378U,  // ceil(2^31 + 2^32/10^1)
-      2190433321U,  // ceil(2^31 + 2^32/10^2)
-      2151778616U,  // ceil(2^31 + 2^32/10^3)
-      2147913145U,  // ceil(2^31 + 2^32/10^4)
-      2147526598U,  // ceil(2^31 + 2^32/10^5)
-      2147487943U,  // ceil(2^31 + 2^32/10^6)
-      2147484078U,  // ceil(2^31 + 2^32/10^7)
-      2147483691U   // ceil(2^31 + 2^32/10^8)
-  };
-};
-// This is a struct rather than an alias to avoid shadowing warnings in gcc.
-struct data : basic_data<> {};
-
-#if FMT_CPLUSPLUS < 201703L
-template <typename T>
-constexpr uint32_t basic_data<T>::fractional_part_rounding_thresholds[];
-#endif
 
 template <typename T, bool doublish = num_bits<T>() == num_bits<double>()>
 using convert_float_result =
@@ -3029,7 +3010,7 @@ class bigint {
     bigits_.resize(to_unsigned(num_bigits + exp_difference));
     for (int i = num_bigits - 1, j = i + exp_difference; i >= 0; --i, --j)
       bigits_[j] = bigits_[i];
-    std::uninitialized_fill_n(bigits_.data(), exp_difference, 0);
+    std::uninitialized_fill_n(bigits_.data(), exp_difference, 0u);
     exp_ -= exp_difference;
   }
 
@@ -3178,8 +3159,10 @@ FMT_CONSTEXPR20 inline void format_dragon(basic_fp<uint128_t> value,
       }
       if (buf[0] == overflow) {
         buf[0] = '1';
-        if ((flags & dragon::fixed) != 0) buf.push_back('0');
-        else ++exp10;
+        if ((flags & dragon::fixed) != 0)
+          buf.push_back('0');
+        else
+          ++exp10;
       }
       return;
     }
@@ -3274,6 +3257,17 @@ template <typename Float, FMT_ENABLE_IF(is_double_double<Float>::value)>
 FMT_CONSTEXPR20 void format_hexfloat(Float value, int precision,
                                      float_specs specs, buffer<char>& buf) {
   format_hexfloat(static_cast<double>(value), precision, specs, buf);
+}
+
+constexpr uint32_t fractional_part_rounding_thresholds(int index) {
+  // For checking rounding thresholds.
+  // The kth entry is chosen to be the smallest integer such that the
+  // upper 32-bits of 10^(k+1) times it is strictly bigger than 5 * 10^k.
+  // It is equal to ceil(2^31 + 2^32/10^(k + 1)).
+  // These are stored in a string literal because we cannot have static arrays
+  // in constexpr functions and non-static ones are poorly optimized.
+  return U"\x9999999a\x828f5c29\x80418938\x80068db9\x8000a7c6\x800010c7"
+         U"\x800001ae\x8000002b"[index];
 }
 
 template <typename Float>
@@ -3480,12 +3474,12 @@ FMT_CONSTEXPR20 auto format_float(Float value, int precision, float_specs specs,
           //    fractional part is strictly larger than 1/2.
           if (precision < 9) {
             uint32_t fractional_part = static_cast<uint32_t>(prod);
-            should_round_up = fractional_part >=
-                                  data::fractional_part_rounding_thresholds
-                                      [8 - number_of_digits_to_print] ||
-                              ((fractional_part >> 31) &
-                               ((digits & 1) | (second_third_subsegments != 0) |
-                                has_more_segments)) != 0;
+            should_round_up =
+                fractional_part >= fractional_part_rounding_thresholds(
+                                       8 - number_of_digits_to_print) ||
+                ((fractional_part >> 31) &
+                 ((digits & 1) | (second_third_subsegments != 0) |
+                  has_more_segments)) != 0;
           }
           // Rounding at the subsegment boundary.
           // In this case, the fractional part is at least 1/2 if and only if
@@ -3520,12 +3514,12 @@ FMT_CONSTEXPR20 auto format_float(Float value, int precision, float_specs specs,
             // of 19 digits, so in this case the third segment should be
             // consisting of a genuine digit from the input.
             uint32_t fractional_part = static_cast<uint32_t>(prod);
-            should_round_up = fractional_part >=
-                                  data::fractional_part_rounding_thresholds
-                                      [8 - number_of_digits_to_print] ||
-                              ((fractional_part >> 31) &
-                               ((digits & 1) | (third_subsegment != 0) |
-                                has_more_segments)) != 0;
+            should_round_up =
+                fractional_part >= fractional_part_rounding_thresholds(
+                                       8 - number_of_digits_to_print) ||
+                ((fractional_part >> 31) &
+                 ((digits & 1) | (third_subsegment != 0) |
+                  has_more_segments)) != 0;
           }
           // Rounding at the subsegment boundary.
           else {
@@ -4198,6 +4192,59 @@ template <typename T> struct formatter<group_digits_view<T>> : formatter<T> {
   }
 };
 
+template <typename T> struct nested_view {
+  const formatter<T>* fmt;
+  const T* value;
+};
+
+template <typename T> struct formatter<nested_view<T>> {
+  FMT_CONSTEXPR auto parse(format_parse_context& ctx) -> const char* {
+    return ctx.begin();
+  }
+  auto format(nested_view<T> view, format_context& ctx) const
+      -> decltype(ctx.out()) {
+    return view.fmt->format(*view.value, ctx);
+  }
+};
+
+template <typename T> struct nested_formatter {
+ private:
+  int width_;
+  detail::fill_t<char> fill_;
+  align_t align_ : 4;
+  formatter<T> formatter_;
+
+ public:
+  constexpr nested_formatter() : width_(0), align_(align_t::none) {}
+
+  FMT_CONSTEXPR auto parse(format_parse_context& ctx) -> const char* {
+    auto specs = detail::dynamic_format_specs<char>();
+    auto it = parse_format_specs(ctx.begin(), ctx.end(), specs, ctx,
+                                 detail::type::none_type);
+    width_ = specs.width;
+    fill_ = specs.fill;
+    align_ = specs.align;
+    ctx.advance_to(it);
+    return formatter_.parse(ctx);
+  }
+
+  template <typename F>
+  auto write_padded(format_context& ctx, F write) const -> decltype(ctx.out()) {
+    if (width_ == 0) return write(ctx.out());
+    auto buf = memory_buffer();
+    write(std::back_inserter(buf));
+    auto specs = format_specs<>();
+    specs.width = width_;
+    specs.fill = fill_;
+    specs.align = align_;
+    return detail::write(ctx.out(), string_view(buf.data(), buf.size()), specs);
+  }
+
+  auto nested(const T& value) const -> nested_view<T> {
+    return nested_view<T>{&formatter_, &value};
+  }
+};
+
 // DEPRECATED! join_view will be moved to ranges.h.
 template <typename It, typename Sentinel, typename Char = char>
 struct join_view : detail::view {
@@ -4319,6 +4366,8 @@ inline auto to_string(const T& value) -> std::string {
   return to_string(format_as(value));
 }
 
+FMT_END_EXPORT
+
 namespace detail {
 
 template <typename Char>
@@ -4390,6 +4439,8 @@ void vformat_to(buffer<Char>& buf, basic_string_view<Char> fmt,
   detail::parse_format_string<false>(fmt, format_handler(out, fmt, args, loc));
 }
 
+FMT_BEGIN_EXPORT
+
 #ifndef FMT_HEADER_ONLY
 extern template FMT_API void vformat_to(buffer<char>&, string_view,
                                         typename vformat_args<>::type,
@@ -4422,7 +4473,7 @@ template <detail_exported::fixed_string Str> constexpr auto operator""_a() {
   return detail::udl_arg<char_t, sizeof(Str.data) / sizeof(char_t), Str>();
 }
 #  else
-constexpr auto operator"" _a(const char* s, size_t) -> detail::udl_arg<char> {
+constexpr auto operator""_a(const char* s, size_t) -> detail::udl_arg<char> {
   return {s};
 }
 #  endif
