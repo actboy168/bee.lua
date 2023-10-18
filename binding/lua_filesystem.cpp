@@ -230,6 +230,13 @@ namespace bee::lua_filesystem {
         return &getpath(L, idx);
     }
 
+#if !defined(__cpp_lib_chrono) || __cpp_lib_chrono < 201907
+    template <class DestClock, class SourceClock, class Duration>
+    static auto clock_cast(const std::chrono::time_point<SourceClock, Duration>& t) {
+        return DestClock::now() + (t - SourceClock::now());
+    }
+#endif
+
     namespace path {
         static void push(lua_State* L);
         static void push(lua_State* L, const fs::path& path);
@@ -553,6 +560,23 @@ namespace bee::lua_filesystem {
             return 1;
         }
 
+        static lua::cxx::status last_write_time(lua_State* L) {
+            using namespace std::chrono;
+            const auto& entry = to(L, 1);
+            std::error_code ec;
+            auto time = entry.last_write_time(ec);
+             if (ec) {
+                return pusherror(L, "directory_entry::last_write_time", ec);
+            }
+#if defined(__APPLE__)
+            auto system_time = time;
+#else
+            auto system_time = clock_cast<system_clock>(time);
+#endif
+            lua_pushinteger(L, duration_cast<seconds>(system_time.time_since_epoch()).count());
+            return 1;
+        }
+
         static void metatable(lua_State* L) {
             static luaL_Reg lib[] = {
                 { "path", path },
@@ -563,6 +587,7 @@ namespace bee::lua_filesystem {
                 { "exists", exists },
                 { "is_directory", is_directory },
                 { "is_regular_file", is_regular_file },
+                { "last_write_time", lua::cxx::cfunc<last_write_time> },
                 { NULL, NULL },
             };
             luaL_newlibtable(L, lib);
@@ -833,13 +858,6 @@ namespace bee::lua_filesystem {
         path::push(L, r);
         return 1;
     }
-
-#if !defined(__cpp_lib_chrono) || __cpp_lib_chrono < 201907
-    template <class DestClock, class SourceClock, class Duration>
-    static auto clock_cast(const std::chrono::time_point<SourceClock, Duration>& t) {
-        return DestClock::now() + (t - SourceClock::now());
-    }
-#endif
 
     static lua::cxx::status last_write_time(lua_State* L) {
         using namespace std::chrono;
