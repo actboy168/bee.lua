@@ -577,6 +577,18 @@ namespace bee::lua_filesystem {
             return 1;
         }
 
+        static lua::cxx::status file_size(lua_State* L) {
+            using namespace std::chrono;
+            const auto& entry = to(L, 1);
+            std::error_code ec;
+            auto size = entry.file_size(ec);
+            if (ec) {
+                return pusherror(L, "directory_entry::file_size", ec);
+            }
+            lua_pushinteger(L, static_cast<lua_Integer>(size));
+            return 1;
+        }
+
         static void metatable(lua_State* L) {
             static luaL_Reg lib[] = {
                 { "path", path },
@@ -588,6 +600,7 @@ namespace bee::lua_filesystem {
                 { "is_directory", is_directory },
                 { "is_regular_file", is_regular_file },
                 { "last_write_time", lua::cxx::cfunc<last_write_time> },
+                { "file_size", lua::cxx::cfunc<file_size> },
                 { NULL, NULL },
             };
             luaL_newlibtable(L, lib);
