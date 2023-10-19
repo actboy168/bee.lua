@@ -1,8 +1,29 @@
 local lt = require "ltest"
 local socket = require "bee.socket"
+local select = require "bee.select"
 local thread = require "bee.thread"
 local fs = require "bee.filesystem"
 local errlog = thread.channel "errlog"
+
+local function simple_select(fd, mode)
+    local s <close> = select.create()
+    if mode == "r" then
+        s:event_init(fd, nil, select.SELECT_READ)
+        s:wait()
+    elseif mode == "w" then
+        s:event_init(fd, nil, select.SELECT_WRITE)
+        s:wait()
+    elseif mode == "rw" then
+        s:event_init(fd, nil, select.SELECT_READ | select.SELECT_WRITE)
+        local event = 0
+        for _, e in s:wait() do
+            event = event | e
+        end
+        return event
+    else
+        assert(false)
+    end
+end
 
 local function assertNotThreadError()
     local ok, msg = errlog:pop()
@@ -23,10 +44,7 @@ end
 
 local function syncSend(fd, data)
     while true do
-        local _, wr = socket.select(nil, { fd })
-        if not wr or wr[1] ~= fd then
-            break
-        end
+        simple_select(fd, "w")
         local n = fd:send(data)
         if not n then
             return n, data
@@ -42,10 +60,7 @@ end
 local function syncRecv(fd, n)
     local res = ""
     while true do
-        local rd = socket.select({ fd }, nil)
-        if not rd or rd[1] ~= fd then
-            break
-        end
+        simple_select(fd, "r")
         local data = fd:recv(n)
         if data == nil then
             return nil, n
@@ -152,12 +167,8 @@ function test_socket:test_tcp_accept()
     for _ = 1, 2 do
         local client = lt.assertIsUserdata(socket "tcp")
         lt.assertIsBoolean(client:connect("127.0.0.1", port))
-        local rd, _ = socket.select({ server }, nil)
-        local _, wr = socket.select(nil, { client })
-        lt.assertIsTable(rd)
-        lt.assertIsTable(wr)
-        lt.assertEquals(rd[1], server)
-        lt.assertEquals(wr[1], client)
+        simple_select(server, "r")
+        simple_select(client, "w")
         local session = lt.assertIsUserdata(server:accept())
         lt.assertEquals(client:status(), true)
         lt.assertEquals(session:status(), true)
@@ -176,12 +187,8 @@ function test_socket:test_unix_accept()
     for _ = 1, 2 do
         local client = lt.assertIsUserdata(socket "unix")
         lt.assertIsBoolean(client:connect(TestUnixSock))
-        local rd, _ = socket.select({ server }, nil)
-        local _, wr = socket.select(nil, { client })
-        lt.assertIsTable(rd)
-        lt.assertIsTable(wr)
-        lt.assertEquals(rd[1], server)
-        lt.assertEquals(wr[1], client)
+        simple_select(server, "r")
+        simple_select(client, "w")
         local session = lt.assertIsUserdata(server:accept())
         lt.assertEquals(client:status(), true)
         lt.assertEquals(session:status(), true)
@@ -206,15 +213,35 @@ local function createEchoThread(name, ...)
     -- %s
     local protocol, address, port = ...
     local socket = require 'bee.socket'
+    local select = require "bee.select"
+    local function simple_select(fd, mode)
+        local s <close> = select.create()
+        if mode == "r" then
+            s:event_init(fd, nil, select.SELECT_READ)
+            s:wait()
+        elseif mode == "w" then
+            s:event_init(fd, nil, select.SELECT_WRITE)
+            s:wait()
+        elseif mode == "rw" then
+            s:event_init(fd, nil, select.SELECT_READ | select.SELECT_WRITE)
+            local event = 0
+            for _, e in s:wait() do
+                event = event | e
+            end
+            return event
+        else
+            assert(false)
+        end
+    end
+
     local client = assert(socket(protocol))
     client:connect(address, port)
-    local _, wr = socket.select(nil, {client})
-    assert(wr[1] == client)
+    simple_select(client, "w")
     assert(client:status())
     local queue = ''
     while true do
-        local rd, wr = socket.select({client}, {client})
-        if rd and rd[1] then
+        local event = simple_select(client, "rw")
+        if event & select.SELECT_READ then
             local data = client:recv()
             if data == nil then
                 break
@@ -223,7 +250,7 @@ local function createEchoThread(name, ...)
                 queue = queue .. data
             end
         end
-        if wr and wr[1] then
+        if event & select.SELECT_WRITE then
             if #queue == 0 then
                 goto continue
             end
@@ -248,8 +275,7 @@ local function createTcpEchoTest(name, f)
     local _, port = server:info("socket")
     lt.assertIsNumber(port)
     local client = createEchoThread(name, "tcp", "127.0.0.1", port)
-    local rd, _ = socket.select({ server }, nil)
-    lt.assertEquals(rd[1], server)
+    simple_select(server, "r")
     local session = lt.assertIsUserdata(server:accept())
     lt.assertEquals(session:status(), true)
 
@@ -267,8 +293,7 @@ local function createUnixEchoTest(name, f)
     lt.assertIsBoolean(server:bind(TestUnixSock))
     lt.assertIsBoolean(server:listen())
     local client = createEchoThread(name, "unix", (TestUnixSock))
-    local rd, _ = socket.select({ server }, nil)
-    lt.assertEquals(rd[1], server)
+    simple_select(server, "r")
     local session = lt.assertIsUserdata(server:accept())
     lt.assertEquals(session:status(), true)
 

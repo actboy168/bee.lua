@@ -393,8 +393,6 @@ namespace bee::lua_socket {
         return 1;
     }
 
-    int select(lua_State* L);
-
     static int luaopen(lua_State* L) {
         if (!net::socket::initialize()) {
             lua_pushstring(L, make_syserror("initialize").c_str());
@@ -402,7 +400,6 @@ namespace bee::lua_socket {
         }
         luaL_Reg lib[] = {
             { "pair", pair },
-            { "select", select },
             { "fd", fd },
             { NULL, NULL }
         };
