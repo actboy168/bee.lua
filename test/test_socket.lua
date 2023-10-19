@@ -5,7 +5,11 @@ local fs = require "bee.filesystem"
 local errlog = thread.channel "errlog"
 
 local function assertNotThreadError()
-    lt.assertEquals(errlog:pop(), false)
+    local ok, msg = errlog:pop()
+    if ok then
+        lt.failure(msg)
+    end
+    lt.assertEquals(ok, false)
 end
 
 local function file_exists(filename)
