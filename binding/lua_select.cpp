@@ -245,8 +245,14 @@ namespace bee::lua_select {
         if (events & SELECT_READ) {
             ctx.readset.insert(fd);
         }
+        else {
+            ctx.readset.erase(fd);
+        }
         if (events & SELECT_WRITE) {
             ctx.writeset.insert(fd);
+        }
+        else {
+            ctx.writeset.erase(fd);
         }
         lua_pushboolean(L, 1);
         return 1;
