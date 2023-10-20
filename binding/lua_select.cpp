@@ -24,22 +24,23 @@ namespace bee::lua_select {
         socket_set()
             : set(nullptr)
             , cap(0) {
+            reset(FD_SETSIZE);
         }
         ~socket_set() {
             clear();
         }
         void clear() {
             if (set) {
-                delete[] reinterpret_cast<uint8_t*>(set);
+                delete[] (reinterpret_cast<uint8_t*>(set));
             }
         }
         void reset(size_t n) {
             if (n > cap) {
                 clear();
                 set           = reinterpret_cast<storage*>(new uint8_t[sizeof(uint32_t) + sizeof(SOCKET) * n]);
-                set->fd_count = 0;
                 cap           = n;
             }
+            set->fd_count = 0;
         }
         fd_set* ptr() {
             return reinterpret_cast<fd_set*>(set);
@@ -69,10 +70,15 @@ namespace bee::lua_select {
     };
     constexpr lua_Integer SELECT_READ  = 1;
     constexpr lua_Integer SELECT_WRITE = 2;
-    static void storeref(lua_State* L, net::fd_t r) {
+    static void storeref(lua_State* L, net::fd_t k) {
         lua_getiuservalue(L, 1, 1);
-        lua_pushinteger(L, (lua_Integer)r);
+        lua_pushinteger(L, (lua_Integer)k);
         lua_pushvalue(L, 3);
+        lua_rawset(L, -3);
+        lua_pop(L, 1);
+        lua_getiuservalue(L, 1, 2);
+        lua_pushvalue(L, 2);
+        lua_pushboolean(L, 1);
         lua_rawset(L, -3);
         lua_pop(L, 1);
     }
@@ -82,9 +88,14 @@ namespace bee::lua_select {
         lua_pushnil(L);
         lua_rawset(L, -3);
         lua_pop(L, 1);
+        lua_getiuservalue(L, 1, 2);
+        lua_pushvalue(L, 2);
+        lua_pushnil(L);
+        lua_rawset(L, -3);
+        lua_pop(L, 1);
     }
-    static void findref(lua_State* L, net::fd_t r) {
-        lua_getiuservalue(L, 1, 1);
+    static void findref(lua_State* L, int t, net::fd_t r) {
+        lua_getiuservalue(L, t, 1);
         lua_pushinteger(L, (lua_Integer)r);
         lua_rawget(L, -2);
         lua_remove(L, -2);
@@ -92,25 +103,23 @@ namespace bee::lua_select {
     static int pairs_events(lua_State* L) {
         auto& ctx = *(select_ctx*)lua_touserdata(L, lua_upvalueindex(1));
 #if defined(_WIN32)
-        {
-            auto set = ctx.readfds.ptr();
-            if (ctx.i < set->fd_count) {
-                auto fd = set->fd_array[ctx.i];
-                findref(L, (net::fd_t)fd);
-                lua_pushinteger(L, SELECT_READ);
-                ++ctx.i;
-                return 2;
-            }
+        auto rset = ctx.readfds.ptr();
+        auto wset = ctx.writefds.ptr();
+        auto rlen = rset->fd_count;
+        auto wlen = wset->fd_count;
+        if (ctx.i < rset->fd_count) {
+            auto fd = rset->fd_array[ctx.i];
+            findref(L, lua_upvalueindex(1), (net::fd_t)fd);
+            lua_pushinteger(L, SELECT_READ);
+            ++ctx.i;
+            return 2;
         }
-        {
-            auto set = ctx.writefds.ptr();
-            if (ctx.i < set->fd_count) {
-                auto fd = set->fd_array[ctx.i];
-                findref(L, (net::fd_t)fd);
-                lua_pushinteger(L, SELECT_WRITE);
-                ++ctx.i;
-                return 2;
-            }
+        if (ctx.i < rlen + wset->fd_count) {
+            auto fd = wset->fd_array[ctx.i - rlen];
+            findref(L, lua_upvalueindex(1), (net::fd_t)fd);
+            lua_pushinteger(L, SELECT_WRITE);
+            ++ctx.i;
+            return 2;
         }
 #else
         for (; ctx.i < ctx.maxfd; ++ctx.i) {
@@ -122,7 +131,7 @@ namespace bee::lua_select {
                 event |= SELECT_WRITE;
             }
             if (event) {
-                findref(L, (net::fd_t)ctx.i);
+                findref(L, lua_upvalueindex(1), (net::fd_t)ctx.i);
                 lua_pushinteger(L, event);
                 return 2;
             }
@@ -135,16 +144,14 @@ namespace bee::lua_select {
     }
     static int wait(lua_State* L) {
         auto& ctx         = lua::checkudata<select_ctx>(L, 1);
-        bool read_finish  = ctx.readset.empty();
-        bool write_finish = ctx.writeset.empty();
-        lua_Number timeo  = luaL_optnumber(L, 3, -1);
-        if (read_finish && write_finish) {
+        lua_Number timeo  = luaL_optnumber(L, 2, -1);
+        if (ctx.readset.empty() && ctx.writeset.empty()) {
             if (timeo < 0) {
                 return luaL_error(L, "no open sockets to check and no timeout set");
             }
             else {
                 thread_sleep(static_cast<int>(timeo * 1000));
-                lua_getiuservalue(L, 1, 3);
+                lua_getiuservalue(L, 1, 4);
                 return 1;
             }
         }
@@ -197,7 +204,7 @@ namespace bee::lua_select {
             push_neterror(L, "select");
             return lua_error(L);
         }
-        lua_getiuservalue(L, 1, 2);
+        lua_getiuservalue(L, 1, 3);
         return 1;
     }
     static int close(lua_State* L) {
@@ -295,11 +302,13 @@ namespace bee::lua_select {
         lua::newudata<select_ctx>(L, metatable);
         lua_newtable(L);
         lua_setiuservalue(L, -2, 1);
+        lua_newtable(L);
+        lua_setiuservalue(L, -2, 2);
         lua_pushvalue(L, -1);
         lua_pushcclosure(L, pairs_events, 1);
-        lua_setiuservalue(L, -2, 2);
-        lua_pushcclosure(L, empty_events, 0);
         lua_setiuservalue(L, -2, 3);
+        lua_pushcclosure(L, empty_events, 0);
+        lua_setiuservalue(L, -2, 4);
         return 1;
     }
     static int luaopen(lua_State* L) {
@@ -323,7 +332,7 @@ DEFINE_LUAOPEN(select)
 namespace bee::lua {
     template <>
     struct udata<lua_select::select_ctx> {
-        static inline int nupvalue = 3;
+        static inline int nupvalue = 4;
         static inline auto name    = "bee::select";
     };
 }
