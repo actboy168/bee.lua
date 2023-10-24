@@ -73,7 +73,7 @@ namespace bee::lua_select {
     static void storeref(lua_State* L, net::fd_t k) {
         lua_getiuservalue(L, 1, 1);
         lua_pushinteger(L, (lua_Integer)k);
-        lua_pushvalue(L, 3);
+        lua_pushvalue(L, 4);
         lua_rawset(L, -3);
         lua_pop(L, 1);
         lua_getiuservalue(L, 1, 2);
@@ -213,33 +213,8 @@ namespace bee::lua_select {
         ctx.writeset.clear();
         return 0;
     }
-    static int event_init(lua_State* L) {
-        auto& ctx = lua::checkudata<select_ctx>(L, 1);
-        auto fd   = lua::checkudata<net::fd_t>(L, 2);
-        storeref(L, fd);
-        if (!lua_isnoneornil(L, 4)) {
-            auto events = luaL_checkinteger(L, 4);
-            if (events & SELECT_READ) {
-                ctx.readset.insert(fd);
-            }
-            if (events & SELECT_WRITE) {
-                ctx.writeset.insert(fd);
-            }
-        }
-        lua_pushboolean(L, 1);
-        return 1;
-    }
-    static int event_close(lua_State* L) {
-        auto& ctx = lua::checkudata<select_ctx>(L, 1);
-        auto fd   = lua::checkudata<net::fd_t>(L, 2);
-        cleanref(L, fd);
-        ctx.readset.erase(fd);
-        ctx.writeset.erase(fd);
-        lua_pushboolean(L, 1);
-        return 1;
-    }
     static int event_add(lua_State* L) {
-        auto& ctx   = lua::checkudata<select_ctx>(L, 1);
+        auto& ctx = lua::checkudata<select_ctx>(L, 1);
         auto fd     = lua::checkudata<net::fd_t>(L, 2);
         auto events = luaL_checkinteger(L, 3);
         if (events & SELECT_READ) {
@@ -254,6 +229,7 @@ namespace bee::lua_select {
         else {
             ctx.writeset.erase(fd);
         }
+        storeref(L, fd);
         lua_pushboolean(L, 1);
         return 1;
     }
@@ -279,6 +255,7 @@ namespace bee::lua_select {
     static int event_del(lua_State* L) {
         auto& ctx = lua::checkudata<select_ctx>(L, 1);
         auto fd   = lua::checkudata<net::fd_t>(L, 2);
+        cleanref(L, fd);
         ctx.readset.erase(fd);
         ctx.writeset.erase(fd);
         lua_pushboolean(L, 1);
@@ -288,8 +265,6 @@ namespace bee::lua_select {
         luaL_Reg lib[] = {
             { "wait", wait },
             { "close", close },
-            { "event_init", event_init },
-            { "event_close", event_close },
             { "event_add", event_add },
             { "event_mod", event_mod },
             { "event_del", event_del },

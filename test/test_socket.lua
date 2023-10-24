@@ -8,13 +8,13 @@ local errlog = thread.channel "errlog"
 local function simple_select(fd, mode)
     local s <close> = select.create()
     if mode == "r" then
-        s:event_init(fd, nil, select.SELECT_READ)
+        s:event_add(fd, select.SELECT_READ)
         s:wait()
     elseif mode == "w" then
-        s:event_init(fd, nil, select.SELECT_WRITE)
+        s:event_add(fd, select.SELECT_WRITE)
         s:wait()
     elseif mode == "rw" then
-        s:event_init(fd, nil, select.SELECT_READ | select.SELECT_WRITE)
+        s:event_add(fd, select.SELECT_READ | select.SELECT_WRITE)
         local event = 0
         for _, e in s:wait() do
             event = event | e
@@ -217,13 +217,13 @@ local function createEchoThread(name, ...)
     local function simple_select(fd, mode)
         local s <close> = select.create()
         if mode == "r" then
-            s:event_init(fd, nil, select.SELECT_READ)
+            s:event_add(fd, select.SELECT_READ)
             s:wait()
         elseif mode == "w" then
-            s:event_init(fd, nil, select.SELECT_WRITE)
+            s:event_add(fd, select.SELECT_WRITE)
             s:wait()
         elseif mode == "rw" then
-            s:event_init(fd, nil, select.SELECT_READ | select.SELECT_WRITE)
+            s:event_add(fd, select.SELECT_READ | select.SELECT_WRITE)
             local event = 0
             for _, e in s:wait() do
                 event = event | e
