@@ -130,7 +130,7 @@ namespace bee::lua_select {
             return 2;
         }
 #else
-        for (; ctx.i < ctx.maxfd; ++ctx.i) {
+        for (; ctx.i <= ctx.maxfd; ++ctx.i) {
             lua_Integer event = 0;
             if (FD_ISSET(ctx.i, &ctx.readfds)) {
                 event |= SELECT_READ;
@@ -141,6 +141,7 @@ namespace bee::lua_select {
             if (event) {
                 findref(L, lua_upvalueindex(1), (net::fd_t)ctx.i);
                 lua_pushinteger(L, event);
+                ++ctx.i;
                 return 2;
             }
         }
