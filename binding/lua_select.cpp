@@ -71,6 +71,14 @@ namespace bee::lua_select {
     constexpr lua_Integer SELECT_READ  = 1;
     constexpr lua_Integer SELECT_WRITE = 2;
     static void storeref(lua_State* L, net::fd_t k) {
+        if (lua_isnoneornil(L, 4)) {
+            lua_getiuservalue(L, 1, 1);
+            lua_pushinteger(L, (lua_Integer)k);
+            lua_pushvalue(L, 2);
+            lua_rawset(L, -3);
+            lua_pop(L, 1);
+            return;
+        }
         lua_getiuservalue(L, 1, 1);
         lua_pushinteger(L, (lua_Integer)k);
         lua_pushvalue(L, 4);
@@ -82,9 +90,9 @@ namespace bee::lua_select {
         lua_rawset(L, -3);
         lua_pop(L, 1);
     }
-    static void cleanref(lua_State* L, net::fd_t r) {
+    static void cleanref(lua_State* L, net::fd_t k) {
         lua_getiuservalue(L, 1, 1);
-        lua_pushinteger(L, (lua_Integer)r);
+        lua_pushinteger(L, (lua_Integer)k);
         lua_pushnil(L);
         lua_rawset(L, -3);
         lua_pop(L, 1);
@@ -94,9 +102,9 @@ namespace bee::lua_select {
         lua_rawset(L, -3);
         lua_pop(L, 1);
     }
-    static void findref(lua_State* L, int t, net::fd_t r) {
+    static void findref(lua_State* L, int t, net::fd_t k) {
         lua_getiuservalue(L, t, 1);
-        lua_pushinteger(L, (lua_Integer)r);
+        lua_pushinteger(L, (lua_Integer)k);
         lua_rawget(L, -2);
         lua_remove(L, -2);
     }
@@ -217,6 +225,7 @@ namespace bee::lua_select {
         auto& ctx = lua::checkudata<select_ctx>(L, 1);
         auto fd     = lua::checkudata<net::fd_t>(L, 2);
         auto events = luaL_checkinteger(L, 3);
+        storeref(L, fd);
         if (events & SELECT_READ) {
             ctx.readset.insert(fd);
         }
@@ -229,7 +238,6 @@ namespace bee::lua_select {
         else {
             ctx.writeset.erase(fd);
         }
-        storeref(L, fd);
         lua_pushboolean(L, 1);
         return 1;
     }
