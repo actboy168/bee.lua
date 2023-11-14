@@ -114,7 +114,6 @@ namespace bee::lua_select {
         auto rset = ctx.readfds.ptr();
         auto wset = ctx.writefds.ptr();
         auto rlen = rset->fd_count;
-        auto wlen = wset->fd_count;
         if (ctx.i < rset->fd_count) {
             auto fd = rset->fd_array[ctx.i];
             findref(L, lua_upvalueindex(1), (net::fd_t)fd);
