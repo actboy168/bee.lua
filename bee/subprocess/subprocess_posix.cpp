@@ -243,7 +243,14 @@ namespace bee::subprocess {
     }
 
     bool process::detach() noexcept {
-        return !is_running();
+        if (pid == -1) {
+            return true;
+        }
+        if (!is_running()) {
+            pid = -1;
+            return true;
+        }
+        return false;
     }
 
     process_id process::get_id() const noexcept {

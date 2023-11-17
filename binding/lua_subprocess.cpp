@@ -41,6 +41,12 @@ namespace bee::lua_subprocess {
             }
         }
 
+        static int detach(lua_State* L) {
+            auto& self = to(L, 1);
+            lua_pushboolean(L, self.detach());
+            return 1;
+        }
+
         static int mt_close(lua_State* L) {
             auto& self = to(L, 1);
             process_detach(L, self);
@@ -139,6 +145,7 @@ namespace bee::lua_subprocess {
                 { "is_running", is_running },
                 { "resume", resume },
                 { "native_handle", native_handle },
+                { "detach", detach },
                 { NULL, NULL }
             };
             luaL_newlibtable(L, lib);
