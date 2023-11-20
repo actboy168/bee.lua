@@ -119,16 +119,18 @@ end
 
 function test_subprocess:test_stdio_1()
     local process = shell:runlua('io.stdout:write("ok")', { stdout = true })
-    safe_exit(process)
+    lt.assertEquals(process:wait(), 0)
     lt.assertIsUserdata(process.stdout)
     lt.assertEquals(process.stdout:read(2), "ok")
     lt.assertEquals(process.stdout:read(2), nil)
+    lt.assertEquals(process:detach(), true)
 
     local process = shell:runlua('io.stderr:write("ok")', { stderr = true })
-    safe_exit(process)
+    lt.assertEquals(process:wait(), 0)
     lt.assertIsUserdata(process.stderr)
     lt.assertEquals(process.stderr:read(2), "ok")
     lt.assertEquals(process.stderr:read(2), nil)
+    lt.assertEquals(process:detach(), true)
 
     local process = shell:runlua('io.write(io.read "a")', { stdin = true, stdout = true, stderr = true })
     lt.assertIsUserdata(process.stdin)
@@ -137,14 +139,16 @@ function test_subprocess:test_stdio_1()
     lt.assertEquals(process:is_running(), true)
     process.stdin:write "ok"
     process.stdin:close()
-    safe_exit(process)
+    lt.assertEquals(process:wait(), 0)
     lt.assertEquals(process.stdout:read(2), "ok")
     lt.assertEquals(process.stdout:read(2), nil)
+    lt.assertEquals(process:detach(), true)
 
     local process = shell:runlua('error "Test subprocess error."', { stderr = true })
-    safe_exit(process, 1)
+    lt.assertEquals(process:wait(), 1)
     local found = not not string.find(process.stderr:read "a", "Test subprocess error.", nil, true)
     lt.assertEquals(found, true)
+    lt.assertEquals(process:detach(), true)
 end
 
 function test_subprocess:test_stdio_2()
@@ -178,8 +182,9 @@ function test_subprocess:test_stdio_2()
     local process1 = shell:runlua('io.write "ok"', { stdout = true })
     local process2 = shell:runlua('io.write(io.read "a")', { stdin = process1.stdout, stdout = true })
     safe_exit(process1)
-    safe_exit(process2)
+    lt.assertEquals(process2:wait(), 0)
     lt.assertEquals(process2.stdout:read "a", "ok")
+    lt.assertEquals(process2:detach(), true)
 end
 
 function test_subprocess:test_stdio_3()
@@ -187,11 +192,12 @@ function test_subprocess:test_stdio_3()
         io.stdout:write "[stdout]"; io.stdout:flush()
         io.stderr:write "[stderr]"; io.stderr:flush()
     ]], { stdout = true, stderr = "stdout" })
-    safe_exit(process)
+    lt.assertEquals(process:wait(), 0)
     lt.assertIsUserdata(process.stdout)
     lt.assertIsUserdata(process.stderr)
     lt.assertEquals(process.stdout, process.stderr)
     lt.assertEquals(process.stdout:read "a", "[stdout][stderr]")
+    lt.assertEquals(process:detach(), true)
 end
 
 function test_subprocess:test_stdio_4()
@@ -217,26 +223,29 @@ function test_subprocess:test_stdio_4()
     end
     process.stdin:write "EXIT"
     process.stdin:close()
-    safe_exit(process)
+    lt.assertEquals(process:wait(), 0)
     lt.assertEquals(process.stdout:read(4), nil)
+    lt.assertEquals(process:detach(), true)
 end
 
 function test_subprocess:test_peek()
     local process = shell:runlua('io.write "ok"', { stdout = true })
-    safe_exit(process)
+    lt.assertEquals(process:wait(), 0)
     lt.assertIsUserdata(process.stdout)
     lt.assertEquals(subprocess.peek(process.stdout), 2)
     lt.assertEquals(subprocess.peek(process.stdout), 2)
     lt.assertEquals(process.stdout:read(2), "ok")
     lt.assertEquals(subprocess.peek(process.stdout), nil)
+    lt.assertEquals(process:detach(), true)
 
     local process = shell:runlua('io.write "ok"', { stdout = true })
-    safe_exit(process)
+    lt.assertEquals(process:wait(), 0)
     lt.assertIsUserdata(process.stdout)
     lt.assertEquals(subprocess.peek(process.stdout), 2)
     process.stdout:close()
     lt.assertError("attempt to use a closed file", process.stdout.read, process.stdout, 2)
     lt.assertEquals(subprocess.peek(process.stdout), nil)
+    lt.assertEquals(process:detach(), true)
 
     local process = shell:runlua('io.stdout:setvbuf "no" io.write "start" io.write(io.read "a")', { stdin = true, stdout = true })
     lt.assertIsUserdata(process.stdin)
@@ -252,9 +261,10 @@ function test_subprocess:test_peek()
     end
     process.stdin:write "ok"
     process.stdin:close()
-    safe_exit(process)
+    lt.assertEquals(process:wait(), 0)
     lt.assertEquals(process.stdout:read(2), "ok")
     lt.assertEquals(process.stdout:read(2), nil)
+    lt.assertEquals(process:detach(), true)
 end
 
 function test_subprocess:test_filemode()
@@ -264,8 +274,9 @@ function test_subprocess:test_filemode()
         ]], { stdin = true, stderr = true })
         process.stdin:write "\r\n"
         process.stdin:close()
-        safe_exit(process)
+        lt.assertEquals(process:wait(), 0)
         lt.assertEquals(process.stderr:read "a", "")
+        lt.assertEquals(process:detach(), true)
     end
     local process = shell:runlua([[
         local sp = require "bee.subprocess"
@@ -274,8 +285,9 @@ function test_subprocess:test_filemode()
     ]], { stdin = true, stderr = true })
     process.stdin:write "\r\n"
     process.stdin:close()
-    safe_exit(process)
+    lt.assertEquals(process:wait(), 0)
     lt.assertEquals(process.stderr:read "a", "")
+    lt.assertEquals(process:detach(), true)
 end
 
 function test_subprocess:test_env()
@@ -313,8 +325,9 @@ function test_subprocess:test_setenv()
     local process = shell:runlua([[
         assert(os.getenv "TEST_ENV" == nil)
     ]], { stderr = true })
-    safe_exit(process)
+    lt.assertEquals(process:wait(), 0)
     lt.assertEquals(process.stderr:read "a", "")
+    lt.assertEquals(process:detach(), true)
 
     subprocess.setenv("TEST_ENV", "OK")
 
@@ -322,16 +335,18 @@ function test_subprocess:test_setenv()
     local process = shell:runlua([[
         assert(os.getenv "TEST_ENV" == "OK")
     ]], { stderr = true })
-    safe_exit(process)
+    lt.assertEquals(process:wait(), 0)
     lt.assertEquals(process.stderr:read "a", "")
+    lt.assertEquals(process:detach(), true)
 end
 
 function test_subprocess:test_encoding()
     local process = shell:runlua([[
         print "中文"
     ]], { stdout = true })
-    safe_exit(process)
+    lt.assertEquals(process:wait(), 0)
     lt.assertEquals(process.stdout:read(6), "中文")
+    lt.assertEquals(process:detach(), true)
 end
 
 function test_subprocess:test_cwd()

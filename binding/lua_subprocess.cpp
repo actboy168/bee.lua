@@ -41,14 +41,35 @@ namespace bee::lua_subprocess {
             }
         }
 
+        static void process_close_std(lua_State* L) {
+            if (LUA_TTABLE == lua_getiuservalue(L, 1, 1)) {
+                for (auto name : { "stdin", "stdout", "stderr" }) {
+                    if (LUA_TNIL != lua_getfield(L, -1, name)) {
+                        if (LUA_TTABLE == lua_getmetatable(L, -1)) {
+                            if (LUA_TFUNCTION == lua_getfield(L, -1, "__close")) {
+                                lua_pushvalue(L, -2);
+                                lua_call(L, 1, 0);
+                            }
+                            lua_pop(L, 1);
+                        }
+                        lua_pop(L, 1);
+                    }
+                    lua_pop(L, 1);
+                }
+            }
+            lua_pop(L, 1);
+        }
+
         static int detach(lua_State* L) {
             auto& self = to(L, 1);
+            process_close_std(L);
             lua_pushboolean(L, self.detach());
             return 1;
         }
 
         static int mt_close(lua_State* L) {
             auto& self = to(L, 1);
+            process_close_std(L);
             process_detach(L, self);
             return 0;
         }
@@ -123,18 +144,21 @@ namespace bee::lua_subprocess {
             return 0;
         }
 
-        static int mt_newindex(lua_State* L) {
-            if (LUA_TTABLE != lua_getiuservalue(L, 1, 1)) {
+        static bool set_uservalue(lua_State* L, const char* name) {
+            if (LUA_TTABLE != lua_getiuservalue(L, -1, 1)) {
                 lua_pop(L, 1);
                 lua_newtable(L);
                 lua_pushvalue(L, -1);
-                if (!lua_setiuservalue(L, 1, 1)) {
-                    return 0;
+                if (!lua_setiuservalue(L, -3, 1)) {
+                    lua_remove(L, -3);
+                    lua_pop(L, 1);
+                    return false;
                 }
             }
-            lua_insert(L, -3);
-            lua_rawset(L, -3);
-            return 0;
+            lua_rotate(L, -3, 2);
+            lua_setfield(L, -2, name);
+            lua_pop(L, 1);
+            return true;
         }
 
         static void metatable(lua_State* L) {
@@ -153,7 +177,6 @@ namespace bee::lua_subprocess {
             lua_pushcclosure(L, mt_index, 1);
             lua_setfield(L, -2, "__index");
             static luaL_Reg mt[] = {
-                { "__newindex", mt_newindex },
                 { "__close", mt_close },
                 { "__gc", mt_gc },
                 { NULL, NULL }
@@ -404,16 +427,13 @@ namespace bee::lua_subprocess {
             }
             process::constructor(L, spawn);
             if (f_stderr) {
-                lua_insert(L, -2);
-                lua_setfield(L, -2, "stderr");
+                process::set_uservalue(L, "stderr");
             }
             if (f_stdout) {
-                lua_insert(L, -2);
-                lua_setfield(L, -2, "stdout");
+                process::set_uservalue(L, "stdout");
             }
             if (f_stdin) {
-                lua_insert(L, -2);
-                lua_setfield(L, -2, "stdin");
+                process::set_uservalue(L, "stdin");
             }
             return 1;
         }
