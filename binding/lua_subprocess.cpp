@@ -44,17 +44,21 @@ namespace bee::lua_subprocess {
         static void process_close_std(lua_State* L) {
             if (LUA_TTABLE == lua_getiuservalue(L, 1, 1)) {
                 for (auto name : { "stdin", "stdout", "stderr" }) {
-                    if (LUA_TNIL != lua_getfield(L, -1, name)) {
-                        if (LUA_TTABLE == lua_getmetatable(L, -1)) {
-                            if (LUA_TFUNCTION == lua_getfield(L, -1, "__close")) {
-                                lua_pushvalue(L, -2);
-                                lua_call(L, 1, 0);
-                            }
-                            lua_pop(L, 1);
-                        }
+                    if (LUA_TUSERDATA != lua_getfield(L, -1, name)) {
                         lua_pop(L, 1);
+                        continue;
                     }
-                    lua_pop(L, 1);
+                    if (!lua_getmetatable(L, -1)) {
+                        lua_pop(L, 2);
+                        continue;
+                    }
+                    if (LUA_TFUNCTION != lua_getfield(L, -1, "__close")) {
+                        lua_pop(L, 3);
+                        continue;
+                    }
+                    lua_remove(L, -2);
+                    lua_insert(L, -2);
+                    lua_call(L, 1, 0);
                 }
             }
             lua_pop(L, 1);

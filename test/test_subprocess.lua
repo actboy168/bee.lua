@@ -185,6 +185,7 @@ function test_subprocess:test_stdio_2()
     lt.assertEquals(process2:wait(), 0)
     lt.assertEquals(process2.stdout:read "a", "ok")
     lt.assertEquals(process2:detach(), true)
+    lt.assertEquals(tostring(process2.stdout), "file (closed)")
 end
 
 function test_subprocess:test_stdio_3()
