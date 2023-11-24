@@ -142,6 +142,8 @@ namespace bee::lua_platform {
         lua_pushstring(L, "wasm64");
 #elif defined(__mips64)
         lua_pushstring(L, "mips64el");
+#elif defined(__loongarch64)
+        lua_pushstring(L, "loongarch64");
 #else
         lua_pushstring(L, "unknown");
 #endif
