@@ -15,6 +15,15 @@ namespace bee::lua_serialization {
         case LUA_TSTRING:
             lua_settop(L, 1);
             return seri_unpack(L, (void*)lua_tostring(L, 1));
+        case LUA_TFUNCTION: {
+            lua_settop(L, 1);
+            lua_call(L, 0, 3);
+            void* data = lua_touserdata(L, -3);
+            lua_copy(L, -1, 1);
+            lua_toclose(L, 1);
+            lua_pop(L, 2);
+            return seri_unpack(L, (void*)data);
+        }
         default:
             return luaL_error(L, "unsupported type %s", luaL_typename(L, lua_type(L, 1)));
         }
