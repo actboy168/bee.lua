@@ -212,6 +212,28 @@ namespace bee::lua {
         }
     }
 
+    template <typename T>
+    void getmetatable(lua_State* L, void (*init_metatable)(lua_State*)) {
+        if (luaL_newmetatable(L, udata<T>::name)) {
+            if constexpr (!std::is_trivially_destructible<T>::value) {
+                lua_pushcfunction(L, destroyudata<T>);
+                lua_setfield(L, -2, "__gc");
+            }
+            init_metatable(L);
+        }
+    }
+
+    template <typename T>
+    void getmetatable(lua_State* L, const char* name, void (*init_metatable)(lua_State*)) {
+        if (luaL_newmetatable(L, name)) {
+            if constexpr (!std::is_trivially_destructible<T>::value) {
+                lua_pushcfunction(L, destroyudata<T>);
+                lua_setfield(L, -2, "__gc");
+            }
+            init_metatable(L);
+        }
+    }
+
     template <typename T, typename... Args>
     T& newudata(lua_State* L, void (*init_metatable)(lua_State*), Args&&... args) {
         static_assert(udata_has_name<T>::value);
@@ -221,13 +243,7 @@ namespace bee::lua {
         }
         T* o = static_cast<T*>(lua_newuserdatauv(L, sizeof(T), nupvalue));
         new (o) T(std::forward<Args>(args)...);
-        if (luaL_newmetatable(L, udata<T>::name)) {
-            if constexpr (!std::is_trivially_destructible<T>::value) {
-                lua_pushcfunction(L, destroyudata<T>);
-                lua_setfield(L, -2, "__gc");
-            }
-            init_metatable(L);
-        }
+        getmetatable<T>(L, init_metatable);
         lua_setmetatable(L, -2);
         return *o;
     }
@@ -240,13 +256,7 @@ namespace bee::lua {
         }
         T* o = static_cast<T*>(lua_newuserdatauv(L, sizeof(T), nupvalue));
         new (o) T(std::forward<Args>(args)...);
-        if (luaL_newmetatable(L, name)) {
-            if constexpr (!std::is_trivially_destructible<T>::value) {
-                lua_pushcfunction(L, destroyudata<T>);
-                lua_setfield(L, -2, "__gc");
-            }
-            init_metatable(L);
-        }
+        getmetatable<T>(L, name, init_metatable);
         lua_setmetatable(L, -2);
         return *o;
     }
