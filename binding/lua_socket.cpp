@@ -1,4 +1,5 @@
 ﻿#include <bee/error.h>
+#include <bee/lua/binding.h>
 #include <bee/net/endpoint.h>
 #include <bee/net/socket.h>
 #include <bee/nonstd/unreachable.h>

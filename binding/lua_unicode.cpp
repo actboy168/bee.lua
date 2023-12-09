@@ -1,3 +1,4 @@
+#include <bee/lua/binding.h>
 #include <bee/platform/win/unicode.h>
 #include <binding/binding.h>
 

@@ -1,4 +1,5 @@
 #include <bee/error.h>
+#include <bee/lua/binding.h>
 #include <bee/nonstd/filesystem.h>
 #include <bee/nonstd/format.h>
 #include <bee/nonstd/unreachable.h>

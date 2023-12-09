@@ -1,4 +1,5 @@
 #include <bee/error.h>
+#include <bee/lua/binding.h>
 #include <bee/nonstd/format.h>
 #include <bee/nonstd/print.h>
 #include <bee/nonstd/semaphore.h>

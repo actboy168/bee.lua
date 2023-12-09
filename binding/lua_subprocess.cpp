@@ -1,4 +1,5 @@
 #include <bee/error.h>
+#include <bee/lua/binding.h>
 #include <bee/nonstd/filesystem.h>
 #include <bee/subprocess.h>
 #include <bee/subprocess/process_select.h>
@@ -610,8 +611,8 @@ DEFINE_LUAOPEN(subprocess)
 namespace bee::lua {
     template <>
     struct udata<subprocess::process> {
-        static inline int nupvalue             = 1;
-        static inline auto name                = "bee::subprocess";
-        static inline auto metatable           = bee::lua_subprocess::process::metatable;
+        static inline int nupvalue   = 1;
+        static inline auto name      = "bee::subprocess";
+        static inline auto metatable = bee::lua_subprocess::process::metatable;
     };
 }

@@ -1,3 +1,4 @@
+#include <bee/lua/binding.h>
 #include <binding/binding.h>
 
 #if defined(_WIN32)
