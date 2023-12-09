@@ -5,6 +5,12 @@
 #include <binding/binding.h>
 
 namespace bee::lua_socket {
+    struct fd_no_ownership {
+        net::fd_t v;
+        fd_no_ownership(net::fd_t v)
+            : v(v)
+        {}
+    };
     static int push_neterror(lua_State* L, std::string_view msg) {
         auto error = make_neterror(msg);
         lua_pushnil(L);
@@ -354,10 +360,10 @@ namespace bee::lua_socket {
         luaL_setfuncs(L, mt, 0);
     }
     static void pushfd(lua_State* L, net::fd_t fd) {
-        lua::newudata<net::fd_t>(L, "bee::net::fd", metatable, fd);
+        lua::newudata<net::fd_t>(L, fd);
     }
     static void pushfd_no_ownership(lua_State* L, net::fd_t fd) {
-        lua::newudata<net::fd_t>(L, "bee::net::fd (no ownership)", metatable_no_ownership, fd);
+        lua::newudata<fd_no_ownership>(L, fd);
     }
     static int pair(lua_State* L) {
         net::fd_t sv[2];
@@ -417,3 +423,18 @@ namespace bee::lua_socket {
 }
 
 DEFINE_LUAOPEN(socket)
+
+namespace bee::lua {
+    template <>
+    struct udata<net::fd_t> {
+        static inline int nupvalue   = 1;
+        static inline auto name      = "bee::net::fd";
+        static inline auto metatable = bee::lua_socket::metatable;
+    };
+    template <>
+    struct udata<lua_socket::fd_no_ownership> {
+        static inline int nupvalue   = 1;
+        static inline auto name      = "bee::net::fd (no ownership)";
+        static inline auto metatable = bee::lua_socket::metatable_no_ownership;
+    };
+}

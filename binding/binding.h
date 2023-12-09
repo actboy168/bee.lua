@@ -175,17 +175,6 @@ namespace bee::lua {
         return 0;
     }
 
-    template <typename T>
-    T& newudata(lua_State* L) {
-        static_assert(!udata_has_name<T>::value);
-        static_assert(std::is_trivial<T>::value);
-        int nupvalue = 0;
-        if constexpr (udata_has_nupvalue<T>::value) {
-            nupvalue = udata<T>::nupvalue;
-        }
-        return *static_cast<T*>(lua_newuserdatauv(L, sizeof(T), nupvalue));
-    }
-
     namespace cxx {
         struct status {
             int n;
@@ -213,29 +202,18 @@ namespace bee::lua {
     }
 
     template <typename T>
-    void getmetatable(lua_State* L, void (*init_metatable)(lua_State*)) {
+    void getmetatable(lua_State* L) {
         if (luaL_newmetatable(L, udata<T>::name)) {
             if constexpr (!std::is_trivially_destructible<T>::value) {
                 lua_pushcfunction(L, destroyudata<T>);
                 lua_setfield(L, -2, "__gc");
             }
-            init_metatable(L);
-        }
-    }
-
-    template <typename T>
-    void getmetatable(lua_State* L, const char* name, void (*init_metatable)(lua_State*)) {
-        if (luaL_newmetatable(L, name)) {
-            if constexpr (!std::is_trivially_destructible<T>::value) {
-                lua_pushcfunction(L, destroyudata<T>);
-                lua_setfield(L, -2, "__gc");
-            }
-            init_metatable(L);
+            udata<T>::metatable(L);
         }
     }
 
     template <typename T, typename... Args>
-    T& newudata(lua_State* L, void (*init_metatable)(lua_State*), Args&&... args) {
+    T& newudata(lua_State* L, Args&&... args) {
         static_assert(udata_has_name<T>::value);
         int nupvalue = 0;
         if constexpr (udata_has_nupvalue<T>::value) {
@@ -243,20 +221,7 @@ namespace bee::lua {
         }
         T* o = static_cast<T*>(lua_newuserdatauv(L, sizeof(T), nupvalue));
         new (o) T(std::forward<Args>(args)...);
-        getmetatable<T>(L, init_metatable);
-        lua_setmetatable(L, -2);
-        return *o;
-    }
-
-    template <typename T, typename... Args>
-    T& newudata(lua_State* L, const char* name, void (*init_metatable)(lua_State*), Args&&... args) {
-        int nupvalue = 0;
-        if constexpr (udata_has_nupvalue<T>::value) {
-            nupvalue = udata<T>::nupvalue;
-        }
-        T* o = static_cast<T*>(lua_newuserdatauv(L, sizeof(T), nupvalue));
-        new (o) T(std::forward<Args>(args)...);
-        getmetatable<T>(L, name, init_metatable);
+        getmetatable<T>(L);
         lua_setmetatable(L, -2);
         return *o;
     }

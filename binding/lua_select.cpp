@@ -288,7 +288,7 @@ namespace bee::lua_select {
         luaL_setfuncs(L, mt, 0);
     }
     static int create(lua_State* L) {
-        lua::newudata<select_ctx>(L, metatable);
+        lua::newudata<select_ctx>(L);
         lua_newtable(L);
         lua_setiuservalue(L, -2, 1);
         lua_newtable(L);
@@ -322,6 +322,7 @@ namespace bee::lua {
     template <>
     struct udata<lua_select::select_ctx> {
         static inline int nupvalue = 4;
-        static inline auto name    = "bee::select";
+        static inline auto name      = "bee::select";
+        static inline auto metatable = bee::lua_select::metatable;
     };
 }

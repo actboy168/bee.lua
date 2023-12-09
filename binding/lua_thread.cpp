@@ -80,17 +80,6 @@ namespace bee::lua_thread {
     };
 }
 
-namespace bee::lua {
-    template <>
-    struct udata<lua_thread::boxchannel> {
-        static inline auto name = "bee::channel";
-    };
-    template <>
-    struct udata<lua_thread::rpc> {
-        static inline auto name = "bee::rpc";
-    };
-}
-
 namespace bee::lua_thread {
     class channelmgr {
     public:
@@ -181,7 +170,7 @@ namespace bee::lua_thread {
         return 0;
     }
 
-    static void metatable(lua_State* L) {
+    static void channel_metatable(lua_State* L) {
         luaL_Reg lib[] = {
             { "push", lchannel_push },
             { "pop", lchannel_pop },
@@ -199,7 +188,7 @@ namespace bee::lua_thread {
         if (!c) {
             return luaL_error(L, "Can't query channel '%s'", name.data());
         }
-        lua::newudata<boxchannel>(L, metatable, c);
+        lua::newudata<boxchannel>(L, c);
         return 1;
     }
 
@@ -318,7 +307,7 @@ namespace bee::lua_thread {
     static void rpc_metatable(lua_State* L) {}
 
     static int lrpc_create(lua_State* L) {
-        auto& r = lua::newudata<rpc>(L, rpc_metatable);
+        auto& r = lua::newudata<rpc>(L);
         lua_pushlightuserdata(L, &r);
         lua_rotate(L, 1, 1);
         return 2;
@@ -373,3 +362,16 @@ namespace bee::lua_thread {
 }
 
 DEFINE_LUAOPEN(thread)
+
+namespace bee::lua {
+    template <>
+    struct udata<lua_thread::boxchannel> {
+        static inline auto name      = "bee::channel";
+        static inline auto metatable = bee::lua_thread::channel_metatable;
+    };
+    template <>
+    struct udata<lua_thread::rpc> {
+        static inline auto name      = "bee::rpc";
+        static inline auto metatable = bee::lua_thread::rpc_metatable;
+    };
+}

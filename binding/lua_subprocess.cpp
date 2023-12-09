@@ -5,7 +5,6 @@
 #include <bee/utility/assume.h>
 #include <binding/binding.h>
 #include <binding/file.h>
-#include <binding/udata.h>
 #include <errno.h>
 #include <signal.h>
 
@@ -18,14 +17,6 @@
 #else
 #    include <unistd.h>
 #endif
-
-namespace bee::lua {
-    template <>
-    struct udata<subprocess::process> {
-        static inline int nupvalue = 1;
-        static inline auto name    = "bee::subprocess";
-    };
-}
 
 namespace bee::lua_subprocess {
     namespace process {
@@ -189,7 +180,7 @@ namespace bee::lua_subprocess {
         }
 
         static int constructor(lua_State* L, subprocess::spawn& spawn) {
-            lua::newudata<subprocess::process>(L, metatable, spawn);
+            lua::newudata<subprocess::process>(L, spawn);
             return 1;
         }
     }
@@ -615,3 +606,12 @@ return table.concat(t)
 }
 
 DEFINE_LUAOPEN(subprocess)
+
+namespace bee::lua {
+    template <>
+    struct udata<subprocess::process> {
+        static inline int nupvalue             = 1;
+        static inline auto name                = "bee::subprocess";
+        static inline auto metatable           = bee::lua_subprocess::process::metatable;
+    };
+}

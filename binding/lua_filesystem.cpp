@@ -6,7 +6,6 @@
 #include <bee/utility/path_helper.h>
 #include <binding/binding.h>
 #include <binding/file.h>
-#include <binding/udata.h>
 
 #include <chrono>
 #include <utility>
@@ -14,26 +13,6 @@
 #if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 #    define BEE_DISABLE_FULLPATH
 #endif
-
-namespace bee::lua {
-    template <>
-    struct udata<fs::file_status> {
-        static inline auto name = "bee::file_status";
-    };
-    template <>
-    struct udata<fs::directory_entry> {
-        static inline auto name = "bee::directory_entry";
-    };
-    template <>
-    struct udata<fs::recursive_directory_iterator> {
-        static inline auto name = "bee::pairs_r";
-    };
-    template <>
-    struct udata<fs::directory_iterator> {
-        static inline auto name = "bee::pairs";
-    };
-
-}
 
 #if defined(__EMSCRIPTEN__)
 #    include <emscripten.h>
@@ -395,13 +374,13 @@ namespace bee::lua_filesystem {
             luaL_setfuncs(L, mt, 0);
         }
         static void push(lua_State* L) {
-            lua::newudata<fs::path>(L, metatable);
+            lua::newudata<fs::path>(L);
         }
         static void push(lua_State* L, const fs::path& path) {
-            lua::newudata<fs::path>(L, metatable, path);
+            lua::newudata<fs::path>(L, path);
         }
         static void push(lua_State* L, fs::path&& path) {
-            lua::newudata<fs::path>(L, metatable, std::forward<fs::path>(path));
+            lua::newudata<fs::path>(L, std::forward<fs::path>(path));
         }
     }
 
@@ -493,7 +472,7 @@ namespace bee::lua_filesystem {
             luaL_setfuncs(L, mt, 0);
         }
         static void push(lua_State* L, fs::file_status&& status) {
-            lua::newudata<fs::file_status>(L, metatable, std::forward<fs::file_status>(status));
+            lua::newudata<fs::file_status>(L, std::forward<fs::file_status>(status));
         }
     }
 
@@ -614,7 +593,7 @@ namespace bee::lua_filesystem {
             luaL_setfuncs(L, mt, 0);
         }
         static void push(lua_State* L, const fs::directory_entry& entry) {
-            lua::newudata<fs::directory_entry>(L, metatable, entry);
+            lua::newudata<fs::directory_entry>(L, entry);
         }
     }
 
@@ -1011,7 +990,7 @@ namespace bee::lua_filesystem {
         }
         static lua::cxx::status constructor(lua_State* L, const fs::path& path) {
             std::error_code ec;
-            lua::newudata<T>(L, metatable, path, ec);
+            lua::newudata<T>(L, path, ec);
             if (ec) {
                 return pusherror(L, "directory_iterator::directory_iterator", ec, path);
             }
@@ -1174,3 +1153,31 @@ namespace bee::lua_filesystem {
 }
 
 DEFINE_LUAOPEN(filesystem)
+
+namespace bee::lua {
+    template <>
+    struct udata<fs::path> {
+        static inline auto name      = "bee::path";
+        static inline auto metatable = bee::lua_filesystem::path::metatable;
+    };
+    template <>
+    struct udata<fs::file_status> {
+        static inline auto name      = "bee::file_status";
+        static inline auto metatable = bee::lua_filesystem::file_status::metatable;
+    };
+    template <>
+    struct udata<fs::directory_entry> {
+        static inline auto name      = "bee::directory_entry";
+        static inline auto metatable = bee::lua_filesystem::directory_entry::metatable;
+    };
+    template <>
+    struct udata<fs::recursive_directory_iterator> {
+        static inline auto name      = "bee::pairs_r";
+        static inline auto metatable = bee::lua_filesystem::pairs_directory<fs::recursive_directory_iterator>::metatable;
+    };
+    template <>
+    struct udata<fs::directory_iterator> {
+        static inline auto name      = "bee::pairs";
+        static inline auto metatable = bee::lua_filesystem::pairs_directory<fs::directory_iterator>::metatable;
+    };
+}

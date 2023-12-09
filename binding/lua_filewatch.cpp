@@ -4,14 +4,6 @@
 #include <bee/nonstd/unreachable.h>
 #include <binding/binding.h>
 
-namespace bee::lua {
-    template <>
-    struct udata<filewatch::watch> {
-        static inline int nupvalue = 1;
-        static inline auto name    = "bee::filewatch";
-    };
-}
-
 namespace bee::lua_filewatch {
     static filewatch::watch& to(lua_State* L, int idx) {
         return lua::checkudata<filewatch::watch>(L, idx);
@@ -129,7 +121,7 @@ namespace bee::lua_filewatch {
     }
 
     static int create(lua_State* L) {
-        lua::newudata<filewatch::watch>(L, metatable);
+        lua::newudata<filewatch::watch>(L);
         lua_newthread(L);
         lua_setiuservalue(L, -2, 1);
         return 1;
@@ -150,3 +142,12 @@ namespace bee::lua_filewatch {
 }
 
 DEFINE_LUAOPEN(filewatch)
+
+namespace bee::lua {
+    template <>
+    struct udata<filewatch::watch> {
+        static inline int nupvalue   = 1;
+        static inline auto name      = "bee::filewatch";
+        static inline auto metatable = bee::lua_filewatch::metatable;
+    };
+}
