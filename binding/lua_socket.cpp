@@ -36,16 +36,8 @@ namespace bee::lua_socket {
             return ep;
         }
     }
-    static net::fd_t checkfd(lua_State* L, int idx) {
-        net::fd_t fd = lua::checkudata<net::fd_t>(L, idx);
-        if (fd == net::retired_fd) {
-            luaL_error(L, "socket is already closed.");
-        }
-        return fd;
-    }
     static void pushfd(lua_State* L, net::fd_t fd);
-    static int accept(lua_State* L) {
-        auto fd = checkfd(L, 1);
+    static int accept(lua_State* L, net::fd_t fd) {
         net::fd_t newfd;
         if (net::socket::fdstat::success != net::socket::accept(fd, newfd)) {
             return push_neterror(L, "accept");
@@ -53,8 +45,7 @@ namespace bee::lua_socket {
         pushfd(L, newfd);
         return 1;
     }
-    static int recv(lua_State* L) {
-        auto fd  = checkfd(L, 1);
+    static int recv(lua_State* L, net::fd_t fd) {
         auto len = lua::optinteger<int, LUAL_BUFFERSIZE>(L, 2);
         luaL_Buffer b;
         luaL_buffinit(L, &b);
@@ -76,8 +67,7 @@ namespace bee::lua_socket {
             std::unreachable();
         }
     }
-    static int send(lua_State* L) {
-        auto fd  = checkfd(L, 1);
+    static int send(lua_State* L, net::fd_t fd) {
         auto buf = lua::checkstrview(L, 2);
         int rc;
         switch (net::socket::send(fd, rc, buf.data(), (int)buf.size())) {
@@ -93,8 +83,7 @@ namespace bee::lua_socket {
             std::unreachable();
         }
     }
-    static int recvfrom(lua_State* L) {
-        auto fd  = checkfd(L, 1);
+    static int recvfrom(lua_State* L, net::fd_t fd) {
         auto len = lua::optinteger<int, LUAL_BUFFERSIZE>(L, 2);
         luaL_Buffer b;
         luaL_buffinit(L, &b);
@@ -122,8 +111,7 @@ namespace bee::lua_socket {
             std::unreachable();
         }
     }
-    static int sendto(lua_State* L) {
-        auto fd   = checkfd(L, 1);
+    static int sendto(lua_State* L, net::fd_t fd) {
         auto buf  = lua::checkstrview(L, 2);
         auto ip   = lua::checkstrview(L, 3);
         auto port = lua::checkinteger<uint16_t>(L, 4);
@@ -154,13 +142,6 @@ namespace bee::lua_socket {
         fd      = net::retired_fd;
         return ok;
     }
-    static int close(lua_State* L) {
-        if (!socket_destroy(L)) {
-            return push_neterror(L, "close");
-        }
-        lua_pushboolean(L, 1);
-        return 1;
-    }
     static int shutdown(lua_State* L, net::fd_t fd, net::socket::shutdown_flag flag) {
         if (!net::socket::shutdown(fd, flag)) {
             return push_neterror(L, "shutdown");
@@ -168,8 +149,7 @@ namespace bee::lua_socket {
         lua_pushboolean(L, 1);
         return 1;
     }
-    static int shutdown(lua_State* L) {
-        auto fd = checkfd(L, 1);
+    static int shutdown(lua_State* L, net::fd_t fd) {
         if (lua_isnoneornil(L, 2)) {
             return shutdown(L, fd, net::socket::shutdown_flag::both);
         }
@@ -185,28 +165,7 @@ namespace bee::lua_socket {
             return 2;
         }
     }
-    static int mt_tostring(lua_State* L) {
-        auto fd = lua::checkudata<net::fd_t>(L, 1);
-        if (fd == net::retired_fd) {
-            lua_pushstring(L, "socket (closed)");
-            return 1;
-        }
-        lua_pushfstring(L, "socket (%d)", fd);
-        return 1;
-    }
-    static int mt_close(lua_State* L) {
-        socket_destroy(L);
-        return 0;
-    }
-    static int mt_gc(lua_State* L) {
-        auto fd = lua::checkudata<net::fd_t>(L, 1);
-        if (fd != net::retired_fd) {
-            net::socket::close(fd);
-        }
-        return 0;
-    }
-    static int status(lua_State* L) {
-        auto fd = checkfd(L, 1);
+    static int status(lua_State* L, net::fd_t fd) {
         auto ec = net::socket::errcode(fd);
         if (!ec) {
             lua_pushboolean(L, 1);
@@ -217,8 +176,7 @@ namespace bee::lua_socket {
         lua_pushstring(L, error.c_str());
         return 2;
     }
-    static int info(lua_State* L) {
-        auto fd    = checkfd(L, 1);
+    static int info(lua_State* L, net::fd_t fd) {
         auto which = lua::checkstrview(L, 2);
         if (which == "peer") {
             if (auto ep_opt = net::socket::getpeername(fd)) {
@@ -240,23 +198,11 @@ namespace bee::lua_socket {
         }
         return 0;
     }
-    static int handle(lua_State* L) {
-        auto fd = checkfd(L, 1);
+    static int handle(lua_State* L, net::fd_t fd) {
         lua_pushlightuserdata(L, (void*)(intptr_t)fd);
         return 1;
     }
-    static int detach(lua_State* L) {
-        auto& fd = lua::checkudata<net::fd_t>(L, 1);
-        if (fd == net::retired_fd) {
-            luaL_error(L, "socket is already closed.");
-            return 0;
-        }
-        lua_pushlightuserdata(L, (void*)(intptr_t)fd);
-        fd = net::retired_fd;
-        return 1;
-    }
-    static int option(lua_State* L) {
-        auto fd                         = checkfd(L, 1);
+    static int option(lua_State* L, net::fd_t fd) {
         static const char* const opts[] = { "reuseaddr", "sndbuf", "rcvbuf", NULL };
         auto opt                        = (net::socket::option)luaL_checkoption(L, 2, NULL, opts);
         auto value                      = lua::checkinteger<int>(L, 3);
@@ -267,8 +213,7 @@ namespace bee::lua_socket {
         lua_pushboolean(L, 1);
         return 1;
     }
-    static int connect(lua_State* L) {
-        auto fd = checkfd(L, 1);
+    static int connect(lua_State* L, net::fd_t fd) {
         auto ep = check_endpoint(L, 2);
         switch (net::socket::connect(fd, ep)) {
         case net::socket::fdstat::success:
@@ -283,8 +228,7 @@ namespace bee::lua_socket {
             std::unreachable();
         }
     }
-    static int bind(lua_State* L) {
-        auto fd = checkfd(L, 1);
+    static int bind(lua_State* L, net::fd_t fd) {
         auto ep = check_endpoint(L, 2);
         net::socket::unlink(ep);
         if (!net::socket::bind(fd, ep)) {
@@ -293,9 +237,8 @@ namespace bee::lua_socket {
         lua_pushboolean(L, 1);
         return 1;
     }
-    static int listen(lua_State* L) {
+    static int listen(lua_State* L, net::fd_t fd) {
         static constexpr int kDefaultBackLog = 5;
-        auto fd                              = checkfd(L, 1);
         auto backlog                         = lua::optinteger<int, kDefaultBackLog>(L, 2);
         if (!net::socket::listen(fd, backlog)) {
             return push_neterror(L, "listen");
@@ -303,30 +246,97 @@ namespace bee::lua_socket {
         lua_pushboolean(L, 1);
         return 1;
     }
+
+    static int detach(lua_State* L, net::fd_t& fd) {
+        if (fd == net::retired_fd) {
+            luaL_error(L, "socket is already closed.");
+            return 0;
+        }
+        lua_pushlightuserdata(L, (void*)(intptr_t)fd);
+        fd = net::retired_fd;
+        return 1;
+    }
+    static int mt_tostring(lua_State* L, net::fd_t& fd) {
+        if (fd == net::retired_fd) {
+            lua_pushstring(L, "socket (closed)");
+            return 1;
+        }
+        lua_pushfstring(L, "socket (%d)", fd);
+        return 1;
+    }
+
+    static int close(lua_State* L) {
+        if (!socket_destroy(L)) {
+            return push_neterror(L, "close");
+        }
+        lua_pushboolean(L, 1);
+        return 1;
+    }
+    static int mt_close(lua_State* L) {
+        socket_destroy(L);
+        return 0;
+    }
+    static int mt_gc(lua_State* L) {
+        auto fd = lua::checkudata<net::fd_t>(L, 1);
+        if (fd != net::retired_fd) {
+            net::socket::close(fd);
+        }
+        return 0;
+    }
+
+    using socket_func = int (*)(lua_State*, net::fd_t);
+    using socketref_func = int (*)(lua_State*, net::fd_t&);
+    template <socket_func func>
+    static int call_socket(lua_State* L) {
+        auto fd = lua::checkudata<net::fd_t>(L, 1);
+        if (fd == net::retired_fd) {
+            luaL_error(L, "socket is already closed.");
+        }
+        return func(L, fd);
+    }
+    template <socket_func func>
+    static int call_socket_no_ownership(lua_State* L) {
+        auto fd = lua::checkudata<fd_no_ownership>(L, 1).v;
+        if (fd == net::retired_fd) {
+            luaL_error(L, "socket is already closed.");
+        }
+        return func(L, fd);
+    }
+    template <socketref_func func>
+    static int call_socketref(lua_State* L) {
+        auto& fd = lua::checkudata<net::fd_t>(L, 1);
+        return func(L, fd);
+    }
+    template <socketref_func func>
+    static int call_socketref_no_ownership(lua_State* L) {
+        auto& fd = lua::checkudata<fd_no_ownership>(L, 1).v;
+        return func(L, fd);
+    }
+
     static void metatable(lua_State* L) {
         luaL_Reg lib[] = {
-            { "connect", connect },
-            { "bind", bind },
-            { "listen", listen },
-            { "accept", accept },
-            { "recv", recv },
-            { "send", send },
-            { "recvfrom", recvfrom },
-            { "sendto", sendto },
+            { "connect", call_socket<connect> },
+            { "bind", call_socket<bind> },
+            { "listen", call_socket<listen> },
+            { "accept", call_socket<accept> },
+            { "recv", call_socket<recv> },
+            { "send", call_socket<send> },
+            { "recvfrom", call_socket<recvfrom> },
+            { "sendto", call_socket<sendto> },
+            { "shutdown", call_socket<shutdown> },
+            { "status", call_socket<status> },
+            { "info", call_socket<info> },
+            { "option", call_socket<option> },
+            { "handle", call_socket<handle> },
+            { "detach", call_socketref<detach> },
             { "close", close },
-            { "shutdown", shutdown },
-            { "status", status },
-            { "info", info },
-            { "handle", handle },
-            { "detach", detach },
-            { "option", option },
             { NULL, NULL },
         };
         luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);
         lua_setfield(L, -2, "__index");
         luaL_Reg mt[] = {
-            { "__tostring", mt_tostring },
+            { "__tostring", call_socketref<mt_tostring> },
             { "__close", mt_close },
             { "__gc", mt_gc },
             { NULL, NULL },
@@ -335,27 +345,27 @@ namespace bee::lua_socket {
     }
     static void metatable_no_ownership(lua_State* L) {
         luaL_Reg lib[] = {
-            { "connect", connect },
-            { "bind", bind },
-            { "listen", listen },
-            { "accept", accept },
-            { "recv", recv },
-            { "send", send },
-            { "recvfrom", recvfrom },
-            { "sendto", sendto },
-            { "shutdown", shutdown },
-            { "status", status },
-            { "info", info },
-            { "handle", handle },
-            { "detach", detach },
-            { "option", option },
+            { "connect", call_socket_no_ownership<connect> },
+            { "bind", call_socket_no_ownership<bind> },
+            { "listen", call_socket_no_ownership<listen> },
+            { "accept", call_socket_no_ownership<accept> },
+            { "recv", call_socket_no_ownership<recv> },
+            { "send", call_socket_no_ownership<send> },
+            { "recvfrom", call_socket_no_ownership<recvfrom> },
+            { "sendto", call_socket_no_ownership<sendto> },
+            { "shutdown", call_socket_no_ownership<shutdown> },
+            { "status", call_socket_no_ownership<status> },
+            { "info", call_socket_no_ownership<info> },
+            { "option", call_socket_no_ownership<option> },
+            { "handle", call_socket_no_ownership<handle> },
+            { "detach", call_socketref_no_ownership<detach> },
             { NULL, NULL },
         };
         luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);
         lua_setfield(L, -2, "__index");
         luaL_Reg mt[] = {
-            { "__tostring", mt_tostring },
+            { "__tostring", call_socketref_no_ownership<mt_tostring> },
             { NULL, NULL },
         };
         luaL_setfuncs(L, mt, 0);
