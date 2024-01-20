@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bee/utility/assume.h>
 #include <errno.h>
 #include <string.h>
 
@@ -240,5 +241,31 @@ namespace bee::lua {
         }
         lua_setmetatable(L, -2);
         return 1;
+    }
+
+    inline luaL_Stream* tofile(lua_State* L, int idx) {
+        void* p = lua_touserdata(L, idx);
+        void* r = NULL;
+        if (p) {
+            if (lua_getmetatable(L, idx)) {
+                do {
+                    luaL_getmetatable(L, "bee::file");
+                    if (lua_rawequal(L, -1, -2)) {
+                        r = p;
+                        break;
+                    }
+                    lua_pop(L, 1);
+                    luaL_getmetatable(L, LUA_FILEHANDLE);
+                    if (lua_rawequal(L, -1, -2)) {
+                        r = p;
+                        break;
+                    }
+                } while (false);
+                lua_pop(L, 2);
+            }
+        }
+        luaL_argexpected(L, r != NULL, idx, LUA_FILEHANDLE);
+        ASSUME(r != NULL);
+        return (luaL_Stream*)r;
     }
 }

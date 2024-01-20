@@ -3,7 +3,6 @@
 #include <bee/nonstd/filesystem.h>
 #include <bee/subprocess.h>
 #include <bee/subprocess/process_select.h>
-#include <bee/utility/assume.h>
 #include <binding/binding.h>
 #include <binding/file.h>
 #include <errno.h>
@@ -237,36 +236,10 @@ namespace bee::lua_subprocess {
             return args;
         }
 
-        static luaL_Stream* get_file(lua_State* L, int idx) {
-            void* p = lua_touserdata(L, idx);
-            void* r = NULL;
-            if (p) {
-                if (lua_getmetatable(L, idx)) {
-                    do {
-                        luaL_getmetatable(L, "bee::file");
-                        if (lua_rawequal(L, -1, -2)) {
-                            r = p;
-                            break;
-                        }
-                        lua_pop(L, 1);
-                        luaL_getmetatable(L, LUA_FILEHANDLE);
-                        if (lua_rawequal(L, -1, -2)) {
-                            r = p;
-                            break;
-                        }
-                    } while (false);
-                    lua_pop(L, 2);
-                }
-            }
-            luaL_argexpected(L, r != NULL, idx, LUA_FILEHANDLE);
-            ASSUME(r != NULL);
-            return (luaL_Stream*)r;
-        }
-
         static file_handle cast_stdio(lua_State* L, const char* name, const file_handle handle) {
             switch (lua_getfield(L, 1, name)) {
             case LUA_TUSERDATA: {
-                luaL_Stream* p = get_file(L, -1);
+                luaL_Stream* p = lua::tofile(L, -1);
                 if (!p->closef) {
                     lua_pop(L, 1);
                     return {};
@@ -465,7 +438,7 @@ namespace bee::lua_subprocess {
     }
 
     static int peek(lua_State* L) {
-        luaL_Stream* p = spawn::get_file(L, 1);
+        luaL_Stream* p = lua::tofile(L, 1);
         if (!p->closef) {
             auto ec    = std::make_error_code(std::errc::broken_pipe);
             auto error = make_error(ec, "subprocess::peek");
@@ -486,7 +459,7 @@ namespace bee::lua_subprocess {
 
 #if defined(_WIN32)
     static int filemode(lua_State* L) {
-        luaL_Stream* p = spawn::get_file(L, 1);
+        luaL_Stream* p = lua::tofile(L, 1);
         auto mode      = lua::checkstrview(L, 2);
         if (p && p->closef && p->f) {
             int ok = _setmode(_fileno(p->f), mode[0] == 'b' ? _O_BINARY : _O_TEXT);
