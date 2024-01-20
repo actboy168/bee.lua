@@ -190,27 +190,9 @@ unsigned long __stdcall utf8_FormatMessageA(
     return ret;
 }
 
-static UINT GetOutputCP(FILE* stream) {
-    HANDLE handle = (HANDLE)_get_osfhandle(_fileno(stream));
-    switch (GetFileType(handle)) {
-    case FILE_TYPE_DISK:
-        return CP_UTF8;
-    case FILE_TYPE_CHAR: {
-        DWORD mode;
-        if (GetConsoleMode(handle, &mode)) {
-            return GetConsoleOutputCP();
-        }
-        return CP_UTF8;
-    }
-    case FILE_TYPE_PIPE:
-    default:
-        return CP_UTF8;
-    }
-}
-
 static void ConsoleWrite(FILE* stream, const char* s, int l) {
-    UINT cp = GetOutputCP(stream);
-    if (cp == CP_UTF8) {
+    HANDLE handle = (HANDLE)_get_osfhandle(_fileno(stream));
+    if (FILE_TYPE_CHAR != GetFileType(handle)) {
         fwrite(s, sizeof(char), l, stream);
         return;
     }
@@ -220,19 +202,9 @@ static void ConsoleWrite(FILE* stream, const char* s, int l) {
         if (wmsg) {
             wsz = MultiByteToWideChar(CP_UTF8, 0, s, l, wmsg, wsz);
             if (wsz > 0) {
-                int sz = WideCharToMultiByte(cp, 0, wmsg, wsz, NULL, 0, NULL, NULL);
-                if (sz > 0) {
-                    char* msg = (char*)calloc(sz, sizeof(char));
-                    if (msg) {
-                        sz = WideCharToMultiByte(cp, 0, wmsg, wsz, msg, sz, NULL, NULL);
-                        if (sz > 0) {
-                            fwrite(msg, sizeof(char), sz, stream);
-                            free(msg);
-                            free(wmsg);
-                            return;
-                        }
-                        free(msg);
-                    }
+                if (WriteConsoleW(handle, wmsg, wsz, NULL, NULL)) {
+                    free(wmsg);
+                    return;
                 }
             }
             free(wmsg);
