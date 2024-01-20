@@ -121,6 +121,9 @@ lm:lua_source "source_bee" {
     },
     windows = {
         defines = "_CRT_SECURE_NO_WARNINGS",
+        sources = {
+            "binding/port/lua_windows.cpp",
+        },
         links = {
             "advapi32",
             "ws2_32",
@@ -141,12 +144,10 @@ lm:lua_source "source_bee" {
         }
     },
     linux = {
-        sources = "!binding/lua_unicode.cpp",
         links = "stdc++fs",
         ldflags = "-pthread"
     },
     macos = {
-        sources = "!binding/lua_unicode.cpp",
         frameworks = {
             "Foundation",
             "CoreFoundation",
@@ -155,34 +156,21 @@ lm:lua_source "source_bee" {
     },
     ios = {
         sources = {
-            "!binding/lua_unicode.cpp",
             "!binding/lua_filewatch.cpp",
         },
         frameworks = "Foundation",
     },
-    android = {
-        sources = "!binding/lua_unicode.cpp",
-    },
     netbsd = {
-        sources = {
-            "!binding/lua_unicode.cpp",
-        },
         links = ":libinotify.a",
         linkdirs = "/usr/pkg/lib",
         ldflags = "-pthread"
     },
     freebsd = {
-        sources = {
-            "!binding/lua_unicode.cpp",
-        },
         links = "inotify",
         linkdirs = "/usr/local/lib",
         ldflags = "-pthread"
     },
     openbsd = {
-        sources = {
-            "!binding/lua_unicode.cpp",
-        },
         links = ":libinotify.a",
         linkdirs = "/usr/local/lib/inotify",
         ldflags = "-pthread"

@@ -268,8 +268,8 @@ function test_subprocess:test_peek()
     lt.assertEquals(process:detach(), true)
 end
 
-function test_subprocess:test_filemode()
-    if platform.os == "windows" then
+if platform.os == "windows" then
+    function test_subprocess:test_filemode()
         local process = shell:runlua([[
             assert(io.read "a" == "\n")
         ]], { stdin = true, stderr = true })
@@ -278,17 +278,17 @@ function test_subprocess:test_filemode()
         lt.assertEquals(process:wait(), 0)
         lt.assertEquals(process.stderr:read "a", "")
         lt.assertEquals(process:detach(), true)
+        local process = shell:runlua([[
+            local windows = require "bee.windows"
+            windows.filemode(io.stdin, 'b')
+            assert(io.read "a" == "\r\n")
+        ]], { stdin = true, stderr = true })
+        process.stdin:write "\r\n"
+        process.stdin:close()
+        lt.assertEquals(process:wait(), 0)
+        lt.assertEquals(process.stderr:read "a", "")
+        lt.assertEquals(process:detach(), true)
     end
-    local process = shell:runlua([[
-        local sp = require "bee.subprocess"
-        sp.filemode(io.stdin, 'b')
-        assert(io.read "a" == "\r\n")
-    ]], { stdin = true, stderr = true })
-    process.stdin:write "\r\n"
-    process.stdin:close()
-    lt.assertEquals(process:wait(), 0)
-    lt.assertEquals(process.stderr:read "a", "")
-    lt.assertEquals(process:detach(), true)
 end
 
 function test_subprocess:test_env()

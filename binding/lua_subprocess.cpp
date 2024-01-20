@@ -12,8 +12,6 @@
 #if defined(_WIN32)
 #    include <Windows.h>
 #    include <bee/platform/win/unicode.h>
-#    include <fcntl.h>
-#    include <io.h>
 #else
 #    include <unistd.h>
 #endif
@@ -457,28 +455,6 @@ namespace bee::lua_subprocess {
         return 1;
     }
 
-#if defined(_WIN32)
-    static int filemode(lua_State* L) {
-        luaL_Stream* p = lua::tofile(L, 1);
-        auto mode      = lua::checkstrview(L, 2);
-        if (p && p->closef && p->f) {
-            int ok = _setmode(_fileno(p->f), mode[0] == 'b' ? _O_BINARY : _O_TEXT);
-            if (ok == -1) {
-                lua_pushnil(L);
-                lua_pushstring(L, make_crterror("_setmode").c_str());
-                return 2;
-            }
-            lua_pushboolean(L, 1);
-            return 1;
-        }
-        lua_pushnil(L);
-        lua_pushstring(L, make_error(std::make_error_code(std::errc::bad_file_descriptor), "_setmode").c_str());
-        return 2;
-    }
-#else
-    static int filemode(lua_State*) { return 0; }
-#endif
-
     static int lsetenv(lua_State* L) {
         auto name  = lua::checkstrview(L, 1);
         auto value = lua::checkstrview(L, 2);
@@ -564,7 +540,6 @@ return table.concat(t)
             { "spawn", spawn::spawn },
             { "select", select },
             { "peek", peek },
-            { "filemode", filemode },
             { "setenv", lsetenv },
             { "get_id", get_id },
             { "quotearg", NULL },
