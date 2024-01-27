@@ -21,6 +21,7 @@ Lua runtime and toolset
 * Add resume/yield hook (for debugger)
 * Enable lua_assert in debug mode
 * Disable tail calls in debug mode (for debugger)
+* Force 16-byte alignment for userdata
 
 ## 3rd Party Libraries
 

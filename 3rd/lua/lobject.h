@@ -462,7 +462,7 @@ typedef struct Udata {
   size_t len;  /* number of bytes */
   struct Table *metatable;
   GCObject *gclist;
-  UValue uv[1];  /* user values */
+  UValue uv[1] __attribute__((__aligned__(16)));  /* user values */
 } Udata;
 
 
