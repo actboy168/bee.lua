@@ -155,9 +155,8 @@ namespace bee::lua {
 
     template <typename T>
     constexpr T* udata_align(void* storage) {
-#ifdef BEE_FORCE_USERDATA_ALIGN16
-        constexpr size_t alignment = (std::max)((size_t)16, std::alignment_of_v<T>);
-        return static_cast<T*>(align_up(storage, alignment));
+#ifdef BEE_FORCE_USERDATA_ALIGN
+        return static_cast<T*>(align_up(storage, std::alignment_of_v<T>));
 #else
         return static_cast<T*>(storage);
 #endif
@@ -235,9 +234,8 @@ namespace bee::lua {
         if constexpr (udata_has_nupvalue<T>::value) {
             nupvalue = udata<T>::nupvalue;
         }
-#ifdef BEE_FORCE_USERDATA_ALIGN16
-        constexpr size_t alignment = (std::max)((size_t)16, std::alignment_of_v<T>);
-        void* storage              = lua_newuserdatauv(L, sizeof(T) + alignment, nupvalue);
+#ifdef BEE_FORCE_USERDATA_ALIGN
+        void* storage = lua_newuserdatauv(L, sizeof(T) + std::alignment_of_v<T>, nupvalue);
 #else
         void* storage = lua_newuserdatauv(L, sizeof(T), nupvalue);
 #endif

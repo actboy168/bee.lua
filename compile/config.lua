@@ -54,7 +54,7 @@ lm:config "prebuilt" {
     freebsd = {
         crt = "static",
         ldflags = "-Wl,-E",
-        defines = "BEE_FORCE_USERDATA_ALIGN16",
+        defines = "BEE_FORCE_USERDATA_ALIGN",
     },
     openbsd = {
         crt = "static",
