@@ -1,5 +1,5 @@
 name: test
-on: push
+on: [ push, pull_request ]
 jobs:
   windows-x86:
     name: windows (x86)
