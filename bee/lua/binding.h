@@ -6,6 +6,7 @@
 #include <bee/nonstd/unreachable.h>
 #include <bee/utility/zstring_view.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <limits>
 #include <lua.hpp>
@@ -147,6 +148,22 @@ namespace bee::lua {
     }
 
     template <typename T>
+    constexpr T align_up(T v, size_t align) {
+        uintptr_t mask = (uintptr_t)(align - 1);
+        return T(((uintptr_t)v + mask) & ~mask);
+    }
+
+    template <typename T>
+    constexpr T* udata_align(void* storage) {
+#ifdef BEE_FORCE_USERDATA_ALIGN16
+        constexpr size_t alignment = (std::max)((size_t)16, std::alignment_of_v<T>);
+        return static_cast<T*>(align_up(storage, alignment));
+#else
+        return static_cast<T*>(storage);
+#endif
+    }
+
+    template <typename T>
     T checklightud(lua_State* L, int arg) {
         luaL_checktype(L, arg, LUA_TLIGHTUSERDATA);
         return tolightud<T>(L, arg);
@@ -154,7 +171,7 @@ namespace bee::lua {
 
     template <typename T>
     T& toudata(lua_State* L, int arg) {
-        return *tolightud<T*>(L, arg);
+        return *udata_align<T>(lua_touserdata(L, arg));
     }
 
     template <typename T>
@@ -218,7 +235,13 @@ namespace bee::lua {
         if constexpr (udata_has_nupvalue<T>::value) {
             nupvalue = udata<T>::nupvalue;
         }
-        T* o = static_cast<T*>(lua_newuserdatauv(L, sizeof(T), nupvalue));
+#ifdef BEE_FORCE_USERDATA_ALIGN16
+        constexpr size_t alignment = (std::max)((size_t)16, std::alignment_of_v<T>);
+        void* storage              = lua_newuserdatauv(L, sizeof(T) + alignment, nupvalue);
+#else
+        void* storage = lua_newuserdatauv(L, sizeof(T), nupvalue);
+#endif
+        T* o = udata_align<T>(storage);
         new (o) T(std::forward<Args>(args)...);
         getmetatable<T>(L);
         lua_setmetatable(L, -2);
@@ -228,7 +251,7 @@ namespace bee::lua {
     template <typename T>
     T& checkudata(lua_State* L, int arg) {
         if constexpr (udata_has_name<T>::value) {
-            return *static_cast<T*>(luaL_checkudata(L, arg, udata<T>::name));
+            return *udata_align<T>(luaL_checkudata(L, arg, udata<T>::name));
         }
         else {
             luaL_checktype(L, arg, LUA_TUSERDATA);

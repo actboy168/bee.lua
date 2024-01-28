@@ -110,7 +110,7 @@ namespace bee::lua_select {
         lua_remove(L, -2);
     }
     static int pairs_events(lua_State* L) {
-        auto& ctx = *(select_ctx*)lua_touserdata(L, lua_upvalueindex(1));
+        auto& ctx = lua::toudata<select_ctx>(L, lua_upvalueindex(1));
 #if defined(_WIN32)
         auto rset = ctx.readfds.ptr();
         auto wset = ctx.writefds.ptr();
