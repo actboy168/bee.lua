@@ -147,19 +147,31 @@ namespace bee::lua {
         }
     }
 
-    template <typename T>
-    constexpr T align_up(T v, size_t align) {
-        uintptr_t mask = (uintptr_t)(align - 1);
-        return T(((uintptr_t)v + mask) & ~mask);
-    }
+    union lua_maxalign_t { LUAI_MAXALIGN; };
+    constexpr inline size_t lua_maxalign = std::alignment_of_v<lua_maxalign_t>;
 
     template <typename T>
     constexpr T* udata_align(void* storage) {
-#ifdef BEE_FORCE_USERDATA_ALIGN
-        return static_cast<T*>(align_up(storage, std::alignment_of_v<T>));
-#else
-        return static_cast<T*>(storage);
-#endif
+        if constexpr (std::alignment_of_v<T> > lua_maxalign) {
+            uintptr_t mask = (uintptr_t)(std::alignment_of_v<T> - 1);
+            storage = (void*)(((uintptr_t)storage + mask) & ~mask);
+            return static_cast<T*>(storage);
+        }
+        else {
+            return static_cast<T*>(storage);
+        }
+    }
+
+    template <typename T>
+    constexpr T* udata_new(lua_State* L, int nupvalue) {
+        if constexpr (std::alignment_of_v<T> > lua_maxalign) {
+            void* storage = lua_newuserdatauv(L, sizeof(T) + std::alignment_of_v<T>, nupvalue);
+            return udata_align<T>(storage);
+        }
+        else {
+            void* storage = lua_newuserdatauv(L, sizeof(T), nupvalue);
+            return udata_align<T>(storage);
+        }
     }
 
     template <typename T>
@@ -234,12 +246,7 @@ namespace bee::lua {
         if constexpr (udata_has_nupvalue<T>::value) {
             nupvalue = udata<T>::nupvalue;
         }
-#ifdef BEE_FORCE_USERDATA_ALIGN
-        void* storage = lua_newuserdatauv(L, sizeof(T) + std::alignment_of_v<T>, nupvalue);
-#else
-        void* storage = lua_newuserdatauv(L, sizeof(T), nupvalue);
-#endif
-        T* o = udata_align<T>(storage);
+        T* o = udata_new<T>(L, nupvalue);
         new (o) T(std::forward<Args>(args)...);
         getmetatable<T>(L);
         lua_setmetatable(L, -2);
