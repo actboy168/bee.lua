@@ -49,53 +49,35 @@
 #if !defined(NDEBUG)
 
 #include "lauxlib.h"
-
-#if defined(lua_assert)
-#undef lua_assert
+inline void _bee_lua_assert(const char* message, const char* file, unsigned line) {
+    fprintf(stderr, "(%s:%d) %s\n", file, line, message);
+    fflush(stderr);
+    abort();
+}
+inline void _bee_lua_apicheck(lua_State* L, const char* message, const char* file, unsigned line) {
+    fprintf(stderr, "(%s:%d) %s\n", file, line, message);
+    fflush(stderr);
+    if (!lua_checkstack(L, LUA_MINSTACK)) {
+        abort();
+    }
+    luaL_traceback(L, L, 0, 0);
+    fprintf(stderr, "%s\n", lua_tostring(L, -1));
+    fflush(stderr);
+    lua_pop(L, 1);
+    abort();
+}
+#    if defined(lua_assert)
+#        undef lua_assert
+#    endif
+#    if defined(luai_apicheck)
+#        undef luai_apicheck
+#    endif
+#    define lua_assert(expression)       (void)((!!(expression)) || (_bee_lua_assert  (   #expression, __FILE__, (unsigned)(__LINE__)), 0))
+#    define luai_apicheck(l, expression) (void)((!!(expression)) || (_bee_lua_apicheck(l, #expression, __FILE__, (unsigned)(__LINE__)), 0))
 #endif
 
-#define lua_assert(e) (void)(               \
-        (!!(e)) ||                          \
-        (                                   \
-            fprintf(stderr, "(%s:%d) %s\n", \
-                __FILE__,                   \
-                (unsigned)(__LINE__),       \
-                #e),                        \
-            fflush(stderr),                 \
-            abort(),                        \
-            0                               \
-        )                                   \
-    )
-
-#if defined(luai_apicheck)
-#undef luai_apicheck
-#endif
-
-#define luai_apicheck(l, e)                  \
-    do {                                     \
-        if (!(e)) {                          \
-            fprintf(stderr, "(%s:%d) %s\n",  \
-                __FILE__,                    \
-                (unsigned)(__LINE__),        \
-                #e);                         \
-            fflush(stderr);                  \
-            if (!lua_checkstack((l), LUA_MINSTACK)) { \
-                abort();                     \
-            }                                \
-            luaL_traceback((l), (l), 0, 0);  \
-            fprintf(stderr, "%s\n",          \
-                lua_tostring((l), -1));      \
-            fflush(stderr);                  \
-            lua_pop((l), 1);                 \
-            abort();                         \
-        }                                    \
-    } while(0)
-
-#endif
-
-#define l_randomizePivot() (*(unsigned int*)"Lua\0Lua\0")
-#define luai_makeseed(L) (getenv("LUA_SEED")? (unsigned int)atoi(getenv("LUA_SEED")): l_randomizePivot())
-
+#define l_randomizePivot() (~0)
+#define luai_makeseed(L) (getenv("LUA_SEED") ? (unsigned int)atoi(getenv("LUA_SEED")) : (*(unsigned int*)"Lua\0Lua\0"))
 
 #if defined(_MSC_VER) && !defined(__SANITIZE_ADDRESS__)
 
