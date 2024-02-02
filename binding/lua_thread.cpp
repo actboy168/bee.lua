@@ -12,6 +12,7 @@
 #include <atomic>
 #include <functional>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <queue>
 #include <string>
@@ -248,8 +249,39 @@ namespace bee::lua_thread {
         return 1;
     }
 
+    static void* l_alloc(void* ud, void* ptr, size_t osize, size_t nsize) {
+        (void)ud;
+        (void)osize; /* not used */
+        if (nsize == 0) {
+            free(ptr);
+            return NULL;
+        }
+        else
+            return realloc(ptr, nsize);
+    }
+
+    static int panic(lua_State* L) {
+        const char* msg = (lua_type(L, -1) == LUA_TSTRING)
+                              ? lua_tostring(L, -1)
+                              : "error object is not a string";
+        lua_writestringerror("PANIC: unprotected error in call to Lua API (%s)\n", msg);
+        return 0; /* return to Lua to abort */
+    }
+
     static void thread_main(void* ud) noexcept {
-        lua_State* L = luaL_newstate();
+        lua_State* L = lua_newstate(l_alloc, NULL, *(unsigned int*)"Lua\0Lua\0");
+        if (L == NULL) {
+            boxchannel errlog = g_channel.query("errlog");
+            if (errlog) {
+                void* errmsg = seri_pack(L, lua_gettop(L) - 1, NULL);
+                errlog->push(errmsg);
+            }
+            else {
+                std::println(stdout, "cannot create state: not enough memory");
+            }
+            return;
+        }
+        lua_atpanic(L, &panic);
         lua_pushcfunction(L, msghandler);
         lua_pushcfunction(L, thread_luamain);
         lua_pushlightuserdata(L, ud);

@@ -1,5 +1,7 @@
 local lm = require "luamake"
 
+lm.luaversion = "lua55"
+
 if lm.compiler == "emcc" then
     lm:import 'compile/emcc.lua'
     return

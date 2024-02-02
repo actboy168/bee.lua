@@ -4,7 +4,7 @@
 
 namespace bee::win {
 
-    module_version::module_version(const wchar_t* module_path)
+    module_version::module_version(const wchar_t* module_path) noexcept
         : current_(0)
         , translation_()
         , version_info_() {
@@ -36,7 +36,7 @@ namespace bee::win {
         select_language(::GetUserDefaultLangID());
     }
 
-    std::wstring_view module_version::get_value(const wchar_t* key) const {
+    std::wstring_view module_version::get_value(const wchar_t* key) const noexcept {
         if (translation_.empty()) {
             return L"";
         }

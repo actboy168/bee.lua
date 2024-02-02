@@ -245,17 +245,37 @@ static int pmain(lua_State *L) {
     return 1;
 }
 
+static void *l_alloc(void *ud, void *ptr, size_t osize, size_t nsize) {
+    (void)ud;
+    (void)osize; /* not used */
+    if (nsize == 0) {
+        free(ptr);
+        return NULL;
+    }
+    else
+        return realloc(ptr, nsize);
+}
+
+static int panic(lua_State *L) {
+    const char *msg = (lua_type(L, -1) == LUA_TSTRING)
+                          ? lua_tostring(L, -1)
+                          : "error object is not a string";
+    lua_writestringerror("PANIC: unprotected error in call to Lua API (%s)\n", msg);
+    return 0; /* return to Lua to abort */
+}
+
 #if defined(_WIN32)
 int umain(int argc, char **argv) {
 #else
 int main(int argc, char **argv) {
 #endif
     int status, result;
-    lua_State *L = luaL_newstate(); /* create state */
+    lua_State *L = lua_newstate(l_alloc, NULL, *(unsigned int *)"Lua\0Lua\0");
     if (L == NULL) {
         l_message(argv[0], "cannot create state: not enough memory");
         return EXIT_FAILURE;
     }
+    lua_atpanic(L, &panic);
     lua_pushcfunction(L, &pmain);   /* to call 'pmain' in protected mode */
     lua_pushinteger(L, argc);       /* 1st argument */
     lua_pushlightuserdata(L, argv); /* 2nd argument */

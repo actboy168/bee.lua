@@ -36,21 +36,28 @@ end
 
 function test_fw:test_2()
     test(function (fw, root)
-        fs.create_directories(root / "test1")
-        create_file(root / "test1.txt")
-        fs.rename(root / "test1.txt", root / "test2.txt")
-        fs.remove(root / "test2.txt")
-
+        fs.create_directories(root / "dir")
+        create_file(root / "file_1")
+        fs.rename(root / "file_1", root / "file_2")
+        fs.remove(root / "file_2")
+        local function equal(a, b)
+            return a:match "^(.-)/?$" == b:match "^(.-)/?$"
+        end
+        local function has(t, a)
+            for _, v in ipairs(t) do
+                if equal(v, a) then
+                    return true
+                end
+            end
+        end
         local list = {}
         local n = 100
         while true do
             local w, v = fw:select()
             if w then
                 n = 100
-                if type(v) == "userdata" or type(v) == "table" then
+                if not has(list, v) and not equal(v, root:string()) then
                     list[#list+1] = v
-                else
-                    list[#list+1] = fs.path(v)
                 end
             else
                 n = n - 1
@@ -60,17 +67,11 @@ function test_fw:test_2()
                 thread.sleep(0.001)
             end
         end
-        local function assertHas(path)
-            for _, v in ipairs(list) do
-                if v == path then
-                    return
-                end
-            end
-            lt.assertEquals(path, nil)
-        end
-        assertHas(root / "test1")
-        assertHas(root / "test1.txt")
-        assertHas(root / "test2.txt")
+        lt.assertEquals(list, {
+            (root / "dir"):string(),
+            (root / "file_1"):string(),
+            (root / "file_2"):string(),
+        })
     end)
 end
 

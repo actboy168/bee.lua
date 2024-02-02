@@ -10,10 +10,7 @@ local function getTestDir()
 end
 __Target__ = getProcDir()
 __EXT__ = package.cpath:match "[/\\]%?%.([a-z]+)"
-package.path = table.concat({
-    getTestDir().."/?.lua",
-    getTestDir().."/ltest/?.lua",
-}, ";")
+package.path = getTestDir().."/?.lua"
 package.cpath = ("%s/?.%s"):format(__Target__, __EXT__)
 
 local platform = require "bee.platform"

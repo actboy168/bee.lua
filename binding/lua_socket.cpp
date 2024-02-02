@@ -39,11 +39,18 @@ namespace bee::lua_socket {
     static void pushfd(lua_State* L, net::fd_t fd);
     static int accept(lua_State* L, net::fd_t fd) {
         net::fd_t newfd;
-        if (net::socket::fdstat::success != net::socket::accept(fd, newfd)) {
+        switch (net::socket::accept(fd, newfd)) {
+        case net::socket::fdstat::wait:
+            lua_pushboolean(L, 0);
+            return 1;
+        case net::socket::fdstat::success:
+            pushfd(L, newfd);
+            return 1;
+        case net::socket::fdstat::failed:
             return push_neterror(L, "accept");
+        default:
+            std::unreachable();
         }
-        pushfd(L, newfd);
-        return 1;
     }
     static int recv(lua_State* L, net::fd_t fd) {
         auto len = lua::optinteger<int, LUAL_BUFFERSIZE>(L, 2);

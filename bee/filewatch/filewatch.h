@@ -30,7 +30,7 @@ namespace bee::filewatch {
         };
         flag flags;
         std::string path;
-        notify(const flag& flags, const std::string& path)
+        notify(const flag& flags, const std::string& path) noexcept
             : flags(flags)
             , path(path) {}
     };
@@ -47,30 +47,30 @@ namespace bee::filewatch {
         static inline filter DefaultFilter = [](const char*) { return true; };
 
         watch() noexcept;
-        ~watch();
+        ~watch() noexcept;
 
         void stop() noexcept;
-        void add(const string_type& path);
+        void add(const string_type& path) noexcept;
         void set_recursive(bool enable) noexcept;
         bool set_follow_symlinks(bool enable) noexcept;
-        bool set_filter(filter f = DefaultFilter);
-        void update();
-        std::optional<notify> select();
+        bool set_filter(filter f = DefaultFilter) noexcept;
+        void update() noexcept;
+        std::optional<notify> select() noexcept;
 
     private:
 #if defined(_WIN32)
-        bool event_update(task& task);
+        bool event_update(task& task) noexcept;
 #elif defined(__APPLE__)
         bool create_stream(CFArrayRef cf_paths) noexcept;
         void destroy_stream() noexcept;
-        void update_stream();
+        void update_stream() noexcept;
 
     public:
-        void event_update(const char* paths[], const FSEventStreamEventFlags flags[], size_t n);
+        void event_update(const char* paths[], const FSEventStreamEventFlags flags[], size_t n) noexcept;
 
     private:
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-        void event_update(void* event);
+        void event_update(void* event) noexcept;
 #endif
 
     private:

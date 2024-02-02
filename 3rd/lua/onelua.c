@@ -108,6 +108,7 @@
 #include "ltablib.c"
 #include "lutf8lib.c"
 //#include "linit.c"
+#include "bee_assert.c"
 #endif
 
 /* lua */

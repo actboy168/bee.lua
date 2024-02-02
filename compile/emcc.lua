@@ -1,11 +1,12 @@
 local lm = require "luamake"
-
-lm.rootdir = ".."
-lm.c = "c11"
-lm.cxx = "c++17"
-lm.rtti = "off"
-lm.flags = {
-    "-pthread",
+lm:conf {
+    rootdir = "..",
+    c = "c11",
+    cxx = "c++17",
+    rtti = "off",
+    flags = {
+        "-pthread",
+    }
 }
 
 lm:lua_source "source_bee" {
@@ -70,14 +71,14 @@ if not lm.notest then
     table.sort(tests)
 
     lm:rule "test" {
-        "node", "$bin/lua.js", "@test/test.lua", "--touch", "$out",
+        args = { "node", "$bin/lua.js", "@test/test.lua", "--touch", "$out" },
         description = "Run test.",
         pool = "console",
     }
     lm:build "test" {
         rule = "test",
         deps = "lua",
-        input = tests,
-        output = "$obj/test.stamp",
+        inputs = tests,
+        outputs = "$obj/test.stamp",
     }
 end

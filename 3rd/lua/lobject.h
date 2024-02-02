@@ -188,9 +188,20 @@ typedef union {
 /* Value returned for a key not found in a table (absent key) */
 #define LUA_VABSTKEY	makevariant(LUA_TNIL, 2)
 
+/* Special variant to signal that a fast get is accessing a non-table */
+#define LUA_VNOTABLE    makevariant(LUA_TNIL, 3)
+
 
 /* macro to test for (any kind of) nil */
 #define ttisnil(v)		checktype((v), LUA_TNIL)
+
+/*
+** Macro to test the result of a table access. Formally, it should
+** distinguish between LUA_VEMPTY/LUA_VABSTKEY/LUA_VNOTABLE and
+** other tags. As currently nil is equivalent to LUA_VEMPTY, it is
+** simpler to just test whether the value is nil.
+*/
+#define tagisempty(tag)		(novariant(tag) == LUA_TNIL)
 
 
 /* macro to test for a standard nil */
@@ -380,35 +391,53 @@ typedef struct GCObject {
 #define setsvalue2n	setsvalue
 
 
+/* Kinds of long strings (stored in 'shrlen') */
+#define LSTRREG		-1  /* regular long string */
+#define LSTRFIX		-2  /* fixed external long string */
+#define LSTRMEM		-3  /* external long string with deallocation */
+
+
 /*
 ** Header for a string value.
 */
 typedef struct TString {
   CommonHeader;
   lu_byte extra;  /* reserved words for short strings; "has hash" for longs */
-  lu_byte shrlen;  /* length for short strings, 0xFF for long strings */
+  ls_byte shrlen;  /* length for short strings, negative for long strings */
   unsigned int hash;
   union {
     size_t lnglen;  /* length for long strings */
     struct TString *hnext;  /* linked list for hash table */
   } u;
-  char contents[1];
+  char *contents;  /* pointer to content in long strings */
+  lua_Alloc falloc;  /* deallocation function for external strings */
+  void *ud;  /* user data for external strings */
 } TString;
 
+
+#define strisshr(ts)	((ts)->shrlen >= 0)
 
 
 /*
 ** Get the actual string (array of bytes) from a 'TString'. (Generic
 ** version and specialized versions for long and short strings.)
 */
-#define getstr(ts)	((ts)->contents)
-#define getlngstr(ts)	check_exp((ts)->shrlen == 0xFF, (ts)->contents)
-#define getshrstr(ts)	check_exp((ts)->shrlen != 0xFF, (ts)->contents)
+#define rawgetshrstr(ts)  (cast_charp(&(ts)->contents))
+#define getshrstr(ts)	check_exp(strisshr(ts), rawgetshrstr(ts))
+#define getlngstr(ts)	check_exp(!strisshr(ts), (ts)->contents)
+#define getstr(ts) 	(strisshr(ts) ? rawgetshrstr(ts) : (ts)->contents)
 
 
-/* get string length from 'TString *s' */
-#define tsslen(s)  \
-	((s)->shrlen != 0xFF ? (s)->shrlen : (s)->u.lnglen)
+/* get string length from 'TString *ts' */
+#define tsslen(ts)  \
+	(strisshr(ts) ? cast_uint((ts)->shrlen) : (ts)->u.lnglen)
+
+/*
+** Get string and length */
+#define getlstr(ts, len)  \
+	(strisshr(ts) \
+	? (cast_void((len) = (ts)->shrlen), rawgetshrstr(ts)) \
+	: (cast_void((len) = (ts)->u.lnglen), (ts)->contents))
 
 /* }================================================================== */
 
@@ -544,13 +573,21 @@ typedef struct AbsLineInfo {
   int line;
 } AbsLineInfo;
 
+
+/*
+** Flags in Prototypes
+*/
+#define PF_ISVARARG	1
+#define PF_FIXED	2  /* prototype has parts in fixed memory */
+
+
 /*
 ** Function Prototypes
 */
 typedef struct Proto {
   CommonHeader;
   lu_byte numparams;  /* number of fixed (named) parameters */
-  lu_byte is_vararg;
+  lu_byte flag;
   lu_byte maxstacksize;  /* number of registers needed by this function */
   int sizeupvalues;  /* size of 'upvalues' */
   int sizek;  /* size of 'k' */
@@ -734,14 +771,16 @@ typedef union Node {
 #define setnorealasize(t)	((t)->flags |= BITRAS)
 
 
+typedef struct ArrayCell ArrayCell;
+
+
 typedef struct Table {
   CommonHeader;
   lu_byte flags;  /* 1<<p means tagmethod(p) is not present */
   lu_byte lsizenode;  /* log2 of size of 'node' array */
   unsigned int alimit;  /* "limit" of 'array' array */
-  TValue *array;  /* array part */
+  ArrayCell *array;  /* array part */
   Node *node;
-  Node *lastfree;  /* any free position is before this position */
   struct Table *metatable;
   GCObject *gclist;
 } Table;
@@ -796,6 +835,9 @@ typedef struct Table {
 
 LUAI_FUNC int luaO_utf8esc (char *buff, unsigned long x);
 LUAI_FUNC int luaO_ceillog2 (unsigned int x);
+LUAI_FUNC unsigned int luaO_codeparam (unsigned int p);
+LUAI_FUNC l_obj luaO_applyparam (unsigned int p, l_obj x);
+
 LUAI_FUNC int luaO_rawarith (lua_State *L, int op, const TValue *p1,
                              const TValue *p2, TValue *res);
 LUAI_FUNC void luaO_arith (lua_State *L, int op, const TValue *p1,

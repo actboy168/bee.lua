@@ -9,5 +9,5 @@ namespace bee::subprocess {
         timeout,
         failed,
     };
-    status process_select(const dynarray<process*>& set, int timeout);
+    status process_select(const dynarray<process*>& set, int timeout) noexcept;
 }

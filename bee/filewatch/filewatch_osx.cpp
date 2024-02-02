@@ -6,7 +6,7 @@ namespace bee::filewatch {
         return "fsevent";
     }
 
-    static void event_cb(ConstFSEventStreamRef streamRef, void* info, size_t numEvents, void* eventPaths, const FSEventStreamEventFlags eventFlags[], const FSEventStreamEventId eventIds[]) {
+    static void event_cb(ConstFSEventStreamRef streamRef, void* info, size_t numEvents, void* eventPaths, const FSEventStreamEventFlags eventFlags[], const FSEventStreamEventId eventIds[]) noexcept {
         (void)streamRef;
         (void)eventIds;
         watch* self = (watch*)info;
@@ -17,9 +17,11 @@ namespace bee::filewatch {
         : m_notify()
         , m_paths()
         , m_stream(NULL) {}
-    watch::~watch() {
+
+    watch::~watch() noexcept {
         stop();
     }
+
     void watch::stop() noexcept {
         destroy_stream();
         m_paths.clear();
@@ -65,7 +67,7 @@ namespace bee::filewatch {
         m_stream = NULL;
     }
 
-    void watch::add(const string_type& path) {
+    void watch::add(const string_type& path) noexcept {
         m_paths.emplace(path);
         update_stream();
     }
@@ -78,11 +80,11 @@ namespace bee::filewatch {
         return false;
     }
 
-    bool watch::set_filter(filter f) {
+    bool watch::set_filter(filter f) noexcept {
         return false;
     }
 
-    void watch::update_stream() {
+    void watch::update_stream() noexcept {
         destroy_stream();
         if (m_paths.empty()) {
             return;
@@ -106,10 +108,10 @@ namespace bee::filewatch {
         CFRelease(cf_paths);
     }
 
-    void watch::update() {
+    void watch::update() noexcept {
     }
 
-    void watch::event_update(const char* paths[], const FSEventStreamEventFlags flags[], size_t n) {
+    void watch::event_update(const char* paths[], const FSEventStreamEventFlags flags[], size_t n) noexcept {
         std::unique_lock<std::mutex> lock(m_mutex);
         for (size_t i = 0; i < n; ++i) {
             const char* path = paths[i];
@@ -125,7 +127,7 @@ namespace bee::filewatch {
         }
     }
 
-    std::optional<notify> watch::select() {
+    std::optional<notify> watch::select() noexcept {
         std::unique_lock<std::mutex> lock(m_mutex);
         if (m_notify.empty()) {
             return std::nullopt;

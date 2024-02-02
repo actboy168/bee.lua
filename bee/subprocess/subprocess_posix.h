@@ -11,9 +11,9 @@
 namespace bee::subprocess {
     class envbuilder {
     public:
-        void set(const std::string& key, const std::string& value);
-        void del(const std::string& key);
-        environment release();
+        void set(const std::string& key, const std::string& value) noexcept;
+        void del(const std::string& key) noexcept;
+        environment release() noexcept;
 
     private:
         std::map<std::string, std::optional<std::string>> set_env_;
@@ -39,22 +39,22 @@ namespace bee::subprocess {
     };
 
     struct args_t {
-        ~args_t();
-        void push(char* str);
-        void push(zstring_view str);
-        char*& operator[](size_t i) {
+        ~args_t() noexcept;
+        void push(char* str) noexcept;
+        void push(zstring_view str) noexcept;
+        char*& operator[](size_t i) noexcept {
             return data_[i];
         }
-        char* const& operator[](size_t i) const {
+        char* const& operator[](size_t i) const noexcept {
             return data_[i];
         }
-        char* const* data() const {
+        char* const* data() const noexcept {
             return data_.data();
         }
-        char** data() {
+        char** data() noexcept {
             return data_.data();
         }
-        size_t size() const {
+        size_t size() const noexcept {
             return data_.size();
         }
 
@@ -66,12 +66,12 @@ namespace bee::subprocess {
         friend class process;
 
     public:
-        spawn();
-        void suspended();
-        void detached();
-        void redirect(stdio type, file_handle f);
-        void env(environment&& env);
-        bool exec(args_t& args, const char* cwd);
+        spawn() noexcept;
+        void suspended() noexcept;
+        void detached() noexcept;
+        void redirect(stdio type, file_handle f) noexcept;
+        void env(environment&& env) noexcept;
+        bool exec(args_t& args, const char* cwd) noexcept;
 
     private:
         environment env_ = nullptr;

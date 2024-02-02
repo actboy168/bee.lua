@@ -43,21 +43,9 @@ namespace bee::lua_serialization {
         return 1;
     }
     static int lightuserdata(lua_State* L) {
-        switch (lua_type(L, 1)) {
-        case LUA_TLIGHTUSERDATA:
-            lua_pushinteger(L, lua::tolightud<lua_Integer>(L, 1));
-            return 1;
-        case LUA_TNUMBER:
-            if (lua_isinteger(L, 1)) {
-                lua_pushlightuserdata(L, (void*)lua::checkinteger<intptr_t>(L, 1));
-                return 1;
-            }
-            else {
-                return luaL_error(L, "unsupported type float");
-            }
-        default:
-            return luaL_error(L, "unsupported type %s", luaL_typename(L, lua_type(L, 1)));
-        }
+        luaL_checktype(L, 1, LUA_TUSERDATA);
+        lua_pushlightuserdata(L, lua_touserdata(L, 1));
+        return 1;
     }
     static int luaopen(lua_State* L) {
         luaL_Reg lib[] = {

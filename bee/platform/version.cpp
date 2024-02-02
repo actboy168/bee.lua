@@ -32,7 +32,7 @@ namespace bee {
     }
 
 #    if defined(_WIN32)
-    static uint32_t toint(std::wstring_view wstr, uint32_t def = 0) {
+    static uint32_t toint(std::wstring_view wstr, uint32_t def = 0) noexcept {
         std::string str;
         str.resize(wstr.size());
         for (size_t i = 0; i < wstr.size(); ++i) {
@@ -46,7 +46,7 @@ namespace bee {
 #    endif
 
     template <typename CharT>
-    static version to_version(std::basic_string_view<CharT> verstr) {
+    static version to_version(std::basic_string_view<CharT> verstr) noexcept {
         constexpr auto npos = std::basic_string_view<CharT>::npos;
         version v { 0, 0, 0 };
         size_t pos  = 0;
@@ -68,7 +68,7 @@ namespace bee {
     }
 #endif
 
-    version os_version() {
+    version os_version() noexcept {
 #if defined(__APPLE__)
         // id processInfo = [NSProcessInfo processInfo]
         id processInfo = reinterpret_cast<id (*)(Class, SEL)>(objc_msgSend)(objc_getClass("NSProcessInfo"), sel_getUid("processInfo"));

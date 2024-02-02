@@ -22,7 +22,7 @@ namespace bee::filewatch {
         assert(m_inotify_fd != -1);
     }
 
-    watch::~watch() {
+    watch::~watch() noexcept {
         stop();
     }
 
@@ -39,7 +39,7 @@ namespace bee::filewatch {
         m_inotify_fd = -1;
     }
 
-    void watch::add(const string_type& str) {
+    void watch::add(const string_type& str) noexcept {
         if (m_inotify_fd == -1) {
             return;
         }
@@ -84,12 +84,12 @@ namespace bee::filewatch {
         return true;
     }
 
-    bool watch::set_filter(filter f) {
+    bool watch::set_filter(filter f) noexcept {
         m_filter = f;
         return true;
     }
 
-    void watch::update() {
+    void watch::update() noexcept {
         if (m_inotify_fd == -1) {
             return;
         }
@@ -113,7 +113,7 @@ namespace bee::filewatch {
         }
     }
 
-    void watch::event_update(void* e) {
+    void watch::event_update(void* e) noexcept {
         inotify_event* event = (inotify_event*)e;
         if (event->mask & IN_Q_OVERFLOW) {
             // TODO?
@@ -143,7 +143,7 @@ namespace bee::filewatch {
         }
     }
 
-    std::optional<notify> watch::select() {
+    std::optional<notify> watch::select() noexcept {
         if (m_notify.empty()) {
             return std::nullopt;
         }

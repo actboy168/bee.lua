@@ -1,39 +1,18 @@
 local lm = require "luamake"
-lm:required_version "1.2"
+lm:required_version "1.6"
 
-lm.c = "c11"
-lm.cxx = "c++17"
-lm.rtti = "off"
-
-if lm.sanitize then
-    lm:config "sanitize" {
-        mode = "debug",
-        flags = "-fsanitize=address",
-        gcc = {
-            ldflags = "-fsanitize=address"
-        },
-        clang = {
-            ldflags = "-fsanitize=address"
-        }
-    }
-    lm:msvc_copydll "sanitize-dll" {
-        type = "asan",
-        output = "$bin"
-    }
-end
-
-lm:config "test" {
-    msvc = lm.mode == "debug" and lm.arch == "x86_64" and {
-        ldflags = "/STACK:"..0x160000
-    },
-}
-
-lm:config "prebuilt" {
+lm:conf {
+    c = "c11",
+    cxx = "c++17",
+    rtti = "off",
     windows = {
         defines = "_WIN32_WINNT=0x0601",
     },
     msvc = {
         flags = "/utf-8",
+        ldflags = lm.mode == "debug" and lm.arch == "x86_64" and {
+            "/STACK:"..0x160000
+        },
     },
     macos = {
         flags = "-Wunguarded-availability",
@@ -64,8 +43,19 @@ lm:config "prebuilt" {
     },
 }
 
-lm.configs = {
-    "test",
-    "prebuilt",
-    lm.sanitize and "sanitize"
-}
+if lm.sanitize then
+    lm:conf {
+        mode = "debug",
+        flags = "-fsanitize=address",
+        gcc = {
+            ldflags = "-fsanitize=address"
+        },
+        clang = {
+            ldflags = "-fsanitize=address"
+        }
+    }
+    lm:msvc_copydll "sanitize-dll" {
+        type = "asan",
+        outputs = "$bin"
+    }
+end

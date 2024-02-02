@@ -48,8 +48,8 @@ lm:executable "bootstrap" {
 local exe = lm.os == "windows" and ".exe" or ""
 
 lm:copy "copy_script" {
-    input = "bootstrap/main.lua",
-    output = "$bin/main.lua",
+    inputs = "bootstrap/main.lua",
+    outputs = "$bin/main.lua",
     deps = "bootstrap",
 }
 
@@ -57,22 +57,22 @@ if not lm.notest then
     local tests = {}
     local fs = require "bee.filesystem"
     local rootdir = fs.path(lm.workdir) / ".."
-    for file in fs.pairs(rootdir / "test", "r") do
-        if file:equal_extension ".lua" then
+    for file in fs.pairs_r(rootdir / "test") do
+        if file:extension() == ".lua" then
             tests[#tests+1] = fs.relative(file, rootdir):lexically_normal():string()
         end
     end
     table.sort(tests)
 
     lm:rule "test" {
-        "$bin/bootstrap"..exe, "@test/test.lua", "--touch", "$out",
+        args = { "$bin/bootstrap"..exe, "@test/test.lua", "--touch", "$out" },
         description = "Run test.",
         pool = "console",
     }
     lm:build "test" {
         rule = "test",
         deps = { "bootstrap", "copy_script" },
-        input = tests,
-        output = "$obj/test.stamp",
+        inputs = tests,
+        outputs = "$obj/test.stamp",
     }
 end

@@ -29,19 +29,19 @@ namespace bee {
             : data_()
             , size_(0)
         {}
-        dynarray(size_type size)
+        dynarray(size_type size) noexcept
             : data_(std::make_unique<value_type[]>(size))
             , size_(size)
         {}
-        dynarray(const value_type* data, size_type size)
+        dynarray(const value_type* data, size_type size) noexcept
             : dynarray(size) {
             memcpy(data_.get(), data, sizeof(value_type) * size);
         }
         template <typename Vec, typename = std::enable_if_t<std::is_same_v<typename Vec::value_type, value_type>>>
-        dynarray(Vec const& vec)
+        dynarray(Vec const& vec) noexcept
             : dynarray(vec.data(), vec.size())
         {}
-        ~dynarray()
+        ~dynarray() noexcept
         {}
         dynarray(const dynarray&) = delete;
         dynarray& operator=(const dynarray&) = delete;
