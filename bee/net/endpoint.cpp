@@ -5,7 +5,7 @@
 #    include <arpa/inet.h>
 #    include <netdb.h>
 #    include <sys/un.h>
-#    if defined(__FreeBSD__)
+#    if defined(__FreeBSD__) || defined(__OpenBSD__)
 #        include <netinet/in.h>
 #        include <sys/socket.h>
 #    endif
