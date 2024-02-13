@@ -54,7 +54,7 @@ function test_fw:test_2()
             local w, v = fw:select()
             if w then
                 n = 100
-                if not has(list, v) and root:string() ~= v then
+                if not has(list, v) and root:string():match "^(.-)/?$" ~= v:match "^(.-)/?$" then
                     list[#list+1] = v
                 end
             else
