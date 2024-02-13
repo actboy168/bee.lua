@@ -41,13 +41,20 @@ function test_fw:test_2()
         fs.rename(root / "file_1", root / "file_2")
         fs.remove(root / "file_2")
 
+        local function has(t, a)
+            for _, v in ipairs(t) do
+                if v == a then
+                    return true
+                end
+            end
+        end
         local list = {}
         local n = 100
         while true do
             local w, v = fw:select()
             if w then
                 n = 100
-                if list[#list] ~= v then
+                if not has(list, v) and root:string() ~= v then
                     list[#list+1] = v
                 end
             else
