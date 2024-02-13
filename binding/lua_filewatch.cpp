@@ -27,7 +27,7 @@ namespace bee::lua_filewatch {
             lua_error(L);
             return 0;
         }
-        self.add(abspath.lexically_normal().string<filewatch::watch::string_type::value_type>());
+        self.add(abspath.lexically_normal().generic_string<filewatch::watch::string_type::value_type>());
         return 0;
     }
 

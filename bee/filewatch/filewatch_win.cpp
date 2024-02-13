@@ -55,7 +55,12 @@ namespace bee::filewatch {
         if (m_directory != INVALID_HANDLE_VALUE) {
             return true;
         }
-        m_path      = path;
+        if (path.back() != L'/') {
+            m_path = path + L"/";
+        }
+        else {
+            m_path = path;
+        }
         m_directory = ::CreateFileW(m_path.c_str(), FILE_LIST_DIRECTORY, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, NULL);
         if (m_directory == INVALID_HANDLE_VALUE) {
             return false;
@@ -185,7 +190,7 @@ namespace bee::filewatch {
         for (;;) {
             const FILE_NOTIFY_INFORMATION& fni = (const FILE_NOTIFY_INFORMATION&)*data;
             std::wstring path(fni.FileName, fni.FileNameLength / sizeof(wchar_t));
-            path = task.path() + L"/" + path;
+            path = task.path() + path;
             switch (fni.Action) {
             case FILE_ACTION_MODIFIED:
                 m_notify.emplace(notify::flag::modify, win::w2u(path));
