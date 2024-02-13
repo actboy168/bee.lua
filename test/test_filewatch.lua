@@ -40,10 +40,12 @@ function test_fw:test_2()
         create_file(root / "file_1")
         fs.rename(root / "file_1", root / "file_2")
         fs.remove(root / "file_2")
-
+        local function equal(a, b)
+            return a:match "^(.-)/?$" == b:match "^(.-)/?$"
+        end
         local function has(t, a)
             for _, v in ipairs(t) do
-                if v == a then
+                if equal(v, a) then
                     return true
                 end
             end
@@ -54,7 +56,7 @@ function test_fw:test_2()
             local w, v = fw:select()
             if w then
                 n = 100
-                if not has(list, v) and root:string():match "^(.-)/?$" ~= v:match "^(.-)/?$" then
+                if not has(list, v) and not equal(v, root:string()) then
                     list[#list+1] = v
                 end
             else
