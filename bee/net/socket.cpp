@@ -20,7 +20,7 @@
 #    include <unistd.h>
 #    if defined(__APPLE__)
 #        include <sys/ioctl.h>
-#    elif defined(__FreeBSD__)
+#    elif defined(__FreeBSD__) || defined(__OpenBSD__)
 #        include <sys/socket.h>
 #    endif
 #endif
