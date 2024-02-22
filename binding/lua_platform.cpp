@@ -36,41 +36,29 @@ namespace bee::lua_platform {
         lua_createtable(L, 0, 16);
 
 #if defined(_WIN32)
-        lua_pushstring(L, "Windows");
         lua_pushstring(L, "windows");
 #elif defined(__ANDROID__)
-        lua_pushstring(L, "Android");
         lua_pushstring(L, "android");
 #elif defined(__linux__)
-        lua_pushstring(L, "Linux");
         lua_pushstring(L, "linux");
 #elif defined(__NetBSD__)
-        lua_pushstring(L, "NetBSD");
         lua_pushstring(L, "netbsd");
 #elif defined(__FreeBSD__)
-        lua_pushstring(L, "FreeBSD");
         lua_pushstring(L, "freebsd");
 #elif defined(__OpenBSD__)
-        lua_pushstring(L, "OpenBSD");
         lua_pushstring(L, "openbsd");
 #elif defined(__ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__)
-        lua_pushstring(L, "iOS");
         lua_pushstring(L, "ios");
 #elif defined(__ENVIRONMENT_TV_OS_VERSION_MIN_REQUIRED__)
-        lua_pushstring(L, "iOS");
         lua_pushstring(L, "ios");
 #elif defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)
-        lua_pushstring(L, "macOS");
         lua_pushstring(L, "macos");
 #elif defined(__EMSCRIPTEN__)
-        lua_pushstring(L, "Emscripten");
         lua_pushstring(L, "emscripten");
 #else
         lua_pushstring(L, "unknown");
-        lua_pushstring(L, "unknown");
 #endif
-        lua_setfield(L, -3, "os");
-        lua_setfield(L, -2, "OS");
+        lua_setfield(L, -2, "os");
 
 #if defined(__EMSCRIPTEN__)
         lua_pushboolean(L, wasm_posix_host());
