@@ -1,12 +1,12 @@
 local lm = require "luamake"
-lm:required_version "1.2"
+lm:required_version "1.6"
 
 lm.c = "c11"
 lm.cxx = "c++17"
 lm.rtti = "off"
 
 if lm.sanitize then
-    lm:config "sanitize" {
+    lm:conf {
         mode = "debug",
         flags = "-fsanitize=address",
         gcc = {
@@ -22,18 +22,15 @@ if lm.sanitize then
     }
 end
 
-lm:config "test" {
-    msvc = lm.mode == "debug" and lm.arch == "x86_64" and {
-        ldflags = "/STACK:"..0x160000
-    },
-}
-
-lm:config "prebuilt" {
+lm:conf {
     windows = {
         defines = "_WIN32_WINNT=0x0601",
     },
     msvc = {
         flags = "/utf-8",
+        ldflags = lm.mode == "debug" and lm.arch == "x86_64" and {
+            "/STACK:"..0x160000
+        },
     },
     macos = {
         flags = "-Wunguarded-availability",
@@ -62,10 +59,4 @@ lm:config "prebuilt" {
     android = {
         ldflags = "-Wl,-E",
     },
-}
-
-lm.configs = {
-    "test",
-    "prebuilt",
-    lm.sanitize and "sanitize"
 }
