@@ -1,28 +1,10 @@
 local lm = require "luamake"
 lm:required_version "1.6"
 
-lm.c = "c11"
-lm.cxx = "c++17"
-lm.rtti = "off"
-
-if lm.sanitize then
-    lm:conf {
-        mode = "debug",
-        flags = "-fsanitize=address",
-        gcc = {
-            ldflags = "-fsanitize=address"
-        },
-        clang = {
-            ldflags = "-fsanitize=address"
-        }
-    }
-    lm:msvc_copydll "sanitize-dll" {
-        type = "asan",
-        output = "$bin"
-    }
-end
-
 lm:conf {
+    c = "c11",
+    cxx = "c++17",
+    rtti = "off",
     windows = {
         defines = "_WIN32_WINNT=0x0601",
     },
@@ -60,3 +42,20 @@ lm:conf {
         ldflags = "-Wl,-E",
     },
 }
+
+if lm.sanitize then
+    lm:conf {
+        mode = "debug",
+        flags = "-fsanitize=address",
+        gcc = {
+            ldflags = "-fsanitize=address"
+        },
+        clang = {
+            ldflags = "-fsanitize=address"
+        }
+    }
+    lm:msvc_copydll "sanitize-dll" {
+        type = "asan",
+        output = "$bin"
+    }
+end
