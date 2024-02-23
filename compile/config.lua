@@ -56,6 +56,6 @@ if lm.sanitize then
     }
     lm:msvc_copydll "sanitize-dll" {
         type = "asan",
-        output = "$bin"
+        outputs = "$bin"
     }
 end
