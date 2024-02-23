@@ -72,7 +72,7 @@ if not lm.notest then
     lm:build "test" {
         rule = "test",
         deps = { "bootstrap", "copy_script" },
-        input = tests,
-        output = "$obj/test.stamp",
+        inputs = tests,
+        outputs = "$obj/test.stamp",
     }
 end

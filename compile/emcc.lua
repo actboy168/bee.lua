@@ -78,7 +78,7 @@ if not lm.notest then
     lm:build "test" {
         rule = "test",
         deps = "lua",
-        input = tests,
-        output = "$obj/test.stamp",
+        inputs = tests,
+        outputs = "$obj/test.stamp",
     }
 end
