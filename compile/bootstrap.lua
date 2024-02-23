@@ -48,8 +48,8 @@ lm:executable "bootstrap" {
 local exe = lm.os == "windows" and ".exe" or ""
 
 lm:copy "copy_script" {
-    input = "bootstrap/main.lua",
-    output = "$bin/main.lua",
+    inputs = "bootstrap/main.lua",
+    outputs = "$bin/main.lua",
     deps = "bootstrap",
 }
 
