@@ -65,7 +65,7 @@ if not lm.notest then
     table.sort(tests)
 
     lm:rule "test" {
-        "$bin/bootstrap"..exe, "@test/test.lua", "--touch", "$out",
+        args = { "$bin/bootstrap"..exe, "@test/test.lua", "--touch", "$out" },
         description = "Run test.",
         pool = "console",
     }
