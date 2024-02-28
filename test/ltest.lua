@@ -760,9 +760,7 @@ local function parseCmdLine(cmdLine)
             elseif cmdArg == "--shuffle" or cmdArg == "-s" then
                 result.shuffle = true
             elseif cmdArg == "--coverage" or cmdArg == "-c" then
-                if coverage then
-                    result.coverage = true
-                end
+                result.coverage = true
             elseif cmdArg == "--list" or cmdArg == "-l" then
                 result.list = true
             elseif cmdArg == "--test" or cmdArg == "-t" then
