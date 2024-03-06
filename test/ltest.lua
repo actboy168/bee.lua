@@ -1,6 +1,4 @@
-local LOADED = {}
-
-LOADED["stringify"] = function ()
+local stringify; do
     local level
     local buffer
     local visited
@@ -192,7 +190,7 @@ LOADED["stringify"] = function ()
         end
     end
 
-    return function (root)
+    function stringify(root)
         level   = 0
         buffer  = {}
         visited = {}
@@ -201,7 +199,8 @@ LOADED["stringify"] = function ()
     end
 end
 
-LOADED["undump"] = function ()
+local coverage_script = [[
+local undump; do
     local unpack_buf = ""
     local unpack_pos = 1
     local function unpack_setpos(...)
@@ -449,7 +448,7 @@ LOADED["undump"] = function ()
         assert(LoadNumber() == 370.5)
     end
 
-    local function undump(bytes)
+    function undump(bytes)
         unpack_pos = 1
         unpack_buf = bytes
         local cl = {}
@@ -461,12 +460,9 @@ LOADED["undump"] = function ()
         assert(cl.nupvalues == cl.f.sizeupvalues)
         return cl, Version
     end
-
-    return undump
 end
 
-LOADED["coverage"] = function ()
-    local undump = LOADED["undump"]()
+do
     local debug_getinfo = debug.getinfo
     local include = {}
 
@@ -611,9 +607,9 @@ LOADED["coverage"] = function ()
 
     return m
 end
+]]
 
 local m = {}
-local stringify = LOADED["stringify"]()
 local coverage
 
 local function split(str)
@@ -1037,7 +1033,7 @@ if options.coverage then
         return tonumber(major) * 10 + tonumber(minor)
     end)()
     if LuaVersion >= 53 then
-        coverage = LOADED["coverage"]()
+        coverage = assert(load(coverage_script))()
         coverage.start()
     end
 end
