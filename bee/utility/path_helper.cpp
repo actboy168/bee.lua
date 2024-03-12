@@ -11,7 +11,7 @@
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
 namespace bee::path_helper {
-    static path_expected dll_path(HMODULE module_handle) {
+    static path_expected dll_path(HMODULE module_handle) noexcept {
         wchar_t buffer[MAX_PATH];
         DWORD path_len = ::GetModuleFileNameW(module_handle, buffer, _countof(buffer));
         if (path_len == 0) {
@@ -33,11 +33,11 @@ namespace bee::path_helper {
         return unexpected<std::string>("::GetModuleFileNameW return too long.");
     }
 
-    path_expected exe_path() {
+    path_expected exe_path() noexcept {
         return dll_path(NULL);
     }
 
-    path_expected dll_path() {
+    path_expected dll_path() noexcept {
         return dll_path(reinterpret_cast<HMODULE>(&__ImageBase));
     }
 }
@@ -49,7 +49,7 @@ namespace bee::path_helper {
 #        include <mach-o/dyld.h>
 
 namespace bee::path_helper {
-    path_expected exe_path() {
+    path_expected exe_path() noexcept {
         uint32_t path_len = 0;
         _NSGetExecutablePath(0, &path_len);
         if (path_len <= 1) {
@@ -77,7 +77,7 @@ namespace bee::path_helper {
 #        endif
 
 namespace bee::path_helper {
-    path_expected exe_path() {
+    path_expected exe_path() noexcept {
 #        if defined(__FreeBSD__)
         int name[] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
         char exe[1024];
@@ -117,10 +117,10 @@ namespace bee::path_helper {
 #    if defined(BEE_DISABLE_DLOPEN)
 
 namespace bee::path_helper {
-    static path_expected dll_path(void* module_handle) {
+    static path_expected dll_path(void* module_handle) noexcept {
         return unexpected<std::string>("disable dl.");
     }
-    path_expected dll_path() {
+    path_expected dll_path() noexcept  {
         return dll_path(nullptr);
     }
 }
@@ -130,17 +130,22 @@ namespace bee::path_helper {
 #        include <dlfcn.h>
 
 namespace bee::path_helper {
-    static path_expected dll_path(void* module_handle) {
+    static path_expected dll_path(void* module_handle) noexcept {
         ::Dl_info dl_info;
         dl_info.dli_fname = 0;
         const int ret     = ::dladdr(module_handle, &dl_info);
         if (0 != ret && dl_info.dli_fname != NULL) {
-            return fs::absolute(dl_info.dli_fname).lexically_normal();
+            std::error_code ec;
+            auto path = fs::absolute(dl_info.dli_fname, ec);
+            if (ec) {
+                return unexpected<std::string>(ec.message());
+            }
+            return path.lexically_normal();
         }
         return unexpected<std::string>("::dladdr failed.");
     }
 
-    path_expected dll_path() {
+    path_expected dll_path() noexcept {
         return dll_path((void*)&exe_path);
     }
 }
@@ -151,7 +156,7 @@ namespace bee::path_helper {
 
 namespace bee::path_helper {
 #if defined(_WIN32)
-    bool equal(const fs::path& lhs, const fs::path& rhs) {
+    bool equal(const fs::path& lhs, const fs::path& rhs) noexcept {
         fs::path lpath = lhs.lexically_normal();
         fs::path rpath = rhs.lexically_normal();
         const fs::path::value_type* l(lpath.c_str());
@@ -163,7 +168,7 @@ namespace bee::path_helper {
         return *l == *r;
     }
 #elif defined(__APPLE__)
-    bool equal(const fs::path& lhs, const fs::path& rhs) {
+    bool equal(const fs::path& lhs, const fs::path& rhs) noexcept {
         fs::path lpath = lhs.lexically_normal();
         fs::path rpath = rhs.lexically_normal();
         const fs::path::value_type* l(lpath.c_str());
@@ -175,7 +180,7 @@ namespace bee::path_helper {
         return *l == *r;
     }
 #else
-    bool equal(const fs::path& lhs, const fs::path& rhs) {
+    bool equal(const fs::path& lhs, const fs::path& rhs) noexcept {
         return lhs.lexically_normal() == rhs.lexically_normal();
     }
 #endif

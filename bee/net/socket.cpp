@@ -129,7 +129,7 @@ namespace bee::net::socket {
     }
 
     static WSAPROTOCOL_INFOW UnixProtocol;
-    static bool supportUnixDomainSocket_() {
+    static bool supportUnixDomainSocket_() noexcept {
         static GUID AF_UNIX_PROVIDER_ID = { 0xA00943D9, 0x9C2E, 0x4633, { 0x9B, 0x59, 0x00, 0x57, 0xA3, 0x16, 0x09, 0x94 } };
         DWORD len                       = 0;
         ::WSAEnumProtocolsW(0, NULL, &len);
@@ -152,7 +152,7 @@ namespace bee::net::socket {
         }
         return false;
     }
-    static bool supportUnixDomainSocket() {
+    static bool supportUnixDomainSocket() noexcept {
         static bool support = supportUnixDomainSocket_();
         return support;
     }
@@ -499,7 +499,7 @@ namespace bee::net::socket {
         return status::success;
     }
 
-    expected<endpoint, status> recvfrom(fd_t s, int& rc, char* buf, int len) {
+    expected<endpoint, status> recvfrom(fd_t s, int& rc, char* buf, int len) noexcept {
         endpoint ep;
         rc = ::recvfrom(s, buf, len, 0, ep.out_addr(), ep.out_addrlen());
         if (rc == 0) {
@@ -524,7 +524,7 @@ namespace bee::net::socket {
         return status::success;
     }
 
-    std::optional<endpoint> getpeername(fd_t s) {
+    std::optional<endpoint> getpeername(fd_t s) noexcept {
         endpoint ep;
         const int ok = ::getpeername(s, ep.out_addr(), ep.out_addrlen());
         if (!net_success(ok)) {
@@ -533,7 +533,7 @@ namespace bee::net::socket {
         return ep;
     }
 
-    std::optional<endpoint> getsockname(fd_t s) {
+    std::optional<endpoint> getsockname(fd_t s) noexcept {
         endpoint ep;
         const int ok = ::getsockname(s, ep.out_addr(), ep.out_addrlen());
         if (!net_success(ok)) {

@@ -22,5 +22,5 @@ namespace bee {
         }
     };
 
-    version os_version();
+    version os_version() noexcept;
 }

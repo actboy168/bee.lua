@@ -63,10 +63,10 @@ namespace bee::net::socket {
     fdstat accept(fd_t s, fd_t& newfd, fd_flags flags = fd_flags::nonblock) noexcept;
     status recv(fd_t s, int& rc, char* buf, int len) noexcept;
     status send(fd_t s, int& rc, const char* buf, int len) noexcept;
-    expected<endpoint, status> recvfrom(fd_t s, int& rc, char* buf, int len);
+    expected<endpoint, status> recvfrom(fd_t s, int& rc, char* buf, int len) noexcept;
     status sendto(fd_t s, int& rc, const char* buf, int len, const endpoint& ep) noexcept;
-    std::optional<endpoint> getpeername(fd_t s);
-    std::optional<endpoint> getsockname(fd_t s);
+    std::optional<endpoint> getpeername(fd_t s) noexcept;
+    std::optional<endpoint> getsockname(fd_t s) noexcept;
     bool unlink(const endpoint& ep);
     std::error_code errcode(fd_t s) noexcept;
     fd_t dup(fd_t s) noexcept;

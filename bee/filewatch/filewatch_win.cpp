@@ -17,7 +17,7 @@ namespace bee::filewatch {
 
     public:
         task() noexcept;
-        ~task();
+        ~task() noexcept;
 
         enum class result {
             success,
@@ -26,7 +26,7 @@ namespace bee::filewatch {
             zero,
         };
 
-        bool open(const std::wstring& path);
+        bool open(const std::wstring& path) noexcept;
         bool start(bool recursive) noexcept;
         void cancel() noexcept;
         result try_read() noexcept;
@@ -47,11 +47,11 @@ namespace bee::filewatch {
         hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
     }
 
-    task::~task() {
+    task::~task() noexcept {
         assert(m_directory == INVALID_HANDLE_VALUE);
     }
 
-    bool task::open(const std::wstring& path) {
+    bool task::open(const std::wstring& path) noexcept {
         if (m_directory != INVALID_HANDLE_VALUE) {
             return true;
         }
@@ -152,7 +152,7 @@ namespace bee::filewatch {
         m_tasks.clear();
     }
 
-    void watch::add(const string_type& path) {
+    void watch::add(const string_type& path) noexcept {
         auto& t = m_tasks.emplace_back();
         if (t.open(path)) {
             if (t.start(m_recursive)) {
@@ -170,11 +170,11 @@ namespace bee::filewatch {
         return false;
     }
 
-    bool watch::set_filter(filter f) {
+    bool watch::set_filter(filter f) noexcept {
         return false;
     }
 
-    bool watch::event_update(task& task) {
+    bool watch::event_update(task& task) noexcept {
         switch (task.try_read()) {
         case task::result::wait:
             return true;
@@ -213,7 +213,7 @@ namespace bee::filewatch {
         return task.start(m_recursive);
     }
 
-    void watch::update() {
+    void watch::update() noexcept {
         for (auto iter = m_tasks.begin(); iter != m_tasks.end();) {
             if (event_update(*iter)) {
                 ++iter;
@@ -224,7 +224,7 @@ namespace bee::filewatch {
         }
     }
 
-    std::optional<notify> watch::select() {
+    std::optional<notify> watch::select() noexcept {
         if (m_notify.empty()) {
             return std::nullopt;
         }

@@ -35,9 +35,9 @@ namespace bee::subprocess {
     };
     class envbuilder {
     public:
-        void set(const std::wstring& key, const std::wstring& value);
-        void del(const std::wstring& key);
-        environment release();
+        void set(const std::wstring& key, const std::wstring& value) noexcept;
+        void del(const std::wstring& key) noexcept;
+        environment release() noexcept;
 
     private:
         using less = ignore_case::less<std::wstring>;
@@ -79,8 +79,8 @@ namespace bee::subprocess {
     };
 
     struct args_t {
-        void push(zstring_view v);
-        void push(std::wstring&& v);
+        void push(zstring_view v) noexcept;
+        void push(std::wstring&& v) noexcept;
         std::wstring& operator[](size_t i) noexcept {
             return data_[i];
         }
@@ -100,7 +100,7 @@ namespace bee::subprocess {
 
     public:
         spawn() noexcept;
-        ~spawn();
+        ~spawn() noexcept;
         void search_path() noexcept;
         void set_console(console type) noexcept;
         bool hide_window() noexcept;
@@ -108,7 +108,7 @@ namespace bee::subprocess {
         void detached() noexcept;
         void redirect(stdio type, file_handle h) noexcept;
         void env(environment&& env) noexcept;
-        bool exec(const args_t& args, const wchar_t* cwd);
+        bool exec(const args_t& args, const wchar_t* cwd) noexcept;
 
     private:
         environment env_ = nullptr;

@@ -9,9 +9,9 @@
 namespace bee::win {
     class module_version {
     public:
-        module_version(const wchar_t* module_path);
+        module_version(const wchar_t* module_path) noexcept;
         bool select_language(uint16_t langid) noexcept;
-        std::wstring_view get_value(const wchar_t* key) const;
+        std::wstring_view get_value(const wchar_t* key) const noexcept;
 
     protected:
         struct translation {

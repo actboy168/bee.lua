@@ -23,30 +23,30 @@ extern char** environ;
 
 namespace bee::subprocess {
 
-    args_t::~args_t() {
+    args_t::~args_t() noexcept  {
         for (size_t i = 0; i < size(); ++i) {
             delete[] (data_[i]);
         }
     }
 
-    void args_t::push(char* str) {
+    void args_t::push(char* str) noexcept {
         data_.emplace_back(str);
     }
 
-    void args_t::push(zstring_view str) {
+    void args_t::push(zstring_view str) noexcept {
         dynarray<char> tmp(str.data(), str.size() + 1);
         data_.emplace_back(tmp.release());
     }
 
-    void envbuilder::set(const std::string& key, const std::string& value) {
+    void envbuilder::set(const std::string& key, const std::string& value) noexcept {
         set_env_[key] = value;
     }
 
-    void envbuilder::del(const std::string& key) {
+    void envbuilder::del(const std::string& key) noexcept {
         set_env_[key] = std::nullopt;
     }
 
-    static void env_append(std::vector<char*>& envs, const std::string& k, const std::string& v) {
+    static void env_append(std::vector<char*>& envs, const std::string& k, const std::string& v) noexcept {
         size_t n = k.size() + v.size() + 2;
         dynarray<char> tmp(n);
         memcpy(tmp.data(), k.data(), k.size());
@@ -56,12 +56,12 @@ namespace bee::subprocess {
         envs.emplace_back(tmp.release());
     }
 
-    static dynarray<char*> env_release(std::vector<char*>& envs) {
+    static dynarray<char*> env_release(std::vector<char*>& envs) noexcept {
         envs.emplace_back(nullptr);
         return { envs };
     }
 
-    environment envbuilder::release() {
+    environment envbuilder::release() noexcept {
         char** es = environ;
         if (es == 0) {
             return nullptr;
@@ -92,27 +92,27 @@ namespace bee::subprocess {
         return env_release(envs);
     }
 
-    spawn::spawn() {
+    spawn::spawn() noexcept {
         fds_[0] = -1;
         fds_[1] = -1;
         fds_[2] = -1;
     }
 
-    void spawn::suspended() {
+    void spawn::suspended() noexcept  {
 #if defined(POSIX_SPAWN_START_SUSPENDED)
         // apple extension
         spawnattr_ |= POSIX_SPAWN_START_SUSPENDED;
 #endif
     }
 
-    void spawn::detached() {
+    void spawn::detached() noexcept {
 #if defined(POSIX_SPAWN_SETSID)
         // since glibc 2.26
         spawnattr_ |= POSIX_SPAWN_SETSID;
 #endif
     }
 
-    void spawn::redirect(stdio type, file_handle h) {
+    void spawn::redirect(stdio type, file_handle h) noexcept {
         switch (type) {
         case stdio::eInput:
             fds_[0] = h.value();
@@ -128,7 +128,7 @@ namespace bee::subprocess {
         }
     }
 
-    void spawn::env(environment&& env) {
+    void spawn::env(environment&& env) noexcept {
         env_ = std::move(env);
     }
 
@@ -141,7 +141,7 @@ namespace bee::subprocess {
 #    define USE_POSIX_SPAWN 1
 #endif
 
-    bool spawn::exec(args_t& args, const char* cwd) {
+    bool spawn::exec(args_t& args, const char* cwd) noexcept {
         if (args.size() == 0) {
             return false;
         }
@@ -265,7 +265,7 @@ namespace bee::subprocess {
         return 0 == ::kill(pid, signum);
     }
 
-    static uint32_t make_status(int status) {
+    static uint32_t make_status(int status) noexcept {
         if (WIFEXITED(status)) {
             return WEXITSTATUS(status);
         }

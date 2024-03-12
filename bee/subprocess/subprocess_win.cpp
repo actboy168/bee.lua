@@ -16,10 +16,10 @@
 #define SIGKILL 9
 
 namespace bee::subprocess {
-    void args_t::push(zstring_view v) {
+    void args_t::push(zstring_view v) noexcept {
         data_.emplace_back(win::u2w(v));
     }
-    void args_t::push(std::wstring&& v) {
+    void args_t::push(std::wstring&& v) noexcept {
         data_.emplace_back(std::forward<std::wstring>(v));
     }
 
@@ -28,7 +28,7 @@ namespace bee::subprocess {
         struct node {
             dynarray<char_t> data;
             size_t size;
-            node(size_t maxsize)
+            node(size_t maxsize) noexcept
                 : data(maxsize)
                 , size(0) {}
             bool has(size_t n) const noexcept {
@@ -40,13 +40,13 @@ namespace bee::subprocess {
                 size += n;
             }
         };
-        strbuilder(size_t defsize)
+        strbuilder(size_t defsize) noexcept
             : deque()
             , size(0)
             , defsize(defsize) {
             deque.emplace_back(defsize);
         }
-        void append(const char_t* str, size_t n) {
+        void append(const char_t* str, size_t n) noexcept {
             auto& back = deque.back();
             if (back.has(n)) {
                 back.append(str, n);
@@ -60,15 +60,15 @@ namespace bee::subprocess {
             size += n;
         }
         template <class T, size_t n>
-        strbuilder& operator+=(T (&str)[n]) {
+        strbuilder& operator+=(T (&str)[n]) noexcept {
             append(str, n - 1);
             return *this;
         }
-        strbuilder& operator+=(const std::basic_string_view<char_t>& s) {
+        strbuilder& operator+=(const std::basic_string_view<char_t>& s) noexcept {
             append(s.data(), s.size());
             return *this;
         }
-        dynarray<char_t> string() {
+        dynarray<char_t> string() noexcept {
             dynarray<char_t> r(size + 1);
             size_t pos = 0;
             for (auto& s : deque) {
@@ -84,7 +84,7 @@ namespace bee::subprocess {
     };
 
     struct EnvironmentStrings {
-        ~EnvironmentStrings() {
+        ~EnvironmentStrings() noexcept {
             if (str) {
                 FreeEnvironmentStringsW(str);
             }
@@ -99,7 +99,7 @@ namespace bee::subprocess {
     };
 
     template <class char_t>
-    std::basic_string<char_t> quote_arg(const std::basic_string<char_t>& source) {
+    std::basic_string<char_t> quote_arg(const std::basic_string<char_t>& source) noexcept {
         const size_t len = source.size();
         if (len == 0) {
             return { '\"', '\"', '\0' };
@@ -134,7 +134,7 @@ namespace bee::subprocess {
         return target;
     }
 
-    static dynarray<wchar_t> make_args(const args_t& args, std::wstring_view prefix = std::wstring_view()) {
+    static dynarray<wchar_t> make_args(const args_t& args, std::wstring_view prefix = std::wstring_view()) noexcept {
         strbuilder<wchar_t> res(1024);
         if (!prefix.empty()) {
             res += prefix;
@@ -148,22 +148,22 @@ namespace bee::subprocess {
         return res.string();
     }
 
-    void envbuilder::set(const std::wstring& key, const std::wstring& value) {
+    void envbuilder::set(const std::wstring& key, const std::wstring& value) noexcept {
         set_env_[key] = value;
     }
 
-    void envbuilder::del(const std::wstring& key) {
+    void envbuilder::del(const std::wstring& key) noexcept {
         set_env_[key] = std::nullopt;
     }
 
-    static void env_append(strbuilder<wchar_t>& envs, const std::wstring& k, const std::wstring& v) {
+    static void env_append(strbuilder<wchar_t>& envs, const std::wstring& k, const std::wstring& v) noexcept {
         envs += k;
         envs += L"=";
         envs += v;
         envs += L"\0";
     }
 
-    environment envbuilder::release() {
+    environment envbuilder::release() noexcept {
         EnvironmentStrings es;
         if (!es) {
             return nullptr;
@@ -246,7 +246,7 @@ namespace bee::subprocess {
         return wnd;
     }
 
-    static bool hide_taskbar(HWND w) {
+    static bool hide_taskbar(HWND w) noexcept {
         ITaskbarList* taskbar = nullptr;
         if (!SUCCEEDED(::CoInitializeEx(NULL, COINIT_MULTITHREADED))) {
             return false;
@@ -260,7 +260,7 @@ namespace bee::subprocess {
         return false;
     }
 
-    static void hide_console(process& proc) {
+    static void hide_console(process& proc) noexcept {
         std::thread thd([&]() {
             auto dup_proc = proc.dup();
             if (!dup_proc) {
@@ -287,7 +287,7 @@ namespace bee::subprocess {
         fds_[2] = INVALID_HANDLE_VALUE;
     }
 
-    spawn::~spawn() {
+    spawn::~spawn() noexcept {
     }
 
     void spawn::search_path() noexcept {
@@ -354,7 +354,7 @@ namespace bee::subprocess {
         }
     }
 
-    bool spawn::exec(const args_t& args, const wchar_t* cwd) {
+    bool spawn::exec(const args_t& args, const wchar_t* cwd) noexcept {
         if (args.size() == 0) {
             return false;
         }
