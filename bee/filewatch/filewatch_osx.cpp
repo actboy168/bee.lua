@@ -17,9 +17,11 @@ namespace bee::filewatch {
         : m_notify()
         , m_paths()
         , m_stream(NULL) {}
-    watch::~watch() {
+
+    watch::~watch() noexcept {
         stop();
     }
+
     void watch::stop() noexcept {
         destroy_stream();
         m_paths.clear();
