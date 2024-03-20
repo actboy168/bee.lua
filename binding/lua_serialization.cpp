@@ -42,11 +42,17 @@ namespace bee::lua_serialization {
         free(data);
         return 1;
     }
+    static int lightuserdata(lua_State* L) {
+        luaL_checktype(L, 1, LUA_TUSERDATA);
+        lua_pushlightuserdata(L, lua_touserdata(L, 1));
+        return 1;
+    }
     static int luaopen(lua_State* L) {
         luaL_Reg lib[] = {
             { "unpack", unpack },
             { "pack", pack },
             { "packstring", packstring },
+            { "lightuserdata", lightuserdata },
             { NULL, NULL }
         };
         luaL_newlibtable(L, lib);
