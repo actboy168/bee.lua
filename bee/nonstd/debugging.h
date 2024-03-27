@@ -12,12 +12,15 @@
 #        include <windows.h>
 #    elif defined(__APPLE__)
 #        include <sys/sysctl.h>
+#        include <unistd.h>
 #    endif
 
 namespace std {
     inline void breakpoint() noexcept {
-#    if defined(_WIN32)
+#    if defined(_MSC_VER)
         __debugbreak();
+#    elif defined(__clang__)
+        __builtin_debugtrap();
 #    endif
     }
     inline bool is_debugger_present() noexcept {
@@ -26,12 +29,12 @@ namespace std {
 #    elif defined(__APPLE__)
         int mib[4];
         struct kinfo_proc info;
-        std::size_t size = sizeof(info);
+        std::size_t size    = sizeof(info);
         info.kp_proc.p_flag = 0;
-        mib[0] = CTL_KERN;
-        mib[1] = KERN_PROC;
-        mib[2] = KERN_PROC_PID;
-        mib[3] = getpid();
+        mib[0]              = CTL_KERN;
+        mib[1]              = KERN_PROC;
+        mib[2]              = KERN_PROC_PID;
+        mib[3]              = getpid();
         if (sysctl(mib, sizeof(mib) / sizeof(*mib), &info, &size, nullptr, 0) != 0) {
             return false;
         }
