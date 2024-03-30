@@ -1,5 +1,7 @@
 #include <bee/error.h>
 #include <bee/lua/binding.h>
+#include <bee/lua/cxx_status.h>
+#include <bee/lua/narrow.h>
 #include <bee/nonstd/filesystem.h>
 #include <bee/nonstd/format.h>
 #include <bee/nonstd/unreachable.h>
@@ -565,8 +567,7 @@ namespace bee::lua_filesystem {
             if (ec) {
                 return pusherror(L, "directory_entry::file_size", ec);
             }
-            lua_pushinteger(L, static_cast<lua_Integer>(size));
-            return 1;
+            return bee::lua::narrow_pushinteger(L, size);
         }
 
         static void metatable(lua_State* L) {
@@ -643,8 +644,7 @@ namespace bee::lua_filesystem {
         if (ec) {
             return pusherror(L, "file_size", ec, p);
         }
-        lua_pushinteger(L, static_cast<lua_Integer>(size));
-        return 1;
+        return bee::lua::narrow_pushinteger(L, size);
     }
 
     static lua::cxx::status create_directory(lua_State* L) {
@@ -716,15 +716,13 @@ namespace bee::lua_filesystem {
             }
             return pusherror(L, "remove_all", ec, p);
         }
-        lua_pushinteger(L, static_cast<lua_Integer>(r));
-        return 1;
+        return bee::lua::narrow_pushinteger(L, r);
 #else
         uintmax_t r = fs::remove_all(p, ec);
         if (ec) {
             return pusherror(L, "remove_all", ec, p);
         }
-        lua_pushinteger(L, static_cast<lua_Integer>(r));
-        return 1;
+        return bee::lua::narrow_pushinteger(L, r);
 #endif
     }
 
