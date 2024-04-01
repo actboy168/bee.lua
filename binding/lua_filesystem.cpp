@@ -567,7 +567,7 @@ namespace bee::lua_filesystem {
             if (ec) {
                 return pusherror(L, "directory_entry::file_size", ec);
             }
-            return bee::lua::narrow_pushinteger(L, size);
+            return lua::narrow_pushinteger(L, size);
         }
 
         static void metatable(lua_State* L) {
@@ -644,7 +644,7 @@ namespace bee::lua_filesystem {
         if (ec) {
             return pusherror(L, "file_size", ec, p);
         }
-        return bee::lua::narrow_pushinteger(L, size);
+        return lua::narrow_pushinteger(L, size);
     }
 
     static lua::cxx::status create_directory(lua_State* L) {
@@ -722,7 +722,7 @@ namespace bee::lua_filesystem {
         if (ec) {
             return pusherror(L, "remove_all", ec, p);
         }
-        return bee::lua::narrow_pushinteger(L, r);
+        return lua::narrow_pushinteger(L, r);
 #endif
     }
 
