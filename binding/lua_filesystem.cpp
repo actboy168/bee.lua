@@ -292,24 +292,21 @@ namespace bee::lua_filesystem {
             return 1;
         }
 
-        static int equal_extension(lua_State* L, const fs::path& self, const fs::path::string_type& ext) {
-            const auto& selfext = self.extension();
-            if (selfext.empty()) {
-                lua_pushboolean(L, ext.empty());
-                return 1;
-            }
-            if (ext[0] != '.') {
-                lua_pushboolean(L, path_helper::equal(selfext, fs::path::string_type { '.' } + ext));
-                return 1;
-            }
-            lua_pushboolean(L, path_helper::equal(selfext, ext));
-            return 1;
-        }
-
         static int equal_extension(lua_State* L) {
             path_ptr self = getpathptr(L, 1);
             path_ptr path = getpathptr(L, 2);
-            return equal_extension(L, self, *path);
+            auto selfext  = self->extension();
+            auto pathext  = path->native();
+            if (selfext.empty()) {
+                lua_pushboolean(L, pathext.empty());
+                return 1;
+            }
+            if (pathext[0] != '.') {
+                lua_pushboolean(L, path_helper::equal(selfext, fs::path::string_type { '.' } + pathext));
+                return 1;
+            }
+            lua_pushboolean(L, path_helper::equal(selfext, pathext));
+            return 1;
         }
 
         static int lexically_normal(lua_State* L) {
@@ -547,7 +544,7 @@ namespace bee::lua_filesystem {
             const auto& entry = to(L, 1);
             std::error_code ec;
             auto time = entry.last_write_time(ec);
-             if (ec) {
+            if (ec) {
                 return pusherror(L, "directory_entry::last_write_time", ec);
             }
 #if defined(__APPLE__)
@@ -795,7 +792,7 @@ namespace bee::lua_filesystem {
 #if defined(__MINGW32__)
         bool ok = mingw_copy_file(from, to, options, ec);
 #else
-        bool ok    = fs::copy_file(from, to, options, ec);
+        bool ok = fs::copy_file(from, to, options, ec);
 #endif
         if (ec) {
             return pusherror(L, "copy_file", ec, from, to);
