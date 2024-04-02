@@ -58,7 +58,7 @@ if not lm.notest then
     local fs = require "bee.filesystem"
     local rootdir = fs.path(lm.workdir) / ".."
     for file in fs.pairs(rootdir / "test", "r") do
-        if file:equal_extension ".lua" then
+        if file:extension() == ".lua" then
             tests[#tests+1] = fs.relative(file, rootdir):lexically_normal():string()
         end
     end
