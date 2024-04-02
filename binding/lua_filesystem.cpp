@@ -254,7 +254,9 @@ namespace bee::lua_filesystem {
 
         static int extension(lua_State* L) {
             path_ptr self = getpathptr(L, 1);
-            push(L, self->extension());
+            auto u8str    = self->extension().generic_u8string();
+            auto str      = u8tostrview(u8str);
+            lua_pushlstring(L, str.data(), str.size());
             return 1;
         }
 
@@ -289,23 +291,6 @@ namespace bee::lua_filesystem {
             path_ptr path  = getpathptr(L, 2);
             self.replace_extension(path);
             lua_settop(L, 1);
-            return 1;
-        }
-
-        static int equal_extension(lua_State* L) {
-            path_ptr self = getpathptr(L, 1);
-            path_ptr path = getpathptr(L, 2);
-            auto selfext  = self->extension();
-            auto pathext  = path->native();
-            if (selfext.empty()) {
-                lua_pushboolean(L, pathext.empty());
-                return 1;
-            }
-            if (pathext[0] != '.') {
-                lua_pushboolean(L, path_helper::equal(selfext, fs::path::string_type { '.' } + pathext));
-                return 1;
-            }
-            lua_pushboolean(L, path_helper::equal(selfext, pathext));
             return 1;
         }
 
@@ -356,7 +341,6 @@ namespace bee::lua_filesystem {
                 { "remove_filename", remove_filename },
                 { "replace_filename", replace_filename },
                 { "replace_extension", replace_extension },
-                { "equal_extension", equal_extension },
                 { "lexically_normal", lexically_normal },
                 { NULL, NULL },
             };

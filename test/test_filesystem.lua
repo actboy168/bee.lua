@@ -108,7 +108,7 @@ end
 
 function test_fs:test_extension()
     local function get_extension(path)
-        return fs.path(path):extension():string()
+        return fs.path(path):extension()
     end
     lt.assertEquals(get_extension("a/b/c.ext"), ".ext")
     lt.assertEquals(get_extension("a/b/c"), "")
@@ -190,20 +190,6 @@ function test_fs:test_replace_extension()
     lt.assertEquals(replace_extension("a/b/c.ext", "lua"), "a/b/c.lua")
     lt.assertEquals(replace_extension("a/b/c.ext", "..lua"), "a/b/c..lua")
     lt.assertEquals(replace_extension("c.ext", ".lua"), "c.lua")
-end
-
-function test_fs:test_equal_extension()
-    local function equal_extension(path, ext)
-        return lt.assertEquals(fs.path(path):equal_extension(ext), true)
-    end
-    equal_extension("a/b/c.ext", ".ext")
-    equal_extension("a/b/c.ext", "ext")
-    equal_extension("a/b/c", "")
-    equal_extension("a/b/.ext", "")
-    equal_extension("a/b/c.", ".")
-    equal_extension("a/b/c..", ".")
-    equal_extension("a/b/c..lua", ".lua")
-    equal_extension("a/b/c..lua", "lua")
 end
 
 function test_fs:test_get_permissions()
