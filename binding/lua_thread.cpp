@@ -145,7 +145,7 @@ namespace bee::lua_thread {
 
     static int lchannel_pop(lua_State* L) {
         auto& bc = lua::checkudata<boxchannel>(L, 1);
-        if (lua_gettop(L) == 1) {
+        if (lua_isnoneornil(L, 2)) {
             void* data;
             if (!bc->pop(data)) {
                 lua_pushboolean(L, 0);
