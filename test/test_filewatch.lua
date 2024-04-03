@@ -64,7 +64,7 @@ function test_fw:test_2()
                 if n < 0 then
                     break
                 end
-                thread.sleep(0.001)
+                thread.sleep(1)
             end
         end
         lt.assertEquals(list, {

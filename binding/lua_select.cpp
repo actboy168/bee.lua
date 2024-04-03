@@ -153,24 +153,24 @@ namespace bee::lua_select {
     }
     static int wait(lua_State* L) {
         auto& ctx         = lua::checkudata<select_ctx>(L, 1);
-        lua_Number timeo  = luaL_optnumber(L, 2, -1);
+        int msec          = lua::optinteger<int, -1>(L, 2);
         if (ctx.readset.empty() && ctx.writeset.empty()) {
-            if (timeo < 0) {
+            if (msec < 0) {
                 return luaL_error(L, "no open sockets to check and no timeout set");
             }
             else {
-                thread_sleep(static_cast<int>(timeo * 1000));
+                thread_sleep(msec);
                 lua_getiuservalue(L, 1, 4);
                 return 1;
             }
         }
         struct timeval timeout, *timeop = &timeout;
-        if (timeo < 0) {
+        if (msec < 0) {
             timeop = NULL;
         }
         else {
-            timeout.tv_sec  = (long)timeo;
-            timeout.tv_usec = (long)((timeo - timeout.tv_sec) * 1000000);
+            timeout.tv_sec  = (long)msec / 1000;
+            timeout.tv_usec = (long)(msec % 1000 * 1000);
         }
 #if defined(_WIN32)
         ctx.i = 0;

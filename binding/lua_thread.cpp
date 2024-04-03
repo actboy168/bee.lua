@@ -155,8 +155,8 @@ namespace bee::lua_thread {
             return 1 + seri_unpackptr(L, data);
         }
         void* data;
-        lua_Number sec = luaL_checknumber(L, 2);
-        if (!bc->timed_pop(data, std::chrono::duration<double>(sec))) {
+        int msec = lua::checkinteger<int>(L, 2);
+        if (!bc->timed_pop(data, std::chrono::milliseconds(msec))) {
             lua_pushboolean(L, 0);
             return 1;
         }
@@ -195,8 +195,8 @@ namespace bee::lua_thread {
     }
 
     static int lsleep(lua_State* L) {
-        lua_Number sec = luaL_checknumber(L, 1);
-        thread_sleep((int)(sec * 1000));
+        int msec = lua::checkinteger<int>(L, 1);
+        thread_sleep(msec);
         return 0;
     }
 
