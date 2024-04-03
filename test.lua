@@ -21,7 +21,7 @@ while true do
         break
     end
     if n == 0 then
-        thread.sleep(0.1)
+        thread.sleep(100)
     else
         local data = process.stdout:read(n)
         io.write(data)
