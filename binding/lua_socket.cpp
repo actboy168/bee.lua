@@ -383,6 +383,19 @@ namespace bee::lua_socket {
     static void pushfd_no_ownership(lua_State* L, net::fd_t fd) {
         lua::newudata<fd_no_ownership>(L, fd);
     }
+    static int create(lua_State* L) {
+        static const char* const opts[] = {
+            "tcp", "udp", "unix", "tcp6", "udp6",
+            NULL
+        };
+        auto protocol = (net::socket::protocol)luaL_checkoption(L, 1, NULL, opts);
+        auto fd       = net::socket::open(protocol);
+        if (fd == net::retired_fd) {
+            return push_neterror(L, "socket");
+        }
+        pushfd(L, fd);
+        return 1;
+    }
     static int pair(lua_State* L) {
         net::fd_t sv[2];
         if (!net::socket::pair(sv)) {
@@ -403,19 +416,6 @@ namespace bee::lua_socket {
         }
         return 1;
     }
-    static int mt_call(lua_State* L) {
-        static const char* const opts[] = {
-            "tcp", "udp", "unix", "tcp6", "udp6",
-            NULL
-        };
-        auto protocol = (net::socket::protocol)luaL_checkoption(L, 2, NULL, opts);
-        auto fd       = net::socket::open(protocol);
-        if (fd == net::retired_fd) {
-            return push_neterror(L, "socket");
-        }
-        pushfd(L, fd);
-        return 1;
-    }
 
     static int luaopen(lua_State* L) {
         if (!net::socket::initialize()) {
@@ -423,19 +423,12 @@ namespace bee::lua_socket {
             return lua_error(L);
         }
         luaL_Reg lib[] = {
+            { "create", create },
             { "pair", pair },
             { "fd", fd },
             { NULL, NULL }
         };
-        luaL_newlibtable(L, lib);
-        luaL_setfuncs(L, lib, 0);
-        luaL_Reg mt[] = {
-            { "__call", mt_call },
-            { NULL, NULL }
-        };
-        luaL_newlibtable(L, mt);
-        luaL_setfuncs(L, mt, 0);
-        lua_setmetatable(L, -2);
+        luaL_newlib(L, lib);
         return 1;
     }
 }

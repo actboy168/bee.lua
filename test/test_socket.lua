@@ -95,27 +95,27 @@ end
 
 function test_socket:test_bind()
     do
-        local fd = lt.assertIsUserdata(socket "tcp")
+        local fd = lt.assertIsUserdata(socket.create "tcp")
         lt.assertIsBoolean(fd:bind("127.0.0.1", 0))
         fd:close()
     end
     do
-        local fd = lt.assertIsUserdata(socket "udp")
+        local fd = lt.assertIsUserdata(socket.create "udp")
         lt.assertIsBoolean(fd:bind("127.0.0.1", 0))
         fd:close()
     end
     do
-        lt.assertErrorMsgEquals([[bad argument #2 to '?' (invalid option 'icmp')]], socket, "icmp")
+        lt.assertErrorMsgEquals([[bad argument #1 to 'bee.socket.create' (invalid option 'icmp')]], socket.create, "icmp")
     end
     do
         fs.remove(TestUnixSock)
-        local fd = lt.assertIsUserdata(socket "unix")
+        local fd = lt.assertIsUserdata(socket.create "unix")
         lt.assertIsBoolean(fd:bind(TestUnixSock))
         lt.assertEquals(file_exists(TestUnixSock), true)
         fd:close()
     end
     do
-        local fd = lt.assertIsUserdata(socket "unix")
+        local fd = lt.assertIsUserdata(socket.create "unix")
         lt.assertIsBoolean(fd:bind(TestUnixSock))
         lt.assertEquals(file_exists(TestUnixSock), true)
         fd:close()
@@ -124,14 +124,14 @@ function test_socket:test_bind()
 end
 
 function test_socket:test_tcp_connect()
-    local server = lt.assertIsUserdata(socket "tcp")
+    local server = lt.assertIsUserdata(socket.create "tcp")
     lt.assertIsBoolean(server:bind("127.0.0.1", 0))
     lt.assertIsBoolean(server:listen())
     local address, port = server:info("socket")
     lt.assertIsString(address)
     lt.assertIsNumber(port)
     for _ = 1, 2 do
-        local client = lt.assertIsUserdata(socket "tcp")
+        local client = lt.assertIsUserdata(socket.create "tcp")
         lt.assertIsBoolean(client:connect("127.0.0.1", port))
         client:close()
     end
@@ -141,15 +141,15 @@ end
 function test_socket:test_unix_connect()
     fs.remove(TestUnixSock)
     --TODO: 某些低版本的windows过不了？
-    --lt.assertEquals(socket 'unix':connect(TestUnixSock), nil)
+    --lt.assertEquals(socket.create "unix":connect(TestUnixSock), nil)
     --lt.assertEquals(file_exists(TestUnixSock), false)
 
-    local server = lt.assertIsUserdata(socket "unix")
+    local server = lt.assertIsUserdata(socket.create "unix")
     lt.assertIsBoolean(server:bind(TestUnixSock))
     lt.assertIsBoolean(server:listen())
     lt.assertEquals(file_exists(TestUnixSock), true)
     for _ = 1, 2 do
-        local client = lt.assertIsUserdata(socket "unix")
+        local client = lt.assertIsUserdata(socket.create "unix")
         lt.assertIsBoolean(client:connect(TestUnixSock))
         client:close()
     end
@@ -158,14 +158,14 @@ function test_socket:test_unix_connect()
 end
 
 function test_socket:test_tcp_accept()
-    local server = lt.assertIsUserdata(socket "tcp")
+    local server = lt.assertIsUserdata(socket.create "tcp")
     lt.assertIsBoolean(server:bind("127.0.0.1", 0))
     lt.assertIsBoolean(server:listen())
     local address, port = server:info("socket")
     lt.assertIsString(address)
     lt.assertIsNumber(port)
     for _ = 1, 2 do
-        local client = lt.assertIsUserdata(socket "tcp")
+        local client = lt.assertIsUserdata(socket.create "tcp")
         lt.assertIsBoolean(client:connect("127.0.0.1", port))
         simple_select(server, "r")
         simple_select(client, "w")
@@ -180,12 +180,12 @@ end
 
 function test_socket:test_unix_accept()
     fs.remove(TestUnixSock)
-    local server = lt.assertIsUserdata(socket "unix")
+    local server = lt.assertIsUserdata(socket.create "unix")
     lt.assertIsBoolean(server:bind(TestUnixSock))
     lt.assertIsBoolean(server:listen())
     lt.assertEquals(file_exists(TestUnixSock), true)
     for _ = 1, 2 do
-        local client = lt.assertIsUserdata(socket "unix")
+        local client = lt.assertIsUserdata(socket.create "unix")
         lt.assertIsBoolean(client:connect(TestUnixSock))
         simple_select(server, "r")
         simple_select(client, "w")
@@ -234,7 +234,7 @@ local function createEchoThread(name, ...)
         end
     end
 
-    local client = assert(socket(protocol))
+    local client = assert(socket.create(protocol))
     client:connect(address, port)
     simple_select(client, "w")
     assert(client:status())
@@ -269,7 +269,7 @@ local function createEchoThread(name, ...)
 end
 
 local function createTcpEchoTest(name, f)
-    local server = lt.assertIsUserdata(socket "tcp")
+    local server = lt.assertIsUserdata(socket.create "tcp")
     lt.assertIsBoolean(server:bind("127.0.0.1", 0))
     lt.assertIsBoolean(server:listen())
     local _, port = server:info("socket")
@@ -289,7 +289,7 @@ end
 
 local function createUnixEchoTest(name, f)
     fs.remove(TestUnixSock)
-    local server = lt.assertIsUserdata(socket "unix")
+    local server = lt.assertIsUserdata(socket.create "unix")
     lt.assertIsBoolean(server:bind(TestUnixSock))
     lt.assertIsBoolean(server:listen())
     local client = createEchoThread(name, "unix", (TestUnixSock))
@@ -358,7 +358,7 @@ function test_socket:test_unix_echo_3()
 end
 
 function test_socket:test_dump()
-    local server = lt.assertIsUserdata(socket "tcp")
+    local server = lt.assertIsUserdata(socket.create "tcp")
     lt.assertIsBoolean(server:bind("127.0.0.1", 0))
     lt.assertIsBoolean(server:listen())
     local bindata = server:detach()
@@ -367,7 +367,7 @@ function test_socket:test_dump()
     lt.assertIsString(address)
     lt.assertIsNumber(port)
     for _ = 1, 2 do
-        local client = lt.assertIsUserdata(socket "tcp")
+        local client = lt.assertIsUserdata(socket.create "tcp")
         lt.assertIsBoolean(client:connect("127.0.0.1", port))
         client:close()
     end
@@ -375,13 +375,13 @@ function test_socket:test_dump()
 end
 
 function test_socket:test_SIGPIPE()
-    local server = lt.assertIsUserdata(socket "tcp")
+    local server = lt.assertIsUserdata(socket.create "tcp")
     lt.assertIsBoolean(server:bind("127.0.0.1", 0))
     lt.assertIsBoolean(server:listen())
     local address, port = server:info("socket")
     lt.assertIsString(address)
     lt.assertIsNumber(port)
-    local client = lt.assertIsUserdata(socket "tcp")
+    local client = lt.assertIsUserdata(socket.create "tcp")
     lt.assertIsBoolean(client:connect("127.0.0.1", port))
     server:close()
     for _ = 1, 10 do
