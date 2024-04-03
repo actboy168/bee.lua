@@ -263,7 +263,7 @@ namespace bee::lua_socket {
         fd = net::retired_fd;
         return 1;
     }
-    static int mt_tostring(lua_State* L, net::fd_t& fd) {
+    static int mt_tostring(lua_State* L, net::fd_t fd) {
         if (fd == net::retired_fd) {
             lua_pushstring(L, "socket (closed)");
             return 1;
@@ -343,7 +343,7 @@ namespace bee::lua_socket {
         luaL_setfuncs(L, lib, 0);
         lua_setfield(L, -2, "__index");
         luaL_Reg mt[] = {
-            { "__tostring", call_socketref<mt_tostring> },
+            { "__tostring", call_socket<mt_tostring> },
             { "__close", mt_close },
             { "__gc", mt_gc },
             { NULL, NULL },
@@ -372,7 +372,7 @@ namespace bee::lua_socket {
         luaL_setfuncs(L, lib, 0);
         lua_setfield(L, -2, "__index");
         luaL_Reg mt[] = {
-            { "__tostring", call_socketref_no_ownership<mt_tostring> },
+            { "__tostring", call_socket_no_ownership<mt_tostring> },
             { NULL, NULL },
         };
         luaL_setfuncs(L, mt, 0);
