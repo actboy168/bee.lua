@@ -138,7 +138,7 @@ namespace bee::filewatch {
         : m_notify()
         , m_tasks() {}
 
-    watch::~watch() {
+    watch::~watch() noexcept {
         stop();
     }
 
