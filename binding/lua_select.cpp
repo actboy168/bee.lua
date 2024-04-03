@@ -302,11 +302,12 @@ namespace bee::lua_select {
         return 1;
     }
     static int luaopen(lua_State* L) {
-        struct luaL_Reg l[] = {
+        struct luaL_Reg lib[] = {
             { "create", create },
             { NULL, NULL },
         };
-        luaL_newlib(L, l);
+        luaL_newlibtable(L, lib);
+        luaL_setfuncs(L, lib, 0);
 #define SETENUM(E)         \
     lua_pushinteger(L, E); \
     lua_setfield(L, -2, #E)
