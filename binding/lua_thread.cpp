@@ -145,20 +145,20 @@ namespace bee::lua_thread {
 
     static int lchannel_pop(lua_State* L) {
         auto& bc = lua::checkudata<boxchannel>(L, 1);
-        void* data;
-        lua_settop(L, 2);
-        lua_Number sec = lua_tonumber(L, 2);
-        if (sec == 0) {
+        if (lua_gettop(L) == 1) {
+            void* data;
             if (!bc->pop(data)) {
                 lua_pushboolean(L, 0);
                 return 1;
             }
+            lua_pushboolean(L, 1);
+            return 1 + seri_unpackptr(L, data);
         }
-        else {
-            if (!bc->timed_pop(data, std::chrono::duration<double>(sec))) {
-                lua_pushboolean(L, 0);
-                return 1;
-            }
+        void* data;
+        lua_Number sec = luaL_checknumber(L, 2);
+        if (!bc->timed_pop(data, std::chrono::duration<double>(sec))) {
+            lua_pushboolean(L, 0);
+            return 1;
         }
         lua_pushboolean(L, 1);
         return 1 + seri_unpackptr(L, data);
