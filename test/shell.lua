@@ -63,6 +63,9 @@ if supported "subprocess" then
         return arg[i + 1]
     end)()
     luaexe = fs.absolute(fs.path(luaexe)):string()
+    if isWindows and not luaexe:match "%.%w+$" then
+        luaexe = luaexe .. ".exe"
+    end
 
     local initscript = (function ()
         local cpaths = {}
