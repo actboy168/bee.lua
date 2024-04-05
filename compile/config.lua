@@ -6,7 +6,7 @@ lm:conf {
     cxx = "c++17",
     rtti = "off",
     windows = {
-        defines = "_WIN32_WINNT=0x0601",
+        defines = "_WIN32_WINNT=0x0602",
     },
     msvc = {
         flags = "/utf-8",
