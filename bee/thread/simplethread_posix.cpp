@@ -13,9 +13,10 @@ namespace bee {
     };
 
     static void* thread_function(void* args) noexcept {
-        simplethread* t = static_cast<simplethread*>(args);
-        t->func(t->ud);
-        delete t;
+        simplethread* ptr = static_cast<simplethread*>(args);
+        simplethread v    = *ptr;
+        delete ptr;
+        v.func(v.ud);
         return NULL;
     }
 

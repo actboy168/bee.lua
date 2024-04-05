@@ -10,10 +10,11 @@ namespace bee {
         void* ud;
     };
 
-    static unsigned __stdcall thread_function(void* lpParam) noexcept {
-        simplethread* t = static_cast<simplethread*>(lpParam);
-        t->func(t->ud);
-        delete t;
+    static unsigned __stdcall thread_function(void* args) noexcept {
+        simplethread* ptr = static_cast<simplethread*>(args);
+        simplethread v    = *ptr;
+        delete ptr;
+        v.func(v.ud);
         _endthreadex(0);
         return 0;
     }
@@ -23,14 +24,14 @@ namespace bee {
         if (!thread) {
             return 0;
         }
-        thread->func         = func;
-        thread->ud           = ud;
-        thread_handle handle = (thread_handle)_beginthreadex(NULL, 0, thread_function, (LPVOID)thread, 0, NULL);
-        if (handle == NULL) {
+        thread->func = func;
+        thread->ud   = ud;
+        auto handle  = _beginthreadex(NULL, 0, thread_function, (LPVOID)thread, 0, NULL);
+        if (handle == 0) {
             delete thread;
             return 0;
         }
-        return handle;
+        return (thread_handle)handle;
     }
 
     void thread_wait(thread_handle handle) noexcept {
