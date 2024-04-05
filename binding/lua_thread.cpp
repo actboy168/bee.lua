@@ -76,13 +76,6 @@ namespace bee::lua_thread {
 
     using boxchannel = std::shared_ptr<channel>;
 
-    struct rpc {
-        atomic_semaphore sem;
-        void* data = nullptr;
-    };
-}
-
-namespace bee::lua_thread {
     class channelmgr {
     public:
         channelmgr() {
@@ -123,6 +116,11 @@ namespace bee::lua_thread {
     private:
         std::map<std::string, boxchannel> channels;
         spinlock mutex;
+    };
+
+    struct rpc {
+        atomic_semaphore sem;
+        void* data = nullptr;
     };
 
     static channelmgr g_channel;
