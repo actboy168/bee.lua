@@ -235,40 +235,40 @@ namespace bee::lua_filesystem {
         }
 
         static int filename(lua_State* L) {
-            auto self = getpathptr(L, 1);
-            push(L, self->filename());
+            const auto& self = getpath(L, 1);
+            push(L, self.filename());
             return 1;
         }
 
         static int parent_path(lua_State* L) {
-            auto self = getpathptr(L, 1);
-            push(L, self->parent_path());
+            const auto& self = getpath(L, 1);
+            push(L, self.parent_path());
             return 1;
         }
 
         static int stem(lua_State* L) {
-            auto self = getpathptr(L, 1);
-            push(L, self->stem());
+            const auto& self = getpath(L, 1);
+            push(L, self.stem());
             return 1;
         }
 
         static int extension(lua_State* L) {
-            auto self  = getpathptr(L, 1);
-            auto u8str = self->extension().generic_u8string();
-            auto str   = u8tostrview(u8str);
+            const auto& self = getpath(L, 1);
+            auto u8str       = self.extension().generic_u8string();
+            auto str         = u8tostrview(u8str);
             lua_pushlstring(L, str.data(), str.size());
             return 1;
         }
 
         static int is_absolute(lua_State* L) {
-            auto self = getpathptr(L, 1);
-            lua_pushboolean(L, self->is_absolute());
+            const auto& self = getpath(L, 1);
+            lua_pushboolean(L, self.is_absolute());
             return 1;
         }
 
         static int is_relative(lua_State* L) {
-            auto self = getpathptr(L, 1);
-            lua_pushboolean(L, self->is_relative());
+            const auto& self = getpath(L, 1);
+            lua_pushboolean(L, self.is_relative());
             return 1;
         }
 
@@ -295,36 +295,36 @@ namespace bee::lua_filesystem {
         }
 
         static int lexically_normal(lua_State* L) {
-            auto self = getpathptr(L, 1);
-            push(L, self->lexically_normal());
+            const auto& self = getpath(L, 1);
+            push(L, self.lexically_normal());
             return 1;
         }
 
         static int mt_div(lua_State* L) {
-            auto self = getpathptr(L, 1);
-            auto path = getpathptr(L, 2);
-            push(L, (*self) / (*path));
+            auto lft = getpathptr(L, 1);
+            auto rht = getpathptr(L, 2);
+            push(L, (*lft) / (*rht));
             return 1;
         }
 
         static int mt_concat(lua_State* L) {
-            auto self = getpathptr(L, 1);
-            auto path = getpathptr(L, 2);
-            push(L, self->native() + path->native());
+            auto lft = getpathptr(L, 1);
+            auto rht = getpathptr(L, 2);
+            push(L, lft->native() + rht->native());
             return 1;
         }
 
         static int mt_eq(lua_State* L) {
-            auto self = getpathptr(L, 1);
-            auto rht  = getpathptr(L, 2);
-            lua_pushboolean(L, path_helper::equal(self, rht));
+            const auto& lft = getpath(L, 1);
+            const auto& rht = getpath(L, 2);
+            lua_pushboolean(L, path_helper::equal(lft, rht));
             return 1;
         }
 
         static int mt_tostring(lua_State* L) {
-            auto self  = getpathptr(L, 1);
-            auto u8str = self->generic_u8string();
-            auto str   = u8tostrview(u8str);
+            const auto& self = getpath(L, 1);
+            auto u8str       = self.generic_u8string();
+            auto str         = u8tostrview(u8str);
             lua_pushlstring(L, str.data(), str.size());
             return 1;
         }
