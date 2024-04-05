@@ -32,41 +32,29 @@ namespace bee::lua_time {
 #endif
     }
 
-    static uint64_t time_counter() {
-#if defined(_WIN32)
-        LARGE_INTEGER li;
-        QueryPerformanceCounter(&li);
-        return li.QuadPart;
-#else
-        struct timespec now;
-        clock_gettime(CLOCK_MONOTONIC, &now);
-        return now.tv_sec * (uint64_t)(1000000000) + now.tv_nsec;
-#endif
-    }
-
-    static uint64_t time_frequency() {
-#if defined(_WIN32)
-        LARGE_INTEGER li;
-        QueryPerformanceFrequency(&li);
-        return li.QuadPart;
-#else
-        return (uint64_t)(1000000000);
-#endif
-    }
-
     static int lmonotonic(lua_State* L) {
         lua_pushinteger(L, time_monotonic());
         return 1;
     }
+
     static int ltime(lua_State* L) {
         lua_pushinteger(L, time_time());
         return 1;
     }
+
     static int lcounter(lua_State* L) {
-        uint64_t freq = lua_tointeger(L, lua_upvalueindex(1));
-        uint64_t ti   = time_counter();
-        lua_pushnumber(L, (double)ti * 1000 / freq);
+#if defined(_WIN32)
+        LARGE_INTEGER li;
+        QueryPerformanceCounter(&li);
+        lua_Integer freq = lua_tointeger(L, lua_upvalueindex(1));
+        lua_pushnumber(L, (lua_Number)li.QuadPart * 1000. / freq);
         return 1;
+#else
+        struct timespec now;
+        clock_gettime(CLOCK_MONOTONIC, &now);
+        lua_pushnumber(L, (lua_Number)(now.tv_sec * 1000) + (lua_Number)now.tv_nsec / (lua_Number)1000000.);
+        return 1;
+#endif
     }
 
     static int luaopen(lua_State* L) {
@@ -79,8 +67,14 @@ namespace bee::lua_time {
         luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);
 
-        lua_pushinteger(L, time_frequency());
+#if defined(_WIN32)
+        LARGE_INTEGER li;
+        QueryPerformanceFrequency(&li);
+        lua_pushinteger(L, (lua_Integer)li.QuadPart);
         lua_pushcclosure(L, lcounter, 1);
+#else
+        lua_pushcclosure(L, lcounter, 0);
+#endif
         lua_setfield(L, -2, "counter");
 
         return 1;
