@@ -213,7 +213,7 @@ namespace bee::filewatch {
         return task.start(m_recursive);
     }
 
-    void watch::update() noexcept {
+    std::optional<notify> watch::select() noexcept {
         for (auto iter = m_tasks.begin(); iter != m_tasks.end();) {
             if (event_update(*iter)) {
                 ++iter;
@@ -222,9 +222,6 @@ namespace bee::filewatch {
                 iter = m_tasks.erase(iter);
             }
         }
-    }
-
-    std::optional<notify> watch::select() noexcept {
         if (m_notify.empty()) {
             return std::nullopt;
         }

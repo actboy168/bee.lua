@@ -48,14 +48,15 @@ namespace bee::filewatch {
 
         watch() noexcept;
         ~watch() noexcept;
-
         void stop() noexcept;
         void add(const string_type& path) noexcept;
         void set_recursive(bool enable) noexcept;
         bool set_follow_symlinks(bool enable) noexcept;
         bool set_filter(filter f = DefaultFilter) noexcept;
-        void update() noexcept;
         std::optional<notify> select() noexcept;
+#if defined(__APPLE__)
+        void event_update(const char* paths[], const FSEventStreamEventFlags flags[], size_t n) noexcept;
+#endif
 
     private:
 #if defined(_WIN32)
@@ -64,11 +65,6 @@ namespace bee::filewatch {
         bool create_stream(CFArrayRef cf_paths) noexcept;
         void destroy_stream() noexcept;
         void update_stream() noexcept;
-
-    public:
-        void event_update(const char* paths[], const FSEventStreamEventFlags flags[], size_t n) noexcept;
-
-    private:
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
         void event_update(void* event) noexcept;
 #endif

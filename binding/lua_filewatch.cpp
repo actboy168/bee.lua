@@ -18,8 +18,8 @@ namespace bee::lua_filewatch {
     }
 
     static int add(lua_State* L) {
-        filewatch::watch& self = to(L, 1);
-        auto path              = lua::checkstring(L, 2);
+        auto& self = to(L, 1);
+        auto path  = lua::checkstring(L, 2);
         std::error_code ec;
         fs::path abspath = fs::absolute(path, ec);
         if (ec) {
@@ -32,23 +32,23 @@ namespace bee::lua_filewatch {
     }
 
     static int set_recursive(lua_State* L) {
-        filewatch::watch& self = to(L, 1);
-        bool enable            = lua_toboolean(L, 2);
+        auto& self  = to(L, 1);
+        bool enable = lua_toboolean(L, 2);
         self.set_recursive(enable);
         lua_pushboolean(L, 1);
         return 1;
     }
 
     static int set_follow_symlinks(lua_State* L) {
-        filewatch::watch& self = to(L, 1);
-        bool enable            = lua_toboolean(L, 2);
-        bool ok                = self.set_follow_symlinks(enable);
+        auto& self  = to(L, 1);
+        bool enable = lua_toboolean(L, 2);
+        bool ok     = self.set_follow_symlinks(enable);
         lua_pushboolean(L, ok);
         return 1;
     }
 
     static int set_filter(lua_State* L) {
-        filewatch::watch& self = to(L, 1);
+        auto& self = to(L, 1);
         if (lua_isnoneornil(L, 2)) {
             bool ok = self.set_filter();
             lua_pushboolean(L, ok);
@@ -76,8 +76,7 @@ namespace bee::lua_filewatch {
     }
 
     static int select(lua_State* L) {
-        filewatch::watch& self = to(L, 1);
-        self.update();
+        auto& self = to(L, 1);
         auto notify = self.select();
         if (!notify) {
             return 0;
@@ -97,7 +96,7 @@ namespace bee::lua_filewatch {
     }
 
     static int mt_close(lua_State* L) {
-        filewatch::watch& self = to(L, 1);
+        auto& self = to(L, 1);
         self.stop();
         return 0;
     }

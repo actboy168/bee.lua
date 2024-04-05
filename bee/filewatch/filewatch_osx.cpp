@@ -108,9 +108,6 @@ namespace bee::filewatch {
         CFRelease(cf_paths);
     }
 
-    void watch::update() noexcept {
-    }
-
     void watch::event_update(const char* paths[], const FSEventStreamEventFlags flags[], size_t n) noexcept {
         std::unique_lock<std::mutex> lock(m_mutex);
         for (size_t i = 0; i < n; ++i) {
