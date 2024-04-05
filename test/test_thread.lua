@@ -33,7 +33,7 @@ function test_thread:test_thread_1()
     fs.remove("temp.txt")
     lt.assertEquals(file_exists("temp.txt"), false)
     local thd = createThread [[
-        io.open('temp.txt', 'w'):close()
+        io.open("temp.txt", "w"):close()
     ]]
     thread.wait(thd)
     lt.assertEquals(file_exists("temp.txt"), true)
@@ -62,7 +62,7 @@ end
 function test_thread:test_thread_3()
     assertNotThreadError()
     local thd = createThread [[
-        error 'Test thread error.'
+        error "Test thread error."
     ]]
     thread.wait(thd)
     assertHasThreadError("Test thread error.")
@@ -221,10 +221,10 @@ function test_thread:test_thread_bpop()
     thread.newchannel "testRes"
     local thd = createThread [[
         local thread = require "bee.thread"
-        local req = thread.channel 'testReq'
-        local res = thread.channel 'testRes'
+        local req = thread.channel "testReq"
+        local res = thread.channel "testRes"
         local function dispatch(what, ...)
-            if what == 'exit' then
+            if what == "exit" then
                 return true
             end
             res:push(what, ...)
@@ -251,14 +251,14 @@ function test_thread:test_thread_pop()
     thread.newchannel "testRes"
     local thd = createThread [[
         local thread = require "bee.thread"
-        local req = thread.channel 'testReq'
-        local res = thread.channel 'testRes'
+        local req = thread.channel "testReq"
+        local res = thread.channel "testRes"
         local function dispatch(ok, what, ...)
             if not ok then
                 thread.sleep(0)
                 return
             end
-            if what == 'exit' then
+            if what == "exit" then
                 return true
             end
             res:push(what, ...)
@@ -297,7 +297,7 @@ function test_thread:test_rpc()
     thread.newchannel "test"
     local thd = createThread [[
         local thread = require "bee.thread"
-        local c = thread.channel 'test'
+        local c = thread.channel "test"
         local quit
         local cmd = {}
         function cmd.add(a, b)

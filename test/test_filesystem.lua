@@ -298,15 +298,15 @@ function test_fs:test_relative()
     relative(C.."a/b/c", C.."a", "b/c")
     relative(C.."a/d/e", C.."a/b/c", "../../d/e")
     if isWindows then
-        --relative(D..'a/b/c', C..'a',  '')
+        --relative(D.."a/b/c", C.."a",  "")
         relative("a", C.."a/b/c", "")
         relative(C.."a/b", "a/b/c", "")
         relative(C.."a\\b\\c", C.."a", "b/c")
     else
         -- TODO
-        --relative(D..'a/b/c', C..'a',  '')
-        --relative('a', C..'a/b/c',  '')
-        --relative(C..'a/b', 'a/b/c',  '')
+        --relative(D.."a/b/c", C.."a",  "")
+        --relative("a", C.."a/b/c",  "")
+        --relative(C.."a/b", "a/b/c",  "")
     end
 end
 
@@ -760,7 +760,7 @@ end
 --        while arg[i] ~= nil do
 --            i = i - 1
 --        end
---        return fs.path(arg[i + 1]):parent_path() / ('bee.' .. __EXT__)
+--        return fs.path(arg[i + 1]):parent_path() / ("bee." .. __EXT__)
 --    end
 --    assertPathEquals(fs.dll_path(), fs.absolute(getdll()))
 --end
@@ -778,11 +778,11 @@ if platform.os ~= "emscripten" then
 
     function test_fs:test_filelock_2()
         local process = shell:runlua([[
-        local fs = require 'bee.filesystem'
+        local fs = require "bee.filesystem"
         fs.filelock(fs.path("temp.lock"))
-        io.stdout:write 'ok'
+        io.stdout:write "ok"
         io.stdout:flush()
-        io.read 'a'
+        io.read "a"
     ]], { stdin = true, stdout = true, stderr = true })
         lt.assertEquals(process.stdout:read(2), "ok")
         lt.assertEquals(fs.filelock(fs.path("temp.lock")), nil)

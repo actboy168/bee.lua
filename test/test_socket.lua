@@ -212,7 +212,7 @@ local function createEchoThread(name, ...)
     return thread.thread(([[
     -- %s
     local protocol, address, port = ...
-    local socket = require 'bee.socket'
+    local socket = require "bee.socket"
     local select = require "bee.select"
     local function simple_select(fd, mode)
         local s <close> = select.create()
@@ -238,7 +238,7 @@ local function createEchoThread(name, ...)
     client:connect(address, port)
     simple_select(client, "w")
     assert(client:status())
-    local queue = ''
+    local queue = ""
     while true do
         local event = simple_select(client, "rw")
         if event & select.SELECT_READ then
