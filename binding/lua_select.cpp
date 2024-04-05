@@ -38,8 +38,8 @@ namespace bee::lua_select {
         void reset(size_t n) {
             if (n > cap) {
                 clear();
-                set           = reinterpret_cast<storage*>(new uint8_t[sizeof(uint32_t) + sizeof(SOCKET) * n]);
-                cap           = n;
+                set = reinterpret_cast<storage*>(new uint8_t[sizeof(uint32_t) + sizeof(SOCKET) * n]);
+                cap = n;
             }
             set->fd_count = 0;
         }
@@ -152,8 +152,8 @@ namespace bee::lua_select {
         return 0;
     }
     static int wait(lua_State* L) {
-        auto& ctx         = lua::checkudata<select_ctx>(L, 1);
-        int msec          = lua::optinteger<int, -1>(L, 2);
+        auto& ctx = lua::checkudata<select_ctx>(L, 1);
+        int msec  = lua::optinteger<int, -1>(L, 2);
         if (ctx.readset.empty() && ctx.writeset.empty()) {
             if (msec < 0) {
                 return luaL_error(L, "no open sockets to check and no timeout set");
@@ -223,7 +223,7 @@ namespace bee::lua_select {
         return 0;
     }
     static int event_add(lua_State* L) {
-        auto& ctx = lua::checkudata<select_ctx>(L, 1);
+        auto& ctx   = lua::checkudata<select_ctx>(L, 1);
         auto fd     = lua::checkudata<net::fd_t>(L, 2);
         auto events = luaL_checkinteger(L, 3);
         storeref(L, fd);
@@ -323,7 +323,7 @@ DEFINE_LUAOPEN(select)
 namespace bee::lua {
     template <>
     struct udata<lua_select::select_ctx> {
-        static inline int nupvalue = 4;
+        static inline int nupvalue   = 4;
         static inline auto name      = "bee::select";
         static inline auto metatable = bee::lua_select::metatable;
     };

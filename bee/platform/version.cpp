@@ -99,7 +99,7 @@ namespace bee {
 #        pragma warning(push)
 #        pragma warning(disable : 4996; disable : 28159)
 #    endif
-        const BOOL ok            = ::GetVersionExW(&osvi);
+        const BOOL ok = ::GetVersionExW(&osvi);
 #    if defined(_MSC_VER)
 #        pragma warning(pop)
 #    endif

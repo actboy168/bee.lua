@@ -120,7 +120,7 @@ namespace bee::path_helper {
     static path_expected dll_path(void* module_handle) noexcept {
         return unexpected<std::string>("disable dl.");
     }
-    path_expected dll_path() noexcept  {
+    path_expected dll_path() noexcept {
         return dll_path(nullptr);
     }
 }

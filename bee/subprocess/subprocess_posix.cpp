@@ -23,7 +23,7 @@ extern char** environ;
 
 namespace bee::subprocess {
 
-    args_t::~args_t() noexcept  {
+    args_t::~args_t() noexcept {
         for (size_t i = 0; i < size(); ++i) {
             delete[] (data_[i]);
         }
@@ -98,7 +98,7 @@ namespace bee::subprocess {
         fds_[2] = -1;
     }
 
-    void spawn::suspended() noexcept  {
+    void spawn::suspended() noexcept {
 #if defined(POSIX_SPAWN_START_SUSPENDED)
         // apple extension
         spawnattr_ |= POSIX_SPAWN_START_SUSPENDED;

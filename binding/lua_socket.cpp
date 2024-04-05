@@ -9,8 +9,7 @@ namespace bee::lua_socket {
     struct fd_no_ownership {
         net::fd_t v;
         fd_no_ownership(net::fd_t v)
-            : v(v)
-        {}
+            : v(v) {}
     };
     static int push_neterror(lua_State* L, std::string_view msg) {
         auto error = make_neterror(msg);
@@ -291,7 +290,7 @@ namespace bee::lua_socket {
         return 0;
     }
 
-    using socket_func = int (*)(lua_State*, net::fd_t);
+    using socket_func    = int (*)(lua_State*, net::fd_t);
     using socketref_func = int (*)(lua_State*, net::fd_t&);
     template <socket_func func>
     static int call_socket(lua_State* L) {

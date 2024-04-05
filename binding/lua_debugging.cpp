@@ -1,5 +1,5 @@
-#include <binding/binding.h>
 #include <bee/nonstd/debugging.h>
+#include <binding/binding.h>
 
 namespace bee::lua_debugging {
 

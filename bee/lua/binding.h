@@ -147,14 +147,16 @@ namespace bee::lua {
         }
     }
 
-    union lua_maxalign_t { LUAI_MAXALIGN; };
+    union lua_maxalign_t {
+        LUAI_MAXALIGN;
+    };
     constexpr inline size_t lua_maxalign = std::alignment_of_v<lua_maxalign_t>;
 
     template <typename T>
     constexpr T* udata_align(void* storage) {
         if constexpr (std::alignment_of_v<T> > lua_maxalign) {
             uintptr_t mask = (uintptr_t)(std::alignment_of_v<T> - 1);
-            storage = (void*)(((uintptr_t)storage + mask) & ~mask);
+            storage        = (void*)(((uintptr_t)storage + mask) & ~mask);
             return static_cast<T*>(storage);
         }
         else {
