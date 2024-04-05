@@ -1,8 +1,5 @@
 #pragma once
 
-#if defined(_WIN32)
-#    include <cstdint>
-#endif
 #include <bee/nonstd/filesystem.h>
 
 #include <optional>
