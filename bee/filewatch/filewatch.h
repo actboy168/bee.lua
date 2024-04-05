@@ -42,8 +42,7 @@ namespace bee::filewatch {
 #else
         using string_type = std::string;
 #endif
-        using filter = std::function<bool(const char*)>;
-        static const char* type() noexcept;
+        using filter                       = std::function<bool(const char*)>;
         static inline filter DefaultFilter = [](const char*) { return true; };
 
         watch() noexcept;

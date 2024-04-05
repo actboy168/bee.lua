@@ -11,10 +11,6 @@
 #include <functional>
 
 namespace bee::filewatch {
-    const char* watch::type() noexcept {
-        return "inotify";
-    }
-
     watch::watch() noexcept
         : m_notify()
         , m_fd_path()

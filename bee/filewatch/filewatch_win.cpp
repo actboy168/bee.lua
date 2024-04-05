@@ -8,10 +8,6 @@
 #include <cassert>
 
 namespace bee::filewatch {
-    const char* watch::type() noexcept {
-        return "windows";
-    }
-
     class task : public OVERLAPPED {
         static const size_t kBufSize = 16 * 1024;
 

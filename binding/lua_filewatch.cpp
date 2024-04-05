@@ -19,9 +19,9 @@ namespace bee::lua_filewatch {
 
     static int add(lua_State* L) {
         auto& self = to(L, 1);
-        auto path  = lua::checkstring(L, 2);
+        auto path  = lua::checkstrview(L, 2);
         std::error_code ec;
-        fs::path abspath = fs::absolute(path, ec);
+        fs::path abspath = fs::absolute(std::string_view { path.data(), path.size() }, ec);
         if (ec) {
             lua_pushstring(L, make_error(ec, "fs::absolute").c_str());
             lua_error(L);
@@ -76,7 +76,7 @@ namespace bee::lua_filewatch {
     }
 
     static int select(lua_State* L) {
-        auto& self = to(L, 1);
+        auto& self  = to(L, 1);
         auto notify = self.select();
         if (!notify) {
             return 0;
@@ -130,13 +130,10 @@ namespace bee::lua_filewatch {
     static int luaopen(lua_State* L) {
         static luaL_Reg lib[] = {
             { "create", create },
-            { "type", NULL },
             { NULL, NULL }
         };
         luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);
-        lua_pushstring(L, filewatch::watch::type());
-        lua_setfield(L, -2, "type");
         return 1;
     }
 }

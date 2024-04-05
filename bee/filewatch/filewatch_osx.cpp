@@ -2,10 +2,6 @@
 #include <bee/nonstd/unreachable.h>
 
 namespace bee::filewatch {
-    const char* watch::type() noexcept {
-        return "fsevent";
-    }
-
     static void event_cb(ConstFSEventStreamRef streamRef, void* info, size_t numEvents, void* eventPaths, const FSEventStreamEventFlags eventFlags[], const FSEventStreamEventId eventIds[]) noexcept {
         (void)streamRef;
         (void)eventIds;
