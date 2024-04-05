@@ -1,6 +1,6 @@
 ﻿#include <bee/lua/binding.h>
 #include <binding/binding.h>
-#if defined _WIN32
+#if defined(_WIN32)
 #    include <winsock.h>
 #else
 #    include <sys/select.h>

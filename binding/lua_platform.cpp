@@ -138,7 +138,7 @@ namespace bee::lua_platform {
 #endif
         lua_setfield(L, -2, "Arch");
 
-#ifdef NDEBUG
+#if defined(NDEBUG)
         lua_pushboolean(L, 0);
 #else
         lua_pushboolean(L, 1);

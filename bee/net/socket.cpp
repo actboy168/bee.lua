@@ -1,4 +1,4 @@
-#if defined _WIN32
+#if defined(_WIN32)
 //  clang-format off
 #    include <winsock2.h>
 //  clang-format on
@@ -246,7 +246,7 @@ namespace bee::net::socket {
 #endif
 
     bool close(fd_t s) noexcept {
-#if defined _WIN32
+#if defined(_WIN32)
         const int ok = ::closesocket(s);
 #else
         const int ok = ::close(s);
@@ -339,7 +339,7 @@ namespace bee::net::socket {
         case protocol::udp6:
             return createSocket(PF_INET6, SOCK_DGRAM, IPPROTO_UDP, flags);
         case protocol::unix:
-#if defined _WIN32
+#if defined(_WIN32)
             if (!supportUnixDomainSocket()) {
                 return createSocket(PF_INET, SOCK_STREAM, IPPROTO_TCP, flags);
             }
@@ -390,7 +390,7 @@ namespace bee::net::socket {
     }
 
     void udp_connect_reset(fd_t s) noexcept {
-#if defined _WIN32
+#if defined(_WIN32)
         DWORD byte_retruned = 0;
         bool new_be         = false;
         ::WSAIoctl(s, SIO_UDP_CONNRESET, &new_be, sizeof(new_be), NULL, 0, &byte_retruned, NULL, NULL);
@@ -400,7 +400,7 @@ namespace bee::net::socket {
     }
 
     bool bind(fd_t s, const endpoint& ep) {
-#if defined _WIN32
+#if defined(_WIN32)
         if (!supportUnixDomainSocket() && ep.family() == AF_UNIX) {
             return u_bind(s, ep);
         }
@@ -415,7 +415,7 @@ namespace bee::net::socket {
     }
 
     fdstat connect(fd_t s, const endpoint& ep) {
-#if defined _WIN32
+#if defined(_WIN32)
         if (!supportUnixDomainSocket() && ep.family() == AF_UNIX) {
             return u_connect(s, ep);
         }
@@ -425,7 +425,7 @@ namespace bee::net::socket {
             return fdstat::success;
         }
 
-#if defined _WIN32
+#if defined(_WIN32)
         const int error_code = ::WSAGetLastError();
         if (error_code == WSAEINPROGRESS || error_code == WSAEWOULDBLOCK)
             return fdstat::wait;
@@ -462,7 +462,7 @@ namespace bee::net::socket {
     fdstat accept(fd_t s, fd_t& newfd, fd_flags fd_flags) noexcept {
         newfd = acceptEx(s, fd_flags, NULL, NULL);
         if (newfd == retired_fd) {
-#if defined _WIN32
+#if defined(_WIN32)
             return fdstat::failed;
 #else
             if (errno != EAGAIN && errno != ECONNABORTED && errno != EPROTO && errno != EINTR) {
@@ -555,7 +555,7 @@ namespace bee::net::socket {
         if (type != (uint16_t)un_format::pathname) {
             return false;
         }
-#if defined _WIN32
+#if defined(_WIN32)
         return win::unlink(win::u2w(path).c_str());
 #else
         return 0 == ::unlink(path.c_str());
@@ -573,7 +573,7 @@ namespace bee::net::socket {
     }
 
 #if defined(_WIN32)
-    bool unnamed_unix_bind(fd_t s) {
+    static bool unnamed_unix_bind(fd_t s) {
         char tmpdir[MAX_PATH];
         int bind_try = 0;
         for (;;) {
