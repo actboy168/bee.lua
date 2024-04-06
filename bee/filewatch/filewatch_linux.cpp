@@ -116,27 +116,29 @@ namespace bee::filewatch {
     }
 
     std::optional<notify> watch::select() noexcept {
-        if (m_inotify_fd == -1) {
-            return std::nullopt;
-        }
+        do {
+            if (m_inotify_fd == -1) {
+                break;
+            }
 
-        struct pollfd pfd_read;
-        pfd_read.fd     = m_inotify_fd;
-        pfd_read.events = POLLIN;
-        if (poll(&pfd_read, 1, 0) != 1) {
-            return std::nullopt;
-        }
+            struct pollfd pfd_read;
+            pfd_read.fd     = m_inotify_fd;
+            pfd_read.events = POLLIN;
+            if (poll(&pfd_read, 1, 0) != 1) {
+                break;
+            }
 
-        std::byte buf[4096];
-        ssize_t n = read(m_inotify_fd, buf, sizeof buf);
-        if (n == 0 || n == -1) {
-            return std::nullopt;
-        }
-        for (std::byte* p = buf; p < buf + n;) {
-            auto event = (struct inotify_event*)p;
-            event_update(event);
-            p += sizeof(*event) + event->len;
-        }
+            std::byte buf[4096];
+            ssize_t n = read(m_inotify_fd, buf, sizeof buf);
+            if (n == 0 || n == -1) {
+                break;
+            }
+            for (std::byte* p = buf; p < buf + n;) {
+                auto event = (struct inotify_event*)p;
+                event_update(event);
+                p += sizeof(*event) + event->len;
+            }
+        } while (false);
 
         if (m_notify.empty()) {
             return std::nullopt;
