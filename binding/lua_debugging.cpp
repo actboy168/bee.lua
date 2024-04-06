@@ -2,7 +2,6 @@
 #include <binding/binding.h>
 
 namespace bee::lua_debugging {
-
     static int breakpoint(lua_State* L) {
         std::breakpoint();
         return 0;

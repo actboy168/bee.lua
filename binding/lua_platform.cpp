@@ -1,4 +1,3 @@
-#include <bee/lua/binding.h>
 #include <bee/platform/version.h>
 #include <binding/binding.h>
 

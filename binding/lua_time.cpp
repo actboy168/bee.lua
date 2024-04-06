@@ -1,5 +1,6 @@
-#include <bee/lua/binding.h>
 #include <binding/binding.h>
+
+#include <cassert>
 
 #if defined(_WIN32)
 #    include <Windows.h>

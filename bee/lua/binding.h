@@ -1,6 +1,5 @@
 #pragma once
 
-#include <bee/error.h>
 #include <bee/nonstd/bit.h>
 #include <bee/nonstd/to_underlying.h>
 #include <bee/nonstd/unreachable.h>
@@ -10,7 +9,6 @@
 #include <cstdint>
 #include <limits>
 #include <lua.hpp>
-#include <string>
 
 namespace bee::lua {
     inline zstring_view checkstrview(lua_State* L, int idx) {
