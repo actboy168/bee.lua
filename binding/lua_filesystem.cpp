@@ -13,6 +13,10 @@
 #include <chrono>
 #include <utility>
 
+#if defined(_WIN32)
+#    include <bee/platform/win/unicode.h>
+#endif
+
 #if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 #    define BEE_DISABLE_FULLPATH
 #endif

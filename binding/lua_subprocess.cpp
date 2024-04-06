@@ -9,6 +9,7 @@
 #include <signal.h>
 
 #include <optional>
+
 #if defined(_WIN32)
 #    include <Windows.h>
 #    include <bee/platform/win/unicode.h>
@@ -17,6 +18,20 @@
 #endif
 
 namespace bee::lua_subprocess {
+#if defined(_WIN32)
+    using string_type = std::wstring;
+#else
+    using string_type = std::string;
+#endif
+    static string_type checkstring(lua_State* L, int idx) {
+        auto str = lua::checkstrview(L, idx);
+#if defined(_WIN32)
+        return win::u2w(str);
+#else
+        return string_type { str.data(), str.size() };
+#endif
+    }
+
     namespace process {
         static auto& to(lua_State* L, int idx) {
             return lua::checkudata<subprocess::process>(L, idx);
@@ -184,11 +199,11 @@ namespace bee::lua_subprocess {
     }
 
     namespace spawn {
-        static std::optional<lua::string_type> cast_cwd(lua_State* L) {
+        static std::optional<string_type> cast_cwd(lua_State* L) {
             lua_getfield(L, 1, "cwd");
             switch (lua_type(L, -1)) {
             case LUA_TSTRING: {
-                auto ret = lua::checkstring(L, -1);
+                auto ret = checkstring(L, -1);
                 lua_pop(L, 1);
                 return ret;
             }
@@ -297,10 +312,10 @@ namespace bee::lua_subprocess {
                 lua_pushnil(L);
                 while (lua_next(L, -2)) {
                     if (LUA_TSTRING == lua_type(L, -1)) {
-                        builder.set(lua::checkstring(L, -2), lua::checkstring(L, -1));
+                        builder.set(checkstring(L, -2), checkstring(L, -1));
                     }
                     else {
-                        builder.del(lua::checkstring(L, -2));
+                        builder.del(checkstring(L, -2));
                     }
                     lua_pop(L, 1);
                 }

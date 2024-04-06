@@ -11,30 +11,12 @@
 #include <limits>
 #include <lua.hpp>
 #include <string>
-#if defined(_WIN32)
-#    include <bee/platform/win/unicode.h>
-#endif
 
 namespace bee::lua {
-#if defined(_WIN32)
-    using string_type = std::wstring;
-#else
-    using string_type = std::string;
-#endif
-
     inline zstring_view checkstrview(lua_State* L, int idx) {
         size_t len      = 0;
         const char* buf = luaL_checklstring(L, idx, &len);
         return { buf, len };
-    }
-
-    inline string_type checkstring(lua_State* L, int idx) {
-        auto str = checkstrview(L, idx);
-#if defined(_WIN32)
-        return win::u2w(str);
-#else
-        return string_type { str.data(), str.size() };
-#endif
     }
 
     template <typename T, typename I>
