@@ -1,6 +1,7 @@
 #include <binding/binding.h>
 
 #include <cassert>
+#include <cstdint>
 
 #if defined(_WIN32)
 #    include <Windows.h>
