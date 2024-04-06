@@ -19,8 +19,8 @@ namespace bee::subprocess {
     void args_t::push(zstring_view v) noexcept {
         data_.emplace_back(win::u2w(v));
     }
-    void args_t::push(std::wstring&& v) noexcept {
-        data_.emplace_back(std::forward<std::wstring>(v));
+    void args_t::push(const std::wstring& v) noexcept {
+        data_.emplace_back(v);
     }
 
     template <class char_t>

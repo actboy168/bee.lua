@@ -80,7 +80,7 @@ namespace bee::subprocess {
 
     struct args_t {
         void push(zstring_view v) noexcept;
-        void push(std::wstring&& v) noexcept;
+        void push(const std::wstring& v) noexcept;
         std::wstring& operator[](size_t i) noexcept {
             return data_[i];
         }

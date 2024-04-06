@@ -141,8 +141,8 @@ namespace bee::filewatch {
         if (m_notify.empty()) {
             return std::nullopt;
         }
-        auto n = m_notify.front();
+        auto msg = m_notify.front();
         m_notify.pop();
-        return n;
+        return msg;
     }
 }

@@ -194,9 +194,8 @@ namespace bee::lua_subprocess {
             }
             case LUA_TUSERDATA: {
                 const auto& path = lua::checkudata<fs::path>(L, -1);
-                auto ret         = path.string<lua::string_type::value_type>();
                 lua_pop(L, 1);
-                return ret;
+                return path.native();
             }
             default:
                 lua_pop(L, 1);
@@ -214,7 +213,7 @@ namespace bee::lua_subprocess {
                     break;
                 case LUA_TUSERDATA: {
                     const auto& path = lua::checkudata<fs::path>(L, -1);
-                    args.push(path.string<lua::string_type::value_type>());
+                    args.push(path.native());
                     break;
                 }
                 case LUA_TTABLE:
