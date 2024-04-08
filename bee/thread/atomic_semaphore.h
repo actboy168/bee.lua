@@ -4,7 +4,17 @@
 #    include <version>
 #endif
 
-#if defined(__cpp_lib_semaphore) && defined(_MSC_VER)
+#if defined(__cpp_lib_semaphore)
+#    if defined(_MSC_VER)
+#        define BEE_USE_BINARY_SEMAPHORE 1
+#    elif defined(__GLIBCXX__)
+#        if (defined(__glibcxx_atomic_wait) || defined(__cpp_lib_atomic_wait)) && !_GLIBCXX_USE_POSIX_SEMAPHORE
+#            define BEE_USE_BINARY_SEMAPHORE 1
+#        endif
+#    endif
+#endif
+
+#if defined(BEE_USE_BINARY_SEMAPHORE)
 #    include <semaphore>
 namespace bee {
     using atomic_semaphore = ::std::binary_semaphore;
