@@ -2,7 +2,6 @@
 #include <bee/lua/binding.h>
 #include <bee/nonstd/format.h>
 #include <bee/nonstd/print.h>
-#include <bee/nonstd/semaphore.h>
 #include <bee/thread/atomic_semaphore.h>
 #include <bee/thread/setname.h>
 #include <bee/thread/simplethread.h>
@@ -71,7 +70,7 @@ namespace bee::lua_thread {
     private:
         std::queue<value_type> queue;
         spinlock mutex;
-        std::binary_semaphore sem = std::binary_semaphore(0);
+        bee::atomic_semaphore sem = bee::atomic_semaphore(0);
     };
 
     using boxchannel = std::shared_ptr<channel>;
@@ -119,7 +118,7 @@ namespace bee::lua_thread {
     };
 
     struct rpc {
-        atomic_semaphore sem;
+        bee::atomic_semaphore sem = bee::atomic_semaphore(0);
         void* data = nullptr;
     };
 
