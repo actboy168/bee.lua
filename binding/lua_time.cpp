@@ -49,7 +49,7 @@ namespace bee::lua_time {
 #if defined(_WIN32)
         return GetTickCount64();
 #elif defined(__APPLE__)
-        return mach_continuous_time() * timebase.numer / timebase.denom / 1000000;
+        return mach_continuous_time() * G.timebase.numer / G.timebase.denom / 1000000;
 #else
         struct timespec ti;
         clock_gettime(CLOCK_MONOTONIC, &ti);
