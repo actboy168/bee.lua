@@ -78,7 +78,7 @@ namespace bee {
         };
         FutexTimespec ts;
         ts.tv_sec  = (long)(timeout / 1000);
-        ts.tv_nsec = (long)(timeout % 1000 * 1000);
+        ts.tv_nsec = (long)(timeout % 1000 * 1000 * 1000);
         syscall(SYS_futex, ptr, FUTEX_WAIT_PRIVATE, val, &ts, 0, 0);
     }
     template <typename T>
