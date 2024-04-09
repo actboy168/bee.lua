@@ -116,8 +116,9 @@ namespace bee {
         else {
             thread_sleep(10);
         }
-        template <typename T>
-        void kernel_wake(const T* ptr, bool all) {}
+    }
+    template <typename T>
+    void kernel_wake(const T* ptr, bool all) {}
 #    endif
 }
 
