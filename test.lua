@@ -1,35 +1,16 @@
 local subprocess = require "bee.subprocess"
-local thread = require "bee.thread"
+local platform = require "bee.platform"
 
-local luaexe = (function ()
-    local i = 0
-    while arg[i] ~= nil do
-        i = i - 1
-    end
-    return arg[i + 1]
-end)()
+local luaexe = platform.os == "windows"
+    and "./build/bin/bootstrap.exe"
+    or "./build/bin/bootstrap"
 
 local process = assert(subprocess.spawn {
     luaexe, "test/test.lua", arg,
-    stdout = true,
+    stdout = io.stdout,
     stderr = "stdout",
+    searchPath = true,
 })
-
-while true do
-    local n = subprocess.peek(process.stdout)
-    if n == nil then
-        break
-    end
-    if n == 0 then
-        thread.sleep(100)
-    else
-        local data = process.stdout:read(n)
-        io.write(data)
-        io.flush()
-    end
-end
-
-process.stdout:close()
 
 local code = process:wait()
 if code ~= 0 then
