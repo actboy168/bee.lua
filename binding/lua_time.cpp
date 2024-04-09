@@ -48,14 +48,14 @@ namespace bee::lua_time {
 #endif
 
 #if defined(_WIN32)
-    constexpr int64_t TenMHz = 10'000'000ll;
-    static int lua_monotonic_TenMHz(lua_State* L) {
-        static_assert(TenMHz % MSecPerSec == 0);
-        constexpr int64_t Frequency = TenMHz / MSecPerSec;
+    template <int64_t Frequency>
+    static int lua_monotonic(lua_State* L) {
+        static_assert(Frequency % MSecPerSec == 0);
+        constexpr int64_t Div = Frequency / MSecPerSec;
         LARGE_INTEGER li;
         QueryPerformanceCounter(&li);
         int64_t now = (int64_t)li.QuadPart;
-        lua_pushinteger(L, now / Frequency);
+        lua_pushinteger(L, now / Div);
         return 1;
     }
     static int lua_monotonic(lua_State* L) {
@@ -86,12 +86,13 @@ namespace bee::lua_time {
     static void time_initialize() {
         std::unique_lock<spinlock> lock(G.mutex);
 #if defined(_WIN32)
+        constexpr int64_t TenMHz = 10'000'000ll;
         LARGE_INTEGER li;
         QueryPerformanceFrequency(&li);
         G.frequency = li.QuadPart;
         G.time_func = lua_time;
         if (G.frequency == TenMHz) {
-            G.monotonic_func = lua_monotonic_TenMHz;
+            G.monotonic_func = lua_monotonic<TenMHz>;
         }
         else {
             G.monotonic_func = lua_monotonic;
