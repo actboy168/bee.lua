@@ -14,6 +14,9 @@
 #endif
 
 namespace bee::lua_time {
+    constexpr uint64_t MSEC_PER_SEC  = UINT64_C(1000);
+    constexpr uint64_t NSEC_PER_MSEC = UINT64_C(1000000);
+
     static struct {
         spinlock mutex;
         int (*time_func)(lua_State*);
@@ -36,7 +39,7 @@ namespace bee::lua_time {
 #else
         struct timespec ti;
         clock_gettime(CLOCK_REALTIME, &ti);
-        return (uint64_t)ti.tv_sec * 1000 + ti.tv_nsec / 1000000;
+        return (uint64_t)ti.tv_sec * MSEC_PER_SEC + ti.tv_nsec / NSEC_PER_MSEC;
 #endif
     }
 
@@ -49,11 +52,11 @@ namespace bee::lua_time {
 #if defined(_WIN32)
         return GetTickCount64();
 #elif defined(__APPLE__)
-        return mach_continuous_time() * G.timebase.numer / G.timebase.denom / 1000000;
+        return mach_continuous_time() * G.timebase.numer / G.timebase.denom / NSEC_PER_MSEC;
 #else
         struct timespec ti;
         clock_gettime(CLOCK_MONOTONIC, &ti);
-        return (uint64_t)ti.tv_sec * 1000 + ti.tv_nsec / 1000000;
+        return (uint64_t)ti.tv_sec * MSEC_PER_SEC + ti.tv_nsec / NSEC_PER_MSEC;
 #endif
     }
 
@@ -63,8 +66,7 @@ namespace bee::lua_time {
     }
 
 #if defined(_WIN32)
-    constexpr uint64_t TenMHz       = UINT64_C(10000000);
-    constexpr uint64_t MSEC_PER_SEC = UINT64_C(1000);
+    constexpr uint64_t TenMHz = UINT64_C(10000000);
     static int lua_counter_TenMHz(lua_State* L) {
         LARGE_INTEGER li;
         QueryPerformanceCounter(&li);
