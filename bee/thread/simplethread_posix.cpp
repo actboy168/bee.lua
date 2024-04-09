@@ -1,8 +1,10 @@
 #include <bee/thread/simplethread.h>
+#include <errno.h>
 #include <pthread.h>
 #include <sched.h>
-#include <unistd.h>
+#include <time.h>
 
+#include <cassert>
 #include <cstdlib>
 #include <new>
 
@@ -42,7 +44,14 @@ namespace bee {
     }
 
     void thread_sleep(int msec) noexcept {
-        usleep(msec * 1000);
+        struct timespec timeout;
+        int rc;
+        timeout.tv_sec  = msec / 1000;
+        timeout.tv_nsec = (msec % 1000) * 1000 * 1000;
+        do
+            rc = nanosleep(&timeout, &timeout);
+        while (rc == -1 && errno == EINTR);
+        assert(rc == 0);
     }
 
     void thread_yield() noexcept {
