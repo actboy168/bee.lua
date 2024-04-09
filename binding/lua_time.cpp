@@ -14,8 +14,8 @@
 #endif
 
 namespace bee::lua_time {
-    constexpr uint64_t MSecPerSec  = UINT64_C(1000);
-    constexpr uint64_t NSecPerMSec = UINT64_C(1'000'000);
+    constexpr int64_t MSecPerSec  = 1000ll;
+    constexpr int64_t NSecPerMSec = 1'000'000ll;
 
     static struct {
         spinlock mutex;
@@ -23,62 +23,62 @@ namespace bee::lua_time {
         int (*monotonic_func)(lua_State*);
 
 #if defined(_WIN32)
-        uint64_t frequency;
+        int64_t frequency;
 #elif defined(__APPLE__)
         mach_timebase_info_data_t timebase;
 #endif
     } G;
 
-    static uint64_t time_time() {
 #if defined(_WIN32)
+    static int lua_time(lua_State* L) {
         FILETIME f;
         GetSystemTimePreciseAsFileTime(&f);
-        uint64_t t = ((uint64_t)f.dwHighDateTime << 32) | f.dwLowDateTime;
-        return t / (uint64_t)10000 - (uint64_t)11644473600000;
-#else
-        struct timespec ti;
-        clock_gettime(CLOCK_REALTIME, &ti);
-        return (uint64_t)ti.tv_sec * MSecPerSec + ti.tv_nsec / NSecPerMSec;
-#endif
-    }
-
-    static int lua_time(lua_State* L) {
-        lua_pushinteger(L, time_time());
+        int64_t t = ((int64_t)f.dwHighDateTime << 32) | f.dwLowDateTime;
+        t -= 116444736000000000ll;
+        lua_pushinteger(L, t / 10000ll);
         return 1;
     }
+#else
+    static int lua_time(lua_State* L) {
+        struct timespec ti;
+        clock_gettime(CLOCK_REALTIME, &ti);
+        lua_pushinteger(L, (int64_t)ti.tv_sec * MSecPerSec + ti.tv_nsec / NSecPerMSec);
+        return 1;
+    }
+#endif
 
 #if defined(_WIN32)
-    constexpr uint64_t TenMHz = UINT64_C(10'000'000);
+    constexpr int64_t TenMHz = 10'000'000ll;
     static int lua_monotonic_TenMHz(lua_State* L) {
         static_assert(TenMHz % MSecPerSec == 0);
-        constexpr uint64_t Frequency = TenMHz / MSecPerSec;
+        constexpr int64_t Frequency = TenMHz / MSecPerSec;
         LARGE_INTEGER li;
         QueryPerformanceCounter(&li);
-        uint64_t now = (uint64_t)li.QuadPart;
+        int64_t now = (int64_t)li.QuadPart;
         lua_pushinteger(L, now / Frequency);
         return 1;
     }
     static int lua_monotonic(lua_State* L) {
         LARGE_INTEGER li;
         QueryPerformanceCounter(&li);
-        uint64_t now   = (uint64_t)li.QuadPart;
-        uint64_t freq  = G.frequency;
-        uint64_t whole = (now / freq) * MSecPerSec;
-        uint64_t part  = (now % freq) * MSecPerSec / freq;
+        int64_t now   = (int64_t)li.QuadPart;
+        int64_t freq  = G.frequency;
+        int64_t whole = (now / freq) * MSecPerSec;
+        int64_t part  = (now % freq) * MSecPerSec / freq;
         lua_pushinteger(L, whole + part);
         return 1;
     }
 #elif defined(__APPLE__)
     static int lua_monotonic(lua_State* L) {
         uint64_t now = mach_continuous_time();
-        lua_pushinteger(L, now * G.timebase.numer / G.timebase.denom / NSecPerMSec);
+        lua_pushinteger(L, now * G.timebase.numer / G.timebase.denom / NSEC_PER_MSEC);
         return 1;
     }
 #else
     static int lua_monotonic(lua_State* L) {
         struct timespec ti;
         clock_gettime(CLOCK_MONOTONIC, &ti);
-        lua_pushinteger(L, (uint64_t)ti.tv_sec * MSecPerSec + ti.tv_nsec / NSecPerMSec);
+        lua_pushinteger(L, (int64_t)ti.tv_sec * MSecPerSec + ti.tv_nsec / NSecPerMSec);
         return 1;
     }
 #endif
