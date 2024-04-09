@@ -38,7 +38,7 @@ namespace bee::lua_time {
 #else
         struct timespec ti;
         clock_gettime(CLOCK_REALTIME, &ti);
-        return (uint64_t)ti.tv_sec * NSecPerMSec + ti.tv_nsec / NSecPerMSec;
+        return (uint64_t)ti.tv_sec * MSecPerSec + ti.tv_nsec / NSecPerMSec;
 #endif
     }
 
@@ -50,11 +50,11 @@ namespace bee::lua_time {
 #if defined(_WIN32)
     constexpr uint64_t TenMHz = UINT64_C(10'000'000);
     static int lua_monotonic_TenMHz(lua_State* L) {
+        static_assert(TenMHz % MSecPerSec == 0);
+        constexpr uint64_t Frequency = TenMHz / MSecPerSec;
         LARGE_INTEGER li;
         QueryPerformanceCounter(&li);
         uint64_t now = (uint64_t)li.QuadPart;
-        static_assert(TenMHz % NSecPerMSec == 0);
-        constexpr uint64_t Frequency = TenMHz / NSecPerMSec;
         lua_pushinteger(L, now / Frequency);
         return 1;
     }
@@ -63,8 +63,8 @@ namespace bee::lua_time {
         QueryPerformanceCounter(&li);
         uint64_t now   = (uint64_t)li.QuadPart;
         uint64_t freq  = G.frequency;
-        uint64_t whole = (now / freq) * NSecPerMSec;
-        uint64_t part  = (now % freq) * NSecPerMSec / freq;
+        uint64_t whole = (now / freq) * MSecPerSec;
+        uint64_t part  = (now % freq) * MSecPerSec / freq;
         lua_pushinteger(L, whole + part);
         return 1;
     }
@@ -78,7 +78,7 @@ namespace bee::lua_time {
     static int lua_monotonic(lua_State* L) {
         struct timespec ti;
         clock_gettime(CLOCK_MONOTONIC, &ti);
-        lua_pushinteger(L, (uint64_t)ti.tv_sec * NSecPerMSec + ti.tv_nsec / NSecPerMSec);
+        lua_pushinteger(L, (uint64_t)ti.tv_sec * MSecPerSec + ti.tv_nsec / NSecPerMSec);
         return 1;
     }
 #endif
