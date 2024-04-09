@@ -119,7 +119,7 @@ namespace bee::lua_thread {
 
     struct rpc {
         atomic_semaphore sem = atomic_semaphore(0);
-        void* data = nullptr;
+        void* data           = nullptr;
     };
 
     static channelmgr g_channel;
