@@ -70,7 +70,7 @@ namespace bee::lua_thread {
     private:
         std::queue<value_type> queue;
         spinlock mutex;
-        bee::atomic_semaphore sem = bee::atomic_semaphore(0);
+        atomic_semaphore sem = atomic_semaphore(0);
     };
 
     using boxchannel = std::shared_ptr<channel>;
@@ -118,7 +118,7 @@ namespace bee::lua_thread {
     };
 
     struct rpc {
-        bee::atomic_semaphore sem = bee::atomic_semaphore(0);
+        atomic_semaphore sem = atomic_semaphore(0);
         void* data = nullptr;
     };
 
@@ -220,7 +220,7 @@ namespace bee::lua_thread {
         thread_args* args = lua::tolightud<thread_args*>(L, 1);
         lua_pushinteger(L, args->id);
         lua_rawsetp(L, LUA_REGISTRYINDEX, &THREADID);
-        ::bee::lua::preload_module(L);
+        lua::preload_module(L);
         lua_gc(L, LUA_GCGEN, 0, 0);
         if (luaL_loadbuffer(L, args->source.data(), args->source.size(), args->source.c_str()) != LUA_OK) {
             free(args->params);
@@ -348,7 +348,7 @@ namespace bee::lua_thread {
             { "rpc_create", lrpc_create },
             { "rpc_wait", lrpc_wait },
             { "rpc_return", lrpc_return },
-            { "preload_module", ::bee::lua::preload_module },
+            { "preload_module", lua::preload_module },
             { "id", NULL },
             { NULL, NULL },
         };

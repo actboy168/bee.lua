@@ -142,7 +142,7 @@ namespace bee {
 
         void release() noexcept {
             counter.store(1);
-            bee::kernel_wake((value_type*)&counter, false);
+            kernel_wake((value_type*)&counter, false);
         }
 
         void acquire() noexcept {
@@ -152,7 +152,7 @@ namespace bee {
                 if (prev == 1) {
                     break;
                 }
-                bee::kernel_wait(ctx, (value_type*)&counter, prev);
+                kernel_wait(ctx, (value_type*)&counter, prev);
             }
         }
 
@@ -174,7 +174,7 @@ namespace bee {
                 if (remaining_timeout == 0) {
                     return false;
                 }
-                bee::kernel_wait(ctx, (value_type*)&counter, prev, remaining_timeout);
+                kernel_wait(ctx, (value_type*)&counter, prev, remaining_timeout);
             }
         }
 
@@ -190,7 +190,7 @@ namespace bee {
                 if (remaining_timeout == 0) {
                     return false;
                 }
-                bee::kernel_wait(ctx, (value_type*)&counter, prev, remaining_timeout);
+                kernel_wait(ctx, (value_type*)&counter, prev, remaining_timeout);
             }
         }
 
