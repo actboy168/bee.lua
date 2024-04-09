@@ -21,6 +21,7 @@ namespace bee::lua_time {
         spinlock mutex;
         int (*time_func)(lua_State*);
         int (*monotonic_func)(lua_State*);
+        int (*thread_func)(lua_State*);
 
 #if defined(_WIN32)
         int64_t frequency;
@@ -30,12 +31,17 @@ namespace bee::lua_time {
     } G;
 
 #if defined(_WIN32)
+    static int64_t tomsec(FILETIME* f) {
+        int64_t t = ((int64_t)f->dwHighDateTime << 32) | f->dwLowDateTime;
+        return t / 10000ll;
+    }
+
     static int lua_time(lua_State* L) {
         FILETIME f;
         GetSystemTimePreciseAsFileTime(&f);
-        int64_t t = ((int64_t)f.dwHighDateTime << 32) | f.dwLowDateTime;
-        t -= 116444736000000000ll;
-        lua_pushinteger(L, t / 10000ll);
+        int64_t t = tomsec(&f);
+        t -= 11644473600000ll;
+        lua_pushinteger(L, t);
         return 1;
     }
 #else
@@ -83,29 +89,45 @@ namespace bee::lua_time {
     }
 #endif
 
+#if defined(_WIN32)
+    static int lua_thread(lua_State* L) {
+        FILETIME created;
+        FILETIME exited;
+        FILETIME kernel;
+        FILETIME user;
+        if (0 == GetThreadTimes(GetCurrentThread(), &created, &exited, &kernel, &user)) {
+            lua_pushinteger(L, 0);
+            return 1;
+        }
+        lua_pushinteger(L, tomsec(&kernel) + tomsec(&user));
+        return 1;
+    }
+#else
+    static int lua_thread(lua_State* L) {
+        struct timespec ti;
+        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ti);
+        lua_pushinteger(L, (int64_t)ti.tv_sec * MSecPerSec + ti.tv_nsec / NSecPerMSec);
+        return 1;
+    }
+#endif
+
     static void time_initialize() {
         std::unique_lock<spinlock> lock(G.mutex);
+        G.time_func      = lua_time;
+        G.monotonic_func = lua_monotonic;
+        G.thread_func    = lua_thread;
 #if defined(_WIN32)
         constexpr int64_t TenMHz = 10'000'000ll;
         LARGE_INTEGER li;
         QueryPerformanceFrequency(&li);
         G.frequency = li.QuadPart;
-        G.time_func = lua_time;
         if (G.frequency == TenMHz) {
             G.monotonic_func = lua_monotonic<TenMHz>;
-        }
-        else {
-            G.monotonic_func = lua_monotonic;
         }
 #elif defined(__APPLE__)
         if (KERN_SUCCESS != mach_timebase_info(&G.timebase)) {
             abort();
         }
-        G.time_func      = lua_time;
-        G.monotonic_func = lua_monotonic;
-#else
-        G.time_func      = lua_time;
-        G.monotonic_func = lua_monotonic;
 #endif
     }
 
@@ -114,6 +136,7 @@ namespace bee::lua_time {
         luaL_Reg lib[] = {
             { "time", G.time_func },
             { "monotonic", G.monotonic_func },
+            { "thread", G.thread_func },
             { NULL, NULL },
         };
         luaL_newlibtable(L, lib);
