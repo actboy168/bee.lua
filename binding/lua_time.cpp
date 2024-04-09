@@ -15,7 +15,7 @@
 
 namespace bee::lua_time {
     constexpr uint64_t MSEC_PER_SEC  = UINT64_C(1000);
-    constexpr uint64_t NSEC_PER_MSEC = UINT64_C(1000000);
+    constexpr uint64_t NSEC_PER_MSEC = UINT64_C(1'000'000);
 
     static struct {
         spinlock mutex;
@@ -66,7 +66,7 @@ namespace bee::lua_time {
     }
 
 #if defined(_WIN32)
-    constexpr uint64_t TenMHz = UINT64_C(10000000);
+    constexpr uint64_t TenMHz = UINT64_C(10'000'000);
     static int lua_counter_TenMHz(lua_State* L) {
         LARGE_INTEGER li;
         QueryPerformanceCounter(&li);
