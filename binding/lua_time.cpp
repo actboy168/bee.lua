@@ -14,14 +14,13 @@
 #endif
 
 namespace bee::lua_time {
-    constexpr uint64_t MSEC_PER_SEC  = UINT64_C(1000);
-    constexpr uint64_t NSEC_PER_MSEC = UINT64_C(1'000'000);
+    constexpr uint64_t MSecPerSec  = UINT64_C(1000);
+    constexpr uint64_t NSecPerMSec = UINT64_C(1'000'000);
 
     static struct {
         spinlock mutex;
         int (*time_func)(lua_State*);
         int (*monotonic_func)(lua_State*);
-        int (*counter_func)(lua_State*);
 
 #if defined(_WIN32)
         uint64_t frequency;
@@ -39,7 +38,7 @@ namespace bee::lua_time {
 #else
         struct timespec ti;
         clock_gettime(CLOCK_REALTIME, &ti);
-        return (uint64_t)ti.tv_sec * MSEC_PER_SEC + ti.tv_nsec / NSEC_PER_MSEC;
+        return (uint64_t)ti.tv_sec * NSecPerMSec + ti.tv_nsec / NSecPerMSec;
 #endif
     }
 
@@ -48,42 +47,38 @@ namespace bee::lua_time {
         return 1;
     }
 
-    static uint64_t time_monotonic() {
-#if defined(_WIN32)
-        return GetTickCount64();
-#elif defined(__APPLE__)
-        return mach_continuous_time() * G.timebase.numer / G.timebase.denom / NSEC_PER_MSEC;
-#else
-        struct timespec ti;
-        clock_gettime(CLOCK_MONOTONIC, &ti);
-        return (uint64_t)ti.tv_sec * MSEC_PER_SEC + ti.tv_nsec / NSEC_PER_MSEC;
-#endif
-    }
-
-    static int lua_monotonic(lua_State* L) {
-        lua_pushinteger(L, time_monotonic());
-        return 1;
-    }
-
 #if defined(_WIN32)
     constexpr uint64_t TenMHz = UINT64_C(10'000'000);
-    static int lua_counter_TenMHz(lua_State* L) {
+    static int lua_monotonic_TenMHz(lua_State* L) {
         LARGE_INTEGER li;
         QueryPerformanceCounter(&li);
         uint64_t now = (uint64_t)li.QuadPart;
-        static_assert(TenMHz % MSEC_PER_SEC == 0);
-        constexpr uint64_t Frequency = TenMHz / MSEC_PER_SEC;
+        static_assert(TenMHz % NSecPerMSec == 0);
+        constexpr uint64_t Frequency = TenMHz / NSecPerMSec;
         lua_pushinteger(L, now / Frequency);
         return 1;
     }
-    static int lua_counter(lua_State* L) {
+    static int lua_monotonic(lua_State* L) {
         LARGE_INTEGER li;
         QueryPerformanceCounter(&li);
         uint64_t now   = (uint64_t)li.QuadPart;
         uint64_t freq  = G.frequency;
-        uint64_t whole = (now / freq) * MSEC_PER_SEC;
-        uint64_t part  = (now % freq) * MSEC_PER_SEC / freq;
+        uint64_t whole = (now / freq) * NSecPerMSec;
+        uint64_t part  = (now % freq) * NSecPerMSec / freq;
         lua_pushinteger(L, whole + part);
+        return 1;
+    }
+#elif defined(__APPLE__)
+    static int lua_monotonic(lua_State* L) {
+        uint64_t now = mach_continuous_time();
+        lua_pushinteger(L, now * G.timebase.numer / G.timebase.denom / NSecPerMSec);
+        return 1;
+    }
+#else
+    static int lua_monotonic(lua_State* L) {
+        struct timespec ti;
+        clock_gettime(CLOCK_MONOTONIC, &ti);
+        lua_pushinteger(L, (uint64_t)ti.tv_sec * NSecPerMSec + ti.tv_nsec / NSecPerMSec);
         return 1;
     }
 #endif
@@ -93,14 +88,13 @@ namespace bee::lua_time {
 #if defined(_WIN32)
         LARGE_INTEGER li;
         QueryPerformanceFrequency(&li);
-        G.frequency      = li.QuadPart;
-        G.time_func      = lua_time;
-        G.monotonic_func = lua_monotonic;
+        G.frequency = li.QuadPart;
+        G.time_func = lua_time;
         if (G.frequency == TenMHz) {
-            G.counter_func = lua_counter_TenMHz;
+            G.monotonic_func = lua_monotonic_TenMHz;
         }
         else {
-            G.counter_func = lua_counter;
+            G.monotonic_func = lua_monotonic;
         }
 #elif defined(__APPLE__)
         if (KERN_SUCCESS != mach_timebase_info(&G.timebase)) {
@@ -108,11 +102,9 @@ namespace bee::lua_time {
         }
         G.time_func      = lua_time;
         G.monotonic_func = lua_monotonic;
-        G.counter_func   = lua_monotonic;
 #else
         G.time_func      = lua_time;
         G.monotonic_func = lua_monotonic;
-        G.counter_func   = lua_monotonic;
 #endif
     }
 
@@ -121,7 +113,6 @@ namespace bee::lua_time {
         luaL_Reg lib[] = {
             { "time", G.time_func },
             { "monotonic", G.monotonic_func },
-            { "counter", G.counter_func },
             { NULL, NULL },
         };
         luaL_newlibtable(L, lib);
