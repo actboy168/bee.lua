@@ -9,7 +9,6 @@ local process = assert(subprocess.spawn {
     luaexe, "test/test.lua", arg,
     stdout = io.stdout,
     stderr = "stdout",
-    searchPath = true,
 })
 
 local code = process:wait()
