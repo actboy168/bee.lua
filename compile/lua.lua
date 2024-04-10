@@ -40,13 +40,13 @@ if lm.os == "windows" then
         sources = {
             "3rd/lua/onelua.c",
             "3rd/lua/utf8_crt.c",
-            ("3rd/lua/fast_setjmp_%s.s"):format(lm.arch)
         },
         defines = {
             "MAKE_LUAC",
         },
         msvc = {
-            flags = "/wd4334"
+            flags = "/wd4334",
+            sources = ("3rd/lua/fast_setjmp_%s.s"):format(lm.arch),
         }
     }
     return
