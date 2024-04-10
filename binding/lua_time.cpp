@@ -75,9 +75,21 @@ namespace bee::lua_time {
         return 1;
     }
 #elif defined(__APPLE__)
+    template <uint32_t Numer, uint32_t Denom>
     static int lua_monotonic(lua_State* L) {
-        uint64_t now = mach_continuous_time();
-        lua_pushinteger(L, now * G.timebase.numer / G.timebase.denom / NSEC_PER_MSEC);
+        static_assert((NSEC_PER_MSEC * Denom) % Numer == 0);
+        constexpr uint64_t Freq = (NSEC_PER_MSEC * Denom) / Numer;
+        uint64_t now            = mach_continuous_time();
+        lua_pushinteger(L, now / Freq);
+        return 1;
+    }
+    static int lua_monotonic(lua_State* L) {
+        uint64_t now   = mach_continuous_time();
+        uint64_t mul   = G.timebase.numer;
+        uint64_t freq  = NSEC_PER_MSEC * G.timebase.denom;
+        uint64_t whole = (now / freq) * G.timebase.numer;
+        uint64_t part  = (now % freq) * G.timebase.numer / freq;
+        lua_pushinteger(L, whole + part);
         return 1;
     }
 #else
@@ -127,6 +139,12 @@ namespace bee::lua_time {
 #elif defined(__APPLE__)
         if (KERN_SUCCESS != mach_timebase_info(&G.timebase)) {
             abort();
+        }
+        if (G.timebase.number == 125 && G.timebase.denom == 3) {
+            G.monotonic_func = lua_monotonic<125, 3>;
+        }
+        else if (G.timebase.number == 1 && G.timebase.denom == 1) {
+            G.monotonic_func = lua_monotonic<1, 1>;
         }
 #endif
     }
