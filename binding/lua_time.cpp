@@ -85,7 +85,6 @@ namespace bee::lua_time {
     }
     static int lua_monotonic(lua_State* L) {
         uint64_t now   = mach_continuous_time();
-        uint64_t mul   = G.timebase.numer;
         uint64_t freq  = NSEC_PER_MSEC * G.timebase.denom;
         uint64_t whole = (now / freq) * G.timebase.numer;
         uint64_t part  = (now % freq) * G.timebase.numer / freq;
@@ -140,10 +139,10 @@ namespace bee::lua_time {
         if (KERN_SUCCESS != mach_timebase_info(&G.timebase)) {
             abort();
         }
-        if (G.timebase.number == 125 && G.timebase.denom == 3) {
+        if (G.timebase.numer == 125 && G.timebase.denom == 3) {
             G.monotonic_func = lua_monotonic<125, 3>;
         }
-        else if (G.timebase.number == 1 && G.timebase.denom == 1) {
+        else if (G.timebase.numer == 1 && G.timebase.denom == 1) {
             G.monotonic_func = lua_monotonic<1, 1>;
         }
 #endif
