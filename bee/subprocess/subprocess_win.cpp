@@ -4,7 +4,7 @@
 #include <bee/nonstd/bit.h>
 #include <bee/nonstd/format.h>
 #include <bee/nonstd/unreachable.h>
-#include <bee/platform/win/unicode.h>
+#include <bee/platform/win/wtf8.h>
 #include <bee/subprocess.h>
 #include <bee/utility/dynarray.h>
 #include <signal.h>
@@ -17,7 +17,7 @@
 
 namespace bee::subprocess {
     void args_t::push(zstring_view v) noexcept {
-        data_.emplace_back(win::u2w(v));
+        data_.emplace_back(wtf8::u2w(v));
     }
     void args_t::push(const std::wstring& v) noexcept {
         data_.emplace_back(v);

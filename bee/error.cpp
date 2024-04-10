@@ -3,7 +3,7 @@
 
 #if defined(_WIN32)
 #    include <Windows.h>
-#    include <bee/platform/win/unicode.h>
+#    include <bee/platform/win/wtf8.h>
 #else
 #    include <errno.h>
 #endif
@@ -47,7 +47,7 @@ namespace bee {
             return "Windows";
         }
         std::string message(int error_code) const override {
-            return win::w2u(error_message(error_code));
+            return wtf8::w2u(error_message(error_code));
         }
         std::error_condition default_error_condition(int error_code) const noexcept override {
             const std::error_condition cond = std::system_category().default_error_condition(error_code);

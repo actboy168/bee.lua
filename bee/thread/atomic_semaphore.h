@@ -131,7 +131,7 @@ namespace bee {
 #    elif defined(BEE_USE_ULOCK)
         using value_type = uint64_t;
 #    else
-            using value_type = uint8_t;
+        using value_type = uint8_t;
 #    endif
     public:
         constexpr explicit atomic_semaphore(const ptrdiff_t desired) noexcept

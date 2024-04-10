@@ -2,7 +2,7 @@
 #include <bee/error.h>
 #include <bee/filewatch/filewatch.h>
 #include <bee/nonstd/unreachable.h>
-#include <bee/platform/win/unicode.h>
+#include <bee/platform/win/wtf8.h>
 
 #include <array>
 #include <cassert>
@@ -189,13 +189,13 @@ namespace bee::filewatch {
             path = task.path() + path;
             switch (fni.Action) {
             case FILE_ACTION_MODIFIED:
-                m_notify.emplace(notify::flag::modify, win::w2u(path));
+                m_notify.emplace(notify::flag::modify, wtf8::w2u(path));
                 break;
             case FILE_ACTION_ADDED:
             case FILE_ACTION_REMOVED:
             case FILE_ACTION_RENAMED_OLD_NAME:
             case FILE_ACTION_RENAMED_NEW_NAME:
-                m_notify.emplace(notify::flag::rename, win::w2u(path));
+                m_notify.emplace(notify::flag::rename, wtf8::w2u(path));
                 break;
             default:
                 std::unreachable();

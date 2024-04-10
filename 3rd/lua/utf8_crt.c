@@ -8,6 +8,7 @@
 
 #include <Windows.h>
 #include <assert.h>
+#include <bee/platform/win/wtf8_c.h>
 #include <io.h>
 #include <malloc.h>
 
@@ -19,50 +20,58 @@
 #    error Cannot define thread_local
 #endif
 
-wchar_t* u2w(const char* str) {
-    int len      = 0;
-    int out_len  = 0;
-    wchar_t* buf = NULL;
+struct u2w_result {
+    wchar_t* wstr;
+    size_t wlen;
+};
+
+static struct u2w_result u2w_r(const char* str, size_t len) {
+    struct u2w_result res = { NULL, 0 };
     if (!str) {
-        return NULL;
+        return res;
     }
-    len = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);
-    if (!len) {
-        return NULL;
+    size_t wlen = wtf8_to_utf16_length(str, len);
+    if (wlen == (size_t)-1) {
+        return res;
     }
-    buf = (wchar_t*)calloc(len, sizeof(wchar_t));
-    if (!buf) {
-        return NULL;
+    res.wstr = (wchar_t*)calloc(wlen + 1, sizeof(wchar_t));
+    if (!res.wstr) {
+        return res;
     }
-    out_len = MultiByteToWideChar(CP_UTF8, 0, str, -1, buf, len);
-    if (out_len < 0) {
-        free(buf);
-        return NULL;
-    }
-    return buf;
+    res.wlen = wlen;
+    wtf8_to_utf16(str, len, res.wstr, res.wlen);
+    return res;
 }
 
-char* w2u(const wchar_t* str) {
-    int len     = 0;
-    int out_len = 0;
-    char* buf   = NULL;
+wchar_t* u2w(const char* str) {
     if (!str) {
         return NULL;
     }
-    len = WideCharToMultiByte(CP_UTF8, 0, str, -1, NULL, 0, NULL, NULL);
-    if (!len) {
+    size_t len  = strlen(str);  // TODO
+    size_t wlen = wtf8_to_utf16_length(str, len);
+    if (wlen == (size_t)-1) {
         return NULL;
     }
-    buf = (char*)calloc(len, sizeof(char));
-    if (!buf) {
+    wchar_t* wresult = (wchar_t*)calloc(wlen + 1, sizeof(wchar_t));
+    if (!wresult) {
         return NULL;
     }
-    out_len = WideCharToMultiByte(CP_UTF8, 0, str, -1, buf, len, NULL, NULL);
-    if (out_len < 0) {
-        free(buf);
+    wtf8_to_utf16(str, len, wresult, wlen);
+    return wresult;
+}
+
+char* w2u(const wchar_t* wstr) {
+    if (!wstr) {
         return NULL;
     }
-    return buf;
+    size_t wlen  = wcslen(wstr);  // TODO
+    size_t len   = wtf8_from_utf16_length(wstr, wlen);
+    char* result = (char*)calloc(len + 1, sizeof(char));
+    if (!result) {
+        return NULL;
+    }
+    wtf8_from_utf16(wstr, wlen, result);
+    return result;
 }
 
 FILE* __cdecl utf8_fopen(const char* filename, const char* mode) {
@@ -140,10 +149,8 @@ char* __cdecl utf8_tmpnam(char* buffer) {
     if (!_wtmpnam(tmp)) {
         return NULL;
     }
-    unsigned long ret = WideCharToMultiByte(CP_UTF8, 0, tmp, -1, buffer, L_tmpnam, NULL, NULL);
-    if (ret == 0) {
-        return NULL;
-    }
+    size_t wlen = wcslen(tmp);
+    wtf8_from_utf16(tmp, wlen, buffer);
     return buffer;
 }
 
@@ -160,10 +167,20 @@ unsigned long __stdcall utf8_GetModuleFileNameA(void* module, char* filename, un
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
-    unsigned long tmplen = GetModuleFileNameW(module, tmp, size);
-    unsigned long ret    = WideCharToMultiByte(CP_UTF8, 0, tmp, tmplen + 1, filename, size, NULL, NULL);
+    DWORD tmplen = GetModuleFileNameW(module, tmp, size);
+    if (tmplen == 0) {
+        free(tmp);
+        return 0;
+    }
+    size_t len = wtf8_from_utf16_length(tmp, tmplen);
+    if (len > size) {
+        free(tmp);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
+    wtf8_from_utf16(tmp, tmplen, filename);
     free(tmp);
-    return ret - 1;
+    return (unsigned long)len;
 }
 
 unsigned long __stdcall utf8_FormatMessageA(
@@ -180,14 +197,20 @@ unsigned long __stdcall utf8_FormatMessageA(
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
-    int res = FormatMessageW(dwFlags, lpSource, dwMessageId, dwLanguageId, tmp, nSize, Arguments);
-    if (!res) {
+    DWORD tmplen = FormatMessageW(dwFlags, lpSource, dwMessageId, dwLanguageId, tmp, nSize, Arguments);
+    if (tmplen == 0) {
         free(tmp);
-        return res;
+        return 0;
     }
-    int ret = WideCharToMultiByte(CP_UTF8, 0, tmp, -1, lpBuffer, nSize, NULL, NULL);
+    size_t len = wtf8_from_utf16_length(tmp, tmplen);
+    if (len > nSize) {
+        free(tmp);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
+    wtf8_from_utf16(tmp, tmplen, lpBuffer);
     free(tmp);
-    return ret;
+    return (unsigned long)len;
 }
 
 static void ConsoleWrite(FILE* stream, const char* s, int l) {
@@ -196,21 +219,17 @@ static void ConsoleWrite(FILE* stream, const char* s, int l) {
         fwrite(s, sizeof(char), l, stream);
         return;
     }
-    int wsz = MultiByteToWideChar(CP_UTF8, 0, s, l, NULL, 0);
-    if (wsz > 0) {
-        wchar_t* wmsg = (wchar_t*)calloc(wsz, sizeof(wchar_t));
-        if (wmsg) {
-            wsz = MultiByteToWideChar(CP_UTF8, 0, s, l, wmsg, wsz);
-            if (wsz > 0) {
-                if (WriteConsoleW(handle, wmsg, wsz, NULL, NULL)) {
-                    free(wmsg);
-                    return;
-                }
-            }
-            free(wmsg);
-        }
+    struct u2w_result r = u2w_r(s, l);
+    if (!r.wstr) {
+        fwrite(s, sizeof(char), l, stream);
+        return;
     }
-    fwrite(s, sizeof(char), l, stream);
+    if (!WriteConsoleW(handle, r.wstr, (DWORD)r.wlen, NULL, NULL)) {
+        free(r.wstr);
+        fwrite(s, sizeof(char), l, stream);
+        return;
+    }
+    free(r.wstr);
 }
 
 void utf8_ConsoleWrite(const char* s, int l) {

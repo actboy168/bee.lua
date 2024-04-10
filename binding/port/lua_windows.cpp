@@ -2,6 +2,7 @@
 #include <bee/error.h>
 #include <bee/lua/binding.h>
 #include <bee/platform/win/unicode.h>
+#include <bee/platform/win/wtf8.h>
 #include <binding/binding.h>
 #include <binding/file.h>
 #include <fcntl.h>
@@ -51,7 +52,7 @@ namespace bee::lua_windows {
 
     static int write_console(lua_State* L) {
         luaL_Stream* p = lua::tofile(L, 1);
-        auto msg       = win::u2w(lua::checkstrview(L, 2));
+        auto msg       = wtf8::u2w(lua::checkstrview(L, 2));
         if (!p || !p->closef || !p->f) {
             lua_pushnil(L);
             lua_pushstring(L, make_error(std::make_error_code(std::errc::bad_file_descriptor), "write_console").c_str());

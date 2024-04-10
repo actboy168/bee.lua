@@ -12,7 +12,7 @@
 
 #if defined(_WIN32)
 #    include <Windows.h>
-#    include <bee/platform/win/unicode.h>
+#    include <bee/platform/win/wtf8.h>
 #else
 #    include <unistd.h>
 #endif
@@ -26,7 +26,7 @@ namespace bee::lua_subprocess {
     static string_type checkstring(lua_State* L, int idx) {
         auto str = lua::checkstrview(L, idx);
 #if defined(_WIN32)
-        return win::u2w(str);
+        return wtf8::u2w(str);
 #else
         return string_type { str.data(), str.size() };
 #endif

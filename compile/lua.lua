@@ -13,6 +13,7 @@ lm:lua_dll "bee" {
 
 if lm.os == "windows" then
     lm:source_set "lua54" {
+        includes = ".",
         sources = "3rd/lua/utf8_crt.c",
     }
     lm:shared_library "lua54" {

@@ -2,7 +2,7 @@
 
 #if defined(_WIN32)
 #    include <Windows.h>
-#    include <bee/platform/win/unicode.h>
+#    include <bee/platform/win/wtf8.h>
 #else
 #    include <pthread.h>
 #    if defined(__linux__)
@@ -47,7 +47,7 @@ namespace bee {
         using SetThreadDescriptionProc = HRESULT(WINAPI*)(HANDLE, PCWSTR);
         if (HMODULE kernel32 = GetModuleHandleW(L"kernel32.dll")) {
             if (SetThreadDescriptionProc SetThreadDescription = (SetThreadDescriptionProc)GetProcAddress(kernel32, "SetThreadDescription")) {
-                SetThreadDescription(GetCurrentThread(), win::u2w(name).c_str());
+                SetThreadDescription(GetCurrentThread(), wtf8::u2w(name).c_str());
             }
         }
 #    if defined(_MSC_VER)
