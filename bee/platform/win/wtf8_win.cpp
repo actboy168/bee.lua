@@ -1,8 +1,5 @@
-#include <bee/platform/win/wtf8.h>
-
-extern "C" {
 #include <bee/platform/win/cwtf8.h>
-}
+#include <bee/platform/win/wtf8.h>
 
 namespace bee::wtf8 {
     std::wstring u2w(zstring_view str) noexcept {

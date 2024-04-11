@@ -1,5 +1,9 @@
 #pragma once
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -157,3 +161,7 @@ inline void wtf8_from_utf16(const wchar_t* input, size_t length, char* output, s
     (void)output_len;
     assert(output_len == 0);
 }
+
+#if defined(__cplusplus)
+}
+#endif
