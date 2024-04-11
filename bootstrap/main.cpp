@@ -245,7 +245,7 @@ static int pmain(lua_State *L) {
 }
 
 #if defined(_WIN32)
-int umain(int argc, char **argv) {
+static int umain(int argc, char **argv) {
 #else
 int main(int argc, char **argv) {
 #endif
@@ -270,10 +270,9 @@ int main(int argc, char **argv) {
 #    include <Windows.h>
 #    include <wchar.h>
 
-extern "C" wchar_t *u2w(const char *str);
 extern "C" char *w2u(const wchar_t *str);
 
-void enable_vtmode_(HANDLE h) {
+static void enable_vtmode_(HANDLE h) {
     if (h == INVALID_HANDLE_VALUE) {
         return;
     }
@@ -285,7 +284,7 @@ void enable_vtmode_(HANDLE h) {
     SetConsoleMode(h, mode);
 }
 
-void enable_vtmode() {
+static void enable_vtmode() {
     enable_vtmode_(GetStdHandle(STD_OUTPUT_HANDLE));
     enable_vtmode_(GetStdHandle(STD_ERROR_HANDLE));
 }
@@ -313,12 +312,7 @@ int wmain(int argc, wchar_t **wargv) {
 #        include <stdlib.h>
 
 extern int _CRT_glob;
-extern
-#        ifdef __cplusplus
-    "C"
-#        endif
-    void
-    __wgetmainargs(int *, wchar_t ***, wchar_t ***, int, int *);
+extern "C" oid __wgetmainargs(int *, wchar_t ***, wchar_t ***, int, int *);
 
 int main() {
     wchar_t **enpv, **argv;
