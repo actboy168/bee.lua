@@ -152,6 +152,7 @@ char* __cdecl utf8_tmpnam(char* buffer) {
     size_t wlen = wcslen(tmp);
     size_t len  = wtf8_from_utf16_length(tmp, wlen);
     wtf8_from_utf16(tmp, wlen, buffer, len);
+    buffer[len] = '\0';
     return buffer;
 }
 
@@ -181,6 +182,7 @@ unsigned long __stdcall utf8_GetModuleFileNameA(void* module, char* filename, un
     }
     wtf8_from_utf16(tmp, tmplen, filename, len);
     free(tmp);
+    filename[len] = '\0';
     return (unsigned long)len;
 }
 
@@ -211,6 +213,7 @@ unsigned long __stdcall utf8_FormatMessageA(
     }
     wtf8_from_utf16(tmp, tmplen, lpBuffer, len);
     free(tmp);
+    lpBuffer[len] = '\0';
     return (unsigned long)len;
 }
 
