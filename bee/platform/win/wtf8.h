@@ -25,7 +25,7 @@ namespace bee::wtf8 {
         }
         size_t len = wtf8_from_utf16_length(wstr.data(), wstr.size());
         std::string result(len, '\0');
-        wtf8_from_utf16(wstr.data(), wstr.size(), result.data());
+        wtf8_from_utf16(wstr.data(), wstr.size(), result.data(), len);
         return result;
     }
 }

@@ -124,7 +124,7 @@ inline size_t wtf8_from_utf16_length(const wchar_t* input, size_t length) {
     return output_len;
 }
 
-inline void wtf8_from_utf16(const wchar_t* input, size_t length, char* output) {
+inline void wtf8_from_utf16(const wchar_t* input, size_t length, char* output, size_t output_len) {
     for (size_t i = 0; i < length; ++i) {
         uint32_t code_point = wtf8_surrogate(&input[i], length == i + 1);
         if (code_point == 0) {
@@ -132,22 +132,28 @@ inline void wtf8_from_utf16(const wchar_t* input, size_t length, char* output) {
         }
         if (code_point < 0x80) {
             *output++ = code_point;
+            output_len -= 1;
         }
         else if (code_point < 0x800) {
             *output++ = 0xC0 | (code_point >> 6);
             *output++ = 0x80 | (code_point & 0x3F);
+            output_len -= 2;
         }
         else if (code_point < 0x10000) {
             *output++ = 0xE0 | (code_point >> 12);
             *output++ = 0x80 | ((code_point >> 6) & 0x3F);
             *output++ = 0x80 | (code_point & 0x3F);
+            output_len -= 3;
         }
         else {
             *output++ = 0xF0 | (code_point >> 18);
             *output++ = 0x80 | ((code_point >> 12) & 0x3F);
             *output++ = 0x80 | ((code_point >> 6) & 0x3F);
             *output++ = 0x80 | (code_point & 0x3F);
+            output_len -= 4;
             i++;
         }
     }
+    (void)output_len;
+    assert(output_len == 0);
 }

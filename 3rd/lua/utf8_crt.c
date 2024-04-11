@@ -70,7 +70,7 @@ char* w2u(const wchar_t* wstr) {
     if (!result) {
         return NULL;
     }
-    wtf8_from_utf16(wstr, wlen, result);
+    wtf8_from_utf16(wstr, wlen, result, len);
     return result;
 }
 
@@ -150,7 +150,8 @@ char* __cdecl utf8_tmpnam(char* buffer) {
         return NULL;
     }
     size_t wlen = wcslen(tmp);
-    wtf8_from_utf16(tmp, wlen, buffer);
+    size_t len  = wtf8_from_utf16_length(tmp, wlen);
+    wtf8_from_utf16(tmp, wlen, buffer, len);
     return buffer;
 }
 
@@ -178,7 +179,7 @@ unsigned long __stdcall utf8_GetModuleFileNameA(void* module, char* filename, un
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
-    wtf8_from_utf16(tmp, tmplen, filename);
+    wtf8_from_utf16(tmp, tmplen, filename, len);
     free(tmp);
     return (unsigned long)len;
 }
@@ -208,7 +209,7 @@ unsigned long __stdcall utf8_FormatMessageA(
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
-    wtf8_from_utf16(tmp, tmplen, lpBuffer);
+    wtf8_from_utf16(tmp, tmplen, lpBuffer, len);
     free(tmp);
     return (unsigned long)len;
 }
