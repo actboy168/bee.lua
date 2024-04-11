@@ -3,6 +3,10 @@
 
 #if defined(_WIN32)
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #    include <stdio.h>
 #    include <stdlib.h>
 
@@ -32,6 +36,10 @@ void utf8_ConsoleError(const char* fmt, const char* param);
 char** utf8_create_args(int argc, wchar_t** wargv);
 void utf8_free_args(int argc, char** argv);
 
+#endif
+
+#if defined(__cplusplus)
+}
 #endif
 
 #endif

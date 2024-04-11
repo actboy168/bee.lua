@@ -32,12 +32,14 @@ if lm.os == "windows" then
     }
     lm:executable "lua" {
         deps = "lua54",
+        includes = ".",
         sources = {
             "3rd/lua/utf8_lua.c",
             "3rd/lua/utf8_crt.c",
         }
     }
     lm:executable "luac" {
+        includes = ".",
         sources = {
             "3rd/lua/onelua.c",
             "3rd/lua/utf8_crt.c",

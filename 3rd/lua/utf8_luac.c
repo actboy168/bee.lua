@@ -7,8 +7,9 @@
 #    define main(a, b) utf8_main(a, b)
 #    include "luac.c"
 #    undef main
-
 #    include <wchar.h>
+
+#    include "utf8_crt.h"
 
 int wmain(int argc, wchar_t **wargv) {
     char **argv = utf8_create_args(argc, wargv);

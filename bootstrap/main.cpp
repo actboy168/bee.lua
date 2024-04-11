@@ -4,9 +4,7 @@
 
 #if defined(_WIN32)
 #    include <bee/platform/win/wtf8.h>
-extern "C" {
 #    include <3rd/lua/utf8_crt.h>
-}
 #endif
 
 #include <bee/nonstd/filesystem.h>

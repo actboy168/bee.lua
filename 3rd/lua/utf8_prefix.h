@@ -1,16 +1,9 @@
 #ifndef _LUAUTF8_PREFIX_H_
 #define _LUAUTF8_PREFIX_H_
 
-#if defined(__cplusplus)
-extern "C" {
-#endif
 #include "utf8_crt.h"
-#if defined(__cplusplus)
-}
-#endif
 
-#if defined(lua_c) || defined(luac_c)
-#else
+#if !defined(lua_c) && !defined(luac_c)
 #    if defined fopen
 #        undef fopen
 #    endif

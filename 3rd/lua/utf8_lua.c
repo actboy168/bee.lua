@@ -7,8 +7,9 @@
 #    define main(a, b) utf8_main(a, b)
 #    include "lua.c"
 #    undef main
-
 #    include <wchar.h>
+
+#    include "utf8_crt.h"
 
 static void enable_vtmode(HANDLE h) {
     if (h == INVALID_HANDLE_VALUE) {
