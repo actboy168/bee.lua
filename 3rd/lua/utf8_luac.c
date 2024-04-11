@@ -10,21 +10,13 @@
 
 #include <wchar.h>
 
-char* w2u(const wchar_t *str);
-
 int wmain(int argc, wchar_t **wargv) {
-    char **argv = (char **)calloc(argc + 1, sizeof(char *));
-    for (int i = 0; i < argc; ++i) {
-        argv[i] = w2u(wargv[i]);
+	char **argv = utf8_create_args(argc, wargv);
+	if (!argv) {
+		return EXIT_FAILURE;
 	}
-	argv[argc] = 0;
-
 	int ret = utf8_main(argc, argv);
-
-	for (int i = 0; i < argc; ++i) {
-		free(argv[i]);
-	}
-	free(argv);
+	utf8_free_args(argc, argv);
 	return ret;
 }
 

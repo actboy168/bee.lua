@@ -29,6 +29,9 @@ void utf8_ConsoleWrite(const char* msg, int sz);
 void utf8_ConsoleNewLine();
 void utf8_ConsoleError(const char* fmt, const char* param);
 
+char** utf8_create_args(int argc, wchar_t **wargv);
+void utf8_free_args(int argc, char** argv);
+
 #endif
 
 #endif

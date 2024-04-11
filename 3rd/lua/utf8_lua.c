@@ -10,8 +10,6 @@
 
 #include <wchar.h>
 
-char* w2u(const wchar_t *str);
-
 static void enable_vtmode(HANDLE h) {
     if (h == INVALID_HANDLE_VALUE) {
         return;
@@ -25,24 +23,14 @@ static void enable_vtmode(HANDLE h) {
 }
 
 int wmain(int argc, wchar_t **wargv) {
-    enable_vtmode(GetStdHandle(STD_OUTPUT_HANDLE));
-    enable_vtmode(GetStdHandle(STD_ERROR_HANDLE));
-
-	char **argv = calloc(argc + 1, sizeof(char*));
-    if (!argv) {
-        return EXIT_FAILURE;
-    }
-	for (int i = 0; i < argc; ++i) {
-		argv[i] = w2u(wargv[i]);
+	enable_vtmode(GetStdHandle(STD_OUTPUT_HANDLE));
+	enable_vtmode(GetStdHandle(STD_ERROR_HANDLE));
+	char **argv = utf8_create_args(argc, wargv);
+	if (!argv) {
+		return EXIT_FAILURE;
 	}
-	argv[argc] = 0;
-
 	int ret = utf8_main(argc, argv);
-
-	for (int i = 0; i < argc; ++i) {
-		free(argv[i]);
-	}
-	free(argv);
+	utf8_free_args(argc, argv);
 	return ret;
 }
 

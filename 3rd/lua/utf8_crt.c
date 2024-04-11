@@ -60,7 +60,7 @@ static wchar_t* u2w(const char* str) {
     return wresult;
 }
 
-char* w2u(const wchar_t* wstr) {
+static char* w2u(const wchar_t* wstr) {
     if (!wstr) {
         return NULL;
     }
@@ -250,6 +250,25 @@ void utf8_ConsoleError(const char* fmt, const char* param) {
     ConsoleWrite(stderr, s, l);
     fflush(stderr);
     free(s);
+}
+
+char** utf8_create_args(int argc, wchar_t** wargv) {
+    char** argv = (char**)calloc(argc + 1, sizeof(char*));
+    if (!argv) {
+        return NULL;
+    }
+    for (int i = 0; i < argc; ++i) {
+        argv[i] = w2u(wargv[i]);
+    }
+    argv[argc] = 0;
+    return argv;
+}
+
+void utf8_free_args(int argc, char** argv) {
+    for (int i = 0; i < argc; ++i) {
+        free(argv[i]);
+    }
+    free(argv);
 }
 
 #endif
