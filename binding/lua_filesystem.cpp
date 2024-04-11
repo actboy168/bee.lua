@@ -225,13 +225,6 @@ namespace bee::lua_filesystem {
         return &getpath(L, idx);
     }
 
-#if !defined(__cpp_lib_chrono) || __cpp_lib_chrono < 201907
-    template <class DestClock, class SourceClock, class Duration>
-    static auto clock_cast(const std::chrono::time_point<SourceClock, Duration>& t) {
-        return DestClock::now() + (t - SourceClock::now());
-    }
-#endif
-
     namespace path {
         static void push(lua_State* L);
         static void push(lua_State* L, const fs::path& path);
