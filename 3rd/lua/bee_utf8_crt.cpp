@@ -1,24 +1,24 @@
-#ifndef _CRT_SECURE_NO_WARNINGS
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
 #if defined(_WIN32)
+#    ifndef _CRT_SECURE_NO_WARNINGS
+#        define _CRT_SECURE_NO_WARNINGS
+#    endif
 
-#include "utf8_crt.h"
+#    include "bee_utf8_crt.h"
 
-#include <Windows.h>
-#include <assert.h>
-#include <bee/platform/win/cwtf8.h>
-#include <io.h>
-#include <malloc.h>
+#    include <Windows.h>
+#    include <assert.h>
+#    include <bee/platform/win/cwtf8.h>
+#    include <bee/platform/win/wtf8.h>
+#    include <io.h>
+#    include <malloc.h>
 
-#if defined(__GNUC__)
-#    define thread_local __thread
-#elif defined(_MSC_VER)
-#    define thread_local __declspec(thread)
-#else
-#    error Cannot define thread_local
-#endif
+#    if defined(__GNUC__)
+#        define thread_local __thread
+#    elif defined(_MSC_VER)
+#        define thread_local __declspec(thread)
+#    else
+#        error Cannot define thread_local
+#    endif
 
 struct u2w_result {
     wchar_t* wstr;
@@ -75,59 +75,43 @@ static char* w2u(const wchar_t* wstr) {
 }
 
 FILE* __cdecl utf8_fopen(const char* filename, const char* mode) {
-    wchar_t* wfilename = u2w(filename);
-    wchar_t* wmode     = u2w(mode);
-    FILE* ret          = _wfopen(wfilename, wmode);
-    free(wfilename);
-    free(wmode);
-    return ret;
+    auto wfilename = bee::wtf8::u2w(filename);
+    auto wmode     = bee::wtf8::u2w(mode);
+    return _wfopen(wfilename.c_str(), wmode.c_str());
 }
 
 FILE* __cdecl utf8_freopen(const char* filename, const char* mode, FILE* stream) {
-    wchar_t* wfilename = u2w(filename);
-    wchar_t* wmode     = u2w(mode);
-    FILE* ret          = _wfreopen(wfilename, wmode, stream);
-    free(wfilename);
-    free(wmode);
-    return ret;
+    auto wfilename = bee::wtf8::u2w(filename);
+    auto wmode     = bee::wtf8::u2w(mode);
+    return _wfreopen(wfilename.c_str(), wmode.c_str(), stream);
 }
 
 FILE* __cdecl utf8_popen(const char* command, const char* type) {
-    wchar_t* wcommand = u2w(command);
-    wchar_t* wtype    = u2w(type);
-    FILE* ret         = _wpopen(wcommand, wtype);
-    free(wcommand);
-    free(wtype);
-    return ret;
+    auto wcommand = bee::wtf8::u2w(command);
+    auto wtype    = bee::wtf8::u2w(type);
+    return _wpopen(wcommand.c_str(), wtype.c_str());
 }
 
 int __cdecl utf8_system(const char* command) {
-    wchar_t* wcommand = u2w(command);
-    int ret           = _wsystem(wcommand);
-    free(wcommand);
-    return ret;
+    auto wcommand = bee::wtf8::u2w(command);
+    return _wsystem(wcommand.c_str());
 }
 
 int __cdecl utf8_remove(const char* filename) {
-    wchar_t* wfilename = u2w(filename);
-    int ret            = _wremove(wfilename);
-    free(wfilename);
-    return ret;
+    auto wfilename = bee::wtf8::u2w(filename);
+    return _wremove(wfilename.c_str());
 }
 
 int __cdecl utf8_rename(const char* oldfilename, const char* newfilename) {
-    wchar_t* woldfilename = u2w(oldfilename);
-    wchar_t* wnewfilename = u2w(newfilename);
-    int ret               = _wrename(woldfilename, wnewfilename);
-    free(woldfilename);
-    free(wnewfilename);
-    return ret;
+    auto woldfilename = bee::wtf8::u2w(oldfilename);
+    auto wnewfilename = bee::wtf8::u2w(newfilename);
+    return _wrename(woldfilename.c_str(), wnewfilename.c_str());
 }
 
 char* __cdecl utf8_getenv(const char* varname) {
-#if defined(__SANITIZE_ADDRESS__)
+#    if defined(__SANITIZE_ADDRESS__)
     return getenv(varname);
-#else
+#    else
     wchar_t* wvarname = u2w(varname);
     wchar_t* wret     = _wgetenv(wvarname);
     free(wvarname);
@@ -140,7 +124,7 @@ char* __cdecl utf8_getenv(const char* varname) {
     }
     ret = w2u(wret);
     return ret;
-#endif
+#    endif
 }
 
 char* __cdecl utf8_tmpnam(char* buffer) {
@@ -157,19 +141,17 @@ char* __cdecl utf8_tmpnam(char* buffer) {
 }
 
 void* __stdcall utf8_LoadLibraryExA(const char* filename, void* file, unsigned long flags) {
-    wchar_t* wfilename = u2w(filename);
-    void* ret          = LoadLibraryExW(wfilename, file, flags);
-    free(wfilename);
-    return ret;
+    auto wfilename = bee::wtf8::u2w(filename);
+    return LoadLibraryExW(wfilename.c_str(), file, flags);
 }
 
 unsigned long __stdcall utf8_GetModuleFileNameA(void* module, char* filename, unsigned long size) {
-    wchar_t* tmp = calloc(size, sizeof(wchar_t));
+    wchar_t* tmp = (wchar_t*)calloc(size, sizeof(wchar_t));
     if (!tmp) {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
-    DWORD tmplen = GetModuleFileNameW(module, tmp, size);
+    DWORD tmplen = GetModuleFileNameW((HMODULE)module, tmp, size);
     if (tmplen == 0) {
         free(tmp);
         return 0;
@@ -195,7 +177,7 @@ unsigned long __stdcall utf8_FormatMessageA(
     unsigned long nSize,
     va_list* Arguments
 ) {
-    wchar_t* tmp = calloc(nSize, sizeof(wchar_t));
+    wchar_t* tmp = (wchar_t*)calloc(nSize, sizeof(wchar_t));
     if (!tmp) {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
@@ -217,46 +199,46 @@ unsigned long __stdcall utf8_FormatMessageA(
     return (unsigned long)len;
 }
 
-static void ConsoleWrite(FILE* stream, const char* s, int l) {
+static void ConsoleWrite(FILE* stream, const char* str, size_t len) {
     HANDLE handle = (HANDLE)_get_osfhandle(_fileno(stream));
     if (FILE_TYPE_CHAR != GetFileType(handle)) {
-        fwrite(s, sizeof(char), l, stream);
+        fwrite(str, sizeof(char), len, stream);
         return;
     }
-    struct u2w_result r = u2w_r(s, l);
-    if (!r.wstr) {
-        fwrite(s, sizeof(char), l, stream);
+    auto r = bee::wtf8::u2w(bee::zstring_view { str, len });
+    if (r.empty()) {
+        fwrite(str, sizeof(char), len, stream);
         return;
     }
-    if (!WriteConsoleW(handle, r.wstr, (DWORD)r.wlen, NULL, NULL)) {
-        free(r.wstr);
-        fwrite(s, sizeof(char), l, stream);
+    if (!WriteConsoleW(handle, r.data(), (DWORD)r.size(), NULL, NULL)) {
+        fwrite(str, sizeof(char), len, stream);
         return;
     }
-    free(r.wstr);
 }
 
-void utf8_ConsoleWrite(const char* s, int l) {
-    ConsoleWrite(stdout, s, l);
+void utf8_ConsoleWrite(const char* str, size_t len) {
+    ConsoleWrite(stdout, str, len);
 }
+
 void utf8_ConsoleNewLine() {
     fwrite("\n", sizeof(char), 1, stdout);
     fflush(stdout);
 }
+
 void utf8_ConsoleError(const char* fmt, const char* param) {
-    int l   = snprintf(NULL, 0, fmt, param);
-    char* s = (char*)calloc(l, sizeof(char));
-    if (!s) {
+    size_t len = (size_t)snprintf(NULL, 0, fmt, param);
+    char* str  = new (std::nothrow) char[len];
+    if (!str) {
         return;
     }
-    snprintf(s, l, fmt, param);
-    ConsoleWrite(stderr, s, l);
+    snprintf(str, len, fmt, param);
+    ConsoleWrite(stderr, str, len);
     fflush(stderr);
-    free(s);
+    delete[] str;
 }
 
 char** utf8_create_args(int argc, wchar_t** wargv) {
-    char** argv = (char**)calloc(argc + 1, sizeof(char*));
+    char** argv = new (std::nothrow) char*[argc + 1];
     if (!argv) {
         return NULL;
     }
@@ -271,7 +253,7 @@ void utf8_free_args(int argc, char** argv) {
     for (int i = 0; i < argc; ++i) {
         free(argv[i]);
     }
-    free(argv);
+    delete[] argv;
 }
 
 #endif

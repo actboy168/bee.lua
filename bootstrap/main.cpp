@@ -3,8 +3,8 @@
 #endif
 
 #if defined(_WIN32)
+#    include <3rd/lua/bee_utf8_crt.h>
 #    include <bee/platform/win/wtf8.h>
-#    include <3rd/lua/utf8_crt.h>
 #endif
 
 #include <bee/nonstd/filesystem.h>

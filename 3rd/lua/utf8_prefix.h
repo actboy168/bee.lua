@@ -1,7 +1,7 @@
 #ifndef _LUAUTF8_PREFIX_H_
 #define _LUAUTF8_PREFIX_H_
 
-#include "utf8_crt.h"
+#include "bee_utf8_crt.h"
 
 #if !defined(lua_c) && !defined(luac_c)
 #    if defined fopen

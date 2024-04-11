@@ -14,7 +14,7 @@ lm:lua_dll "bee" {
 if lm.os == "windows" then
     lm:source_set "lua54" {
         includes = ".",
-        sources = "3rd/lua/utf8_crt.c",
+        sources = "3rd/lua/bee_utf8_crt.cpp",
     }
     lm:shared_library "lua54" {
         sources = {
@@ -35,14 +35,14 @@ if lm.os == "windows" then
         includes = ".",
         sources = {
             "3rd/lua/utf8_lua.c",
-            "3rd/lua/utf8_crt.c",
+            "3rd/lua/bee_utf8_crt.cpp",
         }
     }
     lm:executable "luac" {
         includes = ".",
         sources = {
             "3rd/lua/onelua.c",
-            "3rd/lua/utf8_crt.c",
+            "3rd/lua/bee_utf8_crt.cpp",
         },
         defines = {
             "MAKE_LUAC",

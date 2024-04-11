@@ -1,5 +1,4 @@
-#ifndef _LUAUTF8_UTF8_CRT_H_
-#define _LUAUTF8_UTF8_CRT_H_
+#pragma once
 
 #if defined(_WIN32)
 
@@ -29,7 +28,7 @@ unsigned long __stdcall utf8_FormatMessageA(
     unsigned long nSize,
     va_list* Arguments
 );
-void utf8_ConsoleWrite(const char* msg, int sz);
+void utf8_ConsoleWrite(const char* msg, size_t sz);
 void utf8_ConsoleNewLine();
 void utf8_ConsoleError(const char* fmt, const char* param);
 
@@ -40,6 +39,4 @@ void utf8_free_args(int argc, char** argv);
 
 #if defined(__cplusplus)
 }
-#endif
-
 #endif
