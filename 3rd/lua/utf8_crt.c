@@ -8,7 +8,7 @@
 
 #include <Windows.h>
 #include <assert.h>
-#include <bee/platform/win/wtf8_c.h>
+#include <bee/platform/win/cwtf8.h>
 #include <io.h>
 #include <malloc.h>
 
@@ -43,7 +43,7 @@ static struct u2w_result u2w_r(const char* str, size_t len) {
     return res;
 }
 
-wchar_t* u2w(const char* str) {
+static wchar_t* u2w(const char* str) {
     if (!str) {
         return NULL;
     }

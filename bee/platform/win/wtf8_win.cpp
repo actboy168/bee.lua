@@ -1,7 +1,7 @@
 #include <bee/platform/win/wtf8.h>
 
 extern "C" {
-#include <bee/platform/win/wtf8_c.h>
+#include <bee/platform/win/cwtf8.h>
 }
 
 namespace bee::wtf8 {

@@ -10,7 +10,6 @@
 
 #include <wchar.h>
 
-wchar_t* u2w(const char *str);
 char* w2u(const wchar_t *str);
 
 void enable_vtmode_(HANDLE h) {

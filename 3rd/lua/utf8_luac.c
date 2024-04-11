@@ -10,13 +10,7 @@
 
 #include <wchar.h>
 
-#ifdef __cplusplus
-extern "C" wchar_t* u2w(const char *str);
-extern "C" char* w2u(const wchar_t *str);
-#else
-wchar_t* u2w(const char *str);
 char* w2u(const wchar_t *str);
-#endif
 
 int wmain(int argc, wchar_t **wargv) {
     char **argv = (char **)calloc(argc + 1, sizeof(char *));
