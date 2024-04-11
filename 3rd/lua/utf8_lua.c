@@ -12,7 +12,7 @@
 
 char* w2u(const wchar_t *str);
 
-void enable_vtmode_(HANDLE h) {
+static void enable_vtmode(HANDLE h) {
     if (h == INVALID_HANDLE_VALUE) {
         return;
     }
@@ -24,15 +24,14 @@ void enable_vtmode_(HANDLE h) {
     SetConsoleMode(h, mode);
 }
 
-void enable_vtmode() {
-    enable_vtmode_(GetStdHandle(STD_OUTPUT_HANDLE));
-    enable_vtmode_(GetStdHandle(STD_ERROR_HANDLE));
-}
-
 int wmain(int argc, wchar_t **wargv) {
-    enable_vtmode();
+    enable_vtmode(GetStdHandle(STD_OUTPUT_HANDLE));
+    enable_vtmode(GetStdHandle(STD_ERROR_HANDLE));
 
 	char **argv = calloc(argc + 1, sizeof(char*));
+    if (!argv) {
+        return EXIT_FAILURE;
+    }
 	for (int i = 0; i < argc; ++i) {
 		argv[i] = w2u(wargv[i]);
 	}

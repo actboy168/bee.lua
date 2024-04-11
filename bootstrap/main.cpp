@@ -270,9 +270,9 @@ int main(int argc, char **argv) {
 #    include <Windows.h>
 #    include <wchar.h>
 
-extern "C" char *w2u(const wchar_t *str);
+extern "C" char* w2u(const wchar_t *str);
 
-static void enable_vtmode_(HANDLE h) {
+static void enable_vtmode(HANDLE h) {
     if (h == INVALID_HANDLE_VALUE) {
         return;
     }
@@ -284,13 +284,9 @@ static void enable_vtmode_(HANDLE h) {
     SetConsoleMode(h, mode);
 }
 
-static void enable_vtmode() {
-    enable_vtmode_(GetStdHandle(STD_OUTPUT_HANDLE));
-    enable_vtmode_(GetStdHandle(STD_ERROR_HANDLE));
-}
-
 int wmain(int argc, wchar_t **wargv) {
-    enable_vtmode();
+    enable_vtmode(GetStdHandle(STD_OUTPUT_HANDLE));
+    enable_vtmode(GetStdHandle(STD_ERROR_HANDLE));
     char **argv = (char **)calloc(argc + 1, sizeof(char *));
     if (!argv) {
         return EXIT_FAILURE;
