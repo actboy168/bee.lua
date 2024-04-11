@@ -528,14 +528,15 @@ namespace bee::lua_filesystem {
         }
 
         static lua::cxx::status last_write_time(lua_State* L) {
+            static_assert(std::is_integral_v<fs::file_time_type::duration::rep>);
             const auto& entry = to(L, 1);
             std::error_code ec;
             auto time = entry.last_write_time(ec);
             if (ec) {
                 return pusherror(L, "directory_entry::last_write_time", ec);
             }
-            lua_pushinteger(L, std::chrono::duration_cast<std::chrono::seconds>(time.time_since_epoch()).count());
-            return 1;
+            auto time_count = std::chrono::duration_cast<std::chrono::seconds>(time.time_since_epoch()).count();
+            return lua::narrow_pushinteger(L, time_count);
         }
 
         static lua::cxx::status file_size(lua_State* L) {
@@ -829,6 +830,7 @@ namespace bee::lua_filesystem {
     }
 
     static lua::cxx::status last_write_time(lua_State* L) {
+        static_assert(std::is_integral_v<fs::file_time_type::duration::rep>);
         auto p = getpathptr(L, 1);
         if (lua_gettop(L) == 1) {
             std::error_code ec;
@@ -836,13 +838,12 @@ namespace bee::lua_filesystem {
             if (ec) {
                 return pusherror(L, "last_write_time", ec, p);
             }
-            lua_pushinteger(L, std::chrono::duration_cast<std::chrono::seconds>(time.time_since_epoch()).count());
-            return 1;
+            auto time_count = std::chrono::duration_cast<std::chrono::seconds>(time.time_since_epoch()).count();
+            return lua::narrow_pushinteger(L, time_count);
         }
-        auto sec = std::chrono::seconds(lua::checkinteger<lua_Integer>(L, 2));
-        auto file_time = fs::file_time_type::clock::time_point() + sec;
+        auto sec = std::chrono::seconds(lua::checkinteger<std::chrono::seconds::rep>(L, 2));
         std::error_code ec;
-        fs::last_write_time(p, file_time, ec);
+        fs::last_write_time(p, fs::file_time_type(sec), ec);
         if (ec) {
             return pusherror(L, "last_write_time", ec, p);
         }
