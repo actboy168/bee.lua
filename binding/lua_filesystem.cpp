@@ -535,19 +535,13 @@ namespace bee::lua_filesystem {
         }
 
         static lua::cxx::status last_write_time(lua_State* L) {
-            using namespace std::chrono;
             const auto& entry = to(L, 1);
             std::error_code ec;
             auto time = entry.last_write_time(ec);
             if (ec) {
                 return pusherror(L, "directory_entry::last_write_time", ec);
             }
-#if defined(__APPLE__)
-            auto system_time = time;
-#else
-            auto system_time = clock_cast<system_clock>(time);
-#endif
-            lua_pushinteger(L, duration_cast<seconds>(system_time.time_since_epoch()).count());
+            lua_pushinteger(L, std::chrono::duration_cast<std::chrono::seconds>(time.time_since_epoch()).count());
             return 1;
         }
 
@@ -842,7 +836,6 @@ namespace bee::lua_filesystem {
     }
 
     static lua::cxx::status last_write_time(lua_State* L) {
-        using namespace std::chrono;
         auto p = getpathptr(L, 1);
         if (lua_gettop(L) == 1) {
             std::error_code ec;
@@ -850,20 +843,11 @@ namespace bee::lua_filesystem {
             if (ec) {
                 return pusherror(L, "last_write_time", ec, p);
             }
-#if defined(__APPLE__)
-            auto system_time = time;
-#else
-            auto system_time = clock_cast<system_clock>(time);
-#endif
-            lua_pushinteger(L, duration_cast<seconds>(system_time.time_since_epoch()).count());
+            lua_pushinteger(L, std::chrono::duration_cast<std::chrono::seconds>(time.time_since_epoch()).count());
             return 1;
         }
-        auto sec = seconds(lua::checkinteger<lua_Integer>(L, 2));
-#if defined(__APPLE__)
+        auto sec = std::chrono::seconds(lua::checkinteger<lua_Integer>(L, 2));
         auto file_time = fs::file_time_type::clock::time_point() + sec;
-#else
-        auto file_time = clock_cast<fs::file_time_type::clock>(system_clock::time_point() + sec);
-#endif
         std::error_code ec;
         fs::last_write_time(p, file_time, ec);
         if (ec) {

@@ -732,13 +732,12 @@ end
 function test_fs:test_last_write_time()
     local function last_write_time(filename)
         fs.remove(filename)
-        local t1 = os.time()
         create_file(filename)
-        local tf = fs.last_write_time(fs.path(filename))
-        local t2 = os.time()
+        local t1 = fs.last_write_time(filename)
+        fs.last_write_time(filename, t1)
+        local t2 = fs.last_write_time(filename)
         fs.remove(filename)
-        lt.assertEquals(tf >= t1 - 10, true)
-        lt.assertEquals(tf <= t2 + 10, true)
+        lt.assertEquals(t1, t2)
     end
     last_write_time("temp.txt")
 end
