@@ -312,7 +312,7 @@ int wmain(int argc, wchar_t **wargv) {
 #        include <stdlib.h>
 
 extern int _CRT_glob;
-extern "C" oid __wgetmainargs(int *, wchar_t ***, wchar_t ***, int, int *);
+extern "C" void __wgetmainargs(int *, wchar_t ***, wchar_t ***, int, int *);
 
 int main() {
     wchar_t **enpv, **argv;
