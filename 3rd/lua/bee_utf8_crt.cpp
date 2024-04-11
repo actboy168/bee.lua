@@ -156,7 +156,7 @@ unsigned long __stdcall utf8_FormatMessageA(
     va_list* Arguments
 ) {
     wchar_t tmp[1024];
-    DWORD tmplen = FormatMessageW(dwFlags, lpSource, dwMessageId, dwLanguageId, tmp, nSize, Arguments);
+    DWORD tmplen = FormatMessageW(dwFlags, lpSource, dwMessageId, dwLanguageId, tmp, 1024, Arguments);
     if (tmplen == 0) {
         return 0;
     }
