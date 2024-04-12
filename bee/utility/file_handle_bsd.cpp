@@ -3,6 +3,10 @@
 #include <sys/file.h>
 #include <unistd.h>
 
+#if defined(__FreeBSD__)
+#    include <sys/user.h>
+#endif
+
 namespace bee {
     file_handle file_handle::lock(const fs::path& filename) noexcept {
         int fd = ::open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -14,5 +18,22 @@ namespace bee {
             return {};
         }
         return { fd };
+    }
+
+    std::optional<fs::path> file_handle::path() const {
+#if defined(F_KINFO)
+        if (!valid()) {
+            return std::nullopt;
+        }
+        struct kinfo_file kf;
+        kf.kf_structsize = sizeof(kf);
+        if (::fcntl(h, F_KINFO, &kf) != 0) {
+            return std::nullopt;
+        }
+        return fs::path(kf.kf_path);
+#else
+        
+        return std::nullopt;
+#endif
     }
 }
