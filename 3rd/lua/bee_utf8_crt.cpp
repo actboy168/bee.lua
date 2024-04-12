@@ -7,15 +7,13 @@
 
 #    include <Windows.h>
 #    include <bee/platform/win/cwtf8.h>
-#    include <bee/platform/win/wtf8.h>
+#    include <bee/utility/zstring_view.h>
 #    include <io.h>
 
 #    include <array>
 #    include <atomic>
 #    include <cassert>
 #    include <string>
-
-#    define U2W(s) bee::wtf8::u2w(s).c_str()
 
 namespace {
     struct spinlock {
@@ -44,7 +42,35 @@ namespace {
         }
         std::atomic<bool> l = { false };
     };
+    std::wstring u2w(bee::zstring_view str) noexcept {
+        if (str.empty()) {
+            return L"";
+        }
+        size_t wlen = wtf8_to_utf16_length(str.data(), str.size());
+        if (wlen == (size_t)-1) {
+            return L"";
+        }
+        std::wstring wresult(wlen, L'\0');
+        wtf8_to_utf16(str.data(), str.size(), wresult.data(), wlen);
+        return wresult;
+    }
+
+    template <size_t N>
+    struct ringbuff {
+        std::array<void*, N> data {};
+        size_t n = 0;
+        void push(void* v) {
+            n = (n + 1) % N;
+            free(data[n]);
+            data[n] = v;
+        }
+    };
 }
+
+static spinlock getenv_lock;
+static ringbuff<64> getenv_rets;
+
+#    define U2W(s) u2w(s).c_str()
 
 FILE* __cdecl utf8_fopen(const char* filename, const char* mode) {
     return _wfopen(U2W(filename), U2W(mode));
@@ -69,21 +95,6 @@ int __cdecl utf8_remove(const char* filename) {
 int __cdecl utf8_rename(const char* oldfilename, const char* newfilename) {
     return _wrename(U2W(oldfilename), U2W(newfilename));
 }
-
-namespace {
-    template <size_t N>
-    struct ringbuff {
-        std::array<void*, N> data {};
-        size_t n = 0;
-        void push(void* v) {
-            n = (n + 1) % N;
-            free(data[n]);
-            data[n] = v;
-        }
-    };
-}
-static spinlock getenv_lock;
-static ringbuff<64> getenv_rets;
 
 char* __cdecl utf8_getenv(const char* varname) {
     wchar_t* wstr;
@@ -173,7 +184,7 @@ unsigned long __stdcall utf8_FormatMessageA(
 static void ConsoleWrite(FILE* stream, bee::zstring_view str) {
     HANDLE handle = (HANDLE)_get_osfhandle(_fileno(stream));
     if (FILE_TYPE_CHAR == GetFileType(handle)) {
-        auto r = bee::wtf8::u2w(str);
+        auto r = u2w(str);
         if (!r.empty()) {
             if (WriteConsoleW(handle, r.data(), (DWORD)r.size(), NULL, NULL)) {
                 return;

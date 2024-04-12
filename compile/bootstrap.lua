@@ -5,7 +5,11 @@ require "config"
 lm:import "common.lua"
 
 lm:source_set "source_bootstrap" {
-    deps = { "source_bee", "source_lua" },
+    deps = {
+        "source_bee",
+        "source_lua",
+        "bee_utf8_crt",
+    },
     includes = { "3rd/lua", "." },
     sources = "bootstrap/main.cpp",
     macos = {

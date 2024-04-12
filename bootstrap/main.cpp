@@ -246,6 +246,9 @@ static int pmain(lua_State *L) {
 }
 
 #if defined(_WIN32)
+extern "C" {
+#    include "3rd/lua/bee_utf8_main.c"
+}
 extern "C" int utf8_main(int argc, char **argv) {
 #else
 int main(int argc, char **argv) {

@@ -177,12 +177,9 @@ lm:lua_source "source_bee" {
     },
 }
 
-lm:source_set "source_lua" {
+lm:source_set "bee_utf8_crt" {
     includes = ".",
-    sources = {
-        "3rd/lua/bee_utf8_crt.cpp",
-        "3rd/lua/bee_utf8_main.c",
-    },
+    sources = "3rd/lua/bee_utf8_crt.cpp",
 }
 
 lm:source_set "source_lua" {

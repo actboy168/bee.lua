@@ -12,13 +12,6 @@ lm:lua_dll "bee" {
 }
 
 if lm.os == "windows" then
-    lm:source_set "bee_utf8_crt" {
-        includes = ".",
-        sources = {
-            "3rd/lua/bee_utf8_crt.cpp",
-            "bee/platform/win/wtf8_win.cpp",
-        },
-    }
     lm:shared_library "lua54" {
         deps = "bee_utf8_crt",
         sources = {
