@@ -17,72 +17,6 @@
 #    include <bee/platform/win/wtf8.h>
 #endif
 
-#if defined(__EMSCRIPTEN__)
-#    include <emscripten.h>
-namespace bee::lua_filesystem {
-    fs::path wasm_current_path() {
-        char* cwd = (char*)EM_ASM_PTR({
-            var cwd              = FS.cwd();
-            var cwdLengthInBytes = lengthBytesUTF8(cwd) + 1;
-            var cwdOnWasmHeap    = _malloc(cwdLengthInBytes);
-            stringToUTF8(cwd, cwdOnWasmHeap, cwdLengthInBytes);
-            return cwdOnWasmHeap;
-        });
-        fs::path r(cwd);
-        free(cwd);
-        return r;
-    }
-    int wasm_remove(const fs::path& path) {
-        return EM_ASM_INT(
-            {
-                try {
-                    var path = UTF8ToString($0);
-                    var st   = FS.lstat(path);
-                    if (st.isDirectory()) {
-                        FS.rmdir(path);
-                    }
-                    else {
-                        FS.unlink(path);
-                    }
-                    return 0;
-                } catch (e) {
-                    return e.errno;
-                }
-            },
-            path.c_str()
-        );
-    }
-    uintmax_t wasm_remove_all(const fs::path& path, std::error_code& ec) {
-        const auto npos = static_cast<uintmax_t>(-1);
-        auto st         = fs::symlink_status(path, ec);
-        if (ec) {
-            return npos;
-        }
-        uintmax_t count = 0;
-        if (fs::is_directory(st)) {
-            for (fs::directory_iterator it(path, ec); !ec && it != fs::directory_iterator(); it.increment(ec)) {
-                auto other_count = wasm_remove_all(it->path(), ec);
-                if (ec) {
-                    return npos;
-                }
-                count += other_count;
-            }
-        }
-        int err = wasm_remove(path);
-        if (err) {
-            if (err != ENOENT && err != ENOTDIR) {
-                ec.assign(err, std::generic_category());
-                return npos;
-            }
-        }
-        else {
-            count += 1;
-        }
-        return count;
-    }
-}
-#endif
-
 namespace bee::lua_filesystem {
     static std::string tostring(const fs::path& path) {
 #if defined(_WIN32)
@@ -657,18 +591,6 @@ namespace bee::lua_filesystem {
 
     static lua::cxx::status remove(lua_State* L) {
         auto p = getpathptr(L, 1);
-#if defined(__EMSCRIPTEN__)
-        int err = wasm_remove(p);
-        if (err) {
-            if (err == ENOENT || err == ENOTDIR) {
-                lua_pushboolean(L, 0);
-                return 1;
-            }
-            return pusherror(L, "remove", std::make_error_code((std::errc)err), p);
-        }
-        lua_pushboolean(L, 1);
-        return 1;
-#else
         std::error_code ec;
         auto r = fs::remove(p, ec);
         if (ec) {
@@ -676,43 +598,26 @@ namespace bee::lua_filesystem {
         }
         lua_pushboolean(L, r);
         return 1;
-#endif
     }
 
     static lua::cxx::status remove_all(lua_State* L) {
         auto p = getpathptr(L, 1);
         std::error_code ec;
-#if defined(__EMSCRIPTEN__)
-        uintmax_t r = wasm_remove_all(p, ec);
-        if (ec) {
-            if (ec == std::errc::no_such_file_or_directory) {
-                lua_pushinteger(L, 0);
-                return 1;
-            }
-            return pusherror(L, "remove_all", ec, p);
-        }
-        return bee::lua::narrow_pushinteger(L, r);
-#else
         auto r = fs::remove_all(p, ec);
         if (ec) {
             return pusherror(L, "remove_all", ec, p);
         }
         return lua::narrow_pushinteger(L, r);
-#endif
     }
 
     static lua::cxx::status current_path(lua_State* L) {
         std::error_code ec;
         if (lua_gettop(L) == 0) {
-#if defined(__EMSCRIPTEN__)
-            path::push(L, wasm_current_path());
-#else
             fs::path r = fs::current_path(ec);
             if (ec) {
                 return pusherror(L, "current_path()", ec);
             }
             path::push(L, r);
-#endif
             return 1;
         }
         auto p = getpathptr(L, 1);
@@ -782,11 +687,7 @@ namespace bee::lua_filesystem {
     static lua::cxx::status absolute(lua_State* L) {
         auto p = getpathptr(L, 1);
         std::error_code ec;
-#if defined(__EMSCRIPTEN__)
-        auto r = wasm_current_path() / p;
-#else
         auto r = fs::absolute(p, ec);
-#endif
         if (ec) {
             return pusherror(L, "absolute", ec, p);
         }
@@ -1005,7 +906,7 @@ namespace bee::lua_filesystem {
         path::push(L, r.value());
         return 1;
     }
-#if !defined(__EMSCRIPTEN__)
+
     static int filelock(lua_State* L) {
         auto self = getpathptr(L, 1);
         auto fd   = file_handle::lock(self);
@@ -1043,7 +944,6 @@ namespace bee::lua_filesystem {
         path::push(L, *fullpath);
         return 1;
     }
-#endif
 
     static int luaopen(lua_State* L) {
         static luaL_Reg lib[] = {
@@ -1074,10 +974,8 @@ namespace bee::lua_filesystem {
             { "pairs", lua::cxx::cfunc<pairs> },
             { "exe_path", exe_path },
             { "dll_path", dll_path },
-#if !defined(__EMSCRIPTEN__)
             { "filelock", filelock },
             { "fullpath", fullpath },
-#endif
             { "copy_options", NULL },
             { "perm_options", NULL },
             { NULL, NULL },

@@ -5,7 +5,6 @@ local shell        = require "shell"
 local supported    = require "supported"
 
 local isWindows    = platform.os == "windows"
-local isEmscripten = platform.os == "emscripten"
 local isMinGW      = isWindows and platform.CRT == "libstdc++"
 local isMacOS      = platform.os ~= "macos"
 
@@ -506,7 +505,7 @@ function test_fs:test_rename()
     fs.remove_all(fs.path("temp2"))
     fs.create_directories(fs.path("temp1"))
     fs.create_directories(fs.path("temp2"))
-    if isWindows or isEmscripten then
+    if isWindows then
         rename_failed("temp1", "temp2")
     else
         rename_ok("temp1", "temp2")
@@ -520,10 +519,8 @@ function test_fs:test_rename()
     rename_failed("temp1", "temp2")
 end
 
-if supported "popen" then
-    function test_fs:test_current_path()
-        lt.assertEquals(fs.current_path(), fs.path(shell:pwd()))
-    end
+function test_fs:test_current_path()
+    lt.assertEquals(fs.current_path(), fs.path(shell:pwd()))
 end
 
 function test_fs:test_copy_file()
@@ -764,34 +761,32 @@ end
 --    assertPathEquals(fs.dll_path(), fs.absolute(getdll()))
 --end
 
-if platform.os ~= "emscripten" then
-    function test_fs:test_filelock_1()
-        local lock = fs.path("temp.lock")
-        local f1 = lt.assertIsUserdata(fs.filelock(lock))
-        lt.assertEquals(fs.filelock(lock), nil)
-        f1:close()
-        local f2 = lt.assertIsUserdata(fs.filelock(lock))
-        f2:close()
-        fs.remove(fs.path("temp.lock"))
-    end
+function test_fs:test_filelock_1()
+    local lock = fs.path("temp.lock")
+    local f1 = lt.assertIsUserdata(fs.filelock(lock))
+    lt.assertEquals(fs.filelock(lock), nil)
+    f1:close()
+    local f2 = lt.assertIsUserdata(fs.filelock(lock))
+    f2:close()
+    fs.remove(fs.path("temp.lock"))
+end
 
-    function test_fs:test_filelock_2()
-        local process = shell:runlua([[
-        local fs = require "bee.filesystem"
-        fs.filelock(fs.path("temp.lock"))
-        io.stdout:write "ok"
-        io.stdout:flush()
-        io.read "a"
-    ]], { stdin = true, stdout = true, stderr = true })
-        lt.assertEquals(process.stdout:read(2), "ok")
-        lt.assertEquals(fs.filelock(fs.path("temp.lock")), nil)
-        process.stdin:close()
-        lt.assertEquals(process.stderr:read "a", "")
-        lt.assertEquals(process:wait(), 0)
-        local f = lt.assertIsUserdata(fs.filelock(fs.path("temp.lock")))
-        f:close()
-        fs.remove(fs.path("temp.lock"))
-    end
+function test_fs:test_filelock_2()
+    local process = shell:runlua([[
+    local fs = require "bee.filesystem"
+    fs.filelock(fs.path("temp.lock"))
+    io.stdout:write "ok"
+    io.stdout:flush()
+    io.read "a"
+]], { stdin = true, stdout = true, stderr = true })
+    lt.assertEquals(process.stdout:read(2), "ok")
+    lt.assertEquals(fs.filelock(fs.path("temp.lock")), nil)
+    process.stdin:close()
+    lt.assertEquals(process.stderr:read "a", "")
+    lt.assertEquals(process:wait(), 0)
+    local f = lt.assertIsUserdata(fs.filelock(fs.path("temp.lock")))
+    f:close()
+    fs.remove(fs.path("temp.lock"))
 end
 
 function test_fs:test_tostring()
