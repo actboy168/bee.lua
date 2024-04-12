@@ -45,25 +45,29 @@ namespace bee::lua_subprocess {
             }
         }
 
+        static void process_close_std(lua_State* L, const char* name) {
+            if (LUA_TUSERDATA != lua_getfield(L, -1, name)) {
+                lua_pop(L, 1);
+                return;
+            }
+            if (!lua_getmetatable(L, -1)) {
+                lua_pop(L, 2);
+                return;
+            }
+            if (LUA_TFUNCTION != lua_getfield(L, -1, "__close")) {
+                lua_pop(L, 3);
+                return;
+            }
+            lua_remove(L, -2);
+            lua_insert(L, -2);
+            lua_call(L, 1, 0);
+        }
+
         static void process_close_std(lua_State* L) {
             if (LUA_TTABLE == lua_getiuservalue(L, 1, 1)) {
-                for (auto name : { "stdin", "stdout", "stderr" }) {
-                    if (LUA_TUSERDATA != lua_getfield(L, -1, name)) {
-                        lua_pop(L, 1);
-                        continue;
-                    }
-                    if (!lua_getmetatable(L, -1)) {
-                        lua_pop(L, 2);
-                        continue;
-                    }
-                    if (LUA_TFUNCTION != lua_getfield(L, -1, "__close")) {
-                        lua_pop(L, 3);
-                        continue;
-                    }
-                    lua_remove(L, -2);
-                    lua_insert(L, -2);
-                    lua_call(L, 1, 0);
-                }
+                process_close_std(L, "stdin");
+                process_close_std(L, "stdout");
+                process_close_std(L, "stderr");
             }
             lua_pop(L, 1);
         }
