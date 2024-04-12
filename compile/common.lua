@@ -177,11 +177,6 @@ lm:lua_source "source_bee" {
     },
 }
 
-lm:source_set "bee_utf8_crt" {
-    includes = ".",
-    sources = "3rd/lua/bee_utf8_crt.cpp",
-}
-
 lm:source_set "source_lua" {
     sources = {
         "3rd/lua/onelua.c",
@@ -226,3 +221,10 @@ lm:source_set "source_lua" {
         flags = "-Wno-maybe-uninitialized",
     }
 }
+
+if lm.os == "windows" then
+    lm:source_set "bee_utf8_crt" {
+        includes = ".",
+        sources = "3rd/lua/bee_utf8_crt.cpp",
+    }
+end
