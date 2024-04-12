@@ -26,8 +26,8 @@ namespace bee {
         // TODO *bsd
         using value_type = uint8_t;
 #endif
-        static void wait(int& ctx, const value_type* ptr, value_type val);
-        static void wait(int& ctx, const value_type* ptr, value_type val, int timeout);
-        static void wake(const value_type* ptr, bool all);
+        static void wait(int& ctx, const value_type* ptr, value_type val) noexcept;
+        static void wait(int& ctx, const value_type* ptr, value_type val, int timeout) noexcept;
+        static void wake(const value_type* ptr, bool all) noexcept;
     };
 }
