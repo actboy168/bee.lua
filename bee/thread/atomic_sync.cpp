@@ -52,6 +52,8 @@ void bee::atomic_sync::wake(const value_type* ptr, bool all) {
 
 #elif defined(BEE_USE_ULOCK)
 
+#    include <errno.h>
+
 extern "C" int __ulock_wait(uint32_t operation, void* addr, uint64_t value, uint32_t timeout);
 extern "C" int __ulock_wake(uint32_t operation, void* addr, uint64_t wake_value);
 static constexpr uint32_t UL_COMPARE_AND_WAIT = 1;
