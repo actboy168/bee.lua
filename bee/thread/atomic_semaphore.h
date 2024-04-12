@@ -107,3 +107,5 @@ namespace bee {
 }
 
 #endif
+
+static_assert(std::is_trivially_destructible_v<::bee::atomic_semaphore>);
