@@ -206,34 +206,4 @@ void utf8_ConsoleError(const char* fmt, const char* param) {
     ConsoleWrite(stderr, str);
 }
 
-char** utf8_create_args(int argc, wchar_t** wargv) {
-    char** argv = new (std::nothrow) char*[argc + 1];
-    if (!argv) {
-        return NULL;
-    }
-    for (int i = 0; i < argc; ++i) {
-        size_t wlen = wcslen(wargv[i]);
-        size_t len  = wtf8_from_utf16_length(wargv[i], wlen);
-        argv[i]     = new (std::nothrow) char[len + 1];
-        if (!argv[i]) {
-            for (int j = 0; j < i; ++j) {
-                delete[] argv[j];
-            }
-            delete[] argv;
-            return NULL;
-        }
-        wtf8_from_utf16(wargv[i], wlen, argv[i], len);
-        argv[i][len] = '\0';
-    }
-    argv[argc] = NULL;
-    return argv;
-}
-
-void utf8_free_args(int argc, char** argv) {
-    for (int i = 0; i < argc; ++i) {
-        delete[] argv[i];
-    }
-    delete[] argv;
-}
-
 #endif

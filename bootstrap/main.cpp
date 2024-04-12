@@ -246,7 +246,7 @@ static int pmain(lua_State *L) {
 }
 
 #if defined(_WIN32)
-static int utf8_main(int argc, char **argv) {
+extern "C" int utf8_main(int argc, char **argv) {
 #else
 int main(int argc, char **argv) {
 #endif
@@ -265,47 +265,3 @@ int main(int argc, char **argv) {
     lua_close(L);
     return (result && status == LUA_OK) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
-
-#if defined(_WIN32)
-
-#    include <Windows.h>
-#    include <wchar.h>
-
-static void enable_vtmode(HANDLE h) {
-    if (h == INVALID_HANDLE_VALUE) {
-        return;
-    }
-    DWORD mode = 0;
-    if (!GetConsoleMode(h, &mode)) {
-        return;
-    }
-    mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-    SetConsoleMode(h, mode);
-}
-
-int wmain(int argc, wchar_t **wargv) {
-    enable_vtmode(GetStdHandle(STD_OUTPUT_HANDLE));
-    enable_vtmode(GetStdHandle(STD_ERROR_HANDLE));
-    char **argv = utf8_create_args(argc, wargv);
-    int ret     = utf8_main(argc, argv);
-    utf8_free_args(argc, argv);
-    return ret;
-}
-
-#    if defined(__MINGW32__)
-
-#        include <stdlib.h>
-
-extern int _CRT_glob;
-extern "C" void __wgetmainargs(int *, wchar_t ***, wchar_t ***, int, int *);
-
-int main() {
-    wchar_t **enpv, **argv;
-    int argc, si = 0;
-    __wgetmainargs(&argc, &argv, &enpv, _CRT_glob, &si);
-    return wmain(argc, argv);
-}
-
-#    endif
-
-#endif

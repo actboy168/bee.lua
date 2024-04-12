@@ -113,10 +113,22 @@
 
 /* lua */
 #ifdef MAKE_LUA
-#include "lua.c"
+#    if defined(_WIN32)
+#        define main(a, b) utf8_main(a, b)
+#        include "lua.c"
+#        undef main
+#    else
+#        include "lua.c"
+#    endif
 #endif
 
 /* luac */
 #ifdef MAKE_LUAC
-#include "utf8_luac.c"
+#    if defined(_WIN32)
+#        define main(a, b) utf8_main(a, b)
+#        include "luac.c"
+#        undef main
+#    else
+#        include "luac.c"
+#    endif
 #endif
