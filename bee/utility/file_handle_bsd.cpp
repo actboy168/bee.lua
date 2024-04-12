@@ -37,7 +37,6 @@ namespace bee {
         }
         return fs::path(kf.kf_path);
 #else
-        
         return std::nullopt;
 #endif
     }
