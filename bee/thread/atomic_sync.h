@@ -35,23 +35,23 @@ namespace bee {
 #if defined(_WIN32)
         using value_type = uint8_t;
         static inline void wait(int& ctx, const value_type* ptr, value_type val) {
-            WaitOnAddress((PVOID)ptr, (PVOID)&val, sizeof(value_type), INFINITE);
+            ::WaitOnAddress((PVOID)ptr, (PVOID)&val, sizeof(value_type), INFINITE);
         }
         static inline void wait(int& ctx, const value_type* ptr, value_type val, int timeout) {
-            WaitOnAddress((PVOID)ptr, (PVOID)&val, sizeof(value_type), timeout);
+            ::WaitOnAddress((PVOID)ptr, (PVOID)&val, sizeof(value_type), timeout);
         }
         static inline void wake(const value_type* ptr, bool all) {
             if (all) {
-                WakeByAddressAll((PVOID)ptr);
+                ::WakeByAddressAll((PVOID)ptr);
             }
             else {
-                WakeByAddressSingle((PVOID)ptr);
+                ::WakeByAddressSingle((PVOID)ptr);
             }
         }
 #elif defined(__linux__)
         using value_type = uint32_t;
         static inline void wait(int& ctx, const value_type* ptr, value_type val) {
-            syscall(SYS_futex, ptr, FUTEX_WAIT_PRIVATE, val, nullptr, 0, 0);
+            ::syscall(SYS_futex, ptr, FUTEX_WAIT_PRIVATE, val, nullptr, 0, 0);
         }
         static inline void wait(int& ctx, const value_type* ptr, value_type val, int timeout) {
             struct FutexTimespec {
@@ -61,10 +61,10 @@ namespace bee {
             FutexTimespec ts;
             ts.tv_sec  = (long)(timeout / 1000);
             ts.tv_nsec = (long)(timeout % 1000 * 1000 * 1000);
-            syscall(SYS_futex, ptr, FUTEX_WAIT_PRIVATE, val, &ts, 0, 0);
+            ::syscall(SYS_futex, ptr, FUTEX_WAIT_PRIVATE, val, &ts, 0, 0);
         }
         static inline void wake(const value_type* ptr, bool all) {
-            syscall(SYS_futex, ptr, FUTEX_WAKE_PRIVATE, all ? INT_MAX : 1, 0, 0, 0);
+            ::syscall(SYS_futex, ptr, FUTEX_WAKE_PRIVATE, all ? INT_MAX : 1, 0, 0, 0);
         }
 #elif defined(BEE_USE_ULOCK)
         using value_type                              = uint32_t;
@@ -73,7 +73,7 @@ namespace bee {
         static constexpr uint32_t ULF_NO_ERRNO        = 0x01000000;
         static inline void wait(int& ctx, const value_type* ptr, value_type val) {
             for (;;) {
-                int rc = __ulock_wait(UL_COMPARE_AND_WAIT | ULF_NO_ERRNO, const_cast<value_type*>(ptr), val, 0);
+                int rc = ::__ulock_wait(UL_COMPARE_AND_WAIT | ULF_NO_ERRNO, const_cast<value_type*>(ptr), val, 0);
                 if (rc == -EINTR) {
                     continue;
                 }
@@ -81,10 +81,10 @@ namespace bee {
             }
         }
         static inline void wait(int& ctx, const value_type* ptr, value_type val, int timeout) {
-            __ulock_wait(UL_COMPARE_AND_WAIT | ULF_NO_ERRNO, const_cast<value_type*>(ptr), val, timeout * 1000);
+            ::__ulock_wait(UL_COMPARE_AND_WAIT | ULF_NO_ERRNO, const_cast<value_type*>(ptr), val, timeout * 1000);
         }
         static inline void wake(const value_type* ptr, bool all) {
-            __ulock_wake(UL_COMPARE_AND_WAIT | ULF_NO_ERRNO | (all ? ULF_WAKE_ALL : 0), const_cast<value_type*>(ptr), 0);
+            ::__ulock_wake(UL_COMPARE_AND_WAIT | ULF_NO_ERRNO | (all ? ULF_WAKE_ALL : 0), const_cast<value_type*>(ptr), 0);
         }
 #else
         using value_type = uint8_t;
