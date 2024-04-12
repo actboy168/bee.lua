@@ -3,6 +3,9 @@
 #if defined(_WIN32)
 
 #    include <Windows.h>
+
+static_assert(sizeof(bee::atomic_sync::value_type) == 1);
+
 void bee::atomic_sync::wait(int& ctx, const value_type* ptr, value_type val) {
     ::WaitOnAddress((PVOID)ptr, (PVOID)&val, sizeof(value_type), INFINITE);
 }
