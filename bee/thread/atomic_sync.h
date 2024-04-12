@@ -67,11 +67,11 @@ namespace bee {
             syscall(SYS_futex, ptr, FUTEX_WAKE_PRIVATE, all ? INT_MAX : 1, 0, 0, 0);
         }
 #elif defined(BEE_USE_ULOCK)
-        using value_type = uint64_t;
-        constexpr uint32_t UL_COMPARE_AND_WAIT = 1;
-        constexpr uint32_t ULF_WAKE_ALL        = 0x00000100;
+        using value_type                              = uint64_t;
+        static constexpr uint32_t UL_COMPARE_AND_WAIT = 1;
+        static constexpr uint32_t ULF_WAKE_ALL        = 0x00000100;
         static inline void wait(int& ctx, const value_type* ptr, value_type val) {
-            __ulock_wait(UL_COMPARE_AND_WAIT, const_cast<T*>(ptr), val, 0);
+            __ulock_wait(UL_COMPARE_AND_WAIT, const_cast<value_type*>(ptr), val, 0);
         }
         static inline void wait(int& ctx, const value_type* ptr, value_type val, int timeout) {
             __ulock_wait(UL_COMPARE_AND_WAIT, const_cast<value_type*>(ptr), val, timeout * 1000);
