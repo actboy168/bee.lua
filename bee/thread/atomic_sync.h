@@ -49,7 +49,7 @@ namespace bee {
             }
         }
 #elif defined(__linux__)
-        using value_type = uint32_t;
+        using value_type = int;
         static inline void wait(int& ctx, const value_type* ptr, value_type val) {
             ::syscall(SYS_futex, ptr, FUTEX_WAIT_PRIVATE, val, nullptr, 0, 0);
         }
