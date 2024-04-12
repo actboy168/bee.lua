@@ -3,6 +3,10 @@
 #        define _CRT_SECURE_NO_WARNINGS
 #    endif
 
+#    if defined(_MSV_VER)
+#        define BEE_USE_CRT_S 1
+#    endif
+
 #    include "bee_utf8_crt.h"
 
 #    include <Windows.h>
@@ -97,6 +101,7 @@ int __cdecl utf8_rename(const char* oldfilename, const char* newfilename) {
 }
 
 char* __cdecl utf8_getenv(const char* varname) {
+#    if defined(BEE_USE_CRT_S)
     wchar_t* wstr;
     size_t wlen;
     errno_t err = _wdupenv_s(&wstr, &wlen, U2W(varname));
@@ -106,15 +111,26 @@ char* __cdecl utf8_getenv(const char* varname) {
     if (!wstr || !wlen) {
         return NULL;
     }
+#    else
+    wchar_t* wstr = _wgetenv(U2W(varname));
+    if (!wstr) {
+        return NULL;
+    }
+    size_t wlen = wcslen(wstr);
+#    endif
     size_t len = wtf8_from_utf16_length(wstr, wlen);
     char* str  = (char*)malloc(len + 1);
     if (!str) {
+#    if defined(BEE_USE_CRT_S)
         free(wstr);
+#    endif
         return NULL;
     }
     wtf8_from_utf16(wstr, wlen, str, len);
     str[len] = '\0';
+#    if defined(BEE_USE_CRT_S)
     free(wstr);
+#    endif
 
     spinlock::guard _(getenv_lock);
     getenv_rets.push(str);
