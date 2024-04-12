@@ -17,10 +17,6 @@
 #    include <bee/platform/win/wtf8.h>
 #endif
 
-#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
-#    define BEE_DISABLE_FULLPATH
-#endif
-
 #if defined(__EMSCRIPTEN__)
 #    include <emscripten.h>
 namespace bee::lua_filesystem {
@@ -1029,7 +1025,6 @@ namespace bee::lua_filesystem {
         return 1;
     }
 
-#    if !defined(BEE_DISABLE_FULLPATH)
     static int fullpath(lua_State* L) {
         auto path = getpathptr(L, 1);
         auto fd   = file_handle::open_link(path);
@@ -1048,7 +1043,6 @@ namespace bee::lua_filesystem {
         path::push(L, *fullpath);
         return 1;
     }
-#    endif
 #endif
 
     static int luaopen(lua_State* L) {
@@ -1082,9 +1076,7 @@ namespace bee::lua_filesystem {
             { "dll_path", dll_path },
 #if !defined(__EMSCRIPTEN__)
             { "filelock", filelock },
-#    if !defined(BEE_DISABLE_FULLPATH)
             { "fullpath", fullpath },
-#    endif
 #endif
             { "copy_options", NULL },
             { "perm_options", NULL },
