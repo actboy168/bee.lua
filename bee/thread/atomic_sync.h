@@ -67,17 +67,24 @@ namespace bee {
             syscall(SYS_futex, ptr, FUTEX_WAKE_PRIVATE, all ? INT_MAX : 1, 0, 0, 0);
         }
 #elif defined(BEE_USE_ULOCK)
-        using value_type                              = uint64_t;
+        using value_type                              = uint32_t;
         static constexpr uint32_t UL_COMPARE_AND_WAIT = 1;
         static constexpr uint32_t ULF_WAKE_ALL        = 0x00000100;
+        static constexpr uint32_t ULF_NO_ERRNO        = 0x01000000;
         static inline void wait(int& ctx, const value_type* ptr, value_type val) {
-            __ulock_wait(UL_COMPARE_AND_WAIT, const_cast<value_type*>(ptr), val, 0);
+            for (;;) {
+                int rc = __ulock_wait(UL_COMPARE_AND_WAIT | ULF_NO_ERRNO, const_cast<value_type*>(ptr), val, 0);
+                if (rc == -EINTR) {
+                    continue;
+                }
+                return;
+            }
         }
         static inline void wait(int& ctx, const value_type* ptr, value_type val, int timeout) {
-            __ulock_wait(UL_COMPARE_AND_WAIT, const_cast<value_type*>(ptr), val, timeout * 1000);
+            __ulock_wait(UL_COMPARE_AND_WAIT | ULF_NO_ERRNO, const_cast<value_type*>(ptr), val, timeout * 1000);
         }
         static inline void wake(const value_type* ptr, bool all) {
-            __ulock_wake(UL_COMPARE_AND_WAIT | (all ? ULF_WAKE_ALL : 0), const_cast<value_type*>(ptr), 0);
+            __ulock_wake(UL_COMPARE_AND_WAIT | ULF_NO_ERRNO | (all ? ULF_WAKE_ALL : 0), const_cast<value_type*>(ptr), 0);
         }
 #else
         using value_type = uint8_t;
