@@ -135,7 +135,7 @@ static int pushargs(lua_State *L) {
     return n;
 }
 
-static fs::path pushprogdir(lua_State *L) {
+static fs::path getprogdir(lua_State *L) {
     auto r = bee::path_helper::exe_path();
     if (!r) {
         luaL_error(L, "unable to get progdir: %s\n", r.error().c_str());
@@ -146,7 +146,7 @@ static fs::path pushprogdir(lua_State *L) {
 
 static void init_cpath(lua_State *L) {
     lua_getglobal(L, "package");
-    auto progdir = pushprogdir(L);
+    auto progdir = getprogdir(L);
 #if defined(_WIN32)
     progdir /= L"?.dll";
     auto wstr = progdir.generic_wstring();
