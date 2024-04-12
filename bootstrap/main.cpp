@@ -214,7 +214,7 @@ static int loadfile(lua_State *L, const fs::path &filename, const char *chunknam
 }
 
 static int handle_script(lua_State *L) {
-    auto progdir = pushprogdir(L);
+    auto progdir = getprogdir(L);
     int status   = loadfile(L, progdir / "main.lua", "=(bootstrap.lua)");
     if (status == LUA_OK) {
         int n  = pushargs(L); /* push arguments to script */
