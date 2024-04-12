@@ -5,8 +5,13 @@ extern "C" {
 #endif
 
 #include <assert.h>
+#include <bee/utility/assume.h>
 #include <stdbool.h>
 #include <stdint.h>
+
+#define WTF8_ASSUME(cond) \
+    assert(cond);         \
+    BEE_ASSUME(cond)
 
 inline uint8_t wtf8_decode(const char* input, uint32_t* res) {
     uint8_t b1 = input[0];
@@ -76,9 +81,9 @@ inline void wtf8_to_utf16(const char* input, size_t length, wchar_t* output, siz
     uint32_t code_point;
     for (size_t i = 0; i < length;) {
         uint8_t n = wtf8_decode(&input[i], &code_point);
-        assert(n > 0);
+        WTF8_ASSUME(n > 0);
         if (code_point > 0x10000) {
-            assert(code_point < 0x10FFFF);
+            WTF8_ASSUME(code_point < 0x10FFFF);
             *output++ = (((code_point - 0x10000) >> 10) + 0xD800);
             *output++ = ((code_point - 0x10000) & 0x3FF) + 0xDC00;
             output_len -= 2;
@@ -90,7 +95,7 @@ inline void wtf8_to_utf16(const char* input, size_t length, wchar_t* output, siz
         i += n;
     }
     (void)output_len;
-    assert(output_len == 0);
+    WTF8_ASSUME(output_len == 0);
 }
 
 inline uint32_t wtf8_surrogate(const wchar_t* input, bool eof) {
@@ -159,7 +164,7 @@ inline void wtf8_from_utf16(const wchar_t* input, size_t length, char* output, s
         }
     }
     (void)output_len;
-    assert(output_len == 0);
+    WTF8_ASSUME(output_len == 0);
 }
 
 #if defined(__cplusplus)

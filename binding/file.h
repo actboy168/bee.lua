@@ -265,7 +265,7 @@ namespace bee::lua {
             }
         }
         luaL_argexpected(L, r != NULL, idx, LUA_FILEHANDLE);
-        ASSUME(r != NULL);
+        BEE_ASSUME(r != NULL);
         return (luaL_Stream*)r;
     }
 }
