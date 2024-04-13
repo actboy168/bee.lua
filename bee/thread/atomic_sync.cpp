@@ -26,7 +26,7 @@ void bee::atomic_sync::wake(const value_type* ptr, bool all) noexcept {
 #elif defined(__linux__) || defined(__OpenBSD__) || defined(__NetBSD__)
 #    if defined(__linux__)
 #        include <linux/futex.h>
-#    else
+#    elif defined(__OpenBSD__)
 #        include <sys/futex.h>
 #    endif
 #    include <sys/syscall.h>
