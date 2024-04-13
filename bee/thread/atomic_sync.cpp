@@ -30,6 +30,7 @@ void bee::atomic_sync::wake(const value_type* ptr, bool all) noexcept {
 #        include <sys/futex.h>
 #    endif
 #    include <sys/syscall.h>
+#    include <sys/time.h>
 #    include <unistd.h>
 
 #    include <climits>
