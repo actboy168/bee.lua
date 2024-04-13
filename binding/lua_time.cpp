@@ -14,8 +14,10 @@
 #endif
 
 namespace bee::lua_time {
-    constexpr int64_t MSecPerSec  = 1000ll;
+    constexpr int64_t MSecPerSec = 1000ll;
+#if !defined(_WIN32)
     constexpr int64_t NSecPerMSec = 1'000'000ll;
+#endif
 
     static struct {
         spinlock mutex;
