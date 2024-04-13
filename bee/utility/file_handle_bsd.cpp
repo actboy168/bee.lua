@@ -21,7 +21,11 @@ namespace bee {
     }
 
     file_handle file_handle::open_link(const fs::path& filename) noexcept {
+#if defined(O_PATH)
         int fd = ::open(filename.c_str(), O_PATH | O_NOFOLLOW);
+#else
+        int fd = ::open(filename.c_str(), O_RDONLY | O_NOFOLLOW);
+#endif
         return { fd };
     }
 
