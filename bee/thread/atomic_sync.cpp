@@ -82,6 +82,7 @@ void bee::atomic_sync::wake(const value_type* ptr, bool all) noexcept {
 #elif defined(__FreeBSD__)
 
 #    include <sys/umtx.h>
+#    include <time.h>
 
 #    include <climits>
 

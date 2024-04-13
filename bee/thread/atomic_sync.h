@@ -23,7 +23,7 @@ namespace bee {
 #elif defined(BEE_USE_ULOCK)
         using value_type = uint32_t;
 #elif defined(__FreeBSD__)
-        using value_type = u_int;
+        using value_type = unsigned int;
 #else
         // TODO *bsd
         using value_type = uint8_t;
