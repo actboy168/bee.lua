@@ -23,10 +23,10 @@ void bee::atomic_sync::wake(const value_type* ptr, bool all) noexcept {
     }
 }
 
-#elif defined(__linux__) || defined(__OpenBSD__) || defined(__NetBSD__)
+#elif defined(BEE_HAVE_FUTEX)
 #    if defined(__linux__)
 #        include <linux/futex.h>
-#    elif defined(__OpenBSD__)
+#    else
 #        include <sys/futex.h>
 #    endif
 #    include <sys/syscall.h>
@@ -102,7 +102,7 @@ void bee::atomic_sync::wake(const value_type* ptr, bool all) noexcept {
     ::_umtx_op(const_cast<value_type*>(ptr), UMTX_OP_WAKE_PRIVATE, all ? INT_MAX : 1, NULL, NULL);
 }
 
-#elif defined(BEE_USE_ULOCK)
+#elif defined(BEE_HAVE_ULOCK)
 
 #    include <errno.h>
 
