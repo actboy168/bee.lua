@@ -60,7 +60,7 @@ namespace bee {
         template <class Rep, class Period>
         bool try_acquire_for(const std::chrono::duration<Rep, Period>& rel_time) {
             int ctx       = 0;
-            auto abs_time = std::chrono::system_clock::now() + rel_time;
+            auto abs_time = std::chrono::steady_clock::now() + rel_time;
             for (;;) {
                 auto prev = counter.exchange(0);
                 if (prev == 1) {
