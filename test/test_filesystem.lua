@@ -1,22 +1,15 @@
-local platform     = require "bee.platform"
-local fs           = require "bee.filesystem"
-local lt           = require "ltest"
-local shell        = require "shell"
-local supported    = require "supported"
+local platform  = require "bee.platform"
+local fs        = require "bee.filesystem"
+local lt        = require "ltest"
+local shell     = require "shell"
+local supported = require "supported"
 
-local isWindows    = platform.os == "windows"
-local isMinGW      = isWindows and platform.CRT == "libstdc++"
-local isMacOS      = platform.os ~= "macos"
+local isWindows = platform.os == "windows"
+local isMinGW   = isWindows and platform.CRT == "libstdc++"
+local isMacOS   = platform.os ~= "macos"
 
-local C
-local D
-if isWindows then
-    C = "c:/"
-    D = "d:/"
-else
-    C = "/mnt/c/"
-    D = "/mnt/d/"
-end
+local C <const> = isWindows and "c:/" or "/mnt/c/"
+local D <const> = isWindows and "d:/" or "/mnt/d/"
 
 local function create_file(filename, content)
     if type(filename) == "userdata" then
@@ -41,8 +34,8 @@ end
 
 local test_fs = lt.test "filesystem"
 
-local ALLOW_WRITE = 0x92
-local USER_WRITE = 0x80
+local ALLOW_WRITE <const> = 0x92
+local USER_WRITE <const> = 0x80
 
 function test_fs:test_setup()
     if fs.exists(fs.path("temp1.txt")) then
@@ -221,8 +214,8 @@ function test_fs:test_set_permissions()
 end
 
 function test_fs:test_div()
-    local function eq_div(A, B, C)
-        lt.assertEquals(fs.path(A) / B, fs.path(C))
+    local function eq_div(a, b, c)
+        lt.assertEquals(fs.path(a) / b, fs.path(c))
     end
     eq_div("a", "b", "a/b")
     eq_div("a/b", "c", "a/b/c")

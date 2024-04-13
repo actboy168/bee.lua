@@ -1,26 +1,14 @@
 local platform = require "bee.platform"
 local fs = require "bee.filesystem"
+local subprocess = require "bee.subprocess"
 local lt = require "ltest"
-local supported = require "supported"
 
-local isWindows = platform.os == "windows"
-
-local isWindowsShell; do
-    local isMingw = os.getenv "MSYSTEM" ~= nil
-    isWindowsShell = (isWindows) and (not isMingw)
-end
+local isWindows <const> = platform.os == "windows"
+local isWindowsShell <const> = isWindows and (os.getenv "MSYSTEM" == nil)
 
 local function runshell(command)
     local p <close> = assert(io.popen(command))
     return p:read "a"
-end
-
-local function isWSL2()
-    if platform.os ~= "linux" then
-        return false
-    end
-    local r = runshell "uname -r"
-    return r:match "WSL2" ~= nil
 end
 
 local shell = {}
@@ -46,20 +34,20 @@ function shell:pwd()
     return runshell(command):gsub("[\n\r]*$", "")
 end
 
-local subprocess = require "bee.subprocess"
-local luaexe = (function ()
+local luaexe <const> = (function ()
     local i = 0
     while arg[i] ~= nil do
         i = i - 1
     end
-    return arg[i + 1]
+    local exe = arg[i + 1]
+    exe = fs.absolute(fs.path(exe)):string()
+    if isWindows and not exe:match "%.%w+$" then
+        exe = exe..".exe"
+    end
+    return exe
 end)()
-luaexe = fs.absolute(fs.path(luaexe)):string()
-if isWindows and not luaexe:match "%.%w+$" then
-    luaexe = luaexe .. ".exe"
-end
 
-local initscript = (function ()
+local initscript <const> = (function ()
     local cpaths = {}
     for cpath in package.cpath:gmatch "[^;]*" do
         if cpath:sub(1, 1) == "." then
@@ -83,8 +71,5 @@ function shell:runlua(script, option)
     lt.assertIsUserdata(process, errmsg)
     return process
 end
-
-shell.isWindowsShell = isWindowsShell
-shell.isWSL2 = isWSL2()
 
 return shell
