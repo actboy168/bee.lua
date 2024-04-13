@@ -23,31 +23,83 @@ void bee::atomic_sync::wake(const value_type* ptr, bool all) noexcept {
     }
 }
 
-#elif defined(__linux__)
-
-#    include <linux/futex.h>
+#elif defined(__linux__) || defined(__OpenBSD__) || defined(__NetBSD__)
+#    if defined(__linux__)
+#        include <linux/futex.h>
+#    else
+#        include <sys/futex.h>
+#    endif
 #    include <sys/syscall.h>
 #    include <unistd.h>
 
 #    include <climits>
 
-void bee::atomic_sync::wait(int& ctx, const value_type* ptr, value_type val) noexcept {
-    ::syscall(SYS_futex, ptr, FUTEX_WAIT_PRIVATE, val, nullptr, 0, 0);
-}
+#    if !defined(FUTEX_PRIVATE_FLAG)
+#        define FUTEX_PRIVATE_FLAG 0
+#    endif
 
-void bee::atomic_sync::wait(int& ctx, const value_type* ptr, value_type val, int timeout) noexcept {
+namespace {
     struct FutexTimespec {
         long tv_sec;
         long tv_nsec;
     };
+}
+
+static void futex_wait(const int* ptr, int val, FutexTimespec* timeout) {
+#    if !defined(__NetBSD__)
+    ::syscall(SYS_futex, ptr, FUTEX_WAIT | FUTEX_PRIVATE_FLAG, val, timeout, 0, 0);
+#    else
+    ::syscall(SYS___futex, ptr, FUTEX_WAIT | FUTEX_PRIVATE_FLAG, val, timeout, 0, 0, 0);
+#    endif
+}
+
+static void futex_wake(const int* ptr, bool all) {
+#    if !defined(__NetBSD__)
+    ::syscall(SYS_futex, ptr, FUTEX_WAKE | FUTEX_PRIVATE_FLAG, all ? INT_MAX : 1, 0, 0, 0);
+#    else
+    ::syscall(SYS___futex, ptr, FUTEX_WAKE | FUTEX_PRIVATE_FLAG, all ? INT_MAX : 1, 0, 0, 0, 0);
+#    endif
+}
+
+void bee::atomic_sync::wait(int& ctx, const value_type* ptr, value_type val) noexcept {
+    futex_wait(ptr, val, nullptr);
+}
+
+void bee::atomic_sync::wait(int& ctx, const value_type* ptr, value_type val, int timeout) noexcept {
     FutexTimespec ts;
     ts.tv_sec  = (long)(timeout / 1000);
     ts.tv_nsec = (long)(timeout % 1000 * 1000 * 1000);
-    ::syscall(SYS_futex, ptr, FUTEX_WAIT_PRIVATE, val, &ts, 0, 0);
+    futex_wait(ptr, val, &ts);
 }
 
 void bee::atomic_sync::wake(const value_type* ptr, bool all) noexcept {
-    ::syscall(SYS_futex, ptr, FUTEX_WAKE_PRIVATE, all ? INT_MAX : 1, 0, 0, 0);
+    futex_wake(ptr, all);
+}
+
+#elif defined(__FreeBSD__)
+
+#    include <sys/types.h>
+#    include <sys/umtx.h>
+#    include <time.h>
+
+#    include <climits>
+
+void bee::atomic_sync::wait(int& ctx, const value_type* ptr, value_type val) noexcept {
+    ::_umtx_op(const_cast<value_type*>(ptr), UMTX_OP_WAIT_UINT_PRIVATE, val, NULL, NULL);
+}
+
+void bee::atomic_sync::wait(int& ctx, const value_type* ptr, value_type val, int timeout) noexcept {
+    // TODO: use UMTX_ABSTIME
+    struct _umtx_time ut;
+    ut._clockid         = CLOCK_MONOTONIC;
+    ut._flags           = 0;
+    ut._timeout.tv_sec  = timeout / 1000;
+    ut._timeout.tv_nsec = (timeout % 1000) * 1000 * 1000;
+    ::_umtx_op(const_cast<value_type*>(ptr), UMTX_OP_WAIT_UINT_PRIVATE, val, (void*)sizeof(struct _umtx_time), (void*)&ut);
+}
+
+void bee::atomic_sync::wake(const value_type* ptr, bool all) noexcept {
+    ::_umtx_op(const_cast<value_type*>(ptr), UMTX_OP_WAKE_PRIVATE, all ? INT_MAX : 1, NULL, NULL);
 }
 
 #elif defined(BEE_USE_ULOCK)
@@ -77,32 +129,6 @@ void bee::atomic_sync::wait(int& ctx, const value_type* ptr, value_type val, int
 
 void bee::atomic_sync::wake(const value_type* ptr, bool all) noexcept {
     ::__ulock_wake(UL_COMPARE_AND_WAIT | ULF_NO_ERRNO | (all ? ULF_WAKE_ALL : 0), const_cast<value_type*>(ptr), 0);
-}
-
-#elif defined(__FreeBSD__)
-
-#    include <sys/types.h>
-#    include <sys/umtx.h>
-#    include <time.h>
-
-#    include <climits>
-
-void bee::atomic_sync::wait(int& ctx, const value_type* ptr, value_type val) noexcept {
-    ::_umtx_op(const_cast<value_type*>(ptr), UMTX_OP_WAIT_UINT_PRIVATE, val, NULL, NULL);
-}
-
-void bee::atomic_sync::wait(int& ctx, const value_type* ptr, value_type val, int timeout) noexcept {
-    // TODO: use UMTX_ABSTIME
-    struct _umtx_time ut;
-    ut._clockid         = CLOCK_MONOTONIC;
-    ut._flags           = 0;
-    ut._timeout.tv_sec  = timeout / 1000;
-    ut._timeout.tv_nsec = (timeout % 1000) * 1000 * 1000;
-    ::_umtx_op(const_cast<value_type*>(ptr), UMTX_OP_WAIT_UINT_PRIVATE, val, (void*)sizeof(struct _umtx_time), (void*)&ut);
-}
-
-void bee::atomic_sync::wake(const value_type* ptr, bool all) noexcept {
-    ::_umtx_op(const_cast<value_type*>(ptr), UMTX_OP_WAKE_PRIVATE, all ? INT_MAX : 1, NULL, NULL);
 }
 
 #else
