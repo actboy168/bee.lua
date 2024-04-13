@@ -51,7 +51,7 @@ static void futex_wait(const int* ptr, int val, FutexTimespec* timeout) {
 #    elif defined(__NetBSD__)
     ::syscall(SYS___futex, ptr, FUTEX_WAIT | FUTEX_PRIVATE_FLAG, val, timeout, 0, 0, 0);
 #    elif defined(__OpenBSD__)
-    futex(ptr, FUTEX_WAIT | FUTEX_PRIVATE_FLAG, val, timeout, 0);
+    ::futex((uint32_t*)const_cast<int*>(ptr), FUTEX_WAIT | FUTEX_PRIVATE_FLAG, val, timeout, 0);
 #    endif
 }
 
@@ -61,7 +61,7 @@ static void futex_wake(const int* ptr, bool all) {
 #    elif defined(__NetBSD__)
     ::syscall(SYS___futex, ptr, FUTEX_WAKE | FUTEX_PRIVATE_FLAG, all ? INT_MAX : 1, 0, 0, 0, 0);
 #    elif defined(__OpenBSD__)
-    ::futex(ptr, FUTEX_WAKE | FUTEX_PRIVATE_FLAG, all ? INT_MAX : 1, 0, 0);
+    ::futex((uint32_t*)const_cast<int*>(ptr), FUTEX_WAKE | FUTEX_PRIVATE_FLAG, all ? INT_MAX : 1, 0, 0);
 #    endif
 }
 
