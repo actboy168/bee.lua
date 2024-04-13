@@ -262,7 +262,7 @@ namespace bee::net::socket {
 #endif
     }
 
-#if defined(_WIN32) || defined(__APPLE__) || defined(__FreeBSD__)
+#if defined(_WIN32) || defined(__APPLE__) || defined(__FreeBSD__) || defined(SO_NOSIGPIPE)
     static void set_error(int err) noexcept {
 #    if defined(_WIN32)
         ::WSASetLastError(err);
