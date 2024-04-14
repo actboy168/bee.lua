@@ -7,14 +7,16 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: actboy168/setup-luamake@master
-    - run: luamake -arch x86
+    - run: luamake -arch x86 -notest
+    - run: luamake -arch x86 -sanitize
   windows-x86_64:
     name: windows (x86_64)
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
     - uses: actboy168/setup-luamake@master
-    - run: luamake -arch x86_64
+    - run: luamake -arch x86_64 -notest
+    - run: luamake -arch x86_64 -sanitize
   windows-mingw:
     name: windows (mingw)
     runs-on: windows-latest
