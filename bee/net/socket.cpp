@@ -109,7 +109,7 @@ namespace bee::net::socket {
 
     static bool write_tcp_port(zstring_view path, fd_t s) {
         if (auto ep_opt = socket::getsockname(s)) {
-            auto tcpport = ep_opt->port();
+            auto tcpport = ep_opt->get_port();
             std::array<char, 10> portstr;
             if (auto [p, ec] = std::to_chars(portstr.data(), portstr.data() + portstr.size() - 1, tcpport); ec != std::errc()) {
                 return false;

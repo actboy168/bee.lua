@@ -33,43 +33,72 @@ struct sockaddr_un {
 #endif
 
 namespace bee::net {
-    static bool needsnolookup(zstring_view name) noexcept {
-        size_t pos = name.find_first_not_of("0123456789.");
-        if (pos == std::string_view::npos) {
-            return true;
-        }
-        pos = name.find_first_not_of("0123456789abcdefABCDEF:");
-        if (pos == std::string_view::npos) {
-            return true;
-        }
-        if (name[pos] != '.') {
-            return false;
-        }
-        pos = name.find_last_of(':');
-        if (pos == std::string_view::npos) {
-            return false;
-        }
-        pos = name.find_first_not_of("0123456789.", pos);
-        if (pos == std::string_view::npos) {
-            return true;
-        }
-        return false;
+    static_assert(sizeof(sockaddr_in) <= kMaxEndpointSize);
+    static_assert(sizeof(sockaddr_in6) <= kMaxEndpointSize);
+    static_assert(sizeof(sockaddr_un) <= kMaxEndpointSize);
+
+    namespace {
+        struct AddrInfo {
+            AddrInfo(zstring_view name, const char* port) noexcept {
+                addrinfo hint  = {};
+                hint.ai_family = AF_UNSPEC;
+                if (needsnolookup(name)) {
+                    hint.ai_flags = AI_NUMERICHOST;
+                }
+                const int err = ::getaddrinfo(name.data(), port, &hint, &info);
+                if (err != 0) {
+                    if (info) {
+                        ::freeaddrinfo(info);
+                        info = nullptr;
+                    }
+                }
+            }
+            ~AddrInfo() noexcept {
+                if (info) {
+                    ::freeaddrinfo(info);
+                }
+            }
+            explicit operator bool() const noexcept {
+                return !!info;
+            }
+            const addrinfo* operator->() const noexcept {
+                return info;
+            }
+            static bool needsnolookup(zstring_view name) noexcept {
+                size_t pos = name.find_first_not_of("0123456789.");
+                if (pos == std::string_view::npos) {
+                    return true;
+                }
+                pos = name.find_first_not_of("0123456789abcdefABCDEF:");
+                if (pos == std::string_view::npos) {
+                    return true;
+                }
+                if (name[pos] != '.') {
+                    return false;
+                }
+                pos = name.find_last_of(':');
+                if (pos == std::string_view::npos) {
+                    return false;
+                }
+                pos = name.find_first_not_of("0123456789.", pos);
+                if (pos == std::string_view::npos) {
+                    return true;
+                }
+                return false;
+            }
+            addrinfo* info = nullptr;
+        };
     }
 
     std::optional<endpoint> endpoint::from_unixpath(zstring_view path) noexcept {
         if (path.size() >= UNIX_PATH_MAX) {
             return std::nullopt;
         }
-        socklen_t sz = (socklen_t)(offsetof(struct sockaddr_un, sun_path) + path.size() + 1);
-        if (sz == 0 || sz > kMaxEndpointSize) {
-            return std::nullopt;
-        }
-        endpoint ep;
-        ep.m_size              = sz;
-        struct sockaddr_un* su = (struct sockaddr_un*)ep.m_data;
-        su->sun_family         = AF_UNIX;
-        std::copy(path.data(), path.data() + path.size() + 1, su->sun_path);
-        return ep;
+        struct sockaddr_un su;
+        su.sun_family = AF_UNIX;
+        memset(su.sun_path, 0, UNIX_PATH_MAX);
+        memcpy(su.sun_path, path.data(), path.size() + 1);
+        return endpoint { su };
     }
 
     endpoint endpoint::from_localhost(uint16_t port) noexcept {
@@ -78,15 +107,10 @@ namespace bee::net {
         assert(r == 1);
         sa4.sin_family = AF_INET;
         sa4.sin_port   = htons(port);
-        return { (const std::byte*)&sa4, sizeof(sa4) };
+        return { sa4 };
     }
 
     std::optional<endpoint> endpoint::from_hostname(zstring_view name, uint16_t port) noexcept {
-        addrinfo hint  = {};
-        hint.ai_family = AF_UNSPEC;
-        if (needsnolookup(name)) {
-            hint.ai_flags = AI_NUMERICHOST;
-        }
         constexpr auto portn = std::numeric_limits<uint16_t>::digits10 + 1;
         char portstr[portn + 1];
         if (auto [p, ec] = std::to_chars(portstr, portstr + portn, port); ec != std::errc()) {
@@ -95,59 +119,33 @@ namespace bee::net {
         else {
             p[0] = '\0';
         }
-        addrinfo* info = 0;
-        const int err  = ::getaddrinfo(name.data(), portstr, &hint, &info);
-        if (err != 0) {
+        AddrInfo info(name, portstr);
+        if (!info) {
             return std::nullopt;
         }
-        if (info->ai_family != AF_INET && info->ai_family != AF_INET6) {
-            ::freeaddrinfo(info);
+        if (info->ai_addrlen == 0 || info->ai_addrlen > kMaxEndpointSize) {
             return std::nullopt;
         }
-        if (info->ai_addrlen == 0) {
-            ::freeaddrinfo(info);
+        if (info->ai_family == AF_INET) {
+            if (info->ai_addrlen != sizeof(sockaddr_in)) {
+                return std::nullopt;
+            }
+            return endpoint { *(const sockaddr_in*)info->ai_addr };
+        }
+        else if (info->ai_family == AF_INET6) {
+            if (info->ai_addrlen != sizeof(sockaddr_in6)) {
+                return std::nullopt;
+            }
+            return endpoint { *(const sockaddr_in6*)info->ai_addr };
+        }
+        else {
             return std::nullopt;
         }
-        endpoint ep = { (const std::byte*)info->ai_addr, (size_t)info->ai_addrlen };
-        ::freeaddrinfo(info);
-        return ep;
     }
 
     endpoint::endpoint() noexcept
         : m_data()
         , m_size(0) {}
-
-    endpoint::endpoint(const std::byte* data, size_t size) noexcept {
-        m_size = (socklen_t)size;
-        std::copy(data, data + size, m_data);
-    }
-
-    uint16_t endpoint::port() const noexcept {
-        const sockaddr* sa = addr();
-        switch (sa->sa_family) {
-        case AF_INET:
-            return ntohs(((struct sockaddr_in*)sa)->sin_port);
-        case AF_INET6:
-            return ntohs(((struct sockaddr_in6*)sa)->sin6_port);
-        default:
-            assert(false);
-            return 0;
-        }
-    }
-
-    family endpoint::get_family() const noexcept {
-        const sockaddr* sa = addr();
-        switch (sa->sa_family) {
-        case AF_INET:
-            return family::inet;
-        case AF_INET6:
-            return family::inet6;
-        case AF_UNIX:
-            return family::unix;
-        default:
-            return family::unknown;
-        }
-    }
 
     std::tuple<std::string, uint16_t> endpoint::get_inet() const noexcept {
         const sockaddr* sa = addr();
@@ -187,6 +185,33 @@ namespace bee::net {
         }
         else {
             return { un_format::unnamed, {} };
+        }
+    }
+
+    family endpoint::get_family() const noexcept {
+        const sockaddr* sa = addr();
+        switch (sa->sa_family) {
+        case AF_INET:
+            return family::inet;
+        case AF_INET6:
+            return family::inet6;
+        case AF_UNIX:
+            return family::unix;
+        default:
+            return family::unknown;
+        }
+    }
+
+    uint16_t endpoint::get_port() const noexcept {
+        const sockaddr* sa = addr();
+        switch (sa->sa_family) {
+        case AF_INET:
+            return ntohs(((struct sockaddr_in*)sa)->sin_port);
+        case AF_INET6:
+            return ntohs(((struct sockaddr_in6*)sa)->sin6_port);
+        default:
+            assert(false);
+            return 0;
         }
     }
 
