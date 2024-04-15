@@ -9,7 +9,7 @@
 
 namespace bee::net::ip {
     template <typename T>
-    static constexpr T htons(T v) {
+    static constexpr T host_to_network(T v) {
         static_assert(std::is_integral_v<T> && (sizeof(T) == 2 || sizeof(T) == 4));
         if constexpr (std::endian::native == std::endian::big) {
             return v;
@@ -82,6 +82,6 @@ namespace bee::net::ip {
         uint8_t c2 = parse_uint8(str, sep1 + 1, sep2 - 1);
         uint8_t c3 = parse_uint8(str, sep2 + 1, sep3 - 1);
         uint8_t c4 = parse_uint8(str, sep3 + 1, N - 2);
-        return htons((static_cast<uint32_t>(c1) << 24) | (static_cast<uint32_t>(c2) << 16) | (static_cast<uint32_t>(c3) << 8) | static_cast<uint32_t>(c4));
+        return host_to_network((static_cast<uint32_t>(c1) << 24) | (static_cast<uint32_t>(c2) << 16) | (static_cast<uint32_t>(c3) << 8) | static_cast<uint32_t>(c4));
     }
 }
