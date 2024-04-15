@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <tuple>
 
 struct sockaddr;
 
@@ -17,23 +18,29 @@ namespace bee::net {
 
     constexpr socklen_t kMaxEndpointSize = 256;
 
-    enum class un_format : uint16_t {
-        pathname = 0,
+    enum class un_format : uint8_t {
+        pathname,
         abstract,
         unnamed,
+        invalid,
     };
 
-    struct endpoint_info {
-        std::string ip;
-        uint16_t port;
+    enum class family : uint8_t {
+        unknown,
+        unix,
+        inet,
+        inet6,
     };
 
     struct endpoint {
         endpoint() noexcept;
-        endpoint_info info() const;
+        uint16_t port() const noexcept;
+        std::tuple<std::string, uint16_t> get_inet() const noexcept;
+        std::tuple<std::string, uint16_t> get_inet6() const noexcept;
+        std::tuple<un_format, zstring_view> get_unix() const noexcept;
+        family get_family() const noexcept;
         const sockaddr* addr() const noexcept;
         socklen_t addrlen() const noexcept;
-        unsigned short family() const noexcept;
         bool valid() const noexcept;
         sockaddr* out_addr() noexcept;
         socklen_t* out_addrlen() noexcept;

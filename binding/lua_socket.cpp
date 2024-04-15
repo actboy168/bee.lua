@@ -35,6 +35,32 @@ namespace bee::lua_socket {
             return ep;
         }
     }
+    static int push_endpoint(lua_State* L, const net::endpoint& ep) {
+        switch (ep.get_family()) {
+        case net::family::inet: {
+            auto [ip, port] = ep.get_inet();
+            lua_pushlstring(L, ip.data(), ip.size());
+            lua_pushinteger(L, port);
+            return 2;
+        }
+        case net::family::inet6: {
+            auto [ip, port] = ep.get_inet6();
+            lua_pushlstring(L, ip.data(), ip.size());
+            lua_pushinteger(L, port);
+            return 2;
+        }
+        case net::family::unix: {
+            auto [type, path] = ep.get_unix();
+            lua_pushlstring(L, path.data(), path.size());
+            lua_pushinteger(L, std::to_underlying(type));
+            return 2;
+        }
+        case net::family::unknown:
+            return 0;
+        default:
+            std::unreachable();
+        }
+    }
     static void pushfd(lua_State* L, net::fd_t fd);
     static int accept(lua_State* L, net::fd_t fd) {
         net::fd_t newfd;
@@ -99,10 +125,7 @@ namespace bee::lua_socket {
         if (res) {
             auto& ep = res.value();
             luaL_pushresultsize(&b, rc);
-            auto [ip, port] = ep.info();
-            lua_pushlstring(L, ip.data(), ip.size());
-            lua_pushinteger(L, port);
-            return 3;
+            return 1 + push_endpoint(L, ep);
         }
         switch (res.error()) {
         case net::socket::status::close:
@@ -186,19 +209,13 @@ namespace bee::lua_socket {
         auto which = lua::checkstrview(L, 2);
         if (which == "peer") {
             if (auto ep_opt = net::socket::getpeername(fd)) {
-                auto [ip, port] = ep_opt->info();
-                lua_pushlstring(L, ip.data(), ip.size());
-                lua_pushinteger(L, port);
-                return 2;
+                return push_endpoint(L, *ep_opt);
             }
             return push_neterror(L, "getpeername");
         }
         else if (which == "socket") {
             if (auto ep_opt = net::socket::getsockname(fd)) {
-                auto [ip, port] = ep_opt->info();
-                lua_pushlstring(L, ip.data(), ip.size());
-                lua_pushinteger(L, port);
-                return 2;
+                return push_endpoint(L, *ep_opt);
             }
             return push_neterror(L, "getsockname");
         }

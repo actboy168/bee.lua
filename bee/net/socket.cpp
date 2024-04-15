@@ -90,8 +90,8 @@ namespace bee::net::socket {
     }
 
     static bool read_tcp_port(const endpoint& ep, uint16_t& tcpport) {
-        auto [path, type] = ep.info();
-        if (type != (uint16_t)un_format::pathname) {
+        auto [type, path] = ep.get_unix();
+        if (type != un_format::pathname) {
             return false;
         }
         auto unixpath = file_read(path);
@@ -109,7 +109,7 @@ namespace bee::net::socket {
 
     static bool write_tcp_port(zstring_view path, fd_t s) {
         if (auto ep_opt = socket::getsockname(s)) {
-            auto [ip, tcpport] = ep_opt->info();
+            auto tcpport = ep_opt->port();
             std::array<char, 10> portstr;
             if (auto [p, ec] = std::to_chars(portstr.data(), portstr.data() + portstr.size() - 1, tcpport); ec != std::errc()) {
                 return false;
@@ -145,8 +145,8 @@ namespace bee::net::socket {
         if (!ok) {
             return ok;
         }
-        auto [path, type] = ep.info();
-        if (type != (uint16_t)un_format::pathname) {
+        auto [type, path] = ep.get_unix();
+        if (type != un_format::pathname) {
             ::WSASetLastError(WSAENETDOWN);
             return false;
         }
@@ -430,13 +430,13 @@ namespace bee::net::socket {
 
     bool bind(fd_t s, const endpoint& ep) {
 #if defined(_WIN32)
-        if (!supportUnixDomainSocket() && ep.family() == AF_UNIX) {
+        if (!supportUnixDomainSocket() && ep.addr()->sa_family == AF_UNIX) {
             return u_bind(s, ep);
         }
 #endif
-        if (ep.family() == AF_UNIX) {
-            auto [path, type] = ep.info();
-            if (type == (uint16_t)un_format::pathname) {
+        if (ep.addr()->sa_family == AF_UNIX) {
+            auto [type, path] = ep.get_unix();
+            if (type == un_format::pathname) {
 #if defined(_WIN32)
                 ::DeleteFileW(wtf8::u2w(path).c_str());
 #else
@@ -455,7 +455,7 @@ namespace bee::net::socket {
 
     fdstat connect(fd_t s, const endpoint& ep) {
 #if defined(_WIN32)
-        if (!supportUnixDomainSocket() && ep.family() == AF_UNIX) {
+        if (!supportUnixDomainSocket() && ep.addr()->sa_family == AF_UNIX) {
             return u_connect(s, ep);
         }
 #endif

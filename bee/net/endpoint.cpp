@@ -125,56 +125,90 @@ namespace bee::net {
         std::copy(data, data + size, m_data);
     }
 
-    endpoint_info endpoint::info() const {
+    uint16_t endpoint::port() const noexcept {
         const sockaddr* sa = addr();
-        if (sa->sa_family == AF_INET) {
-            char tmp[sizeof "255.255.255.255"];
-#if !defined(__MINGW32__)
-            const char* s = inet_ntop(sa->sa_family, (const void*)&((struct sockaddr_in*)sa)->sin_addr, tmp, sizeof tmp);
-#else
-            const char* s = inet_ntop(sa->sa_family, (void*)&((struct sockaddr_in*)sa)->sin_addr, tmp, sizeof tmp);
-#endif
-            return { std::string(s), ntohs(((struct sockaddr_in*)sa)->sin_port) };
+        switch (sa->sa_family) {
+        case AF_INET:
+            return ntohs(((struct sockaddr_in*)sa)->sin_port);
+        case AF_INET6:
+            return ntohs(((struct sockaddr_in6*)sa)->sin6_port);
+        default:
+            assert(false);
+            return 0;
         }
-        else if (sa->sa_family == AF_INET6) {
-            char tmp[sizeof "ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255"];
-#if !defined(__MINGW32__)
-            const char* s = inet_ntop(sa->sa_family, (const void*)&((const struct sockaddr_in6*)sa)->sin6_addr, tmp, sizeof tmp);
-#else
-            const char* s = inet_ntop(sa->sa_family, (void*)&((const struct sockaddr_in6*)sa)->sin6_addr, tmp, sizeof tmp);
-#endif
-            return { std::string(s), ntohs(((struct sockaddr_in6*)sa)->sin6_port) };
-        }
-        else if (sa->sa_family == AF_UNIX) {
-            const char* path = ((struct sockaddr_un*)sa)->sun_path;
-            const size_t len = m_size - offsetof(struct sockaddr_un, sun_path) - 1;
-            if (len > 0 && path[0] != 0) {
-                return { std::string(path, len), (uint16_t)un_format::pathname };
-            }
-            else if (len > 1) {
-                return { std::string(path + 1, len - 1), (uint16_t)un_format::abstract };
-            }
-            else {
-                return { std::string(), (uint16_t)un_format::unnamed };
-            }
-        }
-        return { "", 0 };
     }
+
+    family endpoint::get_family() const noexcept {
+        const sockaddr* sa = addr();
+        switch (sa->sa_family) {
+        case AF_INET:
+            return family::inet;
+        case AF_INET6:
+            return family::inet6;
+        case AF_UNIX:
+            return family::unix;
+        default:
+            return family::unknown;
+        }
+    }
+
+    std::tuple<std::string, uint16_t> endpoint::get_inet() const noexcept {
+        const sockaddr* sa = addr();
+        char tmp[sizeof "255.255.255.255"];
+#if !defined(__MINGW32__)
+        const char* s = inet_ntop(AF_INET, (const void*)&((struct sockaddr_in*)sa)->sin_addr, tmp, sizeof tmp);
+#else
+        const char* s = inet_ntop(AF_INET, (void*)&((struct sockaddr_in*)sa)->sin_addr, tmp, sizeof tmp);
+#endif
+        return { std::string(s), ntohs(((struct sockaddr_in*)sa)->sin_port) };
+    }
+
+    std::tuple<std::string, uint16_t> endpoint::get_inet6() const noexcept {
+        const sockaddr* sa = addr();
+        char tmp[sizeof "ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255"];
+#if !defined(__MINGW32__)
+        const char* s = inet_ntop(AF_INET6, (const void*)&((const struct sockaddr_in6*)sa)->sin6_addr, tmp, sizeof tmp);
+#else
+        const char* s = inet_ntop(AF_INET6, (void*)&((const struct sockaddr_in6*)sa)->sin6_addr, tmp, sizeof tmp);
+#endif
+        return { std::string(s), ntohs(((struct sockaddr_in6*)sa)->sin6_port) };
+    }
+
+    std::tuple<un_format, zstring_view> endpoint::get_unix() const noexcept {
+        const sockaddr* sa = addr();
+        if (sa->sa_family != AF_UNIX) {
+            assert(false);
+            return { un_format::invalid, {} };
+        }
+        const char* path = ((struct sockaddr_un*)sa)->sun_path;
+        const size_t len = m_size - offsetof(struct sockaddr_un, sun_path) - 1;
+        if (len > 0 && path[0] != 0) {
+            return { un_format::pathname, { path, len } };
+        }
+        else if (len > 1) {
+            return { un_format::abstract, { path + 1, len - 1 } };
+        }
+        else {
+            return { un_format::unnamed, {} };
+        }
+    }
+
     const sockaddr* endpoint::addr() const noexcept {
         return (const sockaddr*)m_data;
     }
+
     socklen_t endpoint::addrlen() const noexcept {
         return (socklen_t)m_size;
     }
-    unsigned short endpoint::family() const noexcept {
-        return addr()->sa_family;
-    }
+
     bool endpoint::valid() const noexcept {
         return addrlen() != 0;
     }
+
     sockaddr* endpoint::out_addr() noexcept {
         return (sockaddr*)m_data;
     }
+
     socklen_t* endpoint::out_addrlen() noexcept {
         m_size = kMaxEndpointSize;
         return &m_size;
