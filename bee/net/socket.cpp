@@ -648,13 +648,27 @@ namespace bee::net::socket {
 
     bool pair(fd_t sv[2], fd_flags fd_flags) {
 #if defined(_WIN32)
-        const fd_t sfd = open(protocol::unix, fd_flags);
+        auto proto     = supportUnixDomainSocket() ? protocol::unix : protocol::tcp;
+        const fd_t sfd = open(proto, fd_flags);
         if (sfd == retired_fd) {
             return false;
         }
-        if (!unnamed_unix_bind(sfd)) {
-            internal_close(sfd);
-            return false;
+        if (proto == protocol::unix) {
+            if (!unnamed_unix_bind(sfd)) {
+                internal_close(sfd);
+                return false;
+            }
+        }
+        else {
+            auto newep = endpoint::from_hostname("127.0.0.1", 0);
+            if (!newep.valid()) {
+                internal_close(sfd);
+                return false;
+            }
+            if (!socket::bind(sfd, newep)) {
+                internal_close(sfd);
+                return false;
+            }
         }
         if (!socket::listen(sfd, 5)) {
             internal_close(sfd);
@@ -665,7 +679,7 @@ namespace bee::net::socket {
             internal_close(sfd);
             return false;
         }
-        const fd_t cfd = open(protocol::unix, fd_flags);
+        const fd_t cfd = open(proto, fd_flags);
         if (cfd == retired_fd) {
             internal_close(sfd);
             return false;
