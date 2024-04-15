@@ -440,7 +440,7 @@ namespace bee::net::socket {
 #if defined(_WIN32)
                 ::DeleteFileW(wtf8::u2w(path).c_str());
 #else
-                ::unlink(path.c_str());
+                ::unlink(path.data());
 #endif
             }
         }
