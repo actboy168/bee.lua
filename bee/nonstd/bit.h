@@ -33,3 +33,21 @@ namespace std {
     }
 }
 #endif
+
+#if defined(__cpp_lib_endian)
+#    include <bit>
+#else
+namespace std {
+    enum class endian {
+#    if defined(_MSC_VER) && !defined(__clang__)
+        little = 0,
+        big    = 1,
+        native = little,
+#    else
+        little = __ORDER_LITTLE_ENDIAN__,
+        big    = __ORDER_BIG_ENDIAN__,
+        native = __BYTE_ORDER__,
+#    endif
+    };
+}
+#endif

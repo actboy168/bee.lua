@@ -14,6 +14,7 @@
 #    endif
 #endif
 #include <bee/error.h>
+#include <bee/net/ip.h>
 #include <bee/nonstd/charconv.h>
 
 #include <array>
@@ -103,10 +104,9 @@ namespace bee::net {
 
     endpoint endpoint::from_localhost(uint16_t port) noexcept {
         struct sockaddr_in sa4;
-        auto r = inet_pton(AF_INET, "127.0.0.1", &sa4.sin_addr);
-        assert(r == 1);
         sa4.sin_family = AF_INET;
         sa4.sin_port   = htons(port);
+        sa4.sin_addr   = std::bit_cast<decltype(sa4.sin_addr)>(ip::inet_pton_v4("127.0.0.1"));
         return { sa4 };
     }
 
