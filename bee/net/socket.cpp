@@ -3,7 +3,6 @@
 #    include <winsock2.h>
 //  clang-format on
 #    include <bee/nonstd/charconv.h>
-#    include <bee/platform/win/unlink.h>
 #    include <bee/platform/win/wtf8.h>
 #    include <bee/utility/dynarray.h>
 #    include <mstcpip.h>
@@ -586,7 +585,7 @@ namespace bee::net::socket {
             return false;
         }
 #if defined(_WIN32)
-        return win::unlink(wtf8::u2w(path).c_str());
+        return ::DeleteFileW(wtf8::u2w(path).c_str());
 #else
         return 0 == ::unlink(path.c_str());
 #endif
