@@ -34,8 +34,6 @@ struct sockaddr_un {
 
 namespace bee::net {
 
-#if defined(__linux__) && defined(BEE_DISABLE_DLOPEN)
-#else
     struct autorelease_addrinfo {
         autorelease_addrinfo(const autorelease_addrinfo&)            = delete;
         autorelease_addrinfo& operator=(const autorelease_addrinfo&) = delete;
@@ -84,7 +82,6 @@ namespace bee::net {
         }
         return autorelease_addrinfo(info);
     }
-#endif
 
     endpoint endpoint::from_unixpath(zstring_view path) noexcept {
         if (path.size() >= UNIX_PATH_MAX) {
