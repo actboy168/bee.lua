@@ -68,7 +68,7 @@ namespace bee::net {
         ep.m_size              = sz;
         struct sockaddr_un* su = (struct sockaddr_un*)ep.m_data;
         su->sun_family         = AF_UNIX;
-        memcpy(&su->sun_path[0], path.data(), path.size() + 1);
+        std::copy(path.data(), path.data() + path.size() + 1, su->sun_path);
         return ep;
     }
 
@@ -122,7 +122,7 @@ namespace bee::net {
 
     endpoint::endpoint(const std::byte* data, size_t size) noexcept {
         m_size = (socklen_t)size;
-        memcpy(m_data, data, sizeof(std::byte) * size);
+        std::copy(data, data + size, m_data);
     }
 
     endpoint_info endpoint::info() const {
