@@ -4,6 +4,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <tuple>
 
@@ -41,13 +42,12 @@ namespace bee::net {
         family get_family() const noexcept;
         const sockaddr* addr() const noexcept;
         socklen_t addrlen() const noexcept;
-        bool valid() const noexcept;
         sockaddr* out_addr() noexcept;
         socklen_t* out_addrlen() noexcept;
 
-        static endpoint from_hostname(zstring_view name, uint16_t port) noexcept;
-        static endpoint from_ip(zstring_view ip, uint16_t port) noexcept;
-        static endpoint from_unixpath(zstring_view path) noexcept;
+        static std::optional<endpoint> from_hostname(zstring_view name, uint16_t port) noexcept;
+        static std::optional<endpoint> from_unixpath(zstring_view path) noexcept;
+        static endpoint from_localhost(uint16_t port) noexcept;
 
     private:
         endpoint(const std::byte* data, size_t size) noexcept;

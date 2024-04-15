@@ -128,20 +128,11 @@ namespace bee::net::socket {
             ::WSASetLastError(WSAECONNREFUSED);
             return fdstat::failed;
         }
-        auto newep = endpoint::from_ip("127.0.0.1", tcpport);
-        if (!newep.valid()) {
-            ::WSASetLastError(WSAECONNREFUSED);
-            return fdstat::failed;
-        }
-        return socket::connect(s, newep);
+        return socket::connect(s, endpoint::from_localhost(tcpport));
     }
 
     static bool u_bind(fd_t s, const endpoint& ep) {
-        auto newep = endpoint::from_ip("127.0.0.1", 0);
-        if (!newep.valid()) {
-            return false;
-        }
-        const bool ok = socket::bind(s, newep);
+        const bool ok = socket::bind(s, endpoint::from_localhost(0));
         if (!ok) {
             return ok;
         }
@@ -637,7 +628,7 @@ namespace bee::net::socket {
                 continue;
             }
             auto ep = endpoint::from_unixpath(wtf8::w2u(tmpname).c_str());
-            if (ep.valid() && socket::bind(s, ep)) {
+            if (ep && socket::bind(s, *ep)) {
                 return true;
             }
         }
@@ -660,12 +651,7 @@ namespace bee::net::socket {
             }
         }
         else {
-            auto newep = endpoint::from_ip("127.0.0.1", 0);
-            if (!newep.valid()) {
-                internal_close(sfd);
-                return false;
-            }
-            if (!socket::bind(sfd, newep)) {
+            if (!socket::bind(sfd, endpoint::from_localhost(0))) {
                 internal_close(sfd);
                 return false;
             }

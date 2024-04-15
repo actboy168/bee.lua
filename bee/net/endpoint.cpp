@@ -56,13 +56,13 @@ namespace bee::net {
         return false;
     }
 
-    endpoint endpoint::from_unixpath(zstring_view path) noexcept {
+    std::optional<endpoint> endpoint::from_unixpath(zstring_view path) noexcept {
         if (path.size() >= UNIX_PATH_MAX) {
-            return {};
+            return std::nullopt;
         }
         socklen_t sz = (socklen_t)(offsetof(struct sockaddr_un, sun_path) + path.size() + 1);
-        if (sz > kMaxEndpointSize) {
-            return {};
+        if (sz == 0 || sz > kMaxEndpointSize) {
+            return std::nullopt;
         }
         endpoint ep;
         ep.m_size              = sz;
@@ -72,23 +72,16 @@ namespace bee::net {
         return ep;
     }
 
-    endpoint endpoint::from_ip(zstring_view ip, uint16_t port) noexcept {
+    endpoint endpoint::from_localhost(uint16_t port) noexcept {
         struct sockaddr_in sa4;
-        if (1 == inet_pton(AF_INET, ip.data(), &sa4.sin_addr)) {
-            sa4.sin_family = AF_INET;
-            sa4.sin_port   = htons(port);
-            return { (const std::byte*)&sa4, sizeof(sa4) };
-        }
-        struct sockaddr_in6 sa6;
-        if (1 == inet_pton(AF_INET6, ip.data(), &sa6.sin6_addr)) {
-            sa4.sin_family = AF_INET6;
-            sa6.sin6_port  = htons(port);
-            return { (const std::byte*)&sa6, sizeof(sa6) };
-        }
-        return {};
+        auto r = inet_pton(AF_INET, "127.0.0.1", &sa4.sin_addr);
+        assert(r == 1);
+        sa4.sin_family = AF_INET;
+        sa4.sin_port   = htons(port);
+        return { (const std::byte*)&sa4, sizeof(sa4) };
     }
 
-    endpoint endpoint::from_hostname(zstring_view name, uint16_t port) noexcept {
+    std::optional<endpoint> endpoint::from_hostname(zstring_view name, uint16_t port) noexcept {
         addrinfo hint  = {};
         hint.ai_family = AF_UNSPEC;
         if (needsnolookup(name)) {
@@ -97,7 +90,7 @@ namespace bee::net {
         constexpr auto portn = std::numeric_limits<uint16_t>::digits10 + 1;
         char portstr[portn + 1];
         if (auto [p, ec] = std::to_chars(portstr, portstr + portn, port); ec != std::errc()) {
-            return {};
+            return std::nullopt;
         }
         else {
             p[0] = '\0';
@@ -105,11 +98,15 @@ namespace bee::net {
         addrinfo* info = 0;
         const int err  = ::getaddrinfo(name.data(), portstr, &hint, &info);
         if (err != 0) {
-            return {};
+            return std::nullopt;
         }
         if (info->ai_family != AF_INET && info->ai_family != AF_INET6) {
             ::freeaddrinfo(info);
-            return {};
+            return std::nullopt;
+        }
+        if (info->ai_addrlen == 0) {
+            ::freeaddrinfo(info);
+            return std::nullopt;
         }
         endpoint ep = { (const std::byte*)info->ai_addr, (size_t)info->ai_addrlen };
         ::freeaddrinfo(info);
@@ -199,10 +196,6 @@ namespace bee::net {
 
     socklen_t endpoint::addrlen() const noexcept {
         return (socklen_t)m_size;
-    }
-
-    bool endpoint::valid() const noexcept {
-        return addrlen() != 0;
     }
 
     sockaddr* endpoint::out_addr() noexcept {

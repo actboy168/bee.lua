@@ -21,18 +21,18 @@ namespace bee::lua_socket {
         auto ip = lua::checkstrview(L, idx);
         if (lua_isnoneornil(L, idx + 1)) {
             auto ep = net::endpoint::from_unixpath(ip);
-            if (!ep.valid()) {
+            if (!ep) {
                 luaL_error(L, "invalid address: %s", ip.data());
             }
-            return ep;
+            return *ep;
         }
         else {
             auto port = lua::checkinteger<uint16_t>(L, idx + 1);
             auto ep   = net::endpoint::from_hostname(ip, port);
-            if (!ep.valid()) {
+            if (!ep) {
                 luaL_error(L, "invalid address: %s:%d", ip.data(), port);
             }
-            return ep;
+            return *ep;
         }
     }
     static int push_endpoint(lua_State* L, const net::endpoint& ep) {
@@ -145,11 +145,11 @@ namespace bee::lua_socket {
         auto ip   = lua::checkstrview(L, 3);
         auto port = lua::checkinteger<uint16_t>(L, 4);
         auto ep   = net::endpoint::from_hostname(ip, port);
-        if (!ep.valid()) {
+        if (!ep) {
             return luaL_error(L, "invalid address: %s:%d", ip, port);
         }
         int rc;
-        switch (net::socket::sendto(fd, rc, buf.data(), (int)buf.size(), ep)) {
+        switch (net::socket::sendto(fd, rc, buf.data(), (int)buf.size(), *ep)) {
         case net::socket::status::wait:
             lua_pushboolean(L, 0);
             return 1;
