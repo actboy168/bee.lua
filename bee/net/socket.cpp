@@ -42,21 +42,52 @@ namespace bee::net::socket {
 #if defined(_WIN32)
     static_assert(sizeof(SOCKET) == sizeof(fd_t));
 
+    namespace fileutil {
+        static FILE* open(zstring_view filename, const wchar_t* mode) noexcept {
 #    if defined(_MSC_VER)
-#        define FILENAME(n) wtf8::u2w(n)
-#    else
-#        define FILENAME(n) (n)
+#        pragma warning(push)
+#        pragma warning(disable : 4996)
 #    endif
-
-    static std::string file_read(const std::string& filename) {
-        std::fstream f(FILENAME(filename), std::ios::binary | std::ios::in);
-        if (!f) return std::string();
-        return std::string((std::istreambuf_iterator<char>(f)), (std::istreambuf_iterator<char>()));
+            return _wfopen(wtf8::u2w(filename).c_str(), mode);
+#    if defined(_MSC_VER)
+#        pragma warning(pop)
+#    endif
+        }
+        static size_t size(FILE* f) noexcept {
+            _fseeki64(f, 0, SEEK_END);
+            long long size = _ftelli64(f);
+            _fseeki64(f, 0, SEEK_SET);
+            return (size_t)size;
+        }
+        static size_t read(FILE* f, void* buf, size_t sz) noexcept {
+            return fread(buf, sizeof(char), sz, f);
+        }
+        static size_t write(FILE* f, const void* buf, size_t sz) noexcept {
+            return fwrite(buf, sizeof(char), sz, f);
+        }
+        static void close(FILE* f) noexcept {
+            fclose(f);
+        }
     }
-    static bool file_write(const std::string& filename, const std::string& value) {
-        std::fstream f(FILENAME(filename), std::ios::binary | std::ios::out);
-        if (!f) return false;
-        std::copy(value.begin(), value.end(), std::ostreambuf_iterator<char>(f));
+
+    static std::string file_read(zstring_view filename) {
+        FILE* f = fileutil::open(filename, L"rb");
+        if (!f) {
+            return std::string();
+        }
+        std::string result(fileutil::size(f), '\0');
+        fileutil::read(f, result.data(), result.size());
+        fileutil::close(f);
+        return result;
+    }
+
+    static bool file_write(zstring_view filename, const std::string& value) {
+        FILE* f = fileutil::open(filename, L"wb");
+        if (!f) {
+            return false;
+        }
+        fileutil::write(f, value.data(), value.size());
+        fileutil::close(f);
         return true;
     }
 
@@ -78,7 +109,7 @@ namespace bee::net::socket {
         return true;
     }
 
-    static bool write_tcp_port(const std::string& path, fd_t s) {
+    static bool write_tcp_port(zstring_view path, fd_t s) {
         if (auto ep_opt = socket::getsockname(s)) {
             auto [ip, tcpport] = ep_opt->info();
             std::array<char, 10> portstr;
@@ -574,24 +605,38 @@ namespace bee::net::socket {
 
 #if defined(_WIN32)
     static bool unnamed_unix_bind(fd_t s) {
-        char tmpdir[MAX_PATH];
+        wchar_t tmpdir[MAX_PATH];
         int bind_try = 0;
         for (;;) {
             switch (bind_try++) {
             case 0:
-                GetTempPathA(MAX_PATH, tmpdir);
+                GetTempPathW(MAX_PATH, tmpdir);
                 break;
             case 1: {
-                UINT n = GetWindowsDirectoryA(tmpdir, MAX_PATH);
-                snprintf(tmpdir + n, MAX_PATH - n, "\\Temp\\");
+                UINT n = GetWindowsDirectoryW(tmpdir, MAX_PATH);
+#    if defined(_MSC_VER)
+#        pragma warning(push)
+#        pragma warning(disable : 4996)
+#    endif
+                _snwprintf(tmpdir + n, MAX_PATH - n, L"\\Temp\\");
+#    if defined(_MSC_VER)
+#        pragma warning(pop)
+#    endif
                 break;
             }
             case 2:
-                snprintf(tmpdir, MAX_PATH, "C:\\Temp\\");
+#    if defined(_MSC_VER)
+#        pragma warning(push)
+#        pragma warning(disable : 4996)
+#    endif
+                _snwprintf(tmpdir, MAX_PATH, L"C:\\Temp\\");
+#    if defined(_MSC_VER)
+#        pragma warning(pop)
+#    endif
                 break;
             case 3:
-                tmpdir[0] = '.';
-                tmpdir[1] = '\0';
+                tmpdir[0] = L'.';
+                tmpdir[1] = L'\0';
                 break;
             case 4:
                 ::WSASetLastError(WSAEFAULT);
@@ -599,11 +644,11 @@ namespace bee::net::socket {
             default:
                 std::unreachable();
             }
-            char tmpname[MAX_PATH];
-            if (0 == GetTempFileNameA(tmpdir, "bee", 1, tmpname)) {
+            wchar_t tmpname[MAX_PATH];
+            if (0 == GetTempFileNameW(tmpdir, L"bee", 1, tmpname)) {
                 continue;
             }
-            auto ep = endpoint::from_unixpath(tmpname);
+            auto ep = endpoint::from_unixpath(wtf8::w2u(tmpname).c_str());
             socket::unlink(ep);
             if (ep.valid() && socket::bind(s, ep)) {
                 return true;
