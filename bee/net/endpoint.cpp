@@ -33,24 +33,6 @@ struct sockaddr_un {
 #endif
 
 namespace bee::net {
-
-    struct autorelease_addrinfo {
-        autorelease_addrinfo(const autorelease_addrinfo&)            = delete;
-        autorelease_addrinfo& operator=(const autorelease_addrinfo&) = delete;
-        autorelease_addrinfo& operator=(autorelease_addrinfo&&)      = delete;
-        autorelease_addrinfo(addrinfo* i) noexcept
-            : info(i) {}
-        autorelease_addrinfo(autorelease_addrinfo&& o) noexcept
-            : info(o.info) { o.info = 0; }
-        ~autorelease_addrinfo() noexcept {
-            if (info) ::freeaddrinfo(info);
-        }
-        operator bool() const noexcept { return !!info; }
-        const addrinfo* operator->() const noexcept { return info; }
-        const addrinfo& operator*() const noexcept { return *info; }
-        addrinfo* info;
-    };
-
     static bool needsnolookup(zstring_view name) noexcept {
         size_t pos = name.find_first_not_of("0123456789.");
         if (pos == std::string_view::npos) {
@@ -72,15 +54,6 @@ namespace bee::net {
             return true;
         }
         return false;
-    }
-    static autorelease_addrinfo gethostaddr(const addrinfo& hint, zstring_view name, const char* port) noexcept {
-        addrinfo* info = 0;
-        const int err  = ::getaddrinfo(name.data(), port, &hint, &info);
-        if (err != 0) {
-            if (info) ::freeaddrinfo(info);
-            info = 0;
-        }
-        return autorelease_addrinfo(info);
     }
 
     endpoint endpoint::from_unixpath(zstring_view path) noexcept {
@@ -129,14 +102,18 @@ namespace bee::net {
         else {
             p[0] = '\0';
         }
-        auto info = gethostaddr(hint, name, portstr);
-        if (!info) {
+        addrinfo* info = 0;
+        const int err  = ::getaddrinfo(name.data(), portstr, &hint, &info);
+        if (err != 0) {
             return {};
         }
-        else if (info->ai_family != AF_INET && info->ai_family != AF_INET6) {
+        if (info->ai_family != AF_INET && info->ai_family != AF_INET6) {
+            ::freeaddrinfo(info);
             return {};
         }
-        return { (const std::byte*)info->ai_addr, (size_t)info->ai_addrlen };
+        endpoint ep = { (const std::byte*)info->ai_addr, (size_t)info->ai_addrlen };
+        ::freeaddrinfo(info);
+        return ep;
     }
 
     endpoint::endpoint() noexcept
