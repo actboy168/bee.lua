@@ -45,6 +45,9 @@ lm:source_set "source_bootstrap" {
 lm:executable "bootstrap" {
     bindir = "$bin",
     deps = "source_bootstrap",
+    windows = {
+        sources = "bootstrap/bootstrap.rc",
+    },
     msvc = {
         ldflags = "/IMPLIB:$obj/bootstrap.lib"
     },

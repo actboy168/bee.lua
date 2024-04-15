@@ -107,12 +107,7 @@ namespace bee {
             return { 0, 0, 0 };
         }
 
-        const version v {
-            osvi.dwMajorVersion,
-            osvi.dwMinorVersion,
-            osvi.dwBuildNumber,
-        };
-        if ((v.major > 6) || (v.major == 6 && v.minor >= 2)) {
+        if (osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 2 && osvi.dwBuildNumber == 9200) {
             // see
             //   http://msdn.microsoft.com/en-us/library/windows/desktop/ms724451(v=vs.85).aspx
             //   http://msdn.microsoft.com/en-us/library/windows/desktop/ms724429(v=vs.85).aspx
@@ -120,7 +115,11 @@ namespace bee {
             const auto wstr = mv.get_value(L"ProductVersion");
             return to_version(wstr);
         }
-        return v;
+        return {
+            osvi.dwMajorVersion,
+            osvi.dwMinorVersion,
+            osvi.dwBuildNumber,
+        };
 #else
         struct utsname info;
         if (uname(&info) < 0) {
