@@ -38,7 +38,8 @@ namespace bee::net {
         sockaddr* out_addr() noexcept;
         socklen_t* out_addrlen() noexcept;
 
-        static endpoint from_hostname(zstring_view ip, uint16_t port) noexcept;
+        static endpoint from_hostname(zstring_view name, uint16_t port) noexcept;
+        static endpoint from_ip(zstring_view ip, uint16_t port) noexcept;
         static endpoint from_unixpath(zstring_view path) noexcept;
 
     private:

@@ -128,7 +128,7 @@ namespace bee::net::socket {
             ::WSASetLastError(WSAECONNREFUSED);
             return fdstat::failed;
         }
-        auto newep = endpoint::from_hostname("127.0.0.1", tcpport);
+        auto newep = endpoint::from_ip("127.0.0.1", tcpport);
         if (!newep.valid()) {
             ::WSASetLastError(WSAECONNREFUSED);
             return fdstat::failed;
@@ -137,7 +137,7 @@ namespace bee::net::socket {
     }
 
     static bool u_bind(fd_t s, const endpoint& ep) {
-        auto newep = endpoint::from_hostname("127.0.0.1", 0);
+        auto newep = endpoint::from_ip("127.0.0.1", 0);
         if (!newep.valid()) {
             return false;
         }
@@ -660,7 +660,7 @@ namespace bee::net::socket {
             }
         }
         else {
-            auto newep = endpoint::from_hostname("127.0.0.1", 0);
+            auto newep = endpoint::from_ip("127.0.0.1", 0);
             if (!newep.valid()) {
                 internal_close(sfd);
                 return false;

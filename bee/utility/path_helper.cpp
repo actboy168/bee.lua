@@ -114,20 +114,7 @@ namespace bee::path_helper {
 
 #    endif
 
-#    if defined(BEE_DISABLE_DLOPEN)
-
-namespace bee::path_helper {
-    static path_expected dll_path(void* module_handle) noexcept {
-        return unexpected<std::string>("disable dl.");
-    }
-    path_expected dll_path() noexcept {
-        return dll_path(nullptr);
-    }
-}
-
-#    else
-
-#        include <dlfcn.h>
+#    include <dlfcn.h>
 
 namespace bee::path_helper {
     static path_expected dll_path(void* module_handle) noexcept {
@@ -149,8 +136,6 @@ namespace bee::path_helper {
         return dll_path((void*)&exe_path);
     }
 }
-
-#    endif
 
 #endif
 
