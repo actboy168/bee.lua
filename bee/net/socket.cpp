@@ -434,6 +434,16 @@ namespace bee::net::socket {
             return u_bind(s, ep);
         }
 #endif
+        if (ep.family() == AF_UNIX) {
+            auto [path, type] = ep.info();
+            if (type == (uint16_t)un_format::pathname) {
+#if defined(_WIN32)
+                ::DeleteFileW(wtf8::u2w(path).c_str());
+#else
+                ::unlink(path.c_str());
+#endif
+            }
+        }
         const int ok = ::bind(s, ep.addr(), ep.addrlen());
         return net_success(ok);
     }
@@ -571,26 +581,6 @@ namespace bee::net::socket {
         return ep;
     }
 
-    bool unlink(const endpoint& ep) {
-#if defined(_WIN32)
-        if (!supportUnixDomainSocket()) {
-            return false;
-        }
-#endif
-        if (ep.family() != AF_UNIX) {
-            return false;
-        }
-        auto [path, type] = ep.info();
-        if (type != (uint16_t)un_format::pathname) {
-            return false;
-        }
-#if defined(_WIN32)
-        return ::DeleteFileW(wtf8::u2w(path).c_str());
-#else
-        return 0 == ::unlink(path.c_str());
-#endif
-    }
-
     std::error_code errcode(fd_t s) noexcept {
         int err        = 0;
         socklen_t errl = sizeof(err);
@@ -647,7 +637,6 @@ namespace bee::net::socket {
                 continue;
             }
             auto ep = endpoint::from_unixpath(wtf8::w2u(tmpname).c_str());
-            socket::unlink(ep);
             if (ep.valid() && socket::bind(s, ep)) {
                 return true;
             }

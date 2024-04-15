@@ -236,7 +236,6 @@ namespace bee::lua_socket {
     }
     static int bind(lua_State* L, net::fd_t fd) {
         auto ep = check_endpoint(L, 2);
-        net::socket::unlink(ep);
         if (!net::socket::bind(fd, ep)) {
             return push_neterror(L, "bind");
         }
