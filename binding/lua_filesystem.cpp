@@ -269,6 +269,7 @@ namespace bee::lua_filesystem {
         static int remove_filename(lua_State* L) {
             auto& self = getpath(L, 1);
             self.remove_filename();
+            lua_settop(L, 1);
             return 1;
         }
 
@@ -547,9 +548,6 @@ namespace bee::lua_filesystem {
                 { NULL, NULL },
             };
             luaL_setfuncs(L, mt, 0);
-        }
-        static void push(lua_State* L, const fs::directory_entry& entry) {
-            lua::newudata<fs::directory_entry>(L, entry);
         }
     }
 
@@ -855,11 +853,10 @@ namespace bee::lua_filesystem {
         static lua::cxx::status next(lua_State* L) {
             auto& iter = lua::toudata<T>(L, lua_upvalueindex(1));
             if (iter == T {}) {
-                lua_pushnil(L);
-                return 1;
+                return 0;
             }
             lua::newudata<fs::path>(L, iter->path());
-            directory_entry::push(L, *iter);
+            lua::newudata<fs::directory_entry>(L, *iter);
             std::error_code ec;
             iter.increment(ec);
             if (ec) {
