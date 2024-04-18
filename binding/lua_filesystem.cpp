@@ -88,12 +88,6 @@ namespace bee::lua_filesystem {
 #endif
     }
 
-    template <typename CharT>
-    static std::string_view u8tostrview(const std::basic_string<CharT>& u8str) {
-        static_assert(sizeof(CharT) == sizeof(char));
-        return { reinterpret_cast<const char*>(u8str.data()), u8str.size() };
-    }
-
     template <typename... Args>
     static void lua_pushfmtstring(lua_State* L, std::format_string<Args...> fmt, Args... args) {
         auto str = std::format(fmt, std::forward<Args>(args)...);
