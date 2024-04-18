@@ -1,19 +1,21 @@
 #pragma once
 
-#include <bee/lua/cxx_status.h>
-
-#include <type_traits>
+#include <limits>
+#include <lua.hpp>
 
 namespace bee::lua {
     template <class U>
-    cxx::status narrow_pushinteger(lua_State* L, U u) noexcept {
-        constexpr const bool is_different_signedness = (std::is_signed<lua_Integer>::value != std::is_signed<U>::value);
-        const lua_Integer t                          = static_cast<lua_Integer>(u);
-        if (static_cast<U>(t) != u || (is_different_signedness && ((t < lua_Integer {}) != (u < U {})))) {
-            lua_pushstring(L, "narrowing_error");
-            return cxx::error;
+    int narrow_pushinteger(lua_State* L, U u) noexcept {
+        static_assert(sizeof(U) <= sizeof(lua_Integer));
+        static_assert(std::numeric_limits<lua_Integer>::is_signed);
+        if constexpr ((sizeof(U) < sizeof(lua_Integer)) || std::numeric_limits<U>::is_signed) {
+            lua_pushinteger(L, static_cast<lua_Integer>(u));
+            return 1;
         }
-        lua_pushinteger(L, t);
-        return 1;
+        else {
+            constexpr U umax = static_cast<U>(std::numeric_limits<lua_Integer>::max());
+            lua_pushinteger(L, u > umax ? umax : static_cast<lua_Integer>(u));
+            return 1;
+        }
     }
 }
