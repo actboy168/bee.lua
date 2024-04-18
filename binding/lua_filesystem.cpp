@@ -40,17 +40,17 @@ namespace bee::lua_filesystem {
     }
 
     [[nodiscard]] static lua::cxx::status pusherror(lua_State* L, std::string_view op, std::error_code ec) {
-        lua_pushfmtstring(L, "{}: {}", op, ec.message());
+        lua_pushfmtstring(L, "{}: ({}){}", op, ec.value(), ec.message());
         return lua::cxx::error;
     }
 
     [[nodiscard]] static lua::cxx::status pusherror(lua_State* L, std::string_view op, std::error_code ec, const fs::path& path1) {
-        lua_pushfmtstring(L, "{}: {}: \"{}\"", op, ec.message(), tostring(path1));
+        lua_pushfmtstring(L, "{}: ({}){}: \"{}\"", op, ec.value(), ec.message(), tostring(path1));
         return lua::cxx::error;
     }
 
     [[nodiscard]] static lua::cxx::status pusherror(lua_State* L, std::string_view op, std::error_code ec, const fs::path& path1, const fs::path& path2) {
-        lua_pushfmtstring(L, "{}: {}: \"{}\", \"{}\"", op, ec.message(), tostring(path1), tostring(path2));
+        lua_pushfmtstring(L, "{}: ({}){}: \"{}\", \"{}\"", op, ec.value(), ec.message(), tostring(path1), tostring(path2));
         return lua::cxx::error;
     }
 
