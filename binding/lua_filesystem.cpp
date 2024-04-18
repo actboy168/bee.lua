@@ -14,10 +14,71 @@
 #include <utility>
 
 #if defined(_WIN32)
+#    include <Windows.h>
 #    include <bee/platform/win/wtf8.h>
 #endif
 
 namespace bee::lua_filesystem {
+    namespace workaround {
+#if defined(__MINGW32__)
+        static bool copy_file(const fs::path& from, const fs::path& to, fs::copy_options options, std::error_code& ec) {
+            try {
+                if (fs::exists(from) && fs::exists(to)) {
+                    if ((options & fs::copy_options::overwrite_existing) != fs::copy_options::none) {
+                        fs::remove(to);
+                    }
+                    else if ((options & fs::copy_options::update_existing) != fs::copy_options::none) {
+                        if (fs::last_write_time(from) > fs::last_write_time(to)) {
+                            fs::remove(to);
+                        }
+                        else {
+                            return false;
+                        }
+                    }
+                    else if ((options & fs::copy_options::skip_existing) != fs::copy_options::none) {
+                        return false;
+                    }
+                }
+                return fs::copy_file(from, to, options);
+            } catch (const fs::filesystem_error& e) {
+                ec = e.code();
+                return false;
+            }
+        }
+#endif
+#if defined(_WIN32)
+        static bool remove_can_retry(uint32_t retry) noexcept {
+            constexpr uint32_t max_retry   = 10;
+            constexpr uint32_t retry_delay = 25;
+            if (retry >= max_retry) {
+                return false;
+            }
+            DWORD e = ::GetLastError();
+            if (e != ERROR_SHARING_VIOLATION) {
+                return false;
+            }
+            ::Sleep(retry_delay * (1 + retry));
+            return true;
+        }
+        static bool remove(const fs::path& path, std::error_code& ec) {
+            for (uint32_t retry = 0;; ++retry) {
+                auto r = fs::remove(path, ec);
+                if (!ec || !remove_can_retry(retry)) {
+                    return r;
+                }
+            }
+        }
+        static uintmax_t remove_all(const fs::path& path, std::error_code& ec) {
+            for (uint32_t retry = 0;; ++retry) {
+                auto r = fs::remove_all(path, ec);
+                if (!ec || !remove_can_retry(retry)) {
+                    return r;
+                }
+            }
+        }
+#endif
+    }
+
     static std::string tostring(const fs::path& path) {
 #if defined(_WIN32)
         auto wstr = path.generic_wstring();
@@ -592,7 +653,11 @@ namespace bee::lua_filesystem {
     static lua::cxx::status remove(lua_State* L) {
         auto p = getpathptr(L, 1);
         std::error_code ec;
+#if defined(_WIN32)
+        auto r = workaround::remove(p, ec);
+#else
         auto r = fs::remove(p, ec);
+#endif
         if (ec) {
             return pusherror(L, "remove", ec, p);
         }
@@ -603,7 +668,11 @@ namespace bee::lua_filesystem {
     static lua::cxx::status remove_all(lua_State* L) {
         auto p = getpathptr(L, 1);
         std::error_code ec;
+#if defined(_WIN32)
+        auto r = workaround::remove_all(p, ec);
+#else
         auto r = fs::remove_all(p, ec);
+#endif
         if (ec) {
             return pusherror(L, "remove_all", ec, p);
         }
@@ -640,40 +709,13 @@ namespace bee::lua_filesystem {
         return 0;
     }
 
-#if defined(__MINGW32__)
-    static bool mingw_copy_file(const fs::path& from, const fs::path& to, fs::copy_options options, std::error_code& ec) {
-        try {
-            if (fs::exists(from) && fs::exists(to)) {
-                if ((options & fs::copy_options::overwrite_existing) != fs::copy_options::none) {
-                    fs::remove(to);
-                }
-                else if ((options & fs::copy_options::update_existing) != fs::copy_options::none) {
-                    if (fs::last_write_time(from) > fs::last_write_time(to)) {
-                        fs::remove(to);
-                    }
-                    else {
-                        return false;
-                    }
-                }
-                else if ((options & fs::copy_options::skip_existing) != fs::copy_options::none) {
-                    return false;
-                }
-            }
-            return fs::copy_file(from, to, options);
-        } catch (const fs::filesystem_error& e) {
-            ec = e.code();
-            return false;
-        }
-    }
-#endif
-
     static lua::cxx::status copy_file(lua_State* L) {
         auto from    = getpathptr(L, 1);
         auto to      = getpathptr(L, 2);
         auto options = lua::optinteger<fs::copy_options, fs::copy_options::none>(L, 3);
         std::error_code ec;
 #if defined(__MINGW32__)
-        auto ok = mingw_copy_file(from, to, options, ec);
+        auto ok = workaround::copy_file(from, to, options, ec);
 #else
         auto ok = fs::copy_file(from, to, options, ec);
 #endif
