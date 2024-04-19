@@ -91,7 +91,7 @@ function test_subprocess:test_is_running_2()
     lt.assertIsUserdata(process.stdin)
     process.stdin:close()
     while process:is_running() do
-        thread.sleep(1000)
+        thread.sleep(10)
     end
     lt.assertEquals(process:is_running(), false)
     safe_exit(process, 13)

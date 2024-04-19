@@ -50,12 +50,13 @@ function test_fw:test_2()
                 end
             end
         end
+        local retry <const> = 3
         local list = {}
-        local n = 100
+        local n = retry
         while true do
             local w, v = fw:select()
             if w then
-                n = 100
+                n = retry
                 if not has(list, v) and not equal(v, root:string()) then
                     list[#list+1] = v
                 end
