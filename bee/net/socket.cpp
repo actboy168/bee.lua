@@ -532,9 +532,6 @@ namespace bee::net::socket {
     expected<endpoint, status> recvfrom(fd_t s, int& rc, char* buf, int len) noexcept {
         endpoint ep;
         rc = ::recvfrom(s, buf, len, 0, ep.out_addr(), ep.out_addrlen());
-        if (rc == 0) {
-            return unexpected(status::close);
-        }
         if (rc < 0) {
             return wait_finish() ? unexpected(status::wait)
                                  : unexpected(status::failed);

@@ -128,9 +128,6 @@ namespace bee::lua_socket {
             return 1 + push_endpoint(L, ep);
         }
         switch (res.error()) {
-        case net::socket::status::close:
-            lua_pushnil(L);
-            return 1;
         case net::socket::status::wait:
             lua_pushboolean(L, 0);
             return 1;
