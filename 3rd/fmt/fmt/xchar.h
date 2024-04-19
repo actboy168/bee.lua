@@ -8,13 +8,15 @@
 #ifndef FMT_XCHAR_H_
 #define FMT_XCHAR_H_
 
-#include <cwchar>
+#ifndef FMT_IMPORT_STD
+#  include <cwchar>
+#endif
 
 #include "color.h"
 #include "format.h"
 #include "ranges.h"
 
-#ifndef FMT_STATIC_THOUSANDS_SEPARATOR
+#if !defined(FMT_STATIC_THOUSANDS_SEPARATOR) && !defined(FMT_IMPORT_STD)
 #  include <locale>
 #endif
 
@@ -87,8 +89,8 @@ template <> struct is_char<char32_t> : std::true_type {};
 
 template <typename... T>
 constexpr auto make_wformat_args(T&... args)
-    -> decltype(make_format_args<wformat_context>(args...)) {
-  return make_format_args<wformat_context>(args...);
+    -> decltype(fmt::make_format_args<wformat_context>(args...)) {
+  return fmt::make_format_args<wformat_context>(args...);
 }
 
 inline namespace literals {
@@ -139,6 +141,13 @@ auto format(wformat_string<T...> fmt, T&&... args) -> std::wstring {
   return vformat(fmt::wstring_view(fmt), fmt::make_wformat_args(args...));
 }
 
+template <typename OutputIt, typename... T>
+auto format_to(OutputIt out, wformat_string<T...> fmt, T&&... args)
+    -> OutputIt {
+  return vformat_to(out, fmt::wstring_view(fmt),
+                    fmt::make_wformat_args(args...));
+}
+
 // Pass char_t as a default template parameter instead of using
 // std::basic_string<char_t<S>> to reduce the symbol size.
 template <typename S, typename... T,
@@ -184,8 +193,9 @@ auto vformat_to(OutputIt out, const S& format_str,
 
 template <typename OutputIt, typename S, typename... T,
           typename Char = detail::format_string_char_t<S>,
-          FMT_ENABLE_IF(detail::is_output_iterator<OutputIt, Char>::value&&
-                            detail::is_exotic_char<Char>::value)>
+          FMT_ENABLE_IF(detail::is_output_iterator<OutputIt, Char>::value &&
+                        !std::is_same<Char, char>::value &&
+                        !std::is_same<Char, wchar_t>::value)>
 inline auto format_to(OutputIt out, const S& fmt, T&&... args) -> OutputIt {
   return vformat_to(out, detail::to_string_view(fmt),
                     fmt::make_format_args<buffered_context<Char>>(args...));
