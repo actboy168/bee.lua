@@ -19,7 +19,6 @@ namespace bee {
         };
 
         file_handle() noexcept;
-        file_handle(value_type v) noexcept;
         explicit operator bool() const noexcept;
         bool valid() const noexcept;
         value_type value() const noexcept;
@@ -29,6 +28,11 @@ namespace bee {
         FILE* to_file(mode mode) const noexcept;
         std::optional<fs::path> path() const;
         void close() noexcept;
+        static inline file_handle from_native(value_type v) noexcept {
+            file_handle handle;
+            handle.h = v;
+            return handle;
+        }
         static file_handle from_file(FILE* f) noexcept;
         static file_handle dup(FILE* f) noexcept;
         static file_handle lock(const fs::path& filename) noexcept;

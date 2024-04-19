@@ -30,7 +30,7 @@ namespace bee {
         if (n < 0) {
             return {};
         }
-        return { (HANDLE)_get_osfhandle(n) };
+        return { from_native((HANDLE)_get_osfhandle(n)) };
     }
 
     file_handle file_handle::dup(FILE* f) noexcept {
@@ -47,12 +47,12 @@ namespace bee {
 
     file_handle file_handle::lock(const fs::path& filename) noexcept {
         const HANDLE h = CreateFileW(filename.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_DELETE_ON_CLOSE, NULL);
-        return { h };
+        return from_native(h);
     }
 
     file_handle file_handle::open_link(const fs::path& filename) noexcept {
         const HANDLE h = CreateFileW(filename.c_str(), 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
-        return { h };
+        return from_native(h);
     }
 
     void file_handle::close() noexcept {

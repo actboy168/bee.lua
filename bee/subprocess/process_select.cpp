@@ -26,7 +26,7 @@ namespace bee::subprocess {
 #else
         dynarray<pollfd> fds(set.size());
         nfds_t nfds = 0;
-        for (auto p : set) {
+        for (auto fd : set) {
             fds[nfds++] = { fd, POLLIN | POLLPRI, 0 };
         }
         int ret = poll(fds.data(), nfds, timeout);

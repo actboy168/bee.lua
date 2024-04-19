@@ -316,11 +316,14 @@ namespace bee::subprocess {
             if (!net::socket::pair(fds, net::socket::fd_flags::none)) {
                 return { {}, {} };
             }
-            return { { (bee::file_handle::value_type)fds[0] }, { (bee::file_handle::value_type)fds[1] } };
+            return {
+                file_handle::from_native(fds[0]),
+                file_handle::from_native(fds[1])
+            };
         }
-        int peek(FILE* f) noexcept {
+        int peek(file_handle h) noexcept {
             char tmp[256];
-            int rc = recv(file_handle::from_file(f).value(), tmp, sizeof(tmp), MSG_PEEK | MSG_DONTWAIT);
+            int rc = recv(h.value(), tmp, sizeof(tmp), MSG_PEEK | MSG_DONTWAIT);
             if (rc == 0) {
                 return -1;
             }

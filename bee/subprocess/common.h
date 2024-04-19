@@ -53,17 +53,11 @@ namespace bee::subprocess {
         struct open_result {
             file_handle rd;
             file_handle wr;
-            inline FILE* open_read() noexcept {
-                return rd.to_file(file_handle::mode::read);
-            }
-            inline FILE* open_write() noexcept {
-                return wr.to_file(file_handle::mode::write);
-            }
             operator bool() const noexcept {
                 return rd && wr;
             }
         };
         open_result open() noexcept;
-        int peek(FILE* f) noexcept;
+        int peek(file_handle h) noexcept;
     }
 }

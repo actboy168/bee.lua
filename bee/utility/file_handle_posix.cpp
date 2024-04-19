@@ -17,11 +17,11 @@ namespace bee {
     }
 
     file_handle file_handle::from_file(FILE* f) noexcept {
-        return { fileno(f) };
+        return from_native(fileno(f));
     }
 
     file_handle file_handle::dup(FILE* f) noexcept {
-        return { ::dup(from_file(f).value()) };
+        return from_native(::dup(from_file(f).value()));
     }
 
     void file_handle::close() noexcept {

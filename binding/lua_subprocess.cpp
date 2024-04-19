@@ -272,7 +272,7 @@ namespace bee::lua_subprocess {
                 }
                 lua_pop(L, 1);
                 if (strcmp(name, "stdin") == 0) {
-                    FILE* f = pipe.open_write();
+                    FILE* f = pipe.wr.to_file(file_handle::mode::write);
                     if (!f) {
                         return {};
                     }
@@ -280,7 +280,7 @@ namespace bee::lua_subprocess {
                     return pipe.rd;
                 }
                 else {
-                    FILE* f = pipe.open_read();
+                    FILE* f = pipe.rd.to_file(file_handle::mode::read);
                     if (!f) {
                         return {};
                     }
@@ -426,13 +426,13 @@ namespace bee::lua_subprocess {
 
     static int select(lua_State* L) {
         luaL_checktype(L, 1, LUA_TTABLE);
-        auto timeout  = lua::optinteger<int, -1>(L, 2);
-        size_t n = static_cast<size_t>(luaL_len(L, 1));
+        auto timeout = lua::optinteger<int, -1>(L, 2);
+        size_t n     = static_cast<size_t>(luaL_len(L, 1));
         dynarray<subprocess::process_handle> set(n);
         for (size_t i = 0; i < n; ++i) {
             lua_geti(L, 1, i + 1);
             const auto& p = lua::checkudata<subprocess::process>(L, -1);
-            set[i]  = p.native_handle();
+            set[i]        = p.native_handle();
             lua_pop(L, 1);
         }
         switch (subprocess::process_select(set, timeout)) {
@@ -462,7 +462,7 @@ namespace bee::lua_subprocess {
             lua_pushstring(L, error.c_str());
             return 2;
         }
-        int n = subprocess::pipe::peek(p->f);
+        int n = subprocess::pipe::peek(file_handle::from_file(p->f));
         if (n < 0) {
             auto error = make_syserror("subprocess::peek");
             lua_pushnil(L);

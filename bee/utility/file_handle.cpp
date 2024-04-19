@@ -3,8 +3,6 @@
 namespace bee {
     file_handle::file_handle() noexcept
         : h((value_type)-1) {}
-    file_handle::file_handle(value_type v) noexcept
-        : h(v) {}
     file_handle::operator bool() const noexcept {
         return valid();
     }

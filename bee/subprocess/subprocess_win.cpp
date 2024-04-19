@@ -486,16 +486,24 @@ namespace bee::subprocess {
 
     namespace pipe {
         open_result open() noexcept {
-            net::fd_t fds[2];
-            if (!net::socket::pipe(fds, net::socket::fd_flags::none)) {
-                return { {}, {} };
+            SECURITY_ATTRIBUTES sa;
+            sa.nLength              = sizeof(SECURITY_ATTRIBUTES);
+            sa.bInheritHandle       = FALSE;
+            sa.lpSecurityDescriptor = NULL;
+            HANDLE rd               = NULL;
+            HANDLE wr               = NULL;
+            if (!::CreatePipe(&rd, &wr, &sa, 0)) {
+                return {};
             }
-            return { { (bee::file_handle::value_type)fds[0] }, { (bee::file_handle::value_type)fds[1] } };
+            return {
+                file_handle::from_native(rd),
+                file_handle::from_native(wr)
+            };
         }
 
-        int peek(FILE* f) noexcept {
+        int peek(file_handle h) noexcept {
             DWORD rlen = 0;
-            if (PeekNamedPipe(file_handle::from_file(f).value(), 0, 0, 0, &rlen, 0)) {
+            if (PeekNamedPipe(h.value(), 0, 0, 0, &rlen, 0)) {
                 return rlen;
             }
             return -1;
