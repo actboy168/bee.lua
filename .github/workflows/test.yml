@@ -17,6 +17,17 @@ jobs:
     - uses: actboy168/setup-luamake@master
     - run: luamake -arch x86_64 -notest
     - run: luamake -arch x86_64 -sanitize
+  windows-clang:
+    name: windows (clang)
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
+      with:
+        path: luamake
+        repository: actboy168/luamake
+        submodules : recursive
+    - run: luamake -cc clang-cl
   windows-mingw:
     name: windows (mingw)
     runs-on: windows-latest
@@ -38,8 +49,6 @@ jobs:
       run: ./compile/build.sh notest
     - shell: msys2 {0}
       run: ./luamake/luamake
-    - shell: msys2 {0}
-      run: ./luamake/luamake -sanitize
   macos-x86_64:
     name: macos (x86_64)
     runs-on: macos-latest
