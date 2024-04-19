@@ -38,7 +38,8 @@ jobs:
       run: ./compile/build.sh notest
     - shell: msys2 {0}
       run: ./luamake/luamake
-    - run: ./luamake/luamake -sanitize
+    - shell: msys2 {0}
+      run: ./luamake/luamake -sanitize
   macos-x86_64:
     name: macos (x86_64)
     runs-on: macos-latest
