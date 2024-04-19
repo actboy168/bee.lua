@@ -22,11 +22,7 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/checkout@v4
-      with:
-        path: luamake
-        repository: actboy168/luamake
-        submodules : recursive
+    - uses: actboy168/setup-luamake@master
     - run: luamake -cc clang-cl
   windows-mingw:
     name: windows (mingw)
