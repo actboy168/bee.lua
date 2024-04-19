@@ -427,9 +427,9 @@ namespace bee::lua_subprocess {
     static int select(lua_State* L) {
         luaL_checktype(L, 1, LUA_TTABLE);
         auto timeout  = lua::optinteger<int, -1>(L, 2);
-        lua_Integer n = luaL_len(L, 1);
-        dynarray<subprocess::process_handle> set(static_cast<size_t>(n));
-        for (int i = 0; i < static_cast<int>(n); ++i) {
+        size_t n = static_cast<size_t>(luaL_len(L, 1));
+        dynarray<subprocess::process_handle> set(n);
+        for (size_t i = 0; i < n; ++i) {
             lua_geti(L, 1, i + 1);
             const auto& p = lua::checkudata<subprocess::process>(L, -1);
             set[i]  = p.native_handle();
