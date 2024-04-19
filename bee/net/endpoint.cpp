@@ -231,4 +231,7 @@ namespace bee::net {
         m_size = kMaxEndpointSize;
         return &m_size;
     }
+    bool endpoint::operator==(const endpoint& o) const noexcept {
+        return m_size == o.m_size && (0 == memcmp(m_data, o.m_data, m_size));
+    }
 }

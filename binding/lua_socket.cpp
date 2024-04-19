@@ -6,6 +6,56 @@
 #include <binding/binding.h>
 
 namespace bee::lua_socket {
+    namespace endpoint {
+        static int value(lua_State* L) {
+            const auto& ep = lua::checkudata<net::endpoint>(L, 1);
+            switch (ep.get_family()) {
+            case net::family::inet: {
+                auto [ip, port] = ep.get_inet();
+                lua_pushlstring(L, ip.data(), ip.size());
+                lua_pushinteger(L, port);
+                return 2;
+            }
+            case net::family::inet6: {
+                auto [ip, port] = ep.get_inet6();
+                lua_pushlstring(L, ip.data(), ip.size());
+                lua_pushinteger(L, port);
+                return 2;
+            }
+            case net::family::unix: {
+                auto [type, path] = ep.get_unix();
+                lua_pushlstring(L, path.data(), path.size());
+                lua_pushinteger(L, std::to_underlying(type));
+                return 2;
+            }
+            case net::family::unknown:
+                return 0;
+            default:
+                std::unreachable();
+            }
+        }
+        static int mt_eq(lua_State* L) {
+            const auto& a = lua::checkudata<net::endpoint>(L, 1);
+            const auto& b = lua::checkudata<net::endpoint>(L, 2);
+            lua_pushboolean(L, a == b);
+            return 1;
+        }
+        static void metatable(lua_State* L) {
+            luaL_Reg lib[] = {
+                { "value", value },
+                { NULL, NULL },
+            };
+            luaL_newlibtable(L, lib);
+            luaL_setfuncs(L, lib, 0);
+            lua_setfield(L, -2, "__index");
+            luaL_Reg mt[] = {
+                { "__eq", mt_eq },
+                { NULL, NULL },
+            };
+            luaL_setfuncs(L, mt, 0);
+        }
+    }
+
     struct fd_no_ownership {
         net::fd_t v;
         fd_no_ownership(net::fd_t v)
@@ -117,15 +167,16 @@ namespace bee::lua_socket {
     }
     static int recvfrom(lua_State* L, net::fd_t fd) {
         auto len = lua::optinteger<int, LUAL_BUFFERSIZE>(L, 2);
+        auto& ep = lua::newudata<net::endpoint>(L);
         luaL_Buffer b;
         luaL_buffinit(L, &b);
         char* buf = luaL_prepbuffsize(&b, (size_t)len);
         int rc;
-        net::endpoint ep;
         switch (net::socket::recvfrom(fd, rc, ep, buf, len)) {
         case net::socket::status::success:
             luaL_pushresultsize(&b, rc);
-            return 1 + push_endpoint(L, ep);
+            lua_insert(L, -2);
+            return 2;
         case net::socket::status::wait:
             lua_pushboolean(L, 0);
             return 1;
@@ -203,16 +254,16 @@ namespace bee::lua_socket {
     static int info(lua_State* L, net::fd_t fd) {
         auto which = lua::checkstrview(L, 2);
         if (which == "peer") {
-            net::endpoint ep;
+            auto& ep = lua::newudata<net::endpoint>(L);
             if (net::socket::getpeername(fd, ep)) {
-                return push_endpoint(L, ep);
+                return 1;
             }
             return push_neterror(L, "getpeername");
         }
         else if (which == "socket") {
-            net::endpoint ep;
+            auto& ep = lua::newudata<net::endpoint>(L);
             if (net::socket::getsockname(fd, ep)) {
-                return push_endpoint(L, ep);
+                return 1;
             }
             return push_neterror(L, "getsockname");
         }
@@ -460,5 +511,11 @@ namespace bee::lua {
         static inline int nupvalue   = 1;
         static inline auto name      = "bee::net::fd (no ownership)";
         static inline auto metatable = bee::lua_socket::metatable_no_ownership;
+    };
+    template <>
+    struct udata<net::endpoint> {
+        static inline int nupvalue   = 0;
+        static inline auto name      = "bee::net::endpoint";
+        static inline auto metatable = bee::lua_socket::endpoint::metatable;
     };
 }

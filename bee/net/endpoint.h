@@ -51,6 +51,8 @@ namespace bee::net {
         sockaddr* out_addr() noexcept;
         socklen_t* out_addrlen() noexcept;
 
+        bool operator==(const endpoint& o) const noexcept;
+
         static std::optional<endpoint> from_hostname(zstring_view name, uint16_t port) noexcept;
         static std::optional<endpoint> from_unixpath(zstring_view path) noexcept;
         static endpoint from_localhost(uint16_t port) noexcept;
