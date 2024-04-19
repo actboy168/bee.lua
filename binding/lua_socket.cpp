@@ -65,13 +65,13 @@ namespace bee::lua_socket {
     static int accept(lua_State* L, net::fd_t fd) {
         net::fd_t newfd;
         switch (net::socket::accept(fd, newfd)) {
-        case net::socket::fdstat::wait:
+        case net::socket::status::wait:
             lua_pushboolean(L, 0);
             return 1;
-        case net::socket::fdstat::success:
+        case net::socket::status::success:
             pushfd(L, newfd);
             return 1;
-        case net::socket::fdstat::failed:
+        case net::socket::status::failed:
             return push_neterror(L, "accept");
         default:
             std::unreachable();
@@ -84,16 +84,16 @@ namespace bee::lua_socket {
         char* buf = luaL_prepbuffsize(&b, (size_t)len);
         int rc;
         switch (net::socket::recv(fd, rc, buf, len)) {
-        case net::socket::status::close:
+        case net::socket::recv_status::close:
             lua_pushnil(L);
             return 1;
-        case net::socket::status::wait:
+        case net::socket::recv_status::wait:
             lua_pushboolean(L, 0);
             return 1;
-        case net::socket::status::success:
+        case net::socket::recv_status::success:
             luaL_pushresultsize(&b, rc);
             return 1;
-        case net::socket::status::failed:
+        case net::socket::recv_status::failed:
             return push_neterror(L, "recv");
         default:
             std::unreachable();
@@ -121,13 +121,11 @@ namespace bee::lua_socket {
         luaL_buffinit(L, &b);
         char* buf = luaL_prepbuffsize(&b, (size_t)len);
         int rc;
-        auto res = net::socket::recvfrom(fd, rc, buf, len);
-        if (res) {
-            auto& ep = res.value();
+        net::endpoint ep;
+        switch (net::socket::recvfrom(fd, rc, ep, buf, len)) {
+        case net::socket::status::success:
             luaL_pushresultsize(&b, rc);
             return 1 + push_endpoint(L, ep);
-        }
-        switch (res.error()) {
         case net::socket::status::wait:
             lua_pushboolean(L, 0);
             return 1;
@@ -205,14 +203,16 @@ namespace bee::lua_socket {
     static int info(lua_State* L, net::fd_t fd) {
         auto which = lua::checkstrview(L, 2);
         if (which == "peer") {
-            if (auto ep_opt = net::socket::getpeername(fd)) {
-                return push_endpoint(L, *ep_opt);
+            net::endpoint ep;
+            if (net::socket::getpeername(fd, ep)) {
+                return push_endpoint(L, ep);
             }
             return push_neterror(L, "getpeername");
         }
         else if (which == "socket") {
-            if (auto ep_opt = net::socket::getsockname(fd)) {
-                return push_endpoint(L, *ep_opt);
+            net::endpoint ep;
+            if (net::socket::getsockname(fd, ep)) {
+                return push_endpoint(L, ep);
             }
             return push_neterror(L, "getsockname");
         }
@@ -236,13 +236,13 @@ namespace bee::lua_socket {
     static int connect(lua_State* L, net::fd_t fd) {
         auto ep = check_endpoint(L, 2);
         switch (net::socket::connect(fd, ep)) {
-        case net::socket::fdstat::success:
+        case net::socket::status::success:
             lua_pushboolean(L, 1);
             return 1;
-        case net::socket::fdstat::wait:
+        case net::socket::status::wait:
             lua_pushboolean(L, 0);
             return 1;
-        case net::socket::fdstat::failed:
+        case net::socket::status::failed:
             return push_neterror(L, "connect");
         default:
             std::unreachable();
