@@ -91,15 +91,73 @@ namespace bee::net {
         };
     }
 
-    std::optional<endpoint> endpoint::from_unixpath(zstring_view path) noexcept {
+    bool endpoint::ctor_hostname(endpoint& ep, zstring_view name, uint16_t port) noexcept {
+        constexpr auto portn = std::numeric_limits<uint16_t>::digits10 + 1;
+        char portstr[portn + 1];
+        if (auto [p, ec] = std::to_chars(portstr, portstr + portn, port); ec != std::errc()) {
+            return false;
+        }
+        else {
+            p[0] = '\0';
+        }
+        AddrInfo info(name, portstr);
+        if (!info) {
+            return false;
+        }
+        if (info->ai_addrlen == 0 || info->ai_addrlen > kMaxEndpointSize) {
+            return false;
+        }
+        if (info->ai_family == AF_INET) {
+            if (info->ai_addrlen != sizeof(sockaddr_in)) {
+                return false;
+            }
+            ep.assgin(*(const sockaddr_in*)info->ai_addr);
+            return true;
+        }
+        else if (info->ai_family == AF_INET6) {
+            if (info->ai_addrlen != sizeof(sockaddr_in6)) {
+                return false;
+            }
+            ep.assgin(*(const sockaddr_in6*)info->ai_addr);
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    bool endpoint::ctor_unix(endpoint& ep, zstring_view path) noexcept {
         if (path.size() >= UNIX_PATH_MAX) {
-            return std::nullopt;
+            return false;
         }
         struct sockaddr_un su;
         su.sun_family = AF_UNIX;
         memset(su.sun_path, 0, UNIX_PATH_MAX);
         memcpy(su.sun_path, path.data(), path.size() + 1);
-        return endpoint { su };
+        ep.assgin(su);
+        return true;
+    }
+
+    bool endpoint::ctor_inet(endpoint& ep, zstring_view ip, uint16_t port) noexcept {
+        struct sockaddr_in sa4;
+        if (1 == inet_pton(AF_INET, ip.data(), &sa4.sin_addr)) {
+            sa4.sin_family = AF_INET;
+            sa4.sin_port   = htons(port);
+            ep.assgin(sa4);
+            return true;
+        }
+        return false;
+    }
+
+    bool endpoint::ctor_inet6(endpoint& ep, zstring_view ip, uint16_t port) noexcept {
+        struct sockaddr_in6 sa6;
+        if (1 == inet_pton(AF_INET6, ip.data(), &sa6.sin6_addr)) {
+            sa6.sin6_family = AF_INET6;
+            sa6.sin6_port   = htons(port);
+            ep.assgin(sa6);
+            return true;
+        }
+        return false;
     }
 
     endpoint endpoint::from_localhost(uint16_t port) noexcept {
@@ -107,40 +165,9 @@ namespace bee::net {
         sa4.sin_family = AF_INET;
         sa4.sin_port   = htons(port);
         sa4.sin_addr   = std::bit_cast<decltype(sa4.sin_addr)>(ip::inet_pton_v4("127.0.0.1"));
-        return { sa4 };
-    }
-
-    std::optional<endpoint> endpoint::from_hostname(zstring_view name, uint16_t port) noexcept {
-        constexpr auto portn = std::numeric_limits<uint16_t>::digits10 + 1;
-        char portstr[portn + 1];
-        if (auto [p, ec] = std::to_chars(portstr, portstr + portn, port); ec != std::errc()) {
-            return std::nullopt;
-        }
-        else {
-            p[0] = '\0';
-        }
-        AddrInfo info(name, portstr);
-        if (!info) {
-            return std::nullopt;
-        }
-        if (info->ai_addrlen == 0 || info->ai_addrlen > kMaxEndpointSize) {
-            return std::nullopt;
-        }
-        if (info->ai_family == AF_INET) {
-            if (info->ai_addrlen != sizeof(sockaddr_in)) {
-                return std::nullopt;
-            }
-            return endpoint { *(const sockaddr_in*)info->ai_addr };
-        }
-        else if (info->ai_family == AF_INET6) {
-            if (info->ai_addrlen != sizeof(sockaddr_in6)) {
-                return std::nullopt;
-            }
-            return endpoint { *(const sockaddr_in6*)info->ai_addr };
-        }
-        else {
-            return std::nullopt;
-        }
+        endpoint ep;
+        ep.assgin(sa4);
+        return ep;
     }
 
     endpoint::endpoint() noexcept

@@ -110,13 +110,6 @@ namespace bee::lua_filesystem {
     }
 
     class path_ptr {
-    private:
-        enum class status {
-            ptr,
-            str,
-            val,
-        };
-
     public:
         ~path_ptr() {
             switch (st) {
@@ -130,17 +123,16 @@ namespace bee::lua_filesystem {
                 std::unreachable();
             }
         }
-        path_ptr(const fs::path* p)
+        path_ptr(const fs::path* ptr)
             : st { status::ptr }
-            , ptr { p } {}
-        path_ptr(zstring_view s)
+            , ptr { ptr } {}
+        path_ptr(zstring_view str)
             : st { status::str }
-            , str { s } {
-            new (&str) zstring_view(s);
+            , str { str } {
         }
-        path_ptr(fs::path&& v)
-            : st { status::val } {
-            new (&val) fs::path(std::move(v));
+        path_ptr(fs::path&& val)
+            : st { status::val }
+            , val { std::move(val) } {
         }
         const fs::path* operator->() {
             switch (st) {
@@ -191,6 +183,11 @@ namespace bee::lua_filesystem {
 #endif
             st = status::val;
         }
+        enum class status {
+            ptr,
+            str,
+            val,
+        };
         status st;
         union {
             const fs::path* ptr;

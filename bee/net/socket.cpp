@@ -615,8 +615,8 @@ namespace bee::net::socket {
             if (0 == GetTempFileNameW(tmpdir, L"bee", 1, tmpname)) {
                 continue;
             }
-            auto ep = endpoint::from_unixpath(wtf8::w2u(tmpname).c_str());
-            if (ep && socket::bind(s, *ep)) {
+            endpoint ep;
+            if (endpoint::ctor_unix(ep, wtf8::w2u(tmpname).c_str()) && socket::bind(s, ep)) {
                 return true;
             }
         }

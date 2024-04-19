@@ -67,48 +67,94 @@ namespace bee::lua_socket {
         lua_pushstring(L, error.c_str());
         return 2;
     }
-    static net::endpoint check_endpoint(lua_State* L, int idx) {
-        auto ip = lua::checkstrview(L, idx);
-        if (lua_isnoneornil(L, idx + 1)) {
-            auto ep = net::endpoint::from_unixpath(ip);
-            if (!ep) {
-                luaL_error(L, "invalid address: %s", ip.data());
+
+    class endpoint_ref {
+    public:
+        ~endpoint_ref() {
+            switch (st) {
+            case status::ptr:
+                break;
+            case status::val:
+                val.~endpoint();
+                break;
+            default:
+                std::unreachable();
             }
-            return *ep;
         }
-        else {
-            auto port = lua::checkinteger<uint16_t>(L, idx + 1);
-            auto ep   = net::endpoint::from_hostname(ip, port);
-            if (!ep) {
-                luaL_error(L, "invalid address: %s:%d", ip.data(), port);
+        endpoint_ref(const net::endpoint* ptr)
+            : st { status::ptr }
+            , ptr { ptr } {}
+        endpoint_ref(net::endpoint&& val)
+            : st { status::val }
+            , val { std::move(val) } {
+        }
+        const net::endpoint* operator->() {
+            switch (st) {
+            case status::ptr:
+                return ptr;
+            case status::val:
+                return &val;
+            default:
+                std::unreachable();
             }
-            return *ep;
         }
-    }
-    static int push_endpoint(lua_State* L, const net::endpoint& ep) {
-        switch (ep.get_family()) {
-        case net::family::inet: {
-            auto [ip, port] = ep.get_inet();
-            lua_pushlstring(L, ip.data(), ip.size());
-            lua_pushinteger(L, port);
-            return 2;
+        const net::endpoint& operator*() {
+            switch (st) {
+            case status::ptr:
+                return *ptr;
+            case status::val:
+                return val;
+            default:
+                std::unreachable();
+            }
         }
-        case net::family::inet6: {
-            auto [ip, port] = ep.get_inet6();
-            lua_pushlstring(L, ip.data(), ip.size());
-            lua_pushinteger(L, port);
-            return 2;
+        operator const net::endpoint&() {
+            switch (st) {
+            case status::ptr:
+                return *ptr;
+            case status::val:
+                return val;
+            default:
+                std::unreachable();
+            }
         }
-        case net::family::unix: {
-            auto [type, path] = ep.get_unix();
-            lua_pushlstring(L, path.data(), path.size());
-            lua_pushinteger(L, std::to_underlying(type));
-            return 2;
-        }
-        case net::family::unknown:
-            return 0;
+
+    private:
+        enum class status {
+            ptr,
+            val,
+        };
+        status st;
+        union {
+            const net::endpoint* ptr;
+            net::endpoint val;
+        };
+    };
+
+    static endpoint_ref check_endpoint(lua_State* L, int idx) {
+        switch (lua_type(L, idx)) {
+        case LUA_TSTRING:
+            if (lua_isnoneornil(L, idx + 1)) {
+                auto path = lua::checkstrview(L, idx);
+                net::endpoint ep;
+                if (!net::endpoint::ctor_unix(ep, path)) {
+                    luaL_error(L, "invalid address: %s", path.data());
+                }
+                return ep;
+            }
+            else {
+                auto name = lua::checkstrview(L, idx);
+                auto port = lua::checkinteger<uint16_t>(L, idx + 1);
+                net::endpoint ep;
+                if (!net::endpoint::ctor_hostname(ep, name, port)) {
+                    luaL_error(L, "invalid address: %s:%d", name.data(), port);
+                }
+                return ep;
+            }
         default:
-            std::unreachable();
+        case LUA_TUSERDATA:
+            auto& ep = lua::checkudata<net::endpoint>(L, idx);
+            return &ep;
         }
     }
     static void pushfd(lua_State* L, net::fd_t fd);
@@ -187,15 +233,10 @@ namespace bee::lua_socket {
         }
     }
     static int sendto(lua_State* L, net::fd_t fd) {
-        auto buf  = lua::checkstrview(L, 2);
-        auto ip   = lua::checkstrview(L, 3);
-        auto port = lua::checkinteger<uint16_t>(L, 4);
-        auto ep   = net::endpoint::from_hostname(ip, port);
-        if (!ep) {
-            return luaL_error(L, "invalid address: %s:%d", ip, port);
-        }
+        auto buf = lua::checkstrview(L, 2);
+        auto ep  = check_endpoint(L, 3);
         int rc;
-        switch (net::socket::sendto(fd, rc, buf.data(), (int)buf.size(), *ep)) {
+        switch (net::socket::sendto(fd, rc, buf.data(), (int)buf.size(), ep)) {
         case net::socket::status::wait:
             lua_pushboolean(L, 0);
             return 1;
@@ -446,7 +487,7 @@ namespace bee::lua_socket {
     static void pushfd_no_ownership(lua_State* L, net::fd_t fd) {
         lua::newudata<fd_no_ownership>(L, fd);
     }
-    static int create(lua_State* L) {
+    static int l_create(lua_State* L) {
         static const char* const opts[] = {
             "tcp", "udp", "unix", "tcp6", "udp6",
             NULL
@@ -459,7 +500,61 @@ namespace bee::lua_socket {
         pushfd(L, fd);
         return 1;
     }
-    static int pair(lua_State* L) {
+    enum class endpoint_ctor {
+        unix,
+        hostname,
+        inet,
+        inet6,
+    };
+    static int l_endpoint(lua_State* L) {
+        static const char* const opts[] = {
+            "unix",
+            "hostname",
+            "inet",
+            "inet6",
+            NULL
+        };
+        switch ((endpoint_ctor)luaL_checkoption(L, 1, NULL, opts)) {
+        case endpoint_ctor::unix: {
+            auto path = lua::checkstrview(L, 2);
+            auto& ep  = lua::newudata<net::endpoint>(L);
+            if (!net::endpoint::ctor_unix(ep, path)) {
+                return 0;
+            }
+            return 1;
+        }
+        case endpoint_ctor::hostname: {
+            auto name = lua::checkstrview(L, 2);
+            auto port = lua::checkinteger<uint16_t>(L, 3);
+            auto& ep  = lua::newudata<net::endpoint>(L);
+            if (!net::endpoint::ctor_hostname(ep, name, port)) {
+                return 0;
+            }
+            return 1;
+        }
+        case endpoint_ctor::inet: {
+            auto ip   = lua::checkstrview(L, 2);
+            auto port = lua::checkinteger<uint16_t>(L, 3);
+            auto& ep  = lua::newudata<net::endpoint>(L);
+            if (!net::endpoint::ctor_inet(ep, ip, port)) {
+                return 0;
+            }
+            return 1;
+        }
+        case endpoint_ctor::inet6: {
+            auto ip   = lua::checkstrview(L, 2);
+            auto port = lua::checkinteger<uint16_t>(L, 3);
+            auto& ep  = lua::newudata<net::endpoint>(L);
+            if (!net::endpoint::ctor_inet6(ep, ip, port)) {
+                return 0;
+            }
+            return 1;
+        }
+        default:
+            std::unreachable();
+        }
+    }
+    static int l_pair(lua_State* L) {
         net::fd_t sv[2];
         if (!net::socket::pair(sv)) {
             return push_neterror(L, "socketpair");
@@ -468,7 +563,7 @@ namespace bee::lua_socket {
         pushfd(L, sv[1]);
         return 2;
     }
-    static int fd(lua_State* L) {
+    static int l_fd(lua_State* L) {
         auto fd           = lua::checklightud<net::fd_t>(L, 1);
         bool no_ownership = lua_toboolean(L, 2);
         if (no_ownership) {
@@ -486,9 +581,10 @@ namespace bee::lua_socket {
             return lua_error(L);
         }
         luaL_Reg lib[] = {
-            { "create", create },
-            { "pair", pair },
-            { "fd", fd },
+            { "create", l_create },
+            { "endpoint", l_endpoint },
+            { "pair", l_pair },
+            { "fd", l_fd },
             { NULL, NULL }
         };
         luaL_newlibtable(L, lib);

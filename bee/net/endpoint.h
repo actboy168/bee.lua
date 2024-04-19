@@ -34,12 +34,6 @@ namespace bee::net {
     };
 
     struct endpoint {
-        template <typename SOCKADDR>
-        endpoint(const SOCKADDR& v) noexcept {
-            m_size = (socklen_t)sizeof(v);
-            memcpy(m_data, &v, sizeof(v));
-        }
-
         endpoint() noexcept;
         std::tuple<std::string, uint16_t> get_inet() const noexcept;
         std::tuple<std::string, uint16_t> get_inet6() const noexcept;
@@ -50,11 +44,17 @@ namespace bee::net {
         socklen_t addrlen() const noexcept;
         sockaddr* out_addr() noexcept;
         socklen_t* out_addrlen() noexcept;
-
         bool operator==(const endpoint& o) const noexcept;
+        template <typename SOCKADDR>
+        void assgin(const SOCKADDR& v) noexcept {
+            m_size = (socklen_t)sizeof(v);
+            memcpy(m_data, &v, sizeof(v));
+        }
 
-        static std::optional<endpoint> from_hostname(zstring_view name, uint16_t port) noexcept;
-        static std::optional<endpoint> from_unixpath(zstring_view path) noexcept;
+        static bool ctor_hostname(endpoint& ep, zstring_view name, uint16_t port) noexcept;
+        static bool ctor_unix(endpoint& ep, zstring_view path) noexcept;
+        static bool ctor_inet(endpoint& ep, zstring_view ip, uint16_t port) noexcept;
+        static bool ctor_inet6(endpoint& ep, zstring_view ip, uint16_t port) noexcept;
         static endpoint from_localhost(uint16_t port) noexcept;
 
     private:
