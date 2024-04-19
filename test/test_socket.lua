@@ -399,6 +399,7 @@ function test_socket:test_udp()
     local b_ep = b_fd:info "socket"
     for _, MSG in ipairs { "", "123" } do
         lt.assertEquals(a_fd:sendto(MSG, b_ep), #MSG)
+        simple_select(b_fd, "r")
         local r, r_ep = b_fd:recvfrom()
         lt.assertEquals(MSG, r)
         lt.assertEquals(a_ep, r_ep)
