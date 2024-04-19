@@ -315,6 +315,11 @@ namespace bee::net::socket {
             ::closesocket(fd);
             return retired_fd;
         }
+        if (protocol == IPPROTO_UDP) {
+            DWORD byte_retruned = 0;
+            bool new_be         = false;
+            ::WSAIoctl(fd, SIO_UDP_CONNRESET, &new_be, sizeof(new_be), NULL, 0, &byte_retruned, NULL, NULL);
+        }
 #elif defined(__APPLE__)
         const fd_t fd = ::socket(af, type, protocol);
         if (fd == retired_fd) {
@@ -408,16 +413,6 @@ namespace bee::net::socket {
         default:
             std::unreachable();
         }
-    }
-
-    void udp_connect_reset(fd_t s) noexcept {
-#if defined(_WIN32)
-        DWORD byte_retruned = 0;
-        bool new_be         = false;
-        ::WSAIoctl(s, SIO_UDP_CONNRESET, &new_be, sizeof(new_be), NULL, 0, &byte_retruned, NULL, NULL);
-#else
-        (void)s;
-#endif
     }
 
     bool bind(fd_t s, const endpoint& ep) {

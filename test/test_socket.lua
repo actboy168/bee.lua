@@ -407,3 +407,16 @@ function test_socket:test_udp()
     a_fd:close()
     b_fd:close()
 end
+
+function test_socket:test_udp_unreachable()
+    local a_fd = lt.assertIsUserdata(socket.create "udp")
+    local b_fd = lt.assertIsUserdata(socket.create "udp")
+    lt.assertEquals(a_fd:bind("127.0.0.1", 0), true)
+    lt.assertEquals(b_fd:bind("127.0.0.1", 0), true)
+    local b_ep = b_fd:info "socket"
+    b_fd:close()
+    lt.assertEquals(a_fd:sendto("ping", b_ep), 4)
+    lt.assertEquals(a_fd:recvfrom(), false)
+    lt.assertEquals(a_fd:recvfrom(), false)
+    a_fd:close()
+end

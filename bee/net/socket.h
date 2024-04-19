@@ -56,7 +56,6 @@ namespace bee::net::socket {
     bool close(fd_t s) noexcept;
     bool shutdown(fd_t s, shutdown_flag flag) noexcept;
     bool setoption(fd_t s, option opt, int value) noexcept;
-    void udp_connect_reset(fd_t s) noexcept;
     bool bind(fd_t s, const endpoint& ep);
     bool listen(fd_t s, int backlog) noexcept;
     status connect(fd_t s, const endpoint& ep);
