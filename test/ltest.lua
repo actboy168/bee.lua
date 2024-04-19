@@ -1032,11 +1032,12 @@ if options.coverage then
         local major, minor = _VERSION:match "Lua (%d)%.(%d)"
         return tonumber(major) * 10 + tonumber(minor)
     end)()
-    if LuaVersion >= 53 then
+    if LuaVersion == 53 or LuaVersion == 54 then
         coverage = assert(load(coverage_script))()
         coverage.start()
     end
 end
 m.options = options
+m.stringify = stringify
 
 return m
