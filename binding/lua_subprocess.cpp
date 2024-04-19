@@ -428,11 +428,11 @@ namespace bee::lua_subprocess {
         luaL_checktype(L, 1, LUA_TTABLE);
         auto timeout  = lua::optinteger<int, -1>(L, 2);
         lua_Integer n = luaL_len(L, 1);
-        dynarray<subprocess::process*> set(static_cast<size_t>(n));
+        dynarray<subprocess::process_handle> set(static_cast<size_t>(n));
         for (int i = 0; i < static_cast<int>(n); ++i) {
             lua_geti(L, 1, i + 1);
-            auto& p = lua::checkudata<subprocess::process>(L, -1);
-            set[i]  = &p;
+            const auto& p = lua::checkudata<subprocess::process>(L, -1);
+            set[i]  = p.native_handle();
             lua_pop(L, 1);
         }
         switch (subprocess::process_select(set, timeout)) {

@@ -8,19 +8,14 @@
 #endif
 
 namespace bee::subprocess {
-    status process_select(const dynarray<process*>& set, int timeout) noexcept {
+    status process_select(const dynarray<process_handle>& set, int timeout) noexcept {
 #if defined(_WIN32)
         if (set.size() >= MAXIMUM_WAIT_OBJECTS) {
             SetLastError(ERROR_INVALID_PARAMETER);
             return status::failed;
         }
-        dynarray<HANDLE> fds(set.size());
-        DWORD nfds = 0;
-        for (const auto& p : set) {
-            auto fd     = p->native_handle();
-            fds[nfds++] = fd;
-        }
-        DWORD ret = WaitForMultipleObjects(nfds, fds.data(), FALSE, (timeout < 0) ? INFINITE : static_cast<DWORD>(timeout));
+        DWORD nfds = (DWORD)set.size();
+        DWORD ret  = WaitForMultipleObjects(nfds, set.data(), FALSE, (timeout < 0) ? INFINITE : static_cast<DWORD>(timeout));
         if (ret == WAIT_TIMEOUT) {
             return status::timeout;
         }
@@ -31,8 +26,7 @@ namespace bee::subprocess {
 #else
         dynarray<pollfd> fds(set.size());
         nfds_t nfds = 0;
-        for (const auto& p : set) {
-            auto fd     = p->native_handle();
+        for (auto p : set) {
             fds[nfds++] = { fd, POLLIN | POLLPRI, 0 };
         }
         int ret = poll(fds.data(), nfds, timeout);
