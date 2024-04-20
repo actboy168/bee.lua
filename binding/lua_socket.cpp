@@ -188,15 +188,6 @@ namespace bee::lua_socket {
                 std::unreachable();
             }
         }
-        static bool socket_destroy(lua_State* L) {
-            auto& fd = lua::checkudata<net::fd_t>(L, 1);
-            if (fd == net::retired_fd) {
-                return true;
-            }
-            bool ok = net::socket::close(fd);
-            fd      = net::retired_fd;
-            return ok;
-        }
         static int shutdown(lua_State* L, net::fd_t fd, net::socket::shutdown_flag flag) {
             if (!net::socket::shutdown(fd, flag)) {
                 return push_neterror(L, "shutdown");
@@ -327,14 +318,23 @@ namespace bee::lua_socket {
             return 1;
         }
         static int close(lua_State* L) {
-            if (!socket_destroy(L)) {
-                return push_neterror(L, "close");
+            auto& fd = lua::checkudata<net::fd_t>(L, 1);
+            if (fd != net::retired_fd) {
+                if (!net::socket::close(fd)) {
+                    fd = net::retired_fd;
+                    return push_neterror(L, "close");
+                }
+                fd = net::retired_fd;
             }
             lua_pushboolean(L, 1);
             return 1;
         }
         static int mt_close(lua_State* L) {
-            socket_destroy(L);
+            auto& fd = lua::checkudata<net::fd_t>(L, 1);
+            if (fd != net::retired_fd) {
+                net::socket::close(fd);
+                fd = net::retired_fd;
+            }
             return 0;
         }
         static int mt_gc(lua_State* L) {
