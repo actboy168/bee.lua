@@ -545,14 +545,10 @@ namespace bee::net::socket {
         return net_success(ok);
     }
 
-    std::error_code errcode(fd_t s) noexcept {
-        int err        = 0;
-        socklen_t errl = sizeof(err);
-        const int ok   = ::getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&err, &errl);
-        if (net_success(ok)) {
-            return error::net_errcode(err);
-        }
-        return error::net_errcode();
+    bool errcode(fd_t s, int& err) noexcept {
+        int errlen   = (int)sizeof(int);
+        const int ok = ::getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&err, &errlen);
+        return net_success(ok);
     }
 
 #if defined(_WIN32)
@@ -660,7 +656,8 @@ namespace bee::net::socket {
             if (::select(0, 0, &writefds, &exceptfds, 0) <= 0) {
                 break;
             }
-            if (errcode(cfd)) {
+            int err = 0;
+            if (!errcode(cfd, err) || err != 0) {
                 break;
             }
             fd_t newfd;

@@ -456,8 +456,7 @@ namespace bee::lua_subprocess {
     static int peek(lua_State* L) {
         luaL_Stream* p = lua::tofile(L, 1);
         if (!p->closef) {
-            auto ec    = std::make_error_code(std::errc::broken_pipe);
-            auto error = error::errmsg(ec, "subprocess::peek");
+            auto error = error::crt_errmsg("subprocess::peek", std::errc::broken_pipe);
             lua_pushnil(L);
             lua_pushstring(L, error.c_str());
             return 2;

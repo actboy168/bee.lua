@@ -89,27 +89,27 @@ namespace bee::error {
 #endif
     }
 
-    std::string errmsg(std::error_code ec, std::string_view msg) {
+    std::string errmsg(std::string_view msg, std::error_code ec) {
         return std::format("{}: ({}:{}){}", msg, ec.category().name(), ec.value(), ec.message());
     }
 
     std::string crt_errmsg(std::string_view msg) {
-        return errmsg(std::error_code(last_crterror(), std::generic_category()), msg);
+        return errmsg(msg, std::error_code(last_crterror(), std::generic_category()));
+    }
+
+    std::string crt_errmsg(std::string_view msg, std::errc err) {
+        return errmsg(msg, std::make_error_code(err));
     }
 
     std::string sys_errmsg(std::string_view msg) {
-        return errmsg(std::error_code(last_syserror(), get_error_category()), msg);
+        return errmsg(msg, std::error_code(last_syserror(), get_error_category()));
     }
 
     std::string net_errmsg(std::string_view msg) {
-        return errmsg(std::error_code(last_neterror(), get_error_category()), msg);
+        return errmsg(msg, std::error_code(last_neterror(), get_error_category()));
     }
 
-    std::error_code net_errcode(int err) {
-        return std::error_code(err, get_error_category());
-    }
-
-    std::error_code net_errcode() {
-        return std::error_code(last_neterror(), get_error_category());
+    std::string net_errmsg(std::string_view msg, int err) {
+        return errmsg(msg, std::error_code(err, get_error_category()));
     }
 }

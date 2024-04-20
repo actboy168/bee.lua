@@ -211,14 +211,16 @@ namespace bee::lua_socket {
             }
         }
         static int status(lua_State* L, net::fd_t fd) {
-            auto ec = net::socket::errcode(fd);
-            if (!ec) {
+            int err = 0;
+            if (!net::socket::errcode(fd, err)) {
+                return push_neterror(L, "getsockopt(SO_ERROR)");
+            }
+            if (!err) {
                 lua_pushboolean(L, 1);
                 return 1;
             }
-            auto error = error::errmsg(ec, "status");
             lua_pushnil(L);
-            lua_pushstring(L, error.c_str());
+            lua_pushstring(L, error::net_errmsg("status", err).c_str());
             return 2;
         }
         static int info(lua_State* L, net::fd_t fd) {
