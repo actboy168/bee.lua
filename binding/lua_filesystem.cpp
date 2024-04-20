@@ -89,23 +89,24 @@ namespace bee::lua_filesystem {
     }
 
     template <typename... Args>
-    static void lua_pushfmtstring(lua_State* L, std::format_string<Args...> fmt, Args... args) {
-        auto str = std::format(fmt, std::forward<Args>(args)...);
+    static void lua_pusherrmsg(lua_State* L, std::error_code ec, std::format_string<Args...> fmt, Args... args) {
+        auto msg = std::format(fmt, std::forward<Args>(args)...);
+        auto str = error::errmsg(ec, msg);
         lua_pushlstring(L, str.data(), str.size());
     }
 
     [[nodiscard]] static lua::cxx::status pusherror(lua_State* L, std::string_view op, std::error_code ec) {
-        lua_pushfmtstring(L, "{}: ({}){}", op, ec.value(), ec.message());
+        lua_pusherrmsg(L, ec, "{}", op);
         return lua::cxx::error;
     }
 
     [[nodiscard]] static lua::cxx::status pusherror(lua_State* L, std::string_view op, std::error_code ec, const fs::path& path1) {
-        lua_pushfmtstring(L, "{}: ({}){}: \"{}\"", op, ec.value(), ec.message(), tostring(path1));
+        lua_pusherrmsg(L, ec, "{}: \"{}\"", op, tostring(path1));
         return lua::cxx::error;
     }
 
     [[nodiscard]] static lua::cxx::status pusherror(lua_State* L, std::string_view op, std::error_code ec, const fs::path& path1, const fs::path& path2) {
-        lua_pushfmtstring(L, "{}: ({}){}: \"{}\", \"{}\"", op, ec.value(), ec.message(), tostring(path1), tostring(path2));
+        lua_pusherrmsg(L, ec, "{}: \"{}\", \"{}\"", op, tostring(path1), tostring(path2));
         return lua::cxx::error;
     }
 
@@ -932,13 +933,13 @@ namespace bee::lua_filesystem {
         auto fd   = file_handle::lock(self);
         if (!fd) {
             lua_pushnil(L);
-            lua_pushstring(L, make_syserror("filelock").c_str());
+            lua_pushstring(L, error::sys_errmsg("filelock").c_str());
             return 2;
         }
         auto f = fd.to_file(file_handle::mode::write);
         if (!f) {
             lua_pushnil(L);
-            lua_pushstring(L, make_crterror("filelock").c_str());
+            lua_pushstring(L, error::crt_errmsg("filelock").c_str());
             fd.close();
             return 2;
         }
@@ -951,14 +952,14 @@ namespace bee::lua_filesystem {
         auto fd   = file_handle::open_link(path);
         if (!fd) {
             lua_pushnil(L);
-            lua_pushstring(L, make_syserror("fullpath").c_str());
+            lua_pushstring(L, error::sys_errmsg("fullpath").c_str());
             return 2;
         }
         auto fullpath = fd.path();
         fd.close();
         if (!fullpath) {
             lua_pushnil(L);
-            lua_pushstring(L, make_syserror("fullpath").c_str());
+            lua_pushstring(L, error::sys_errmsg("fullpath").c_str());
             return 2;
         }
         lua::newudata<fs::path>(L, std::move(*fullpath));

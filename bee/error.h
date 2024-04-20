@@ -4,11 +4,11 @@
 #include <string_view>
 #include <system_error>
 
-namespace bee {
-    std::string make_crterror(std::string_view errmsg);
-    std::string make_syserror(std::string_view errmsg);
-    std::string make_neterror(std::string_view errmsg);
-    std::string make_error(std::error_code errcode, std::string_view errmsg);
-    std::error_code make_error(int err);
-    std::error_code make_neterror();
-    }
+namespace bee::error {
+    std::string errmsg(std::error_code ec, std::string_view msg);
+    std::string crt_errmsg(std::string_view msg);
+    std::string sys_errmsg(std::string_view msg);
+    std::string net_errmsg(std::string_view msg);
+    std::error_code net_errcode(int err);
+    std::error_code net_errcode();
+}

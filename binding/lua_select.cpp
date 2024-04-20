@@ -13,8 +13,7 @@
 
 namespace bee::lua_select {
     static void push_neterror(lua_State* L, std::string_view msg) {
-        auto error = make_neterror(msg);
-        lua_pushstring(L, error.c_str());
+        lua_pushstring(L, error::net_errmsg(msg).c_str());
     }
 #if defined(_WIN32)
     struct socket_set {

@@ -550,9 +550,9 @@ namespace bee::net::socket {
         socklen_t errl = sizeof(err);
         const int ok   = ::getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&err, &errl);
         if (net_success(ok)) {
-            return make_error(err);
+            return error::net_errcode(err);
         }
-        return make_neterror();
+        return error::net_errcode();
     }
 
 #if defined(_WIN32)

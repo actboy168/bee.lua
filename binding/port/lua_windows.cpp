@@ -26,13 +26,13 @@ namespace bee::lua_windows {
         auto mode      = lua::checkstrview(L, 2);
         if (!p || !p->closef || !p->f) {
             lua_pushnil(L);
-            lua_pushstring(L, make_error(std::make_error_code(std::errc::bad_file_descriptor), "filemode").c_str());
+            lua_pushstring(L, error::errmsg(std::make_error_code(std::errc::bad_file_descriptor), "filemode").c_str());
             return 2;
         }
         int ok = _setmode(_fileno(p->f), mode[0] == 'b' ? _O_BINARY : _O_TEXT);
         if (ok == -1) {
             lua_pushnil(L);
-            lua_pushstring(L, make_crterror("filemode").c_str());
+            lua_pushstring(L, error::crt_errmsg("filemode").c_str());
             return 2;
         }
         lua_pushboolean(L, 1);
@@ -55,7 +55,7 @@ namespace bee::lua_windows {
         auto msg       = wtf8::u2w(lua::checkstrview(L, 2));
         if (!p || !p->closef || !p->f) {
             lua_pushnil(L);
-            lua_pushstring(L, make_error(std::make_error_code(std::errc::bad_file_descriptor), "write_console").c_str());
+            lua_pushstring(L, error::errmsg(std::make_error_code(std::errc::bad_file_descriptor), "write_console").c_str());
             return 2;
         }
         HANDLE handle = (HANDLE)_get_osfhandle(_fileno(p->f));
@@ -63,7 +63,7 @@ namespace bee::lua_windows {
         BOOL ok       = WriteConsoleW(handle, (void*)msg.c_str(), (DWORD)msg.size(), &written, NULL);
         if (!ok) {
             lua_pushnil(L);
-            lua_pushstring(L, make_syserror("write_console").c_str());
+            lua_pushstring(L, error::sys_errmsg("write_console").c_str());
             return 2;
         }
         lua_pushinteger(L, written);

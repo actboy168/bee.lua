@@ -100,7 +100,7 @@ namespace bee::lua_subprocess {
                 lua_pushinteger(L, (lua_Integer)*status);
                 return 1;
             }
-            auto error = make_syserror("subprocess::wait");
+            auto error = error::sys_errmsg("subprocess::wait");
             lua_pushnil(L);
             lua_pushstring(L, error.c_str());
             return 2;
@@ -407,7 +407,7 @@ namespace bee::lua_subprocess {
             file_handle f_stderr = cast_stdio(L, spawn, "stderr", subprocess::stdio::eError, f_stdout);
             if (!spawn.exec(args, cwd ? cwd->c_str() : 0)) {
                 lua_pushnil(L);
-                lua_pushstring(L, make_syserror("subprocess::spawn").c_str());
+                lua_pushstring(L, error::sys_errmsg("subprocess::spawn").c_str());
                 return 2;
             }
             process::constructor(L, spawn);
@@ -443,7 +443,7 @@ namespace bee::lua_subprocess {
             lua_pushboolean(L, 1);
             return 1;
         case subprocess::status::failed: {
-            auto error = make_syserror("process_select");
+            auto error = error::sys_errmsg("process_select");
             lua_pushnil(L);
             lua_pushstring(L, error.c_str());
             return 2;
@@ -457,14 +457,14 @@ namespace bee::lua_subprocess {
         luaL_Stream* p = lua::tofile(L, 1);
         if (!p->closef) {
             auto ec    = std::make_error_code(std::errc::broken_pipe);
-            auto error = make_error(ec, "subprocess::peek");
+            auto error = error::errmsg(ec, "subprocess::peek");
             lua_pushnil(L);
             lua_pushstring(L, error.c_str());
             return 2;
         }
         int n = subprocess::pipe::peek(file_handle::from_file(p->f));
         if (n < 0) {
-            auto error = make_syserror("subprocess::peek");
+            auto error = error::sys_errmsg("subprocess::peek");
             lua_pushnil(L);
             lua_pushstring(L, error.c_str());
             return 2;
@@ -481,7 +481,7 @@ namespace bee::lua_subprocess {
         int ok = ::_putenv(lua_tostring(L, -1));
         if (ok == -1) {
             lua_pushnil(L);
-            lua_pushstring(L, make_crterror("_putenv").c_str());
+            lua_pushstring(L, error::crt_errmsg("_putenv").c_str());
             return 2;
         }
         lua_pushboolean(L, 1);
@@ -490,7 +490,7 @@ namespace bee::lua_subprocess {
         int ok = ::setenv(name.data(), value.data(), 1);
         if (ok == -1) {
             lua_pushnil(L);
-            lua_pushstring(L, make_crterror("setenv").c_str());
+            lua_pushstring(L, error::crt_errmsg("setenv").c_str());
             return 2;
         }
         lua_pushboolean(L, 1);

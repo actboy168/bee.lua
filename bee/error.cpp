@@ -8,7 +8,7 @@
 #    include <errno.h>
 #endif
 
-namespace bee {
+namespace bee::error {
 #if defined(_WIN32)
     struct errormsg : public std::wstring_view {
         using mybase = std::wstring_view;
@@ -89,27 +89,27 @@ namespace bee {
 #endif
     }
 
-    std::string make_error(std::error_code ec, std::string_view errmsg) {
-        return std::format("{}: ({}:{}){}", errmsg, ec.category().name(), ec.value(), ec.message());
+    std::string errmsg(std::error_code ec, std::string_view msg) {
+        return std::format("{}: ({}:{}){}", msg, ec.category().name(), ec.value(), ec.message());
     }
 
-    std::string make_crterror(std::string_view errmsg) {
-        return make_error(std::error_code(last_crterror(), std::generic_category()), errmsg);
+    std::string crt_errmsg(std::string_view msg) {
+        return errmsg(std::error_code(last_crterror(), std::generic_category()), msg);
     }
 
-    std::string make_syserror(std::string_view errmsg) {
-        return make_error(std::error_code(last_syserror(), get_error_category()), errmsg);
+    std::string sys_errmsg(std::string_view msg) {
+        return errmsg(std::error_code(last_syserror(), get_error_category()), msg);
     }
 
-    std::string make_neterror(std::string_view errmsg) {
-        return make_error(std::error_code(last_neterror(), get_error_category()), errmsg);
+    std::string net_errmsg(std::string_view msg) {
+        return errmsg(std::error_code(last_neterror(), get_error_category()), msg);
     }
 
-    std::error_code make_error(int err) {
+    std::error_code net_errcode(int err) {
         return std::error_code(err, get_error_category());
     }
 
-    std::error_code make_neterror() {
+    std::error_code net_errcode() {
         return std::error_code(last_neterror(), get_error_category());
     }
 }
