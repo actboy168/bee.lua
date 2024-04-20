@@ -243,11 +243,6 @@ do
     ---@return lightuserdata
     function fd:handle()
     end
-
-    ---@nodiscard
-    ---@return lightuserdata
-    function fd:detach()
-    end
 end
 
 ---@nodiscard
