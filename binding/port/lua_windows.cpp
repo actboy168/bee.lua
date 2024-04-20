@@ -1,6 +1,7 @@
 #include <Windows.h>
 #include <bee/error.h>
 #include <bee/lua/binding.h>
+#include <bee/lua/error.h>
 #include <bee/platform/win/unicode.h>
 #include <bee/platform/win/wtf8.h>
 #include <binding/binding.h>
@@ -25,15 +26,11 @@ namespace bee::lua_windows {
         luaL_Stream* p = lua::tofile(L, 1);
         auto mode      = lua::checkstrview(L, 2);
         if (!p || !p->closef || !p->f) {
-            lua_pushnil(L);
-            lua_pushstring(L, error::crt_errmsg("filemode", std::errc::bad_file_descriptor).c_str());
-            return 2;
+            return lua::push_error(L, error::crt_errmsg("filemode", std::errc::bad_file_descriptor));
         }
         int ok = _setmode(_fileno(p->f), mode[0] == 'b' ? _O_BINARY : _O_TEXT);
         if (ok == -1) {
-            lua_pushnil(L);
-            lua_pushstring(L, error::crt_errmsg("filemode").c_str());
-            return 2;
+            return lua::push_error(L, error::crt_errmsg("filemode"));
         }
         lua_pushboolean(L, 1);
         return 1;
@@ -54,17 +51,13 @@ namespace bee::lua_windows {
         luaL_Stream* p = lua::tofile(L, 1);
         auto msg       = wtf8::u2w(lua::checkstrview(L, 2));
         if (!p || !p->closef || !p->f) {
-            lua_pushnil(L);
-            lua_pushstring(L, error::crt_errmsg("write_console", std::errc::bad_file_descriptor).c_str());
-            return 2;
+            return lua::push_error(L, error::crt_errmsg("write_console", std::errc::bad_file_descriptor));
         }
         HANDLE handle = (HANDLE)_get_osfhandle(_fileno(p->f));
         DWORD written = 0;
         BOOL ok       = WriteConsoleW(handle, (void*)msg.c_str(), (DWORD)msg.size(), &written, NULL);
         if (!ok) {
-            lua_pushnil(L);
-            lua_pushstring(L, error::sys_errmsg("write_console").c_str());
-            return 2;
+            return lua::push_error(L, error::sys_errmsg("write_console"));
         }
         lua_pushinteger(L, written);
         return 1;

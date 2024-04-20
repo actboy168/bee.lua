@@ -1,6 +1,7 @@
 #include <bee/error.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/cxx_status.h>
+#include <bee/lua/error.h>
 #include <bee/lua/narrow.h>
 #include <bee/nonstd/filesystem.h>
 #include <bee/nonstd/format.h>
@@ -909,9 +910,7 @@ namespace bee::lua_filesystem {
     static int exe_path(lua_State* L) {
         auto r = path_helper::exe_path();
         if (!r) {
-            lua_pushnil(L);
-            lua_pushstring(L, r.error().c_str());
-            return 2;
+            return lua::push_error(L, r.error());
         }
         lua::newudata<fs::path>(L, r.value());
         return 1;
@@ -920,9 +919,7 @@ namespace bee::lua_filesystem {
     static int dll_path(lua_State* L) {
         auto r = path_helper::dll_path();
         if (!r) {
-            lua_pushnil(L);
-            lua_pushstring(L, r.error().c_str());
-            return 2;
+            return lua::push_error(L, r.error());
         }
         lua::newudata<fs::path>(L, r.value());
         return 1;
@@ -932,16 +929,13 @@ namespace bee::lua_filesystem {
         auto self = getpathptr(L, 1);
         auto fd   = file_handle::lock(self);
         if (!fd) {
-            lua_pushnil(L);
-            lua_pushstring(L, error::sys_errmsg("filelock").c_str());
-            return 2;
+            return lua::push_error(L, error::sys_errmsg("filelock"));
         }
         auto f = fd.to_file(file_handle::mode::write);
         if (!f) {
-            lua_pushnil(L);
-            lua_pushstring(L, error::crt_errmsg("filelock").c_str());
+            auto errmsg = error::crt_errmsg("filelock");
             fd.close();
-            return 2;
+            return lua::push_error(L, errmsg);
         }
         lua::newfile(L, f);
         return 1;
@@ -951,16 +945,12 @@ namespace bee::lua_filesystem {
         auto path = getpathptr(L, 1);
         auto fd   = file_handle::open_link(path);
         if (!fd) {
-            lua_pushnil(L);
-            lua_pushstring(L, error::sys_errmsg("fullpath").c_str());
-            return 2;
+            return lua::push_error(L, error::sys_errmsg("fullpath"));
         }
         auto fullpath = fd.path();
         fd.close();
         if (!fullpath) {
-            lua_pushnil(L);
-            lua_pushstring(L, error::sys_errmsg("fullpath").c_str());
-            return 2;
+            return lua::push_error(L, error::sys_errmsg("fullpath"));
         }
         lua::newudata<fs::path>(L, std::move(*fullpath));
         return 1;

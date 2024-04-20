@@ -1,5 +1,6 @@
 ﻿#include <bee/error.h>
 #include <bee/lua/binding.h>
+#include <bee/lua/error.h>
 #include <bee/net/endpoint.h>
 #include <bee/net/socket.h>
 #include <bee/nonstd/unreachable.h>
@@ -7,9 +8,7 @@
 
 namespace bee::lua_socket {
     static int push_neterror(lua_State* L, std::string_view msg) {
-        lua_pushnil(L);
-        lua_pushstring(L, error::net_errmsg(msg).c_str());
-        return 2;
+        return lua::push_error(L, error::net_errmsg(msg));
     }
 
     namespace endpoint {
@@ -205,9 +204,7 @@ namespace bee::lua_socket {
             case 'w':
                 return shutdown(L, fd, net::socket::shutdown_flag::write);
             default:
-                lua_pushnil(L);
-                lua_pushstring(L, "invalid flag");
-                return 2;
+                return lua::push_error(L, "invalid flag");
             }
         }
         static int status(lua_State* L, net::fd_t fd) {
@@ -219,9 +216,7 @@ namespace bee::lua_socket {
                 lua_pushboolean(L, 1);
                 return 1;
             }
-            lua_pushnil(L);
-            lua_pushstring(L, error::net_errmsg("status", err).c_str());
-            return 2;
+            return lua::push_error(L, error::net_errmsg("status", err));
         }
         static int info(lua_State* L, net::fd_t fd) {
             auto which = lua::checkstrview(L, 2);
