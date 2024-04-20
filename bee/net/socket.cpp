@@ -546,8 +546,8 @@ namespace bee::net::socket {
     }
 
     bool errcode(fd_t s, int& err) noexcept {
-        int errlen   = (int)sizeof(int);
-        const int ok = ::getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&err, &errlen);
+        socklen_t errlen = (socklen_t)sizeof(int);
+        const int ok     = ::getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&err, &errlen);
         return net_success(ok);
     }
 
