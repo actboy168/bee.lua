@@ -68,7 +68,7 @@ namespace bee::net::socket {
         }
     }
 
-    static std::string file_read(zstring_view filename) {
+    static std::string file_read(zstring_view filename) noexcept {
         FILE* f = fileutil::open(filename, L"rb");
         if (!f) {
             return std::string();
@@ -79,7 +79,7 @@ namespace bee::net::socket {
         return result;
     }
 
-    static bool file_write(zstring_view filename, const std::string& value) {
+    static bool file_write(zstring_view filename, const std::string& value) noexcept {
         FILE* f = fileutil::open(filename, L"wb");
         if (!f) {
             return false;
@@ -89,7 +89,7 @@ namespace bee::net::socket {
         return true;
     }
 
-    static bool read_tcp_port(const endpoint& ep, uint16_t& tcpport) {
+    static bool read_tcp_port(const endpoint& ep, uint16_t& tcpport) noexcept {
         auto [type, path] = ep.get_unix();
         if (type != un_format::pathname) {
             return false;
@@ -107,7 +107,7 @@ namespace bee::net::socket {
         return true;
     }
 
-    static bool write_tcp_port(zstring_view path, fd_t s) {
+    static bool write_tcp_port(zstring_view path, fd_t s) noexcept {
         endpoint ep;
         if (socket::getsockname(s, ep)) {
             auto tcpport = ep.get_port();
@@ -123,7 +123,7 @@ namespace bee::net::socket {
         return false;
     }
 
-    static status u_connect(fd_t s, const endpoint& ep) {
+    static status u_connect(fd_t s, const endpoint& ep) noexcept {
         uint16_t tcpport = 0;
         if (!read_tcp_port(ep, tcpport)) {
             ::WSASetLastError(WSAECONNREFUSED);
@@ -275,27 +275,17 @@ namespace bee::net::socket {
         return net_success(ok);
     }
 
-    static int get_error() noexcept {
-#if defined(_WIN32)
-        return ::WSAGetLastError();
-#else
-        return errno;
-#endif
-    }
-
 #if defined(_WIN32) || defined(__APPLE__) || defined(__FreeBSD__) || defined(SO_NOSIGPIPE)
-    static void set_error(int err) noexcept {
-#    if defined(_WIN32)
-        ::WSASetLastError(err);
-#    else
-        errno = err;
-#    endif
-    }
-
     static void internal_close(fd_t s) noexcept {
-        const int saved_errno = get_error();
+#    if defined(_WIN32)
+        auto saved = ::WSAGetLastError();
         close(s);
-        set_error(saved_errno);
+        ::WSASetLastError(saved);
+#    else
+        auto saved = errno;
+        close(s);
+        errno = saved;
+#    endif
     }
 #endif
 
@@ -354,7 +344,7 @@ namespace bee::net::socket {
         return fd;
     }
 
-    fd_t open(protocol protocol, fd_flags flags) {
+    fd_t open(protocol protocol, fd_flags flags) noexcept {
         switch (protocol) {
         case protocol::tcp:
             return createSocket(PF_INET, SOCK_STREAM, IPPROTO_TCP, flags);
@@ -415,7 +405,7 @@ namespace bee::net::socket {
         }
     }
 
-    bool bind(fd_t s, const endpoint& ep) {
+    bool bind(fd_t s, const endpoint& ep) noexcept {
 #if defined(_WIN32)
         if (!supportUnixDomainSocket() && ep.addr()->sa_family == AF_UNIX) {
             return u_bind(s, ep);
@@ -440,7 +430,7 @@ namespace bee::net::socket {
         return net_success(ok);
     }
 
-    status connect(fd_t s, const endpoint& ep) {
+    status connect(fd_t s, const endpoint& ep) noexcept {
 #if defined(_WIN32)
         if (!supportUnixDomainSocket() && ep.addr()->sa_family == AF_UNIX) {
             return u_connect(s, ep);
@@ -560,13 +550,13 @@ namespace bee::net::socket {
         socklen_t errl = sizeof(err);
         const int ok   = ::getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&err, &errl);
         if (net_success(ok)) {
-            return std::error_code(err, get_error_category());
+            return make_error(err);
         }
-        return std::error_code(get_error(), get_error_category());
+        return make_neterror();
     }
 
 #if defined(_WIN32)
-    static bool unnamed_unix_bind(fd_t s) {
+    static bool unnamed_unix_bind(fd_t s) noexcept {
         wchar_t tmpdir[MAX_PATH];
         int bind_try = 0;
         for (;;) {
@@ -620,7 +610,7 @@ namespace bee::net::socket {
     }
 #endif
 
-    bool pair(fd_t sv[2], fd_flags fd_flags) {
+    bool pair(fd_t sv[2], fd_flags fd_flags) noexcept {
 #if defined(_WIN32)
         auto proto     = supportUnixDomainSocket() ? protocol::unix : protocol::tcp;
         const fd_t sfd = open(proto, fd_flags);
@@ -720,7 +710,7 @@ namespace bee::net::socket {
 #endif
     }
 
-    bool pipe(fd_t sv[2], fd_flags fd_flags) {
+    bool pipe(fd_t sv[2], fd_flags fd_flags) noexcept {
 #if defined(_WIN32)
         if (fd_flags == fd_flags::nonblock) {
             SetLastError(ERROR_INVALID_PARAMETER);

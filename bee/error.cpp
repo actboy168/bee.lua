@@ -81,7 +81,7 @@ namespace bee {
 #endif
     }
 
-    const std::error_category& get_error_category() noexcept {
+    static const std::error_category& get_error_category() noexcept {
 #if defined(_WIN32)
         return g_windows_category;
 #else
@@ -103,5 +103,13 @@ namespace bee {
 
     std::string make_neterror(std::string_view errmsg) {
         return make_error(std::error_code(last_neterror(), get_error_category()), errmsg);
+    }
+
+    std::error_code make_error(int err) {
+        return std::error_code(err, get_error_category());
+    }
+
+    std::error_code make_neterror() {
+        return std::error_code(last_neterror(), get_error_category());
     }
 }

@@ -50,15 +50,15 @@ namespace bee::net::socket {
     };
 
     bool initialize() noexcept;
-    fd_t open(protocol protocol, fd_flags flags = fd_flags::nonblock);
-    bool pair(fd_t sv[2], fd_flags flags = fd_flags::nonblock);
-    bool pipe(fd_t sv[2], fd_flags flags = fd_flags::nonblock);
+    fd_t open(protocol protocol, fd_flags flags = fd_flags::nonblock) noexcept;
+    bool pair(fd_t sv[2], fd_flags flags = fd_flags::nonblock) noexcept;
+    bool pipe(fd_t sv[2], fd_flags flags = fd_flags::nonblock) noexcept;
     bool close(fd_t s) noexcept;
     bool shutdown(fd_t s, shutdown_flag flag) noexcept;
     bool setoption(fd_t s, option opt, int value) noexcept;
-    bool bind(fd_t s, const endpoint& ep);
+    bool bind(fd_t s, const endpoint& ep) noexcept;
     bool listen(fd_t s, int backlog) noexcept;
-    status connect(fd_t s, const endpoint& ep);
+    status connect(fd_t s, const endpoint& ep) noexcept;
     status accept(fd_t s, fd_t& newfd, fd_flags flags = fd_flags::nonblock) noexcept;
     recv_status recv(fd_t s, int& rc, char* buf, int len) noexcept;
     status send(fd_t s, int& rc, const char* buf, int len) noexcept;
