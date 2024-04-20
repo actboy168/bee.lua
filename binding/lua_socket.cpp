@@ -63,7 +63,7 @@ namespace bee::lua_socket {
 
     struct fd_no_ownership {
         net::fd_t v;
-        fd_no_ownership(net::fd_t v)
+        fd_no_ownership(net::fd_t v) noexcept
             : v(v) {}
         operator net::fd_t() const noexcept {
             return v;

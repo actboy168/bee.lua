@@ -61,55 +61,39 @@ namespace bee::error {
     static winCategory g_windows_category;
 #endif
 
-    static int last_crterror() noexcept {
-        return errno;
-    }
-
-    static int last_syserror() noexcept {
-#if defined(_WIN32)
-        return ::GetLastError();
-#else
-        return errno;
-#endif
-    }
-
-    static int last_neterror() noexcept {
-#if defined(_WIN32)
-        return ::WSAGetLastError();
-#else
-        return errno;
-#endif
-    }
-
-    static const std::error_category& get_error_category() noexcept {
-#if defined(_WIN32)
-        return g_windows_category;
-#else
-        return std::generic_category();
-#endif
-    }
-
-    std::string errmsg(std::string_view msg, std::error_code ec) {
+    std::string errmsg(std::string_view msg, std::error_code ec) noexcept {
         return std::format("{}: ({}:{}){}", msg, ec.category().name(), ec.value(), ec.message());
     }
 
-    std::string crt_errmsg(std::string_view msg) {
-        return errmsg(msg, std::error_code(last_crterror(), std::generic_category()));
-    }
-
-    std::string crt_errmsg(std::string_view msg, std::errc err) {
+    std::string crt_errmsg(std::string_view msg, std::errc err) noexcept {
         return errmsg(msg, std::make_error_code(err));
     }
 
-    std::string sys_errmsg(std::string_view msg) {
-        return errmsg(msg, std::error_code(last_syserror(), get_error_category()));
+    std::string crt_errmsg(std::string_view msg) noexcept {
+        return crt_errmsg(msg, (std::errc)errno);
     }
 
-    std::string net_errmsg(std::string_view msg) {
-        return errmsg(msg, std::error_code(last_neterror(), get_error_category()));
+    std::string sys_errmsg(std::string_view msg) noexcept {
+#if defined(_WIN32)
+        return errmsg(msg, std::error_code(::WSAGetLastError(), g_windows_category));
+#else
+        return errmsg(msg, std::error_code(errno, std::system_category()));
+#endif
     }
 
-    std::string net_errmsg(std::string_view msg, int err) {
-        return errmsg(msg, std::error_code(err, get_error_category()));
+    std::string net_errmsg(std::string_view msg, int err) noexcept {
+#if defined(_WIN32)
+        return errmsg(msg, std::error_code(err, g_windows_category));
+#else
+        return errmsg(msg, std::error_code(err, std::system_category()));
+#endif
+    }
+
+    std::string net_errmsg(std::string_view msg) noexcept {
+#if defined(_WIN32)
+        return net_errmsg(msg, ::GetLastError());
+#else
+        return net_errmsg(msg, errno);
+#endif
     }
 }
