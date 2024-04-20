@@ -67,6 +67,9 @@ namespace bee::lua_socket {
         net::fd_t v;
         fd_no_ownership(net::fd_t v)
             : v(v) {}
+        operator net::fd_t() const noexcept {
+            return v;
+        }
     };
     namespace fd {
         static net::endpoint& to_endpoint(lua_State* L, int idx, net::endpoint& ep) {
@@ -295,8 +298,8 @@ namespace bee::lua_socket {
             lua_pushboolean(L, 1);
             return 1;
         }
-
-        static int detach(lua_State* L, net::fd_t& fd) {
+        static int detach(lua_State* L) {
+            auto& fd = lua::checkudata<net::fd_t>(L, 1);
             if (fd == net::retired_fd) {
                 luaL_error(L, "socket is already closed.");
                 return 0;
@@ -305,7 +308,8 @@ namespace bee::lua_socket {
             fd = net::retired_fd;
             return 1;
         }
-        static int mt_tostring(lua_State* L, net::fd_t& fd) {
+        static int mt_tostring(lua_State* L) {
+            auto fd = lua::checkudata<net::fd_t>(L, 1);
             if (fd == net::retired_fd) {
                 lua_pushstring(L, "socket (closed)");
                 return 1;
@@ -313,7 +317,15 @@ namespace bee::lua_socket {
             lua_pushfstring(L, "socket (%d)", fd);
             return 1;
         }
-
+        static int mt_tostring_no_ownership(lua_State* L) {
+            auto fd = (net::fd_t)lua::checkudata<fd_no_ownership>(L, 1);
+            if (fd == net::retired_fd) {
+                lua_pushstring(L, "socket (closed) (no ownership)");
+                return 1;
+            }
+            lua_pushfstring(L, "socket (%d) (no ownership)", fd);
+            return 1;
+        }
         static int close(lua_State* L) {
             if (!socket_destroy(L)) {
                 return push_neterror(L, "close");
@@ -332,36 +344,15 @@ namespace bee::lua_socket {
             }
             return 0;
         }
-
-        using socket_func    = int (*)(lua_State*, net::fd_t);
-        using socketref_func = int (*)(lua_State*, net::fd_t&);
-        template <socket_func func>
+        using socket_func = int (*)(lua_State*, net::fd_t);
+        template <socket_func func, typename T = net::fd_t>
         static int call_socket(lua_State* L) {
-            auto fd = lua::checkudata<net::fd_t>(L, 1);
+            auto fd = (net::fd_t)lua::checkudata<T>(L, 1);
             if (fd == net::retired_fd) {
                 luaL_error(L, "socket is already closed.");
             }
             return func(L, fd);
         }
-        template <socket_func func>
-        static int call_socket_no_ownership(lua_State* L) {
-            auto fd = lua::checkudata<fd_no_ownership>(L, 1).v;
-            if (fd == net::retired_fd) {
-                luaL_error(L, "socket is already closed.");
-            }
-            return func(L, fd);
-        }
-        template <socketref_func func>
-        static int call_socketref(lua_State* L) {
-            auto& fd = lua::checkudata<net::fd_t>(L, 1);
-            return func(L, fd);
-        }
-        template <socketref_func func>
-        static int call_socketref_no_ownership(lua_State* L) {
-            auto& fd = lua::checkudata<fd_no_ownership>(L, 1).v;
-            return func(L, fd);
-        }
-
         static void metatable(lua_State* L) {
             luaL_Reg lib[] = {
                 { "connect", call_socket<connect> },
@@ -377,7 +368,7 @@ namespace bee::lua_socket {
                 { "info", call_socket<info> },
                 { "option", call_socket<option> },
                 { "handle", call_socket<handle> },
-                { "detach", call_socketref<detach> },
+                { "detach", detach },
                 { "close", close },
                 { NULL, NULL },
             };
@@ -385,7 +376,7 @@ namespace bee::lua_socket {
             luaL_setfuncs(L, lib, 0);
             lua_setfield(L, -2, "__index");
             luaL_Reg mt[] = {
-                { "__tostring", call_socketref<mt_tostring> },
+                { "__tostring", mt_tostring },
                 { "__close", mt_close },
                 { "__gc", mt_gc },
                 { NULL, NULL },
@@ -394,27 +385,26 @@ namespace bee::lua_socket {
         }
         static void metatable_no_ownership(lua_State* L) {
             luaL_Reg lib[] = {
-                { "connect", call_socket_no_ownership<connect> },
-                { "bind", call_socket_no_ownership<bind> },
-                { "listen", call_socket_no_ownership<listen> },
-                { "accept", call_socket_no_ownership<accept> },
-                { "recv", call_socket_no_ownership<recv> },
-                { "send", call_socket_no_ownership<send> },
-                { "recvfrom", call_socket_no_ownership<recvfrom> },
-                { "sendto", call_socket_no_ownership<sendto> },
-                { "shutdown", call_socket_no_ownership<shutdown> },
-                { "status", call_socket_no_ownership<status> },
-                { "info", call_socket_no_ownership<info> },
-                { "option", call_socket_no_ownership<option> },
-                { "handle", call_socket_no_ownership<handle> },
-                { "detach", call_socketref_no_ownership<detach> },
+                { "connect", call_socket<connect, fd_no_ownership> },
+                { "bind", call_socket<bind, fd_no_ownership> },
+                { "listen", call_socket<listen, fd_no_ownership> },
+                { "accept", call_socket<accept, fd_no_ownership> },
+                { "recv", call_socket<recv, fd_no_ownership> },
+                { "send", call_socket<send, fd_no_ownership> },
+                { "recvfrom", call_socket<recvfrom, fd_no_ownership> },
+                { "sendto", call_socket<sendto, fd_no_ownership> },
+                { "shutdown", call_socket<shutdown, fd_no_ownership> },
+                { "status", call_socket<status, fd_no_ownership> },
+                { "info", call_socket<info, fd_no_ownership> },
+                { "option", call_socket<option, fd_no_ownership> },
+                { "handle", call_socket<handle, fd_no_ownership> },
                 { NULL, NULL },
             };
             luaL_newlibtable(L, lib);
             luaL_setfuncs(L, lib, 0);
             lua_setfield(L, -2, "__index");
             luaL_Reg mt[] = {
-                { "__tostring", call_socketref_no_ownership<mt_tostring> },
+                { "__tostring", mt_tostring_no_ownership },
                 { NULL, NULL },
             };
             luaL_setfuncs(L, mt, 0);
