@@ -5,7 +5,7 @@
 #else
 #    if defined(_WIN32)
 #        include <Windows.h>
-#        include <bee/platform/win/module_version.h>
+#        include <bee/win/module_version.h>
 #    else
 #        include <sys/utsname.h>
 

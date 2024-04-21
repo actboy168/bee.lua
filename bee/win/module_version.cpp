@@ -1,6 +1,6 @@
 #include <Windows.h>
 #include <bee/nonstd/format.h>
-#include <bee/platform/win/module_version.h>
+#include <bee/win/module_version.h>
 
 namespace bee::win {
 

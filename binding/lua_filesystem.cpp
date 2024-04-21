@@ -16,7 +16,7 @@
 
 #if defined(_WIN32)
 #    include <Windows.h>
-#    include <bee/platform/win/wtf8.h>
+#    include <bee/win/wtf8.h>
 #endif
 
 namespace bee::lua_filesystem {

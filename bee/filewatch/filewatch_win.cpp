@@ -2,7 +2,7 @@
 #include <bee/error.h>
 #include <bee/filewatch/filewatch.h>
 #include <bee/nonstd/unreachable.h>
-#include <bee/platform/win/wtf8.h>
+#include <bee/win/wtf8.h>
 
 #include <array>
 #include <cassert>

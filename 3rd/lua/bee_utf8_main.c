@@ -1,7 +1,7 @@
 #if defined(_WIN32)
 
 #    include <Windows.h>
-#    include <bee/platform/win/cwtf8.h>
+#    include <bee/win/cwtf8.h>
 #    include <stdlib.h>
 #    include <string.h>
 

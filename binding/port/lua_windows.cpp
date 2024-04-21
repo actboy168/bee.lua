@@ -2,8 +2,8 @@
 #include <bee/error.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/error.h>
-#include <bee/platform/win/unicode.h>
-#include <bee/platform/win/wtf8.h>
+#include <bee/win/unicode.h>
+#include <bee/win/wtf8.h>
 #include <binding/binding.h>
 #include <binding/file.h>
 #include <fcntl.h>

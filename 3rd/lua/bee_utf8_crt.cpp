@@ -10,7 +10,7 @@
 #    include "bee_utf8_crt.h"
 
 #    include <Windows.h>
-#    include <bee/platform/win/cwtf8.h>
+#    include <bee/win/cwtf8.h>
 #    include <bee/utility/zstring_view.h>
 #    include <io.h>
 
