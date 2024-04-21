@@ -8,7 +8,7 @@
 #endif
 
 namespace bee::subprocess {
-    status process_select(const dynarray<process_handle>& set, int timeout) noexcept {
+    status process_select(const span<process_handle>& set, int timeout) noexcept {
 #if defined(_WIN32)
         if (set.size() >= MAXIMUM_WAIT_OBJECTS) {
             SetLastError(ERROR_INVALID_PARAMETER);

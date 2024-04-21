@@ -1,7 +1,7 @@
 #pragma once
 
 #include <bee/subprocess.h>
-#include <bee/utility/dynarray.h>
+#include <bee/utility/span.h>
 
 namespace bee::subprocess {
     enum class status {
@@ -9,5 +9,5 @@ namespace bee::subprocess {
         timeout,
         failed,
     };
-    status process_select(const dynarray<process_handle>& set, int timeout) noexcept;
+    status process_select(const span<process_handle>& set, int timeout) noexcept;
 }
