@@ -5,6 +5,10 @@
 
 #include <cstdint>
 
+#if defined(__linux__)
+#    include <sys/epoll.h>
+#endif
+
 namespace bee::net {
     enum class bpoll_event : uint32_t {
         null    = 0,
@@ -34,6 +38,10 @@ namespace bee::net {
     using bpoll_socket = int;
 #endif
 
+#if defined(__linux__)
+    using bpoll_data_t  = epoll_data_t;
+    using bpoll_event_t = epoll_event;
+#else
     union bpoll_data_t {
         void* ptr;
         int fd;
@@ -42,13 +50,11 @@ namespace bee::net {
         bpoll_socket sock;
         bpoll_handle hnd;
     };
-
-#pragma pack(push, 1)
     struct bpoll_event_t {
         bpoll_event events;
         bpoll_data_t data;
     };
-#pragma pack(pop)
+#endif
 
     bpoll_handle bpoll_create();
     bool bpoll_close(bpoll_handle hnd);

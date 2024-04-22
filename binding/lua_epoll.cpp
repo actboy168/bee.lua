@@ -32,7 +32,7 @@ namespace bee::lua_epoll {
         }
         const net::bpoll_event_t &ev = ep->events[ep->i];
         luaref_get(ep->ref, L, ev.data.u32);
-        lua_pushinteger(L, std::to_underlying(ev.events));
+        lua_pushinteger(L, static_cast<uint32_t>(ev.events));
         ep->i++;
         return 2;
     }
@@ -133,7 +133,7 @@ namespace bee::lua_epoll {
             return lua::push_error(L, "Too many events.");
         }
         net::bpoll_event_t ev;
-        ev.events   = static_cast<net::bpoll_event>(luaL_checkinteger(L, 3));
+        ev.events   = static_cast<decltype(ev.events)>(luaL_checkinteger(L, 3));
         ev.data.u32 = r;
         if (!net::bpoll_ctl_add(ep->fd, fd, ev)) {
             luaref_unref(ep->ref, r);
@@ -152,7 +152,7 @@ namespace bee::lua_epoll {
             return lua::push_error(L, "event is not initialized.");
         }
         net::bpoll_event_t ev;
-        ev.events   = static_cast<net::bpoll_event>(luaL_checkinteger(L, 3));
+        ev.events   = static_cast<decltype(ev.events)>(luaL_checkinteger(L, 3));
         ev.data.u32 = r;
         if (!net::bpoll_ctl_mod(ep->fd, fd, ev)) {
             return lua::push_error(L, error::net_errmsg("epoll_ctl"));
