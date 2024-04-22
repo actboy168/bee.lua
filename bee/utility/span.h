@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstddef>
 #include <iterator>
 #include <type_traits>
@@ -14,7 +15,7 @@ namespace bee {
     template <class C, class E>
     struct span_compatible_element<C, E, std::void_t<decltype(std::data(std::declval<C>()))>> : std::is_convertible<std::remove_pointer_t<decltype(std::data(std::declval<C &>()))> (*)[], E (*)[]> {};
     template <class C, class E>
-    constexpr bool span_compatible_container = span_has_size_and_data<C>::value && span_compatible_element<C, E>::value;
+    struct span_compatible_container : std::bool_constant<span_has_size_and_data<C>::value && span_compatible_element<C, E>::value> {};
     template <class T>
     class span {
     public:
@@ -34,15 +35,19 @@ namespace bee {
             : data_(nullptr)
             , size_(0) {
         }
+        constexpr span(pointer ptr, size_type count)
+            : data_(ptr)
+            , size_(count) {
+        }
         template <size_t N, std::enable_if_t<std::is_convertible_v<value_type (*)[], element_type (*)[]>, int> = 0>
         constexpr span(element_type (&arr)[N]) noexcept
             : data_(std::addressof(arr[0]))
             , size_(N) {}
-        template <class Container, std::enable_if_t<span_compatible_container<Container, element_type>, int> = 0>
+        template <class Container, std::enable_if_t<span_compatible_container<Container, element_type>::value, int> = 0>
         constexpr span(Container &cont) noexcept
             : data_(std::data(cont))
             , size_(std::size(cont)) {}
-        template <class Container, std::enable_if_t<std::is_const_v<element_type> && span_compatible_container<Container, element_type>, int> = 0>
+        template <class Container, std::enable_if_t<std::is_const_v<element_type> && span_compatible_container<Container, element_type>::value, int> = 0>
         constexpr span(const Container &cont) noexcept
             : data_(std::data(cont))
             , size_(std::size(cont)) {}
