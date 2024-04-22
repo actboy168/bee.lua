@@ -40,8 +40,6 @@ namespace bee::net {
         int fd;
         uint32_t u32;
         uint64_t u64;
-        fd_t sock;
-        fd_t hnd;
     };
     struct bpoll_event_t {
         bpoll_event events;
