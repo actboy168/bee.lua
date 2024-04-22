@@ -1,4 +1,4 @@
-#include <bee/platform/version.h>
+#include <bee/version.h>
 
 #if defined(__APPLE__)
 #    include <objc/message.h>

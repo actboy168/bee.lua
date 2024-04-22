@@ -4,9 +4,9 @@
 #include <bee/nonstd/bit.h>
 #include <bee/nonstd/format.h>
 #include <bee/nonstd/unreachable.h>
-#include <bee/win/wtf8.h>
 #include <bee/subprocess.h>
 #include <bee/utility/dynarray.h>
+#include <bee/win/wtf8.h>
 #include <signal.h>
 
 #include <deque>

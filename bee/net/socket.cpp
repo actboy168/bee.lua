@@ -3,8 +3,8 @@
 #    include <winsock2.h>
 //  clang-format on
 #    include <bee/nonstd/charconv.h>
-#    include <bee/win/wtf8.h>
 #    include <bee/utility/dynarray.h>
+#    include <bee/win/wtf8.h>
 #    include <mstcpip.h>
 #    include <mswsock.h>
 
