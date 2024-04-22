@@ -46,29 +46,29 @@ end
 function m.test_close()
     local epfd = epoll.create(16)
     local fd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
-    assertSuccess(true, epfd:event_add(fd:handle(), 0))
+    assertSuccess(true, epfd:event_add(fd, 0))
     assertSuccess(true, epfd:close())
 
     lt.assertEquals(epfd:close(), nil)
-    lt.assertEquals(epfd:event_add(fd:handle(), 0), nil)
+    lt.assertEquals(epfd:event_add(fd, 0), nil)
 end
 
 function m.test_event()
     local epfd = epoll.create(16)
     local fd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
-    lt.assertIsNil(epfd:event_mod(fd:handle(), 0))
-    lt.assertIsNil(epfd:event_del(fd:handle()))
+    lt.assertIsNil(epfd:event_mod(fd, 0))
+    lt.assertIsNil(epfd:event_del(fd))
 
-    assertSuccess(true, epfd:event_add(fd:handle(), 0))
-    lt.assertIsNil(epfd:event_add(fd:handle(), 0))
-    assertSuccess(true, epfd:event_mod(fd:handle(), 0))
-    assertSuccess(true, epfd:event_del(fd:handle()))
-    lt.assertIsNil(epfd:event_mod(fd:handle(), 0))
-    lt.assertIsNil(epfd:event_del(fd:handle()))
-    assertSuccess(true, epfd:event_add(fd:handle(), 0))
-    lt.assertIsNil(epfd:event_add(fd:handle(), 0))
-    assertSuccess(true, epfd:event_mod(fd:handle(), 0))
-    assertSuccess(true, epfd:event_del(fd:handle()))
+    assertSuccess(true, epfd:event_add(fd, 0))
+    lt.assertIsNil(epfd:event_add(fd, 0))
+    assertSuccess(true, epfd:event_mod(fd, 0))
+    assertSuccess(true, epfd:event_del(fd))
+    lt.assertIsNil(epfd:event_mod(fd, 0))
+    lt.assertIsNil(epfd:event_del(fd))
+    assertSuccess(true, epfd:event_add(fd, 0))
+    lt.assertIsNil(epfd:event_add(fd, 0))
+    assertSuccess(true, epfd:event_mod(fd, 0))
+    assertSuccess(true, epfd:event_del(fd))
 
     epfd:close()
 end
@@ -103,7 +103,7 @@ function m.test_wait()
     end
     local epfd <close> = epoll.create(16)
     local fd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
-    epfd:event_add(fd:handle(), 0, fd)
+    epfd:event_add(fd, 0, fd)
     for _ in epfd:wait(0) do
         lt.failure "Shouldn't run to here."
     end
@@ -196,8 +196,8 @@ function m.test_connect_event()
     local cfd <close> = helper.SimpleClient("tcp", sfd:info "socket")
     local sep <const> = epoll.create(16)
     local cep <const> = epoll.create(16)
-    sep:event_add(sfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT, sfd)
-    cep:event_add(cfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT, cfd)
+    sep:event_add(sfd, epoll.EPOLLIN | epoll.EPOLLOUT, sfd)
+    cep:event_add(cfd, epoll.EPOLLIN | epoll.EPOLLOUT, cfd)
     assertEpollWait(sep, { sfd, "EPOLLIN" })
     assertEpollWait(cep, { cfd, "EPOLLOUT" })
 end
@@ -207,12 +207,12 @@ function m.test_send_recv_event()
     local cfd <close> = helper.SimpleClient("tcp", sfd:info "socket")
     local sep <const> = epoll.create(16)
     local cep <const> = epoll.create(16)
-    sep:event_add(sfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT, sfd)
-    cep:event_add(cfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT, cfd)
+    sep:event_add(sfd, epoll.EPOLLIN | epoll.EPOLLOUT, sfd)
+    cep:event_add(cfd, epoll.EPOLLIN | epoll.EPOLLOUT, cfd)
     assertEpollWait(sep, { sfd, "EPOLLIN" })
     assertEpollWait(cep, { cfd, "EPOLLOUT" })
     local newfd = sfd:accept()
-    sep:event_add(newfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT, newfd)
+    sep:event_add(newfd, epoll.EPOLLIN | epoll.EPOLLOUT, newfd)
     assertEpollWait(sep, { newfd, "EPOLLOUT" })
     local function test(data)
         lt.assertEquals(newfd:send(data), #data)
@@ -230,12 +230,12 @@ function m.test_shutdown_event()
     local cfd <close> = helper.SimpleClient("tcp", sfd:info "socket")
     local sep <const> = epoll.create(16)
     local cep <const> = epoll.create(16)
-    sep:event_add(sfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT | epoll.EPOLLRDHUP, sfd)
-    cep:event_add(cfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT | epoll.EPOLLRDHUP, cfd)
+    sep:event_add(sfd, epoll.EPOLLIN | epoll.EPOLLOUT | epoll.EPOLLRDHUP, sfd)
+    cep:event_add(cfd, epoll.EPOLLIN | epoll.EPOLLOUT | epoll.EPOLLRDHUP, cfd)
     assertEpollWait(sep, { sfd, "EPOLLIN" })
     assertEpollWait(cep, { cfd, "EPOLLOUT" })
     local newfd <close> = sfd:accept()
-    sep:event_add(newfd:handle(), epoll.EPOLLIN | epoll.EPOLLOUT | epoll.EPOLLRDHUP, newfd)
+    sep:event_add(newfd, epoll.EPOLLIN | epoll.EPOLLOUT | epoll.EPOLLRDHUP, newfd)
 
     newfd:shutdown "w"
     assertEpollWait(sep, { newfd, "EPOLLOUT" })
@@ -265,7 +265,7 @@ local function create_stream(epfd, fd)
     local event_w = false
     local event_mask = 0
     local function closefd()
-        epfd:event_del(fd:handle())
+        epfd:event_del(fd)
         fd:close()
     end
     local function event_update()
@@ -277,7 +277,7 @@ local function create_stream(epfd, fd)
             mask = mask | EPOLLOUT
         end
         if mask ~= event_mask then
-            epfd:event_mod(fd:handle(), mask)
+            epfd:event_mod(fd, mask)
             event_mask = mask
         end
     end
@@ -349,7 +349,7 @@ local function create_stream(epfd, fd)
             end
         end
     end
-    epfd:event_add(fd:handle(), 0, on_event)
+    epfd:event_add(fd, 0, on_event)
     event_r = true
     event_update()
 
@@ -408,7 +408,7 @@ end
 local function create_listen(epfd, fd)
     local sock = { fd = fd }
     local function closefd()
-        epfd:event_del(fd:handle())
+        epfd:event_del(fd)
         fd:close()
     end
     local function on_event(e)
@@ -420,7 +420,7 @@ local function create_listen(epfd, fd)
             sock:on_accept()
         end
     end
-    epfd:event_add(fd:handle(), EPOLLIN, on_event)
+    epfd:event_add(fd, EPOLLIN, on_event)
     return sock
 end
 

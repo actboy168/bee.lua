@@ -33,7 +33,7 @@ namespace bee::lua_epoll {
     };
 
     static net::fd_t ep_tofd(lua_State *L, int idx) {
-        return (net::fd_t)lua_touserdata(L, idx);
+        return lua::toudata<net::fd_t>(L, idx);
     }
 
     static int ep_events(lua_State *L) {
