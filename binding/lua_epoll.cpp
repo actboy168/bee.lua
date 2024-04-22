@@ -198,7 +198,7 @@ namespace bee::lua_epoll {
         if (epfd == net::retired_fd) {
             return lua::push_error(L, error::net_errmsg("epoll_create"));
         }
-        lua::newudata<lua_epoll>(L, L, epfd, max_events);
+        lua::newudata<lua_epoll>(L, L, epfd, (size_t)max_events);
         lua_newtable(L);
         lua_setiuservalue(L, -2, 1);
         lua_pushvalue(L, -1);
