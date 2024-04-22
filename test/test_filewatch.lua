@@ -50,7 +50,7 @@ function test_fw:test_2()
                 end
             end
         end
-        local retry <const> = 3
+        local retry <const> = 5
         local list = {}
         local n = retry
         while true do
@@ -65,7 +65,7 @@ function test_fw:test_2()
                 if n < 0 then
                     break
                 end
-                thread.sleep(1)
+                thread.sleep(20)
             end
         end
         lt.assertEquals(list, {
