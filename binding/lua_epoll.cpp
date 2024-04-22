@@ -19,6 +19,17 @@ namespace bee::lua_epoll {
             , ref(luaref_init(L))
             , events(max_events) {
         }
+        ~lua_epoll() {
+            close();
+            luaref_close(ref);
+        }
+        bool close() {
+            if (!net::bpoll_close(fd)) {
+                return false;
+            }
+            fd = net::retired_fd;
+            return true;
+        }
     };
     static net::fd_t ep_tofd(lua_State *L, int idx) {
         return (net::fd_t)(intptr_t)lua_touserdata(L, idx);
@@ -49,33 +60,18 @@ namespace bee::lua_epoll {
         return 1;
     }
 
-    static bool ep_close_epoll(lua_epoll &ep) {
-        if (!net::bpoll_close(ep.fd)) {
-            return false;
-        }
-        ep.fd = net::retired_fd;
-        return true;
-    }
-
     static int ep_close(lua_State *L) {
         auto &ep = lua::checkudata<lua_epoll>(L, 1);
-        if (!ep_close_epoll(ep)) {
+        if (!ep.close()) {
             return lua::push_error(L, error::net_errmsg("epoll_close"));
         }
         lua_pushboolean(L, 1);
         return 1;
     }
 
-    static int ep_mt_gc(lua_State *L) {
-        auto &ep = lua::checkudata<lua_epoll>(L, 1);
-        ep_close_epoll(ep);
-        luaref_close(ep.ref);
-        return 0;
-    }
-
     static int ep_mt_close(lua_State *L) {
         auto &ep = lua::checkudata<lua_epoll>(L, 1);
-        ep_close_epoll(ep);
+        ep.close();
         return 0;
     }
 
@@ -187,7 +183,6 @@ namespace bee::lua_epoll {
         luaL_setfuncs(L, lib, 0);
         lua_setfield(L, -2, "__index");
         static luaL_Reg mt[] = {
-            { "__gc", ep_mt_gc },
             { "__close", ep_mt_close },
             { NULL, NULL }
         };
