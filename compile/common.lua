@@ -126,6 +126,7 @@ lm:lua_source "source_bee" {
             "binding/port/lua_windows.cpp",
         },
         links = {
+            "ntdll",
             "ws2_32",
             "ole32",
             "user32",

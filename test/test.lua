@@ -33,6 +33,7 @@ require "test_filesystem"
 require "test_thread"
 require "test_subprocess"
 require "test_socket"
+require "test_epoll"
 require "test_filewatch"
 require "test_time"
 
