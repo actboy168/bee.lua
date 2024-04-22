@@ -119,9 +119,7 @@ namespace bee::lua_epoll {
     static int ep_event_add(lua_State *L) {
         struct lua_epoll *ep = ep_get(L);
         if (ep->fd == bpoll_invalid_handle) {
-            lua_pushnil(L);
-            lua_pushfstring(L, "(%d) %s", EBADF, strerror(EBADF));
-            return 2;
+            return lua::push_error(L, error::crt_errmsg("epoll_ctl", std::errc::bad_file_descriptor));
         }
         net::bpoll_socket fd = ep_tofd(L, 2);
         if (lua_isnoneornil(L, 4)) {
