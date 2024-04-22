@@ -8,26 +8,24 @@
 #include <binding/luaref.h>
 
 namespace bee::lua_epoll {
-    static const net::bpoll_handle bpoll_invalid_handle = (net::bpoll_handle)-1;
-
     struct lua_epoll {
-        net::bpoll_handle fd;
+        net::fd_t fd;
         int i = 0;
         int n = 0;
         luaref ref;
         dynarray<net::bpoll_event_t> events;
-        lua_epoll(lua_State *L, net::bpoll_handle epfd, size_t max_events)
+        lua_epoll(lua_State *L, net::fd_t epfd, size_t max_events)
             : fd(epfd)
             , ref(luaref_init(L))
             , events(max_events) {
         }
     };
-    static net::bpoll_socket ep_tofd(lua_State *L, int idx) {
-        return (net::bpoll_socket)(intptr_t)lua_touserdata(L, idx);
+    static net::fd_t ep_tofd(lua_State *L, int idx) {
+        return (net::fd_t)(intptr_t)lua_touserdata(L, idx);
     }
 
     static int ep_events(lua_State *L) {
-        auto& ep = *(lua_epoll*)lua_touserdata(L, lua_upvalueindex(1));
+        auto &ep = *(lua_epoll *)lua_touserdata(L, lua_upvalueindex(1));
         if (ep.i >= ep.n) {
             return 0;
         }
@@ -39,9 +37,9 @@ namespace bee::lua_epoll {
     }
 
     static int ep_wait(lua_State *L) {
-        auto& ep = lua::checkudata<lua_epoll>(L, 1);
-        int timeout          = (int)luaL_optinteger(L, 2, -1);
-        int n                = net::bpoll_wait(ep.fd, ep.events, timeout);
+        auto &ep    = lua::checkudata<lua_epoll>(L, 1);
+        int timeout = (int)luaL_optinteger(L, 2, -1);
+        int n       = net::bpoll_wait(ep.fd, ep.events, timeout);
         if (n == -1) {
             return lua::push_error(L, error::net_errmsg("epoll_wait"));
         }
@@ -51,11 +49,11 @@ namespace bee::lua_epoll {
         return 1;
     }
 
-    static bool ep_close_epoll(lua_epoll& ep) {
-        if (!net::bpoll_close(ep->fd)) {
+    static bool ep_close_epoll(lua_epoll &ep) {
+        if (!net::bpoll_close(ep.fd)) {
             return false;
         }
-        ep->fd = bpoll_invalid_handle;
+        ep.fd = net::retired_fd;
         return true;
     }
 
@@ -76,7 +74,7 @@ namespace bee::lua_epoll {
     }
 
     static int ep_mt_close(lua_State *L) {
-        auto& ep = lua::checkudata<lua_epoll>(L, 1);
+        auto &ep = lua::checkudata<lua_epoll>(L, 1);
         ep_close_epoll(ep);
         return 0;
     }
@@ -118,11 +116,11 @@ namespace bee::lua_epoll {
     }
 
     static int ep_event_add(lua_State *L) {
-        auto& ep = lua::checkudata<lua_epoll>(L, 1);
-        if (ep.fd == bpoll_invalid_handle) {
+        auto &ep = lua::checkudata<lua_epoll>(L, 1);
+        if (ep.fd == net::retired_fd) {
             return lua::push_error(L, error::crt_errmsg("epoll_ctl", std::errc::bad_file_descriptor));
         }
-        net::bpoll_socket fd = ep_tofd(L, 2);
+        net::fd_t fd = ep_tofd(L, 2);
         if (lua_isnoneornil(L, 4)) {
             lua_pushvalue(L, 2);
         }
@@ -146,9 +144,9 @@ namespace bee::lua_epoll {
     }
 
     static int ep_event_mod(lua_State *L) {
-        auto& ep = lua::checkudata<lua_epoll>(L, 1);
-        net::bpoll_socket fd = ep_tofd(L, 2);
-        int r                = findref(L);
+        auto &ep     = lua::checkudata<lua_epoll>(L, 1);
+        net::fd_t fd = ep_tofd(L, 2);
+        int r        = findref(L);
         if (r == LUA_NOREF) {
             return lua::push_error(L, "event is not initialized.");
         }
@@ -163,8 +161,8 @@ namespace bee::lua_epoll {
     }
 
     static int ep_event_del(lua_State *L) {
-        auto& ep = lua::checkudata<lua_epoll>(L, 1);
-        net::bpoll_socket fd = ep_tofd(L, 2);
+        auto &ep     = lua::checkudata<lua_epoll>(L, 1);
+        net::fd_t fd = ep_tofd(L, 2);
         if (!net::bpoll_ctl_del(ep.fd, fd)) {
             return lua::push_error(L, error::net_errmsg("epoll_ctl"));
         }
@@ -201,8 +199,8 @@ namespace bee::lua_epoll {
         if (max_events <= 0) {
             return lua::push_error(L, "maxevents is less than or equal to zero.");
         }
-        net::bpoll_handle epfd = net::bpoll_create();
-        if (epfd == bpoll_invalid_handle) {
+        net::fd_t epfd = net::bpoll_create();
+        if (epfd == net::retired_fd) {
             return lua::push_error(L, error::net_errmsg("epoll_create"));
         }
         lua::newudata<lua_epoll>(L, L, epfd, max_events);

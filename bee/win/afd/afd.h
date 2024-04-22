@@ -49,5 +49,5 @@ namespace bee::net::afd {
     bool afd_poll(const afd_context& ctx, afd_poll_context& poll) noexcept;
     bool afd_cancel_poll(const afd_context& ctx, afd_poll_context& poll) noexcept;
     afd_poll_event afd_query_event(const afd_poll_context& poll) noexcept;
-    bpoll_socket afd_get_base_socket(bpoll_socket socket) noexcept;
+    fd_t afd_get_base_socket(fd_t socket) noexcept;
 }

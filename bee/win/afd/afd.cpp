@@ -3,8 +3,8 @@
 #include <Windows.h>
 /* clang-format on */
 
-#include <bee/win/afd/afd.h>
 #include <bee/net/bpoll.h>
+#include <bee/win/afd/afd.h>
 
 #include <cassert>
 
@@ -181,8 +181,8 @@ namespace bee::net::afd {
         }
     }
 
-    static bpoll_socket get_bsp_socket(bpoll_socket socket, DWORD ioctl) noexcept {
-        bpoll_socket bsp_socket;
+    static fd_t get_bsp_socket(fd_t socket, DWORD ioctl) noexcept {
+        fd_t bsp_socket;
         DWORD bytes;
         if (WSAIoctl(socket, ioctl, NULL, 0, &bsp_socket, sizeof(bsp_socket), &bytes, NULL, NULL) == SOCKET_ERROR) {
             return INVALID_SOCKET;
@@ -190,8 +190,8 @@ namespace bee::net::afd {
         return bsp_socket;
     }
 
-    bpoll_socket afd_get_base_socket(bpoll_socket socket) noexcept {
-        bpoll_socket base_socket;
+    fd_t afd_get_base_socket(fd_t socket) noexcept {
+        fd_t base_socket;
         DWORD error;
         for (;;) {
             base_socket = get_bsp_socket(socket, kSIO_BASE_HANDLE);

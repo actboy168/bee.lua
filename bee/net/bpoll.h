@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bee/net/fd.h>
 #include <bee/utility/bitmask.h>
 #include <bee/utility/span.h>
 
@@ -30,14 +31,6 @@ namespace bee::net {
     };
     BEE_BITMASK_OPERATORS(bpoll_event)
 
-#if defined(_WIN32)
-    using bpoll_handle = void*;
-    using bpoll_socket = uintptr_t;
-#else
-    using bpoll_handle = int;
-    using bpoll_socket = int;
-#endif
-
 #if defined(__linux__)
     using bpoll_data_t  = epoll_data_t;
     using bpoll_event_t = epoll_event;
@@ -47,8 +40,8 @@ namespace bee::net {
         int fd;
         uint32_t u32;
         uint64_t u64;
-        bpoll_socket sock;
-        bpoll_handle hnd;
+        fd_t sock;
+        fd_t hnd;
     };
     struct bpoll_event_t {
         bpoll_event events;
@@ -56,10 +49,10 @@ namespace bee::net {
     };
 #endif
 
-    bpoll_handle bpoll_create();
-    bool bpoll_close(bpoll_handle hnd);
-    bool bpoll_ctl_add(bpoll_handle hnd, bpoll_socket socket, const bpoll_event_t& event);
-    bool bpoll_ctl_mod(bpoll_handle hnd, bpoll_socket socket, const bpoll_event_t& event);
-    bool bpoll_ctl_del(bpoll_handle hnd, bpoll_socket socket);
-    int bpoll_wait(bpoll_handle hnd, const span<bpoll_event_t>& events, int timeout);
+    fd_t bpoll_create();
+    bool bpoll_close(fd_t fd);
+    bool bpoll_ctl_add(fd_t fd, fd_t socket, const bpoll_event_t& event);
+    bool bpoll_ctl_mod(fd_t fd, fd_t socket, const bpoll_event_t& event);
+    bool bpoll_ctl_del(fd_t fd, fd_t socket);
+    int bpoll_wait(fd_t fd, const span<bpoll_event_t>& events, int timeout);
 }

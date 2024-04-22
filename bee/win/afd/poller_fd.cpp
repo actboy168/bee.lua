@@ -1,16 +1,16 @@
 #include <Windows.h>
-#include <bee/win/afd/poller.h>
-#include <bee/win/afd/poller_fd.h>
 #include <bee/nonstd/to_underlying.h>
 #include <bee/nonstd/unreachable.h>
 #include <bee/utility/bitmask.h>
+#include <bee/win/afd/poller.h>
+#include <bee/win/afd/poller_fd.h>
 
 #include <cassert>
 
 namespace bee::net::afd {
     constexpr bpoll_event AllowBpollEvents = (bpoll_event::in | bpoll_event::pri | bpoll_event::out | bpoll_event::err | bpoll_event::hup | bpoll_event::rdnorm | bpoll_event::rdband | bpoll_event::wrnorm | bpoll_event::wrand | bpoll_event::msg | bpoll_event::rdhup);
 
-    poller_fd::poller_fd(bpoll_socket socket, bpoll_socket base_socket) noexcept
+    poller_fd::poller_fd(fd_t socket, fd_t base_socket) noexcept
         : socket(socket)
         , base_socket(base_socket) {
     }
@@ -127,7 +127,7 @@ namespace bee::net::afd {
         }
         return event;
     }
-    bpoll_socket poller_fd::get_socket() noexcept {
+    fd_t poller_fd::get_socket() noexcept {
         return socket;
     }
 }

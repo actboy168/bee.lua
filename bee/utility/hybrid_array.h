@@ -10,8 +10,7 @@ namespace bee {
         size_t m_size;
         hybrid_array(size_t n) noexcept
             : m_ptr(n <= N ? m_data : new T[n])
-            , m_size(n)
-        {
+            , m_size(n) {
         }
         ~hybrid_array() noexcept {
             if (m_ptr != m_data) {

@@ -147,23 +147,23 @@ namespace bee::net {
         return ok;
     }
 
-    bpoll_handle bpoll_create() {
-        return (bpoll_handle)kqueue();
+    fd_t bpoll_create() {
+        return kqueue();
     }
 
-    bool bpoll_close(bpoll_handle kq) {
+    bool bpoll_close(fd_t kq) {
         return ::close(kq) == 0;
     }
 
-    bool bpoll_ctl_add(bpoll_handle kq, bpoll_socket fd, const bpoll_event_t& event) {
+    bool bpoll_ctl_add(fd_t kq, fd_t fd, const bpoll_event_t& event) {
         return bpoll_ctl(kq, fd, event, true);
     }
 
-    bool bpoll_ctl_mod(bpoll_handle kq, bpoll_socket fd, const bpoll_event_t& event) {
+    bool bpoll_ctl_mod(fd_t kq, fd_t fd, const bpoll_event_t& event) {
         return bpoll_ctl(kq, fd, event, false);
     }
 
-    bool bpoll_ctl_del(bpoll_handle kq, bpoll_socket fd) {
+    bool bpoll_ctl_del(fd_t kq, fd_t fd) {
         if (invalid_fd(fd)) {
             errno = EBADF;
             return false;
@@ -175,7 +175,7 @@ namespace bee::net {
         return ok;
     }
 
-    int bpoll_wait(bpoll_handle kq, const span<bpoll_event_t>& events, int timeout) {
+    int bpoll_wait(fd_t kq, const span<bpoll_event_t>& events, int timeout) {
         struct kevent kev[events.size()];
         struct timespec t, *timeop = &t;
         if (timeout < 0) {

@@ -1,9 +1,9 @@
 #include <Windows.h>
+#include <bee/nonstd/unreachable.h>
+#include <bee/utility/hybrid_array.h>
 #include <bee/win/afd/afd.h>
 #include <bee/win/afd/poller.h>
 #include <bee/win/afd/poller_fd.h>
-#include <bee/nonstd/unreachable.h>
-#include <bee/utility/hybrid_array.h>
 
 namespace bee::net::afd {
     poller::poller(afd_context&& afd) noexcept
@@ -88,12 +88,12 @@ namespace bee::net::afd {
         }
     }
 
-    bool poller::ctl_add(bpoll_socket socket, const bpoll_event_t& ev) noexcept {
+    bool poller::ctl_add(fd_t socket, const bpoll_event_t& ev) noexcept {
         if (fds.contains(socket)) {
             SetLastError(ERROR_ALREADY_EXISTS);
             return false;
         }
-        bpoll_socket base_socket = afd_get_base_socket(socket);
+        fd_t base_socket = afd_get_base_socket(socket);
         if (base_socket == INVALID_SOCKET) {
             return false;
         }
@@ -109,7 +109,7 @@ namespace bee::net::afd {
         return true;
     }
 
-    bool poller::ctl_mod(bpoll_socket socket, const bpoll_event_t& ev) noexcept {
+    bool poller::ctl_mod(fd_t socket, const bpoll_event_t& ev) noexcept {
         auto pfd = fds.find(socket);
         if (!pfd) {
             SetLastError(ERROR_NOT_FOUND);
@@ -122,7 +122,7 @@ namespace bee::net::afd {
         return true;
     }
 
-    bool poller::ctl_del(bpoll_socket socket) noexcept {
+    bool poller::ctl_del(fd_t socket) noexcept {
         auto pfd = fds.find(socket);
         if (!pfd) {
             SetLastError(ERROR_NOT_FOUND);

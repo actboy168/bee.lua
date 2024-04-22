@@ -1,9 +1,9 @@
 #pragma once
 
-#include <bee/win/afd/afd.h>
 #include <bee/net/bpoll.h>
 #include <bee/utility/flatmap.h>
 #include <bee/utility/span.h>
+#include <bee/win/afd/afd.h>
 
 namespace bee::net::afd {
     class poller_fd;
@@ -12,9 +12,9 @@ namespace bee::net::afd {
         poller(afd_context&& afd) noexcept;
         ~poller() noexcept;
         int wait(const span<bpoll_event_t>& events, int timeout) noexcept;
-        bool ctl_add(bpoll_socket socket, const bpoll_event_t& ev) noexcept;
-        bool ctl_mod(bpoll_socket socket, const bpoll_event_t& ev) noexcept;
-        bool ctl_del(bpoll_socket socket) noexcept;
+        bool ctl_add(fd_t socket, const bpoll_event_t& ev) noexcept;
+        bool ctl_mod(fd_t socket, const bpoll_event_t& ev) noexcept;
+        bool ctl_del(fd_t socket) noexcept;
 
     private:
         void destory_fd(poller_fd* fd) noexcept;
@@ -22,7 +22,7 @@ namespace bee::net::afd {
 
     private:
         afd_context afd;
-        flatmap<bpoll_socket, poller_fd*> fds;
+        flatmap<fd_t, poller_fd*> fds;
         flatset<poller_fd*> update_queue;
     };
 }

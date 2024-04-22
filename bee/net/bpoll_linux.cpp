@@ -22,27 +22,27 @@ namespace bee::net {
     static_assert(std::to_underlying(bpoll_event::rdhup) == EPOLLRDHUP);
     static_assert(std::to_underlying(bpoll_event::oneshot) == EPOLLONESHOT);
 
-    bpoll_handle bpoll_create() {
-        return (bpoll_handle)::epoll_create1(EPOLL_CLOEXEC);
+    fd_t bpoll_create() {
+        return (fd_t)::epoll_create1(EPOLL_CLOEXEC);
     }
 
-    bool bpoll_close(bpoll_handle hnd) {
-        return ::close(hnd) == 0;
+    bool bpoll_close(fd_t epfd) {
+        return ::close(epfd) == 0;
     }
 
-    bool bpoll_ctl_add(bpoll_handle hnd, bpoll_socket socket, const bpoll_event_t& event) {
-        return ::epoll_ctl(hnd, EPOLL_CTL_ADD, socket, (struct epoll_event*)&event) != -1;
+    bool bpoll_ctl_add(fd_t epfd, fd_t socket, const bpoll_event_t& event) {
+        return ::epoll_ctl(epfd, EPOLL_CTL_ADD, socket, (struct epoll_event*)&event) != -1;
     }
 
-    bool bpoll_ctl_mod(bpoll_handle hnd, bpoll_socket socket, const bpoll_event_t& event) {
-        return ::epoll_ctl(hnd, EPOLL_CTL_MOD, socket, (struct epoll_event*)&event) != -1;
+    bool bpoll_ctl_mod(fd_t epfd, fd_t socket, const bpoll_event_t& event) {
+        return ::epoll_ctl(epfd, EPOLL_CTL_MOD, socket, (struct epoll_event*)&event) != -1;
     }
 
-    bool bpoll_ctl_del(bpoll_handle hnd, bpoll_socket socket) {
-        return ::epoll_ctl(hnd, EPOLL_CTL_DEL, socket, NULL) != -1;
+    bool bpoll_ctl_del(fd_t epfd, fd_t socket) {
+        return ::epoll_ctl(epfd, EPOLL_CTL_DEL, socket, NULL) != -1;
     }
 
-    int bpoll_wait(bpoll_handle hnd, const span<bpoll_event_t>& events, int timeout) {
-        return ::epoll_wait(hnd, (struct epoll_event*)events.data(), (int)events.size(), timeout);
+    int bpoll_wait(fd_t epfd, const span<bpoll_event_t>& events, int timeout) {
+        return ::epoll_wait(epfd, (struct epoll_event*)events.data(), (int)events.size(), timeout);
     }
 }
