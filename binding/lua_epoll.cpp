@@ -184,7 +184,7 @@ namespace bee::lua_epoll {
         if (epfd == bpoll_invalid_handle) {
             return lua::push_error(L, error::net_errmsg("epoll_create"));
         }
-        size_t sz            = sizeof(struct lua_epoll) + (max_events - 1) * sizeof(net::bpoll_event_t);
+        size_t sz            = sizeof(struct lua_epoll) + (size_t)(max_events - 1) * sizeof(net::bpoll_event_t);
         struct lua_epoll *ep = (struct lua_epoll *)lua_newuserdatauv(L, sz, 2);
         lua_newtable(L);
         lua_setiuservalue(L, -2, 1);
