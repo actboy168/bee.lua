@@ -31,8 +31,9 @@ namespace bee::lua_epoll {
             return true;
         }
     };
+
     static net::fd_t ep_tofd(lua_State *L, int idx) {
-        return (net::fd_t)(intptr_t)lua_touserdata(L, idx);
+        return (net::fd_t)lua_touserdata(L, idx);
     }
 
     static int ep_events(lua_State *L) {
@@ -40,7 +41,7 @@ namespace bee::lua_epoll {
         if (ep.i >= ep.n) {
             return 0;
         }
-        const net::bpoll_event_t &ev = ep.events[ep.i];
+        const auto &ev = ep.events[ep.i];
         luaref_get(ep.ref, L, ev.data.u32);
         lua_pushinteger(L, static_cast<uint32_t>(ev.events));
         ep.i++;
@@ -49,7 +50,7 @@ namespace bee::lua_epoll {
 
     static int ep_wait(lua_State *L) {
         auto &ep    = lua::checkudata<lua_epoll>(L, 1);
-        int timeout = (int)luaL_optinteger(L, 2, -1);
+        int timeout = lua::optinteger<int, -1>(L, 2);
         int n       = net::bpoll_wait(ep.fd, ep.events, timeout);
         if (n == -1) {
             return lua::push_error(L, error::net_errmsg("epoll_wait"));
