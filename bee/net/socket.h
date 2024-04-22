@@ -12,7 +12,7 @@ namespace bee::net {
 
 namespace bee::net::socket {
     enum class protocol {
-        tcp = 0,
+        tcp,
         udp,
         unix,
         tcp6,
@@ -39,7 +39,7 @@ namespace bee::net::socket {
     };
 
     enum class option {
-        reuseaddr = 0,
+        reuseaddr,
         sndbuf,
         rcvbuf,
     };
