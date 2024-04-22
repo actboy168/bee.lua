@@ -1,10 +1,6 @@
 #pragma once
 
 #include <bee/net/fd.h>
-#include <bee/nonstd/expected.h>
-
-#include <optional>
-#include <system_error>
 
 namespace bee::net {
     struct endpoint;
