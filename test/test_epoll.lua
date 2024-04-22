@@ -2,24 +2,21 @@ local lt = require "ltest"
 local epoll = require "bee.epoll"
 local socket = require "bee.socket"
 local time = require "bee.time"
+local m = lt.test "epoll"
 
-local helper = {}
-
-function helper.SimpleServer(protocol, ...)
+local function SimpleServer(protocol, ...)
     local fd = assert(socket.create(protocol))
     assert(fd:bind(...))
     assert(fd:listen())
     return fd
 end
 
-function helper.SimpleClient(protocol, ...)
+local function SimpleClient(protocol, ...)
     local fd = assert(socket.create(protocol))
     local ok, err = fd:connect(...)
     assert(ok ~= nil, err)
     return fd
 end
-
-local m = lt.test "epoll"
 
 local function assertSuccess(expected, actual, errmsg)
     if not lt.equals(actual, expected) then
@@ -45,7 +42,7 @@ end
 
 function m.test_close()
     local epfd = epoll.create(16)
-    local fd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
+    local fd <close> = SimpleServer("tcp", "127.0.0.1", 0)
     assertSuccess(true, epfd:event_add(fd, 0))
     assertSuccess(true, epfd:close())
 
@@ -55,7 +52,7 @@ end
 
 function m.test_event()
     local epfd = epoll.create(16)
-    local fd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
+    local fd <close> = SimpleServer("tcp", "127.0.0.1", 0)
     lt.assertIsNil(epfd:event_mod(fd, 0))
     lt.assertIsNil(epfd:event_del(fd))
 
@@ -102,7 +99,7 @@ function m.test_wait()
         end
     end
     local epfd <close> = epoll.create(16)
-    local fd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
+    local fd <close> = SimpleServer("tcp", "127.0.0.1", 0)
     epfd:event_add(fd, 0, fd)
     for _ in epfd:wait(0) do
         lt.failure "Shouldn't run to here."
@@ -192,8 +189,8 @@ local function assertEpollWait(epfd, values)
 end
 
 function m.test_connect_event()
-    local sfd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
-    local cfd <close> = helper.SimpleClient("tcp", sfd:info "socket")
+    local sfd <close> = SimpleServer("tcp", "127.0.0.1", 0)
+    local cfd <close> = SimpleClient("tcp", sfd:info "socket")
     local sep <const> = epoll.create(16)
     local cep <const> = epoll.create(16)
     sep:event_add(sfd, epoll.EPOLLIN | epoll.EPOLLOUT, sfd)
@@ -203,8 +200,8 @@ function m.test_connect_event()
 end
 
 function m.test_send_recv_event()
-    local sfd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
-    local cfd <close> = helper.SimpleClient("tcp", sfd:info "socket")
+    local sfd <close> = SimpleServer("tcp", "127.0.0.1", 0)
+    local cfd <close> = SimpleClient("tcp", sfd:info "socket")
     local sep <const> = epoll.create(16)
     local cep <const> = epoll.create(16)
     sep:event_add(sfd, epoll.EPOLLIN | epoll.EPOLLOUT, sfd)
@@ -226,8 +223,8 @@ function m.test_send_recv_event()
 end
 
 function m.test_shutdown_event()
-    local sfd <close> = helper.SimpleServer("tcp", "127.0.0.1", 0)
-    local cfd <close> = helper.SimpleClient("tcp", sfd:info "socket")
+    local sfd <close> = SimpleServer("tcp", "127.0.0.1", 0)
+    local cfd <close> = SimpleClient("tcp", sfd:info "socket")
     local sep <const> = epoll.create(16)
     local cep <const> = epoll.create(16)
     sep:event_add(sfd, epoll.EPOLLIN | epoll.EPOLLOUT | epoll.EPOLLRDHUP, sfd)
@@ -427,7 +424,7 @@ end
 function m.test_pingpong()
     local epfd = epoll.create(512)
     local quit = false
-    local s = helper.SimpleServer("tcp", "127.0.0.1", 0)
+    local s = SimpleServer("tcp", "127.0.0.1", 0)
     local server = create_listen(epfd, s)
     function server:on_accept()
         local newfd = assert(self.fd:accept())
@@ -443,7 +440,7 @@ function m.test_pingpong()
         end
     end
 
-    local c = helper.SimpleClient("tcp", s:info "socket")
+    local c = SimpleClient("tcp", s:info "socket")
     local client = create_stream(epfd, c)
     client:send "PING-1"
     function client:on_recv()
