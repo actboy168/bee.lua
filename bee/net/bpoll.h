@@ -34,6 +34,7 @@ namespace bee::net {
 #if defined(__linux__)
     using bpoll_data_t  = epoll_data_t;
     using bpoll_event_t = epoll_event;
+    using bpoll_handle  = fd_t;
 #else
     union bpoll_data_t {
         void* ptr;
@@ -45,12 +46,17 @@ namespace bee::net {
         bpoll_event events;
         bpoll_data_t data;
     };
+#    if defined(_WIN32)
+    using bpoll_handle = uintptr_t;
+#    else
+    using bpoll_handle = int;
+#    endif
 #endif
 
-    fd_t bpoll_create() noexcept;
-    bool bpoll_close(fd_t fd) noexcept;
-    bool bpoll_ctl_add(fd_t fd, fd_t socket, const bpoll_event_t& event) noexcept;
-    bool bpoll_ctl_mod(fd_t fd, fd_t socket, const bpoll_event_t& event) noexcept;
-    bool bpoll_ctl_del(fd_t fd, fd_t socket) noexcept;
-    int bpoll_wait(fd_t fd, const span<bpoll_event_t>& events, int timeout) noexcept;
+    bpoll_handle bpoll_create() noexcept;
+    bool bpoll_close(bpoll_handle handle) noexcept;
+    bool bpoll_ctl_add(bpoll_handle handle, fd_t socket, const bpoll_event_t& event) noexcept;
+    bool bpoll_ctl_mod(bpoll_handle handle, fd_t socket, const bpoll_event_t& event) noexcept;
+    bool bpoll_ctl_del(bpoll_handle handle, fd_t socket) noexcept;
+    int bpoll_wait(bpoll_handle handle, const span<bpoll_event_t>& events, int timeout) noexcept;
 }

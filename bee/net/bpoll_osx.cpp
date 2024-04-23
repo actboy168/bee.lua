@@ -159,23 +159,23 @@ namespace bee::net {
         return ok;
     }
 
-    fd_t bpoll_create() noexcept {
+    bpoll_handle bpoll_create() noexcept {
         return kqueue();
     }
 
-    bool bpoll_close(fd_t kq) noexcept {
+    bool bpoll_close(bpoll_handle kq) noexcept {
         return ::close(kq) == 0;
     }
 
-    bool bpoll_ctl_add(fd_t kq, fd_t fd, const bpoll_event_t& event) noexcept {
+    bool bpoll_ctl_add(bpoll_handle kq, fd_t fd, const bpoll_event_t& event) noexcept {
         return bpoll_ctl(kq, fd, event, true);
     }
 
-    bool bpoll_ctl_mod(fd_t kq, fd_t fd, const bpoll_event_t& event) noexcept {
+    bool bpoll_ctl_mod(bpoll_handle kq, fd_t fd, const bpoll_event_t& event) noexcept {
         return bpoll_ctl(kq, fd, event, false);
     }
 
-    bool bpoll_ctl_del(fd_t kq, fd_t fd) noexcept {
+    bool bpoll_ctl_del(bpoll_handle kq, fd_t fd) noexcept {
         if (invalid_fd(fd)) {
             errno = EBADF;
             return false;
@@ -187,7 +187,7 @@ namespace bee::net {
         return ok;
     }
 
-    int bpoll_wait(fd_t kq, const span<bpoll_event_t>& events, int timeout) noexcept {
+    int bpoll_wait(bpoll_handle kq, const span<bpoll_event_t>& events, int timeout) noexcept {
         struct kevent kev[events.size()];
         struct timespec t, *timeop = &t;
         if (timeout < 0) {
