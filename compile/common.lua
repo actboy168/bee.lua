@@ -211,15 +211,8 @@ lm:source_set "source_lua" {
         visibility = "default",
     },
     msvc = {
-        flags = {
-            "/wd4267",
-            "/wd4334",
-        },
         sources = ("3rd/lua/fast_setjmp_%s.s"):format(lm.arch)
     },
-    gcc = {
-        flags = "-Wno-maybe-uninitialized",
-    }
 }
 
 if lm.os == "windows" then
