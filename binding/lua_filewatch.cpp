@@ -5,6 +5,10 @@
 #include <bee/nonstd/unreachable.h>
 #include <binding/binding.h>
 
+#if defined(_WIN32)
+#    include <bee/win/wtf8.h>
+#endif
+
 namespace bee::lua_filewatch {
     static filewatch::watch& to(lua_State* L, int idx) {
         return lua::checkudata<filewatch::watch>(L, idx);
@@ -18,10 +22,15 @@ namespace bee::lua_filewatch {
     }
 
     static int add(lua_State* L) {
-        auto& self = to(L, 1);
-        auto path  = lua::checkstrview(L, 2);
+        auto& self   = to(L, 1);
+        auto pathstr = lua::checkstrview(L, 2);
+#if defined(_WIN32)
+        fs::path path { wtf8::u2w(pathstr) };
+#else
+        fs::path path { std::string { pathstr.data(), pathstr.size() } };
+#endif
         std::error_code ec;
-        fs::path abspath = fs::absolute(std::string_view { path.data(), path.size() }, ec);
+        fs::path abspath = fs::absolute(path, ec);
         if (ec) {
             lua_pushstring(L, error::errmsg("fs::absolute", ec).c_str());
             lua_error(L);
