@@ -189,14 +189,28 @@ local function assertEpollWait(epfd, values)
 end
 
 function m.test_connect_event()
-    local sfd <close> = SimpleServer("tcp", "127.0.0.1", 0)
-    local cfd <close> = SimpleClient("tcp", sfd:info "socket")
-    local sep <const> = epoll.create(16)
-    local cep <const> = epoll.create(16)
-    sep:event_add(sfd, epoll.EPOLLIN | epoll.EPOLLOUT, sfd)
-    cep:event_add(cfd, epoll.EPOLLIN | epoll.EPOLLOUT, cfd)
-    assertEpollWait(sep, { sfd, "EPOLLIN" })
-    assertEpollWait(cep, { cfd, "EPOLLOUT" })
+    do
+        local sfd <close> = SimpleServer("tcp", "127.0.0.1", 0)
+        local cfd <close> = SimpleClient("tcp", sfd:info "socket")
+        local sep <const> = epoll.create(16)
+        local cep <const> = epoll.create(16)
+        sep:event_add(sfd, epoll.EPOLLIN | epoll.EPOLLOUT, sfd)
+        cep:event_add(cfd, epoll.EPOLLIN | epoll.EPOLLOUT, cfd)
+        assertEpollWait(sep, { sfd, "EPOLLIN" })
+        assertEpollWait(cep, { cfd, "EPOLLOUT" })
+    end
+    do
+        local sfd <close> = SimpleServer("tcp", "127.0.0.1", 0)
+        local cfd <close> = SimpleClient("tcp", sfd:info "socket")
+        local sep <const> = epoll.create(16)
+        local cep <const> = epoll.create(16)
+        sep:event_add(sfd, epoll.EPOLLIN | epoll.EPOLLOUT, "")
+        sep:event_mod(sfd, epoll.EPOLLIN | epoll.EPOLLOUT, "server")
+        cep:event_add(cfd, epoll.EPOLLIN | epoll.EPOLLOUT, "")
+        cep:event_mod(cfd, epoll.EPOLLIN | epoll.EPOLLOUT, "client")
+        assertEpollWait(sep, { "server", "EPOLLIN" })
+        assertEpollWait(cep, { "client", "EPOLLOUT" })
+    end
 end
 
 function m.test_send_recv_event()

@@ -153,6 +153,10 @@ namespace bee::lua_epoll {
         if (!net::bpoll_ctl_mod(ep.fd, fd, ev)) {
             return lua::push_error(L, error::net_errmsg("epoll_ctl"));
         }
+        if (lua_gettop(L) >= 4) {
+            lua_pushvalue(L, 4);
+            luaref_set(ep.ref, L, r);
+        }
         lua_pushboolean(L, 1);
         return 1;
     }

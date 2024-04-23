@@ -81,3 +81,9 @@ void luaref_get(luaref refL, lua_State* L, int ref) {
     lua_pushvalue(refL, ref);
     lua_xmove(refL, L, 1);
 }
+
+void luaref_set(luaref refL, lua_State* L, int ref) {
+    assert(luaref_isvalid(refL, ref));
+    lua_xmove(L, refL, 1);
+    lua_replace(refL, ref);
+}
