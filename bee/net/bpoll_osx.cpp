@@ -4,12 +4,9 @@
 #include <errno.h>
 #include <poll.h>
 #include <sys/event.h>
-#include <sys/time.h>
 #include <unistd.h>
 
 #include <cassert>
-#include <cstdint>
-#include <cstdio>
 
 namespace bee::net {
     constexpr uint32_t VAL_BITS                = 2;
@@ -17,12 +14,29 @@ namespace bee::net {
     constexpr uint16_t KQUEUE_STATE_REGISTERED = 0x0001;
     constexpr uint16_t KQUEUE_STATE_EPOLLRDHUP = 0x0002;
 
-    static bool invalid_fd(int fd) noexcept {
-        return (fd < 0 || ((uint32_t)fd & ~(((uint32_t)1 << KEY_BITS) - 1)));
+    template <typename T>
+    static bool invalid_fd(T fd) noexcept {
+        static_assert(std::is_integral_v<T>);
+        if constexpr (std::numeric_limits<T>::is_signed) {
+            if (fd < 0) {
+                return true;
+            }
+            return invalid_fd(static_cast<std::make_unsigned_t<T>>(fd));
+        }
+        else if constexpr (sizeof(uint32_t) < sizeof(T)) {
+            if (fd > (std::numeric_limits<uint32_t>::max)()) {
+                return true;
+            }
+            return invalid_fd(static_cast<uint32_t>(fd));
+        }
+        else {
+            return (uint32_t)fd & ~(((uint32_t)1 << KEY_BITS) - 1);
+        }
     }
 
     static int set_state(int kq, uint32_t key, uint16_t val) noexcept {
-        if ((key & ~(((uint32_t)1 << KEY_BITS) - 1)) || (val & ~(((uint16_t)1 << VAL_BITS) - 1))) {
+        assert(!invalid_fd(key));
+        if ((val & ~(((uint16_t)1 << VAL_BITS) - 1))) {
             return EINVAL;
         }
         struct kevent ev[VAL_BITS * 2];
@@ -38,7 +52,7 @@ namespace bee::net {
             }
         }
         int oe = errno;
-        if (kevent(kq, ev, n, NULL, 0, NULL) < 0) {
+        if (::kevent(kq, ev, n, NULL, 0, NULL) < 0) {
             int e = errno;
             errno = oe;
             return e;
@@ -47,17 +61,14 @@ namespace bee::net {
     }
 
     static bool get_state(int kq, uint32_t key, uint16_t* val) noexcept {
-        if ((key & ~(((uint32_t)1 << KEY_BITS) - 1))) {
-            errno = EINVAL;
-            return false;
-        }
+        assert(!invalid_fd(key));
         struct kevent ev[VAL_BITS];
         for (int i = 0; i < VAL_BITS; ++i) {
             uint32_t info_bit = (uint32_t)1 << i;
             uint32_t kev_key  = key | (info_bit << KEY_BITS);
             EV_SET(&ev[i], kev_key, EVFILT_USER, EV_RECEIPT, 0, 0, 0);
         }
-        int n = kevent(kq, ev, VAL_BITS, ev, VAL_BITS, NULL);
+        int n = ::kevent(kq, ev, VAL_BITS, ev, VAL_BITS, NULL);
         if (n < 0) {
             return false;
         }
@@ -83,7 +94,7 @@ namespace bee::net {
         struct kevent ev[2];
         EV_SET(&ev[0], fd, EVFILT_READ, read_flags | EV_RECEIPT, 0, 0, udata);
         EV_SET(&ev[1], fd, EVFILT_WRITE, write_flags | EV_RECEIPT, 0, 0, udata);
-        int r = kevent(epfd, ev, 2, ev, 2, NULL);
+        int r = ::kevent(epfd, ev, 2, ev, 2, NULL);
         if (r < 0) {
             return false;
         }
@@ -100,8 +111,6 @@ namespace bee::net {
     constexpr bpoll_event AllowBpollEvents = bpoll_event::in | bpoll_event::out | bpoll_event::hup | bpoll_event::rdhup | bpoll_event::err;
 
     static bool bpoll_ctl(int kq, int fd, const bpoll_event_t& ev, bool add) noexcept {
-        int flags = 0;
-        int read_flags, write_flags;
         if (bitmask_has(ev.events, ~AllowBpollEvents)) {
             errno = EINVAL;
             return false;
@@ -114,6 +123,7 @@ namespace bee::net {
         if (!get_state(kq, fd, &kqflags)) {
             return false;
         }
+        int flags = 0;
         if (add) {
             if (kqflags & KQUEUE_STATE_REGISTERED) {
                 errno = EEXIST;
@@ -131,7 +141,8 @@ namespace bee::net {
         if (bitmask_has(ev.events, bpoll_event::rdhup)) {
             kqflags |= KQUEUE_STATE_EPOLLRDHUP;
         }
-        read_flags = write_flags = flags | EV_DISABLE;
+        int read_flags  = flags | EV_DISABLE;
+        int write_flags = flags | EV_DISABLE;
         if (bitmask_has(ev.events, bpoll_event::in)) {
             read_flags &= ~EV_DISABLE;
             read_flags |= EV_ENABLE;
@@ -185,7 +196,7 @@ namespace bee::net {
             t.tv_sec  = timeout / 1000l;
             t.tv_nsec = timeout % 1000l * 1000000l;
         }
-        int n = kevent(kq, NULL, 0, kev, events.size(), timeop);
+        int n = ::kevent(kq, NULL, 0, kev, events.size(), timeop);
         if (n == -1) {
             return -1;
         }
@@ -207,7 +218,9 @@ namespace bee::net {
                 }
                 if (kev[i].filter == EVFILT_READ) {
                     uint16_t kqflags = 0;
-                    get_state(kq, kev[i].ident, &kqflags);
+                    if (!invalid_fd(kev[i].ident)) {
+                        get_state(kq, kev[i].ident, &kqflags);
+                    }
                     if (kqflags & KQUEUE_STATE_EPOLLRDHUP) {
                         e |= bpoll_event::rdhup;
                     }
