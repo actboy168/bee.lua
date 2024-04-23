@@ -20,7 +20,7 @@ namespace bee::subprocess {
             : v(std::move(o)) {}
         environment(environment&& o) noexcept
             : v(std::move(o.v)) {}
-        ~environment() {
+        ~environment() noexcept {
 #if !defined(_WIN32)
             if (!v.empty()) {
                 for (char** p = v.data(); *p; ++p) {
