@@ -35,7 +35,7 @@ namespace bee {
             : data_(nullptr)
             , size_(0) {
         }
-        constexpr span(pointer ptr, size_type count)
+        constexpr span(pointer ptr, size_type count) noexcept
             : data_(ptr)
             , size_(count) {
         }

@@ -4,7 +4,7 @@
 #include <bee/win/afd/poller.h>
 
 namespace bee::net {
-    fd_t bpoll_create() {
+    fd_t bpoll_create() noexcept {
         afd::afd_context ctx;
         if (!afd::afd_create(ctx)) {
             return retired_fd;
@@ -18,7 +18,7 @@ namespace bee::net {
         return (fd_t)ep;
     }
 
-    bool bpoll_close(fd_t fd) {
+    bool bpoll_close(fd_t fd) noexcept {
         if (fd == retired_fd) {
             SetLastError(ERROR_INVALID_HANDLE);
             return false;
@@ -28,7 +28,7 @@ namespace bee::net {
         return true;
     }
 
-    bool bpoll_ctl_add(fd_t fd, fd_t socket, const bpoll_event_t& event) {
+    bool bpoll_ctl_add(fd_t fd, fd_t socket, const bpoll_event_t& event) noexcept {
         if (fd == retired_fd) {
             SetLastError(ERROR_INVALID_HANDLE);
             return false;
@@ -46,7 +46,7 @@ namespace bee::net {
         return true;
     }
 
-    bool bpoll_ctl_mod(fd_t fd, fd_t socket, const bpoll_event_t& event) {
+    bool bpoll_ctl_mod(fd_t fd, fd_t socket, const bpoll_event_t& event) noexcept {
         if (fd == retired_fd) {
             SetLastError(ERROR_INVALID_HANDLE);
             return false;
@@ -64,7 +64,7 @@ namespace bee::net {
         return true;
     }
 
-    bool bpoll_ctl_del(fd_t fd, fd_t socket) {
+    bool bpoll_ctl_del(fd_t fd, fd_t socket) noexcept {
         if (fd == retired_fd) {
             SetLastError(ERROR_INVALID_HANDLE);
             return false;
@@ -82,7 +82,7 @@ namespace bee::net {
         return true;
     }
 
-    int bpoll_wait(fd_t fd, const span<bpoll_event_t>& events, int timeout) {
+    int bpoll_wait(fd_t fd, const span<bpoll_event_t>& events, int timeout) noexcept {
         if (fd == retired_fd) {
             SetLastError(ERROR_INVALID_HANDLE);
             return -1;

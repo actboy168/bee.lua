@@ -9,7 +9,7 @@
 
 namespace bee::net::ip {
     template <typename T>
-    static constexpr T host_to_network(T v) {
+    static constexpr T host_to_network(T v) noexcept {
         static_assert(std::is_integral_v<T> && (sizeof(T) == 2 || sizeof(T) == 4));
         if constexpr (std::endian::native == std::endian::big) {
             return v;
@@ -23,7 +23,7 @@ namespace bee::net::ip {
     }
 
     template <size_t N>
-    static constexpr ptrdiff_t rfind(const char (&str)[N], size_t from, char c) {
+    static constexpr ptrdiff_t rfind(const char (&str)[N], size_t from, char c) noexcept {
         for (ptrdiff_t i = from; i >= 0; i--) {
             if (str[i] == c) {
                 return i;

@@ -47,10 +47,10 @@ namespace bee::net {
     };
 #endif
 
-    fd_t bpoll_create();
-    bool bpoll_close(fd_t fd);
-    bool bpoll_ctl_add(fd_t fd, fd_t socket, const bpoll_event_t& event);
-    bool bpoll_ctl_mod(fd_t fd, fd_t socket, const bpoll_event_t& event);
-    bool bpoll_ctl_del(fd_t fd, fd_t socket);
-    int bpoll_wait(fd_t fd, const span<bpoll_event_t>& events, int timeout);
+    fd_t bpoll_create() noexcept;
+    bool bpoll_close(fd_t fd) noexcept;
+    bool bpoll_ctl_add(fd_t fd, fd_t socket, const bpoll_event_t& event) noexcept;
+    bool bpoll_ctl_mod(fd_t fd, fd_t socket, const bpoll_event_t& event) noexcept;
+    bool bpoll_ctl_del(fd_t fd, fd_t socket) noexcept;
+    int bpoll_wait(fd_t fd, const span<bpoll_event_t>& events, int timeout) noexcept;
 }
