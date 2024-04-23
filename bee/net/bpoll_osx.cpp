@@ -7,10 +7,11 @@
 #include <unistd.h>
 
 #include <cassert>
+#include <limits>
 
 namespace bee::net {
-    constexpr uint32_t VAL_BITS                = 2;
-    constexpr uint32_t KEY_BITS                = 32 - VAL_BITS;
+    constexpr int VAL_BITS                     = 2;
+    constexpr int KEY_BITS                     = 32 - VAL_BITS;
     constexpr uint16_t KQUEUE_STATE_REGISTERED = 0x0001;
     constexpr uint16_t KQUEUE_STATE_EPOLLRDHUP = 0x0002;
 
