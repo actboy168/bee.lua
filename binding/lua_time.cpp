@@ -1,5 +1,5 @@
+#include <bee/lua/module.h>
 #include <bee/thread/spinlock.h>
-#include <binding/binding.h>
 
 #include <cassert>
 #include <cstdint>

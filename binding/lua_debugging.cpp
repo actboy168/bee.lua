@@ -1,5 +1,5 @@
+#include <bee/lua/module.h>
 #include <bee/nonstd/debugging.h>
-#include <binding/binding.h>
 
 namespace bee::lua_debugging {
     static int breakpoint(lua_State* L) {

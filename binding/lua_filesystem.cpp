@@ -2,14 +2,14 @@
 #include <bee/lua/binding.h>
 #include <bee/lua/cxx_status.h>
 #include <bee/lua/error.h>
+#include <bee/lua/file.h>
+#include <bee/lua/module.h>
 #include <bee/lua/narrow.h>
 #include <bee/nonstd/filesystem.h>
 #include <bee/nonstd/format.h>
 #include <bee/nonstd/unreachable.h>
 #include <bee/utility/file_handle.h>
 #include <bee/utility/path_helper.h>
-#include <binding/binding.h>
-#include <binding/file.h>
 
 #include <chrono>
 #include <utility>

@@ -1,11 +1,11 @@
 #include <bee/error.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/error.h>
+#include <bee/lua/file.h>
+#include <bee/lua/module.h>
 #include <bee/nonstd/filesystem.h>
 #include <bee/subprocess.h>
 #include <bee/subprocess/process_select.h>
-#include <binding/binding.h>
-#include <binding/file.h>
 #include <errno.h>
 #include <signal.h>
 

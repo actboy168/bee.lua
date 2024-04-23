@@ -1,11 +1,11 @@
 #include <bee/error.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/error.h>
+#include <bee/lua/luaref.h>
+#include <bee/lua/module.h>
 #include <bee/net/bpoll.h>
 #include <bee/nonstd/to_underlying.h>
 #include <bee/utility/dynarray.h>
-#include <binding/binding.h>
-#include <binding/luaref.h>
 
 namespace bee::lua_epoll {
     struct lua_epoll {

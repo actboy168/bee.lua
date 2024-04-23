@@ -1,6 +1,7 @@
 #pragma once
 
 #include <lua.hpp>
+
 typedef lua_State* luaref;
 
 luaref luaref_init(lua_State* L);

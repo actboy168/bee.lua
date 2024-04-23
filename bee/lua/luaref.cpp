@@ -1,4 +1,4 @@
-#include <binding/luaref.h>
+#include <bee/lua/luaref.h>
 
 #include <cassert>
 

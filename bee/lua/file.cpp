@@ -1,5 +1,5 @@
+#include <bee/lua/file.h>
 #include <bee/utility/assume.h>
-#include <binding/file.h>
 #include <errno.h>
 #include <string.h>
 
@@ -168,7 +168,14 @@ namespace bee::lua {
         }
         else {
             lua_pushnil(L);
+#if defined(_MSC_VER)
+#    pragma warning(push)
+#    pragma warning(disable : 4996)
+#endif
             lua_pushfstring(L, "%s", strerror(en));
+#if defined(_MSC_VER)
+#    pragma warning(pop)
+#endif
             lua_pushinteger(L, en);
             return 3;
         }

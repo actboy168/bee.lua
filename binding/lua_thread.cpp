@@ -1,12 +1,12 @@
 #include <bee/error.h>
 #include <bee/lua/binding.h>
+#include <bee/lua/module.h>
 #include <bee/nonstd/format.h>
 #include <bee/nonstd/print.h>
 #include <bee/thread/atomic_semaphore.h>
 #include <bee/thread/setname.h>
 #include <bee/thread/simplethread.h>
 #include <bee/thread/spinlock.h>
-#include <binding/binding.h>
 
 #include <atomic>
 #include <functional>

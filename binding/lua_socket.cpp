@@ -1,10 +1,10 @@
 ﻿#include <bee/error.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/error.h>
+#include <bee/lua/module.h>
 #include <bee/net/endpoint.h>
 #include <bee/net/socket.h>
 #include <bee/nonstd/unreachable.h>
-#include <binding/binding.h>
 
 namespace bee::lua_socket {
     static int push_neterror(lua_State* L, std::string_view msg) {

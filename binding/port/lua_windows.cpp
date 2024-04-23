@@ -2,10 +2,10 @@
 #include <bee/error.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/error.h>
+#include <bee/lua/file.h>
+#include <bee/lua/module.h>
 #include <bee/win/unicode.h>
 #include <bee/win/wtf8.h>
-#include <binding/binding.h>
-#include <binding/file.h>
 #include <fcntl.h>
 #include <io.h>
 

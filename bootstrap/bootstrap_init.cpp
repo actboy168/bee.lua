@@ -1,4 +1,4 @@
-#include <binding/binding.h>
+#include <bee/lua/module.h>
 
 #include <cstddef>
 #include <lua.hpp>

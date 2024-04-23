@@ -39,7 +39,10 @@ local function need(lst)
 end
 
 lm:source_set "source_bee" {
-    includes = ".",
+    includes = {
+        ".",
+        "3rd/lua/",
+    },
     sources = "bee/**/*.cpp",
     msvc = lm.analyze and {
         flags = "/analyze",
