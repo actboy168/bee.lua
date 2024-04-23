@@ -553,44 +553,42 @@ namespace bee::net::socket {
 
 #if defined(_WIN32)
     static bool unnamed_unix_bind(fd_t s) noexcept {
-        wchar_t tmpdir[MAX_PATH];
-        int bind_try = 0;
+        wchar_t buf[MAX_PATH];
+        const wchar_t* tmpdir = buf;
+        int bind_try          = 0;
         for (;;) {
             switch (bind_try++) {
             case 0:
-                GetTempPathW(MAX_PATH, tmpdir);
+                GetTempPathW(MAX_PATH, buf);
+                tmpdir = buf;
                 break;
             case 1: {
-                UINT n = GetWindowsDirectoryW(tmpdir, MAX_PATH);
-#    if defined(_MSC_VER)
-#        pragma warning(push)
-#        pragma warning(disable : 4996)
-#    endif
-                _snwprintf(tmpdir + n, MAX_PATH - n, L"\\Temp\\");
-#    if defined(_MSC_VER)
-#        pragma warning(pop)
-#    endif
+                constexpr size_t sz = std::size(L"\\Temp\\");
+                UINT n              = GetWindowsDirectoryW(buf, MAX_PATH);
+                if (n + sz >= MAX_PATH) {
+                    tmpdir = nullptr;
+                    break;
+                }
+                for (size_t i = 0; i < sz; ++i) {
+                    buf[n + i] = L"\\Temp\\"[i];
+                }
+                tmpdir = buf;
                 break;
             }
             case 2:
-#    if defined(_MSC_VER)
-#        pragma warning(push)
-#        pragma warning(disable : 4996)
-#    endif
-                _snwprintf(tmpdir, MAX_PATH, L"C:\\Temp\\");
-#    if defined(_MSC_VER)
-#        pragma warning(pop)
-#    endif
+                tmpdir = L"C:\\Temp\\";
                 break;
             case 3:
-                tmpdir[0] = L'.';
-                tmpdir[1] = L'\0';
+                tmpdir = L".";
                 break;
             case 4:
                 ::WSASetLastError(WSAEFAULT);
                 return false;
             default:
                 std::unreachable();
+            }
+            if (!tmpdir) {
+                continue;
             }
             wchar_t tmpname[MAX_PATH];
             if (0 == GetTempFileNameW(tmpdir, L"bee", 1, tmpname)) {
