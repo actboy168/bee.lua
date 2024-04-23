@@ -91,11 +91,11 @@ namespace bee::net {
         return true;
     }
 
-    static bool set_kevent(int epfd, int fd, int read_flags, int write_flags, void* udata) noexcept {
+    static bool set_kevent(int kq, int fd, int read_flags, int write_flags, int kqflags, void* udata) noexcept {
         struct kevent ev[2];
         EV_SET(&ev[0], fd, EVFILT_READ, read_flags | EV_RECEIPT, 0, 0, udata);
         EV_SET(&ev[1], fd, EVFILT_WRITE, write_flags | EV_RECEIPT, 0, 0, udata);
-        int r = ::kevent(epfd, ev, 2, ev, 2, NULL);
+        int r = ::kevent(kq, ev, 2, ev, 2, NULL);
         if (r < 0) {
             return false;
         }
@@ -106,6 +106,7 @@ namespace bee::net {
                 return false;
             }
         }
+        set_state(kq, fd, kqflags);
         return true;
     }
 
@@ -152,11 +153,7 @@ namespace bee::net {
             write_flags &= ~EV_DISABLE;
             write_flags |= EV_ENABLE;
         }
-        bool ok = set_kevent(kq, fd, read_flags, write_flags, ev.data.ptr);
-        if (ok) {
-            set_state(kq, fd, kqflags);
-        }
-        return ok;
+        return set_kevent(kq, fd, read_flags, write_flags, kqflags, ev.data.ptr);
     }
 
     bpoll_handle bpoll_create() noexcept {
@@ -180,11 +177,7 @@ namespace bee::net {
             errno = EBADF;
             return false;
         }
-        bool ok = set_kevent(kq, fd, EV_DELETE, EV_DELETE, NULL);
-        if (ok) {
-            set_state(kq, fd, 0);
-        }
-        return ok;
+        return set_kevent(kq, fd, EV_DELETE, EV_DELETE, 0, NULL);
     }
 
     int bpoll_wait(bpoll_handle kq, const span<bpoll_event_t>& events, int timeout) noexcept {
