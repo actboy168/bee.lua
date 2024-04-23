@@ -36,7 +36,7 @@ namespace bee {
         key_type key;
         mapped_type obj;
         uint8_t dib;
-        flatmap_bucket_kv(const key_type &key, mapped_type &&obj, uint8_t dib)
+        flatmap_bucket_kv(const key_type &key, mapped_type &&obj, uint8_t dib) noexcept
             : key(key)
             , obj(std::forward<mapped_type>(obj))
             , dib(dib) {
@@ -47,7 +47,7 @@ namespace bee {
     struct flatmap_bucket_kv<key_type, void> {
         key_type key;
         uint8_t dib;
-        flatmap_bucket_kv(const key_type &key, uint8_t dib)
+        flatmap_bucket_kv(const key_type &key, uint8_t dib) noexcept
             : key(key)
             , dib(dib) {
         }
@@ -58,7 +58,7 @@ namespace bee {
         mapped_type obj;
         key_type key;
         uint8_t dib;
-        flatmap_bucket_vk(const key_type &key, mapped_type &&obj, uint8_t dib)
+        flatmap_bucket_vk(const key_type &key, mapped_type &&obj, uint8_t dib) noexcept
             : obj(std::forward<mapped_type>(obj))
             , key(key)
             , dib(dib) {
@@ -69,7 +69,7 @@ namespace bee {
     struct flatmap_bucket_vk<key_type, void> {
         key_type key;
         uint8_t dib;
-        flatmap_bucket_vk(const key_type &key, uint8_t dib)
+        flatmap_bucket_vk(const key_type &key, uint8_t dib) noexcept
             : key(key)
             , dib(dib) {
         }
@@ -98,14 +98,14 @@ namespace bee {
             , KeyEqual() {
         }
 
-        flatmap(flatmap &&rhs) {
+        flatmap(flatmap &&rhs) noexcept {
             std::swap(m_mask, rhs.m_mask);
             std::swap(m_maxsize, rhs.m_maxsize);
             std::swap(m_size, rhs.m_size);
             std::swap(m_buckets, rhs.m_buckets);
         }
 
-        flatmap &operator=(flatmap &&rhs) {
+        flatmap &operator=(flatmap &&rhs) noexcept {
             std::swap(m_mask, rhs.m_mask);
             std::swap(m_maxsize, rhs.m_maxsize);
             std::swap(m_size, rhs.m_size);
@@ -116,7 +116,7 @@ namespace bee {
         flatmap(const flatmap &)            = delete;
         flatmap &operator=(const flatmap &) = delete;
 
-        ~flatmap() {
+        ~flatmap() noexcept {
             clear();
         }
 
@@ -190,11 +190,11 @@ namespace bee {
             return slot != kInvalidSlot;
         }
 
-        [[nodiscard]] size_t size() const {
+        [[nodiscard]] size_t size() const noexcept {
             return m_size;
         }
 
-        [[nodiscard]] bool empty() const {
+        [[nodiscard]] bool empty() const noexcept {
             return size() == 0;
         }
 
@@ -233,7 +233,7 @@ namespace bee {
             m_size--;
         }
 
-        void clear() {
+        void clear() noexcept {
             if constexpr (!std::is_trivially_destructible<bucket>::value) {
                 if (m_size != 0) {
                     for (size_t i = 0; i < m_mask + 1; ++i) {
@@ -269,7 +269,7 @@ namespace bee {
         struct iterator {
             const flatmap &m;
             size_t n;
-            iterator(const flatmap &m, size_t n)
+            iterator(const flatmap &m, size_t n) noexcept
                 : m(m)
                 , n(n) {
                 if (m.m_size == 0) {
@@ -278,14 +278,14 @@ namespace bee {
                 }
                 next_valid();
             }
-            bool operator!=(const iterator &rhs) const {
+            bool operator!=(const iterator &rhs) const noexcept {
                 return &m != &rhs.m || n != rhs.n;
             }
-            void operator++() {
+            void operator++() noexcept {
                 n++;
                 next_valid();
             }
-            auto operator*() {
+            auto operator*() noexcept {
                 auto &bucket = m.m_buckets[n];
                 if constexpr (std::is_same_v<mapped_type, void>) {
                     return bucket.key;
@@ -294,7 +294,7 @@ namespace bee {
                     return std::make_pair(bucket.key, bucket.obj);
                 }
             }
-            void next_valid() {
+            void next_valid() noexcept {
                 while (n != (m.m_mask + 1) && m.m_buckets[n].dib == 0) {
                     n++;
                 }
@@ -302,33 +302,32 @@ namespace bee {
         };
         using const_iterator = iterator;
 
-        [[nodiscard]] const_iterator begin() const {
+        [[nodiscard]] const_iterator begin() const noexcept {
             return const_iterator { *this, 0 };
         }
-        [[nodiscard]] const_iterator end() const {
+        [[nodiscard]] const_iterator end() const noexcept {
             return const_iterator { *this, m_mask + 1 };
         }
 
-        [[nodiscard]] iterator begin() {
+        [[nodiscard]] iterator begin() noexcept {
             return iterator { *this, 0 };
         }
-        [[nodiscard]] iterator end() {
+        [[nodiscard]] iterator end() noexcept {
             return iterator { *this, m_mask + 1 };
         }
 
         struct rawdata {
-            struct
-            {
+            struct {
                 size_t mask;
                 size_t maxsize;
                 size_t size;
             } h;
             bucket *buckets;
         };
-        [[nodiscard]] const rawdata &toraw() const {
+        [[nodiscard]] const rawdata &toraw() const noexcept {
             return *reinterpret_cast<const rawdata *>(&m_mask);
         }
-        [[nodiscard]] rawdata &toraw() {
+        [[nodiscard]] rawdata &toraw() noexcept {
             return *reinterpret_cast<rawdata *>(&m_mask);
         }
 
@@ -430,7 +429,7 @@ namespace bee {
         }
 
         struct free_bucket {
-            ~free_bucket() { std::free(b); }
+            ~free_bucket() noexcept { std::free(b); }
             bucket *b;
         };
 
