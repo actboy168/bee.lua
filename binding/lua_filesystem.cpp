@@ -8,8 +8,8 @@
 #include <bee/nonstd/filesystem.h>
 #include <bee/nonstd/format.h>
 #include <bee/nonstd/unreachable.h>
-#include <bee/utility/file_handle.h>
-#include <bee/utility/path_helper.h>
+#include <bee/sys/file_handle.h>
+#include <bee/sys/path_helper.h>
 
 #include <chrono>
 #include <utility>

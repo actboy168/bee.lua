@@ -1,6 +1,6 @@
 #include <bee/error.h>
+#include <bee/sys/path_helper.h>
 #include <bee/utility/dynarray.h>
-#include <bee/utility/path_helper.h>
 
 #if defined(_WIN32)
 

@@ -10,7 +10,7 @@
 #include <bee/lua/module.h>
 #include <bee/nonstd/filesystem.h>
 #include <bee/nonstd/unreachable.h>
-#include <bee/utility/path_helper.h>
+#include <bee/sys/path_helper.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
