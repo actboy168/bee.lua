@@ -89,6 +89,30 @@ namespace bee::lua_filesystem {
 #endif
     }
 
+    static bool path_equal(const fs::path& lft, const fs::path& rht) noexcept {
+        fs::path lpath = lft.lexically_normal();
+        fs::path rpath = rht.lexically_normal();
+#if defined(_WIN32)
+        auto l = lpath.c_str();
+        auto r = rpath.c_str();
+        while ((towlower(*l) == towlower(*r) || (*l == L'\\' && *r == L'/') || (*l == L'/' && *r == L'\\')) && *l) {
+            ++l;
+            ++r;
+        }
+        return *l == *r;
+#elif defined(__APPLE__)
+        auto l = lpath.c_str();
+        auto r = rpath.c_str();
+        while (towlower(*l) == towlower(*r) && *l) {
+            ++l;
+            ++r;
+        }
+        return *l == *r;
+#else
+        return lft.lexically_normal() == rht.lexically_normal();
+#endif
+    }
+
     template <typename... Args>
     static void lua_pusherrmsg(lua_State* L, std::error_code ec, std::format_string<Args...> fmt, Args... args) {
         auto msg = std::format(fmt, std::forward<Args>(args)...);
@@ -311,7 +335,7 @@ namespace bee::lua_filesystem {
         static int mt_eq(lua_State* L) {
             const auto& lft = getpath(L, 1);
             const auto& rht = getpath(L, 2);
-            lua_pushboolean(L, path_helper::equal(lft, rht));
+            lua_pushboolean(L, path_equal(lft, rht));
             return 1;
         }
 
