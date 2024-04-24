@@ -1,7 +1,6 @@
 #pragma once
 
 #include <functional>
-#include <mutex>
 #include <optional>
 #include <queue>
 #include <string>
@@ -11,6 +10,7 @@
 #elif defined(__APPLE__)
 #    include <CoreServices/CoreServices.h>
 
+#    include <mutex>
 #    include <set>
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
 #    include <map>
