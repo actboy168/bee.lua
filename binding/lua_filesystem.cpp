@@ -9,7 +9,7 @@
 #include <bee/nonstd/format.h>
 #include <bee/nonstd/unreachable.h>
 #include <bee/sys/file_handle.h>
-#include <bee/sys/path_helper.h>
+#include <bee/sys/path.h>
 
 #include <chrono>
 #include <utility>
@@ -932,7 +932,7 @@ namespace bee::lua_filesystem {
     }
 
     static int exe_path(lua_State* L) {
-        auto r = path_helper::exe_path();
+        auto r = sys::exe_path();
         if (!r) {
             return lua::push_error(L, r.error());
         }
@@ -941,7 +941,7 @@ namespace bee::lua_filesystem {
     }
 
     static int dll_path(lua_State* L) {
-        auto r = path_helper::dll_path();
+        auto r = sys::dll_path();
         if (!r) {
             return lua::push_error(L, r.error());
         }

@@ -10,7 +10,7 @@
 #include <bee/lua/module.h>
 #include <bee/nonstd/filesystem.h>
 #include <bee/nonstd/unreachable.h>
-#include <bee/sys/path_helper.h>
+#include <bee/sys/path.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -136,7 +136,7 @@ static int pushargs(lua_State *L) {
 }
 
 static fs::path getprogdir(lua_State *L) {
-    auto r = bee::path_helper::exe_path();
+    auto r = bee::sys::exe_path();
     if (!r) {
         luaL_error(L, "unable to get progdir: %s\n", r.error().c_str());
         std::unreachable();
