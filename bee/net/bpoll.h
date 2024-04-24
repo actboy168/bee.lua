@@ -46,11 +46,7 @@ namespace bee::net {
         bpoll_event events;
         bpoll_data_t data;
     };
-#    if defined(_WIN32)
     using bpoll_handle = uintptr_t;
-#    else
-    using bpoll_handle = int;
-#    endif
 #endif
 
     bpoll_handle bpoll_create() noexcept;

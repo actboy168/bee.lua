@@ -9,12 +9,12 @@
 
 namespace bee::lua_epoll {
     struct lua_epoll {
-        net::fd_t fd;
+        net::bpoll_handle fd;
         int i = 0;
         int n = 0;
         luaref ref;
         dynarray<net::bpoll_event_t> events;
-        lua_epoll(lua_State *L, net::fd_t epfd, size_t max_events)
+        lua_epoll(lua_State *L, net::bpoll_handle epfd, size_t max_events)
             : fd(epfd)
             , ref(luaref_init(L))
             , events(max_events) {
@@ -199,8 +199,8 @@ namespace bee::lua_epoll {
         if (max_events <= 0) {
             return lua::push_error(L, "maxevents is less than or equal to zero.");
         }
-        net::fd_t epfd = net::bpoll_create();
-        if (epfd == net::retired_fd) {
+        net::bpoll_handle epfd = net::bpoll_create();
+        if (epfd == (net::bpoll_handle)-1) {
             return lua::push_error(L, error::net_errmsg("epoll_create"));
         }
         lua::newudata<lua_epoll>(L, L, epfd, (size_t)max_events);
