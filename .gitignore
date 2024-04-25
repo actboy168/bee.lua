@@ -4,7 +4,6 @@
 !/.vs/launch.vs.json
 /.vscode/ipch/
 /.vscode/c_cpp_properties.json
-/bootstrap/forward_lua.h
 /node_modules/
 /package-lock.json
 /package.json
