@@ -197,6 +197,24 @@ namespace bee::lua_filesystem {
             }
         }
 
+        path_view to_view() {
+            switch (st) {
+            case status::ptr:
+                return ptr->native();
+            case status::str:
+#if defined(_WIN32)
+                conv_val();
+                return val.native();
+#else
+                return str;
+#endif
+            case status::val:
+                return val.native();
+            default:
+                std::unreachable();
+            }
+        }
+
     private:
         void conv_val() {
 #if defined(_WIN32)
@@ -944,8 +962,8 @@ namespace bee::lua_filesystem {
     }
 
     static int filelock(lua_State* L) {
-        auto self = getpathref(L, 1);
-        auto fd   = file_handle::lock(self);
+        auto path = getpathref(L, 1);
+        auto fd   = file_handle::lock(path.to_view());
         if (!fd) {
             return lua::push_error(L, error::sys_errmsg("filelock"));
         }
@@ -961,7 +979,7 @@ namespace bee::lua_filesystem {
 
     static int fullpath(lua_State* L) {
         auto path = getpathref(L, 1);
-        auto fd   = file_handle::open_link(path);
+        auto fd   = file_handle::open_link(path.to_view());
         if (!fd) {
             return lua::push_error(L, error::sys_errmsg("fullpath"));
         }

@@ -3,13 +3,13 @@
 #include <sys/file.h>
 
 namespace bee {
-    file_handle file_handle::lock(const fs::path& filename) noexcept {
-        int fd = ::open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_EXLOCK | O_NONBLOCK, 0644);
+    file_handle file_handle::lock(path_view filename) noexcept {
+        int fd = ::open(filename.data(), O_WRONLY | O_CREAT | O_TRUNC | O_EXLOCK | O_NONBLOCK, 0644);
         return from_native(fd);
     }
 
-    file_handle file_handle::open_link(const fs::path& filename) noexcept {
-        int fd = ::open(filename.c_str(), O_SYMLINK);
+    file_handle file_handle::open_link(path_view filename) noexcept {
+        int fd = ::open(filename.data(), O_SYMLINK);
         return from_native(fd);
     }
 

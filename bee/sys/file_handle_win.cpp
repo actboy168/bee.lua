@@ -45,13 +45,13 @@ namespace bee {
         return newh;
     }
 
-    file_handle file_handle::lock(const fs::path& filename) noexcept {
-        const HANDLE h = CreateFileW(filename.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_DELETE_ON_CLOSE, NULL);
+    file_handle file_handle::lock(path_view filename) noexcept {
+        const HANDLE h = CreateFileW(filename.data(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_DELETE_ON_CLOSE, NULL);
         return from_native(h);
     }
 
-    file_handle file_handle::open_link(const fs::path& filename) noexcept {
-        const HANDLE h = CreateFileW(filename.c_str(), 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
+    file_handle file_handle::open_link(path_view filename) noexcept {
+        const HANDLE h = CreateFileW(filename.data(), 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
         return from_native(h);
     }
 

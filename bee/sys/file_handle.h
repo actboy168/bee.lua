@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bee/nonstd/filesystem.h>
+#include <bee/utility/path_view.h>
 
 #include <optional>
 #include <string>
@@ -35,8 +36,8 @@ namespace bee {
         }
         static file_handle from_file(FILE* f) noexcept;
         static file_handle dup(FILE* f) noexcept;
-        static file_handle lock(const fs::path& filename) noexcept;
-        static file_handle open_link(const fs::path& filename) noexcept;
+        static file_handle lock(path_view filename) noexcept;
+        static file_handle open_link(path_view filename) noexcept;
 
     private:
         value_type h;
