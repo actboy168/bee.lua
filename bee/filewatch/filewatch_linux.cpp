@@ -98,8 +98,7 @@ namespace bee::filewatch {
         }
         if (event->mask & (IN_CREATE | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO)) {
             m_notify.emplace(notify::flag::rename, filename);
-        }
-        else if (event->mask & (IN_MOVE_SELF | IN_ATTRIB | IN_CLOSE_WRITE | IN_MODIFY)) {
+        } else if (event->mask & (IN_MOVE_SELF | IN_ATTRIB | IN_CLOSE_WRITE | IN_MODIFY)) {
             m_notify.emplace(notify::flag::modify, filename);
         }
 

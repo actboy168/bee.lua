@@ -75,8 +75,7 @@ namespace bee::subprocess {
             auto it         = set_env_.find(key);
             if (it == set_env_.end()) {
                 env_append(envs, key, val);
-            }
-            else {
+            } else {
                 if (it->second.has_value()) {
                     env_append(envs, key, *it->second);
                 }
@@ -326,8 +325,7 @@ namespace bee::subprocess {
             int rc = recv(h.value(), tmp, sizeof(tmp), MSG_PEEK | MSG_DONTWAIT);
             if (rc == 0) {
                 return -1;
-            }
-            else if (rc < 0) {
+            } else if (rc < 0) {
                 if (errno == EAGAIN || errno == EINTR) {
                     return 0;
                 }

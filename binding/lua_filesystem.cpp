@@ -27,16 +27,13 @@ namespace bee::lua_filesystem {
                 if (fs::exists(from) && fs::exists(to)) {
                     if ((options & fs::copy_options::overwrite_existing) != fs::copy_options::none) {
                         fs::remove(to);
-                    }
-                    else if ((options & fs::copy_options::update_existing) != fs::copy_options::none) {
+                    } else if ((options & fs::copy_options::update_existing) != fs::copy_options::none) {
                         if (fs::last_write_time(from) > fs::last_write_time(to)) {
                             fs::remove(to);
-                        }
-                        else {
+                        } else {
                             return false;
                         }
-                    }
-                    else if ((options & fs::copy_options::skip_existing) != fs::copy_options::none) {
+                    } else if ((options & fs::copy_options::skip_existing) != fs::copy_options::none) {
                         return false;
                     }
                 }
@@ -237,16 +234,14 @@ namespace bee::lua_filesystem {
         static int constructor(lua_State* L) {
             if (lua_gettop(L) == 0) {
                 lua::newudata<fs::path>(L);
-            }
-            else if (lua_type(L, 1) == LUA_TSTRING) {
+            } else if (lua_type(L, 1) == LUA_TSTRING) {
                 auto str = lua::checkstrview(L, 1);
 #if defined(_WIN32)
                 lua::newudata<fs::path>(L, wtf8::u2w(str));
 #else
                 lua::newudata<fs::path>(L, std::string { str.data(), str.size() });
 #endif
-            }
-            else {
+            } else {
                 lua::newudata<fs::path>(L, getpath(L, 1));
             }
             return 1;
@@ -919,8 +914,7 @@ namespace bee::lua_filesystem {
             if (auto s = pairs_directory<fs::recursive_directory_iterator>::constructor(L, p); !s) {
                 return s;
             }
-        }
-        else {
+        } else {
             if (auto s = pairs_directory<fs::directory_iterator>::constructor(L, p); !s) {
                 return s;
             }

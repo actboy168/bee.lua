@@ -53,8 +53,7 @@ namespace bee::filewatch {
         }
         if (path.back() != L'/') {
             m_path = path + L"/";
-        }
-        else {
+        } else {
             m_path = path;
         }
         m_directory = ::CreateFileW(m_path.c_str(), FILE_LIST_DIRECTORY, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, NULL);
@@ -213,8 +212,7 @@ namespace bee::filewatch {
         for (auto iter = m_tasks.begin(); iter != m_tasks.end();) {
             if (event_update(*iter)) {
                 ++iter;
-            }
-            else {
+            } else {
                 iter = m_tasks.erase(iter);
             }
         }

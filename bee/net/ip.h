@@ -13,11 +13,9 @@ namespace bee::net::ip {
         static_assert(std::is_integral_v<T> && (sizeof(T) == 2 || sizeof(T) == 4));
         if constexpr (std::endian::native == std::endian::big) {
             return v;
-        }
-        else if constexpr (sizeof(T) == 2) {
+        } else if constexpr (sizeof(T) == 2) {
             return static_cast<unsigned short>((v << 8) | (v >> 8));
-        }
-        else if constexpr (sizeof(T) == 4) {
+        } else if constexpr (sizeof(T) == 4) {
             return (v << 24) | ((v << 8) & 0x00FF0000) | ((v >> 8) & 0x0000FF00) | (v >> 24);
         }
     }

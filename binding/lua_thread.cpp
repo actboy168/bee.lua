@@ -97,8 +97,7 @@ namespace bee::lua_thread {
                 auto errlog = it->second;
                 channels.clear();
                 channels.emplace(std::make_pair("errlog", std::move(errlog)));
-            }
-            else {
+            } else {
                 channels.clear();
             }
         }
@@ -256,8 +255,7 @@ namespace bee::lua_thread {
             if (errlog) {
                 void* errmsg = seri_pack(L, lua_gettop(L) - 1, NULL);
                 errlog->push(errmsg);
-            }
-            else {
+            } else {
                 std::println(stdout, "thread error : {}", lua_tostring(L, -1));
             }
         }

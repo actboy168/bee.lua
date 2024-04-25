@@ -17,8 +17,7 @@ void bee::atomic_sync::wait(int& ctx, const value_type* ptr, value_type val, int
 void bee::atomic_sync::wake(const value_type* ptr, bool all) noexcept {
     if (all) {
         ::WakeByAddressAll((PVOID)ptr);
-    }
-    else {
+    } else {
         ::WakeByAddressSingle((PVOID)ptr);
     }
 }
@@ -146,11 +145,9 @@ void bee::atomic_sync::wait(int& ctx, const value_type* ptr, value_type val) noe
     ++ctx;
     if (ctx < 64) {
         cpu_relax();
-    }
-    else if (ctx < 72) {
+    } else if (ctx < 72) {
         thread_yield();
-    }
-    else {
+    } else {
         thread_sleep(10);
     }
 }

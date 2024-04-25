@@ -113,8 +113,7 @@ namespace bee::filewatch {
             }
             if (flags[i] & (kFSEventStreamEventFlagItemCreated | kFSEventStreamEventFlagItemRemoved | kFSEventStreamEventFlagItemRenamed)) {
                 m_notify.emplace(notify::flag::rename, path);
-            }
-            else if (flags[i] & (kFSEventStreamEventFlagItemFinderInfoMod | kFSEventStreamEventFlagItemModified | kFSEventStreamEventFlagItemInodeMetaMod | kFSEventStreamEventFlagItemChangeOwner | kFSEventStreamEventFlagItemXattrMod)) {
+            } else if (flags[i] & (kFSEventStreamEventFlagItemFinderInfoMod | kFSEventStreamEventFlagItemModified | kFSEventStreamEventFlagItemInodeMetaMod | kFSEventStreamEventFlagItemChangeOwner | kFSEventStreamEventFlagItemXattrMod)) {
                 m_notify.emplace(notify::flag::modify, path);
             }
         }

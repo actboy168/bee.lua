@@ -11,8 +11,7 @@ namespace bee::lua {
         if constexpr ((sizeof(U) < sizeof(lua_Integer)) || std::numeric_limits<U>::is_signed) {
             lua_pushinteger(L, static_cast<lua_Integer>(u));
             return 1;
-        }
-        else {
+        } else {
             constexpr U umax = static_cast<U>((std::numeric_limits<lua_Integer>::max)());
             lua_pushinteger(L, u > umax ? umax : static_cast<lua_Integer>(u));
             return 1;

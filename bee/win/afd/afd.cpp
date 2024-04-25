@@ -165,17 +165,13 @@ namespace bee::net::afd {
     afd_poll_event afd_query_event(const afd_poll_context& poll) noexcept {
         if (poll.io_status_block.Status == NTSTATUS_CANCELLED) {
             return { afd_poll_status::cancelled };
-        }
-        else if (poll.io_status_block.Status < 0) {
+        } else if (poll.io_status_block.Status < 0) {
             return { afd_poll_status::failed, bpoll_event::err };
-        }
-        else if (poll.afd_poll_info.NumberOfHandles < 1) {
+        } else if (poll.afd_poll_info.NumberOfHandles < 1) {
             return { afd_poll_status::nothing };
-        }
-        else if (poll.afd_poll_info.Events & AFD_POLL_LOCAL_CLOSE) {
+        } else if (poll.afd_poll_info.Events & AFD_POLL_LOCAL_CLOSE) {
             return { afd_poll_status::closed };
-        }
-        else {
+        } else {
             uint32_t afd_events = poll.afd_poll_info.Events;
             return { afd_poll_status::succeeded, afd_events_to_bpoll_events(afd_events) };
         }

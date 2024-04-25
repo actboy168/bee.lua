@@ -276,8 +276,7 @@ namespace bee::lua_subprocess {
                     }
                     lua::newfile(L, f);
                     return pipe.rd;
-                }
-                else {
+                } else {
                     FILE* f = pipe.rd.to_file(file_handle::mode::read);
                     if (!f) {
                         return {};
@@ -315,8 +314,7 @@ namespace bee::lua_subprocess {
                 while (lua_next(L, -2)) {
                     if (LUA_TSTRING == lua_type(L, -1)) {
                         builder.set(checkstring(L, -2), checkstring(L, -1));
-                    }
-                    else {
+                    } else {
                         builder.del(checkstring(L, -2));
                     }
                     lua_pop(L, 1);
@@ -350,17 +348,13 @@ namespace bee::lua_subprocess {
                 auto console = lua::checkstrview(L, -1);
                 if (console == "new") {
                     self.set_console(subprocess::console::eNew);
-                }
-                else if (console == "disable") {
+                } else if (console == "disable") {
                     self.set_console(subprocess::console::eDisable);
-                }
-                else if (console == "inherit") {
+                } else if (console == "inherit") {
                     self.set_console(subprocess::console::eInherit);
-                }
-                else if (console == "detached") {
+                } else if (console == "detached") {
                     self.set_console(subprocess::console::eDetached);
-                }
-                else if (console == "hide") {
+                } else if (console == "hide") {
                     self.set_console(subprocess::console::eHide);
                 }
             }

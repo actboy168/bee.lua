@@ -96,8 +96,7 @@ namespace bee::net {
         char portstr[portn + 1];
         if (auto [p, ec] = std::to_chars(portstr, portstr + portn, port); ec != std::errc()) {
             return false;
-        }
-        else {
+        } else {
             p[0] = '\0';
         }
         AddrInfo info(name, portstr);
@@ -113,15 +112,13 @@ namespace bee::net {
             }
             ep.assgin(*(const sockaddr_in*)info->ai_addr);
             return true;
-        }
-        else if (info->ai_family == AF_INET6) {
+        } else if (info->ai_family == AF_INET6) {
             if (info->ai_addrlen != sizeof(sockaddr_in6)) {
                 return false;
             }
             ep.assgin(*(const sockaddr_in6*)info->ai_addr);
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -206,11 +203,9 @@ namespace bee::net {
         const size_t len = m_size - offsetof(struct sockaddr_un, sun_path) - 1;
         if (len > 0 && path[0] != 0) {
             return { un_format::pathname, { path, len } };
-        }
-        else if (len > 1) {
+        } else if (len > 1) {
             return { un_format::abstract, { path + 1, len - 1 } };
-        }
-        else {
+        } else {
             return { un_format::unnamed, {} };
         }
     }

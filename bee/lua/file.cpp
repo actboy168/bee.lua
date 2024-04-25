@@ -86,13 +86,11 @@ namespace bee::lua {
         if (lua_type(L, 2) == LUA_TNUMBER) {
             size_t l = (size_t)luaL_checkinteger(L, 2);
             success  = (l == 0) ? test_eof(L, f) : read_chars(L, f, l);
-        }
-        else {
+        } else {
             const char* p = luaL_checkstring(L, 2);
             if (*p == 'a') {
                 read_all(L, f);
-            }
-            else {
+            } else {
                 return luaL_argerror(L, 2, "invalid format");
             }
         }
@@ -112,8 +110,7 @@ namespace bee::lua {
                           ? fprintf(f, LUA_INTEGER_FMT, (LUAI_UACINT)lua_tointeger(L, 2))
                           : fprintf(f, LUA_NUMBER_FMT, (LUAI_UACNUMBER)lua_tonumber(L, 2));
             status  = len > 0;
-        }
-        else {
+        } else {
             size_t l;
             const char* s = luaL_checklstring(L, 2, &l);
             status        = fwrite(s, sizeof(char), l, f) == l;
@@ -165,8 +162,7 @@ namespace bee::lua {
         if (ok) {
             lua_pushboolean(L, 1);
             return 1;
-        }
-        else {
+        } else {
             lua_pushnil(L);
 #if defined(_MSC_VER)
 #    pragma warning(push)

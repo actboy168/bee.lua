@@ -156,8 +156,7 @@ namespace bee::lua_select {
         if (ctx.readset.empty() && ctx.writeset.empty()) {
             if (msec < 0) {
                 return luaL_error(L, "no open sockets to check and no timeout set");
-            }
-            else {
+            } else {
                 thread_sleep(msec);
                 lua_getiuservalue(L, 1, 4);
                 return 1;
@@ -166,8 +165,7 @@ namespace bee::lua_select {
         struct timeval timeout, *timeop = &timeout;
         if (msec < 0) {
             timeop = NULL;
-        }
-        else {
+        } else {
             timeout.tv_sec  = (long)msec / 1000;
             timeout.tv_usec = (long)(msec % 1000 * 1000);
         }
@@ -200,8 +198,7 @@ namespace bee::lua_select {
             do
                 ok = ::select(ctx.maxfd + 1, &ctx.readfds, &ctx.writefds, NULL, NULL);
             while (ok == -1 && errno == EINTR);
-        }
-        else {
+        } else {
             ok = ::select(ctx.maxfd + 1, &ctx.readfds, &ctx.writefds, NULL, timeop);
             if (ok == -1 && errno == EINTR) {
                 ok = 0;
@@ -228,14 +225,12 @@ namespace bee::lua_select {
         storeref(L, fd);
         if (events & SELECT_READ) {
             ctx.readset.insert(fd);
-        }
-        else {
+        } else {
             ctx.readset.erase(fd);
         }
         if (events & SELECT_WRITE) {
             ctx.writeset.insert(fd);
-        }
-        else {
+        } else {
             ctx.writeset.erase(fd);
         }
         lua_pushboolean(L, 1);
@@ -247,14 +242,12 @@ namespace bee::lua_select {
         auto events = luaL_checkinteger(L, 3);
         if (events & SELECT_READ) {
             ctx.readset.insert(fd);
-        }
-        else {
+        } else {
             ctx.readset.erase(fd);
         }
         if (events & SELECT_WRITE) {
             ctx.writeset.insert(fd);
-        }
-        else {
+        } else {
             ctx.writeset.erase(fd);
         }
         lua_pushboolean(L, 1);

@@ -68,8 +68,7 @@ inline size_t wtf8_to_utf16_length(const char* input, size_t length) {
         }
         if (code_point > 0xFFFF) {
             output_len += 2;
-        }
-        else {
+        } else {
             output_len += 1;
         }
         i += n;
@@ -87,8 +86,7 @@ inline void wtf8_to_utf16(const char* input, size_t length, wchar_t* output, siz
             *output++ = (((code_point - 0x10000) >> 10) + 0xD800);
             *output++ = ((code_point - 0x10000) & 0x3FF) + 0xDC00;
             output_len -= 2;
-        }
-        else {
+        } else {
             *output++ = code_point;
             output_len -= 1;
         }
@@ -118,14 +116,11 @@ inline size_t wtf8_from_utf16_length(const wchar_t* input, size_t length) {
         }
         if (code_point < 0x80) {
             output_len += 1;
-        }
-        else if (code_point < 0x800) {
+        } else if (code_point < 0x800) {
             output_len += 2;
-        }
-        else if (code_point < 0x10000) {
+        } else if (code_point < 0x10000) {
             output_len += 3;
-        }
-        else {
+        } else {
             output_len += 4;
             i++;
         }
@@ -142,19 +137,16 @@ inline void wtf8_from_utf16(const wchar_t* input, size_t length, char* output, s
         if (code_point < 0x80) {
             *output++ = code_point;
             output_len -= 1;
-        }
-        else if (code_point < 0x800) {
+        } else if (code_point < 0x800) {
             *output++ = 0xC0 | (code_point >> 6);
             *output++ = 0x80 | (code_point & 0x3F);
             output_len -= 2;
-        }
-        else if (code_point < 0x10000) {
+        } else if (code_point < 0x10000) {
             *output++ = 0xE0 | (code_point >> 12);
             *output++ = 0x80 | ((code_point >> 6) & 0x3F);
             *output++ = 0x80 | (code_point & 0x3F);
             output_len -= 3;
-        }
-        else {
+        } else {
             *output++ = 0xF0 | (code_point >> 18);
             *output++ = 0x80 | ((code_point >> 12) & 0x3F);
             *output++ = 0x80 | ((code_point >> 6) & 0x3F);

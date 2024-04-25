@@ -50,11 +50,9 @@ namespace bee::subprocess {
             auto& back = deque.back();
             if (back.has(n)) {
                 back.append(str, n);
-            }
-            else if (n >= defsize) {
+            } else if (n >= defsize) {
                 deque.emplace_back(n).append(str, n);
-            }
-            else {
+            } else {
                 deque.emplace_back(defsize).append(str, n);
             }
             size += n;
@@ -118,12 +116,10 @@ namespace bee::subprocess {
 
             if (quote_hit && source[i - 1] == '\\') {
                 target += '\\';
-            }
-            else if (source[i - 1] == '"') {
+            } else if (source[i - 1] == '"') {
                 quote_hit = 1;
                 target += '\\';
-            }
-            else {
+            } else {
                 quote_hit = 0;
             }
         }
@@ -181,8 +177,7 @@ namespace bee::subprocess {
             const auto it    = set_env_.find(key);
             if (it == set_env_.end()) {
                 env_append(res, key, val);
-            }
-            else {
+            } else {
                 if (it->second.has_value()) {
                     env_append(res, key, *it->second);
                 }

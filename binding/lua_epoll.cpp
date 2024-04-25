@@ -120,8 +120,7 @@ namespace bee::lua_epoll {
         net::fd_t fd = ep_tofd(L, 2);
         if (lua_isnoneornil(L, 4)) {
             lua_pushvalue(L, 2);
-        }
-        else {
+        } else {
             lua_pushvalue(L, 4);
         }
         int r = luaref_ref(ep.ref, L);

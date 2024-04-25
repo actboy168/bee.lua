@@ -114,8 +114,7 @@ namespace bee::net::socket {
             std::array<char, 10> portstr;
             if (auto [p, ec] = std::to_chars(portstr.data(), portstr.data() + portstr.size() - 1, tcpport); ec != std::errc()) {
                 return false;
-            }
-            else {
+            } else {
                 p[0] = '\0';
             }
             return file_write(path, portstr.data());
@@ -236,8 +235,7 @@ namespace bee::net::socket {
             (void)flags;
             assert(::GetHandleInformation((HANDLE)s, &flags) && (flags & HANDLE_FLAG_INHERIT) == 0);
             return true;
-        }
-        else {
+        } else {
             return !!SetHandleInformation((HANDLE)s, HANDLE_FLAG_INHERIT, 0);
         }
     }
@@ -483,8 +481,7 @@ namespace bee::net::socket {
 #else
             if (errno != EAGAIN && errno != ECONNABORTED && errno != EPROTO && errno != EINTR) {
                 return status::failed;
-            }
-            else {
+            } else {
                 return status::wait;
             }
 #endif
@@ -616,8 +613,7 @@ namespace bee::net::socket {
                 internal_close(sfd);
                 return false;
             }
-        }
-        else {
+        } else {
             if (!socket::bind(sfd, endpoint::from_localhost(0))) {
                 internal_close(sfd);
                 return false;

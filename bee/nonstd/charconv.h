@@ -104,8 +104,7 @@ namespace std {
             }
             if (unsolved_value < max_div_10 || (unsolved_value == max_div_10 && digit <= max_mod_10)) {
                 unsolved_value = static_cast<T>(unsolved_value * 10 + digit);
-            }
-            else {
+            } else {
                 overflowed = true;
             }
         }

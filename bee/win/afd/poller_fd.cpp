@@ -32,8 +32,7 @@ namespace bee::net::afd {
             default:
                 std::unreachable();
             }
-        }
-        else {
+        } else {
             switch (poll_status) {
             case status::pending:
             case status::cancelled:
@@ -55,8 +54,7 @@ namespace bee::net::afd {
                     poll_status    = status::cancelled;
                     pending_events = bpoll_event::null;
                     return update_status::succee;
-                }
-                else {
+                } else {
                     return update_status::failed;
                 }
             }

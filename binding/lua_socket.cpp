@@ -79,8 +79,7 @@ namespace bee::lua_socket {
                         luaL_error(L, "invalid address: %s", path.data());
                     }
                     return ep;
-                }
-                else {
+                } else {
                     auto name = lua::checkstrview(L, idx);
                     auto port = lua::checkinteger<uint16_t>(L, idx + 1);
                     if (!net::endpoint::ctor_hostname(ep, name, port)) {
@@ -226,8 +225,7 @@ namespace bee::lua_socket {
                     return 1;
                 }
                 return push_neterror(L, "getpeername");
-            }
-            else if (which == "socket") {
+            } else if (which == "socket") {
                 auto& ep = lua::newudata<net::endpoint>(L);
                 if (net::socket::getsockname(fd, ep)) {
                     return 1;
@@ -488,8 +486,7 @@ namespace bee::lua_socket {
         bool no_ownership = lua_toboolean(L, 2);
         if (no_ownership) {
             lua::newudata<fd_no_ownership>(L, fd);
-        }
-        else {
+        } else {
             lua::newudata<net::fd_t>(L, fd);
         }
         return 1;

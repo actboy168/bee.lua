@@ -65,8 +65,7 @@ namespace bee {
         ~expected() {
             if (has_val) {
                 val.~value_type();
-            }
-            else {
+            } else {
                 unex.~error_type();
             }
         }

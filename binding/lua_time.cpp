@@ -143,8 +143,7 @@ namespace bee::lua_time {
         }
         if (G.timebase.numer == 125 && G.timebase.denom == 3) {
             G.monotonic_func = lua_monotonic<125, 3>;
-        }
-        else if (G.timebase.numer == 1 && G.timebase.denom == 1) {
+        } else if (G.timebase.numer == 1 && G.timebase.denom == 1) {
             G.monotonic_func = lua_monotonic<1, 1>;
         }
 #endif

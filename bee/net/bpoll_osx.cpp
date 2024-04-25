@@ -24,14 +24,12 @@ namespace bee::net {
                 return true;
             }
             return invalid_fd(static_cast<std::make_unsigned_t<T>>(fd));
-        }
-        else if constexpr (sizeof(uint32_t) < sizeof(T)) {
+        } else if constexpr (sizeof(uint32_t) < sizeof(T)) {
             if (fd > (std::numeric_limits<uint32_t>::max)()) {
                 return true;
             }
             return false;
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -47,8 +45,7 @@ namespace bee::net {
         void set_state(int key, uint16_t val) noexcept {
             if (val == 0) {
                 state.erase(key);
-            }
-            else {
+            } else {
                 state.insert_or_assign(key, val);
             }
         }
@@ -123,8 +120,7 @@ namespace bee::net {
             struct timespec t, *timeop = &t;
             if (timeout < 0) {
                 timeop = NULL;
-            }
-            else {
+            } else {
                 t.tv_sec  = timeout / 1000l;
                 t.tv_nsec = timeout % 1000l * 1000000l;
             }
@@ -137,8 +133,7 @@ namespace bee::net {
                 bpoll_event e = bpoll_event::null;
                 if (kev[i].filter == EVFILT_READ) {
                     e |= bpoll_event::in;
-                }
-                else if (kev[i].filter == EVFILT_WRITE) {
+                } else if (kev[i].filter == EVFILT_WRITE) {
                     e |= bpoll_event::out;
                 }
                 if (kev[i].flags & EV_ERROR) {

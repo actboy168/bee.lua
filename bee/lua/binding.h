@@ -24,14 +24,11 @@ namespace bee::lua {
         static_assert(sizeof(I) >= sizeof(T));
         if constexpr (sizeof(I) == sizeof(T)) {
             return true;
-        }
-        else if constexpr (std::numeric_limits<I>::is_signed == std::numeric_limits<T>::is_signed) {
+        } else if constexpr (std::numeric_limits<I>::is_signed == std::numeric_limits<T>::is_signed) {
             return i >= std::numeric_limits<T>::lowest() && i <= (std::numeric_limits<T>::max)();
-        }
-        else if constexpr (std::numeric_limits<I>::is_signed) {
+        } else if constexpr (std::numeric_limits<I>::is_signed) {
             return static_cast<std::make_unsigned_t<I>>(i) >= std::numeric_limits<T>::lowest() && static_cast<std::make_unsigned_t<I>>(i) <= (std::numeric_limits<T>::max)();
-        }
-        else {
+        } else {
             return static_cast<std::make_signed_t<I>>(i) >= std::numeric_limits<T>::lowest() && static_cast<std::make_signed_t<I>>(i) <= (std::numeric_limits<T>::max)();
         }
     }
@@ -42,24 +39,20 @@ namespace bee::lua {
         if constexpr (std::is_enum_v<T>) {
             using UT = std::underlying_type_t<T>;
             return static_cast<T>(checkinteger<UT>(L, arg));
-        }
-        else if constexpr (std::is_integral_v<T>) {
+        } else if constexpr (std::is_integral_v<T>) {
             lua_Integer r = luaL_checkinteger(L, arg);
             if constexpr (std::is_same_v<T, lua_Integer>) {
                 return r;
-            }
-            else if constexpr (sizeof(T) >= sizeof(lua_Integer)) {
+            } else if constexpr (sizeof(T) >= sizeof(lua_Integer)) {
                 return static_cast<T>(r);
-            }
-            else {
+            } else {
                 if (checklimit<T>(r)) {
                     return static_cast<T>(r);
                 }
                 luaL_error(L, "bad argument '#%d' limit exceeded", arg);
                 std::unreachable();
             }
-        }
-        else {
+        } else {
             return std::bit_cast<T>(checkinteger<lua_Integer>(L, arg));
         }
     }
@@ -69,30 +62,25 @@ namespace bee::lua {
         if constexpr (std::is_enum_v<T>) {
             using UT = std::underlying_type_t<T>;
             return static_cast<T>(optinteger<UT, std::to_underlying(def)>(L, arg));
-        }
-        else if constexpr (std::is_integral_v<T>) {
+        } else if constexpr (std::is_integral_v<T>) {
             if constexpr (std::is_same_v<T, lua_Integer>) {
                 return luaL_optinteger(L, arg, def);
-            }
-            else if constexpr (sizeof(T) == sizeof(lua_Integer)) {
+            } else if constexpr (sizeof(T) == sizeof(lua_Integer)) {
                 lua_Integer r = optinteger<lua_Integer, static_cast<lua_Integer>(def)>(L, arg);
                 return static_cast<T>(r);
-            }
-            else if constexpr (sizeof(T) < sizeof(lua_Integer)) {
+            } else if constexpr (sizeof(T) < sizeof(lua_Integer)) {
                 lua_Integer r = optinteger<lua_Integer, static_cast<lua_Integer>(def)>(L, arg);
                 if (checklimit<T>(r)) {
                     return static_cast<T>(r);
                 }
                 luaL_error(L, "bad argument '#%d' limit exceeded", arg);
                 std::unreachable();
-            }
-            else {
+            } else {
                 static_assert(checklimit<lua_Integer>(def));
                 lua_Integer r = optinteger<lua_Integer, static_cast<lua_Integer>(def)>(L, arg);
                 return static_cast<T>(r);
             }
-        }
-        else {
+        } else {
             // If std::bit_cast were not constexpr, it would fail here, so let it fail.
             return std::bit_cast<T>(optinteger<lua_Integer, std::bit_cast<lua_Integer>(def)>(L, arg));
         }
@@ -104,25 +92,20 @@ namespace bee::lua {
             uintptr_t r = std::bit_cast<uintptr_t>(tolightud<void*>(L, arg));
             if constexpr (std::is_same_v<T, uintptr_t>) {
                 return r;
-            }
-            else if constexpr (sizeof(T) >= sizeof(uintptr_t)) {
+            } else if constexpr (sizeof(T) >= sizeof(uintptr_t)) {
                 return static_cast<T>(r);
-            }
-            else {
+            } else {
                 if (checklimit<T>(r)) {
                     return static_cast<T>(r);
                 }
                 luaL_error(L, "bad argument #%d limit exceeded", arg);
                 std::unreachable();
             }
-        }
-        else if constexpr (std::is_same_v<T, void*>) {
+        } else if constexpr (std::is_same_v<T, void*>) {
             return lua_touserdata(L, arg);
-        }
-        else if constexpr (std::is_pointer_v<T>) {
+        } else if constexpr (std::is_pointer_v<T>) {
             return static_cast<T>(tolightud<void*>(L, arg));
-        }
-        else {
+        } else {
             return std::bit_cast<T>(tolightud<void*>(L, arg));
         }
     }
@@ -138,8 +121,7 @@ namespace bee::lua {
             uintptr_t mask = (uintptr_t)(std::alignment_of_v<T> - 1);
             storage        = (void*)(((uintptr_t)storage + mask) & ~mask);
             return static_cast<T*>(storage);
-        }
-        else {
+        } else {
             return static_cast<T*>(storage);
         }
     }
@@ -149,8 +131,7 @@ namespace bee::lua {
         if constexpr (std::alignment_of_v<T> > lua_maxalign) {
             void* storage = lua_newuserdatauv(L, sizeof(T) + std::alignment_of_v<T>, nupvalue);
             return udata_align<T>(storage);
-        }
-        else {
+        } else {
             void* storage = lua_newuserdatauv(L, sizeof(T), nupvalue);
             return udata_align<T>(storage);
         }
@@ -213,8 +194,7 @@ namespace bee::lua {
     T& checkudata(lua_State* L, int arg) {
         if constexpr (udata_has_name<T>::value) {
             return *udata_align<T>(luaL_checkudata(L, arg, udata<T>::name));
-        }
-        else {
+        } else {
             luaL_checktype(L, arg, LUA_TUSERDATA);
             return toudata<T>(L, arg);
         }

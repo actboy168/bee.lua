@@ -20,8 +20,7 @@ namespace bee {
                 x *= UINT64_C(0xc4ceb9fe1a85ec53);
                 x ^= x >> 33U;
                 return static_cast<size_t>(x);
-            }
-            else {
+            } else {
                 static_assert(std::is_trivially_copy_constructible_v<T>);
                 uint64_t i = 0;
                 memcpy(&i, &v, sizeof(v));
@@ -134,16 +133,14 @@ namespace bee {
                     m_buckets[slot].dib = dib;
                     if constexpr (std::is_same_v<mapped_type, void>) {
                         return false;
-                    }
-                    else {
+                    } else {
                         return { false, &m_buckets[slot].obj };
                     }
                 }
                 if (KeyEqual::operator()(m_buckets[slot].key, key)) {
                     if constexpr (std::is_same_v<mapped_type, void>) {
                         return true;
-                    }
-                    else {
+                    } else {
                         return { true, &m_buckets[slot].obj };
                     }
                 }
@@ -155,8 +152,7 @@ namespace bee {
                     m_buckets[slot].dib = dib;
                     if constexpr (std::is_same_v<mapped_type, void>) {
                         return false;
-                    }
-                    else {
+                    } else {
                         return { false, &m_buckets[slot].obj };
                     }
                 }
@@ -169,8 +165,7 @@ namespace bee {
         bool insert(const key_type &key, MappedType obj) {
             if constexpr (std::is_same_v<mapped_type, void>) {
                 return !find_or_insert(key);
-            }
-            else {
+            } else {
                 auto [found, value] = find_or_insert(key);
                 if (!found) {
                     new (value) mapped_type { std::forward<mapped_type>(obj) };
@@ -289,8 +284,7 @@ namespace bee {
                 auto &bucket = m.m_buckets[n];
                 if constexpr (std::is_same_v<mapped_type, void>) {
                     return bucket.key;
-                }
-                else {
+                } else {
                     return std::make_pair(bucket.key, bucket.obj);
                 }
             }
