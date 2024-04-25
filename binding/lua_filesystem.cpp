@@ -146,16 +146,12 @@ namespace bee::lua_filesystem {
                 std::unreachable();
             }
         }
-        path_ref(const fs::path* ptr)
+        path_ref(const fs::path* ptr) noexcept
             : st { status::ptr }
             , ptr { ptr } {}
-        path_ref(zstring_view str)
+        path_ref(zstring_view str) noexcept
             : st { status::str }
             , str { str } {
-        }
-        path_ref(fs::path&& val)
-            : st { status::val }
-            , val { std::move(val) } {
         }
         const fs::path* operator->() {
             switch (st) {
