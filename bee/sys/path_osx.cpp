@@ -2,18 +2,16 @@
 #include <bee/utility/dynarray.h>
 #include <mach-o/dyld.h>
 
+#include <cassert>
+
 namespace bee::sys {
-    path_expected exe_path() noexcept {
+    std::optional<fs::path> exe_path() noexcept {
         uint32_t path_len = 0;
         _NSGetExecutablePath(0, &path_len);
-        if (path_len <= 1) {
-            return unexpected<std::string>("_NSGetExecutablePath failed.");
-        }
+        assert(path_len > 1);
         dynarray<char> buf(path_len);
         int rv = _NSGetExecutablePath(buf.data(), &path_len);
-        if (rv != 0) {
-            return unexpected<std::string>("_NSGetExecutablePath failed.");
-        }
+        assert(rv == 0);
         return fs::path(buf.data(), buf.data() + path_len - 1);
     }
 }

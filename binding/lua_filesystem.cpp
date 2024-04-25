@@ -928,7 +928,7 @@ namespace bee::lua_filesystem {
     static int exe_path(lua_State* L) {
         auto r = sys::exe_path();
         if (!r) {
-            return lua::push_error(L, r.error());
+            return lua::push_error(L, error::sys_errmsg("exe_path"));
         }
         lua::newudata<fs::path>(L, r.value());
         return 1;
@@ -937,7 +937,7 @@ namespace bee::lua_filesystem {
     static int dll_path(lua_State* L) {
         auto r = sys::dll_path();
         if (!r) {
-            return lua::push_error(L, r.error());
+            return lua::push_error(L, error::sys_errmsg("dll_path"));
         }
         lua::newudata<fs::path>(L, r.value());
         return 1;

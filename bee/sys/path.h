@@ -1,10 +1,10 @@
 #pragma once
 
-#include <bee/nonstd/expected.h>
 #include <bee/nonstd/filesystem.h>
 
+#include <optional>
+
 namespace bee::sys {
-    using path_expected = expected<fs::path, std::string>;
-    path_expected exe_path() noexcept;
-    path_expected dll_path() noexcept;
+    std::optional<fs::path> exe_path() noexcept;
+    std::optional<fs::path> dll_path() noexcept;
 }

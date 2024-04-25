@@ -7,6 +7,7 @@
 #    include <bee/win/wtf8.h>
 #endif
 
+#include <bee/error.h>
 #include <bee/lua/module.h>
 #include <bee/nonstd/filesystem.h>
 #include <bee/nonstd/unreachable.h>
@@ -138,7 +139,7 @@ static int pushargs(lua_State *L) {
 static fs::path getprogdir(lua_State *L) {
     auto r = bee::sys::exe_path();
     if (!r) {
-        luaL_error(L, "unable to get progdir: %s\n", r.error().c_str());
+        luaL_error(L, "unable to get progdir: %s\n", bee::error::sys_errmsg("exe_path").c_str());
         std::unreachable();
     }
     return r.value().remove_filename();

@@ -2,7 +2,7 @@
 #include <dlfcn.h>
 
 namespace bee::sys {
-    static path_expected dll_path(void* module_handle) noexcept {
+    static std::optional<fs::path> dll_path(void* module_handle) noexcept {
         ::Dl_info dl_info;
         dl_info.dli_fname = 0;
         const int ret     = ::dladdr(module_handle, &dl_info);
@@ -10,14 +10,15 @@ namespace bee::sys {
             std::error_code ec;
             auto path = fs::absolute(dl_info.dli_fname, ec);
             if (ec) {
-                return unexpected<std::string>(ec.message());
+                return std::nullopt;
             }
             return path.lexically_normal();
         }
-        return unexpected<std::string>("::dladdr failed.");
+        errno = EFAULT;
+        return std::nullopt;
     }
 
-    path_expected dll_path() noexcept {
+    std::optional<fs::path> dll_path() noexcept {
         return dll_path((void*)&exe_path);
     }
 }
