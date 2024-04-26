@@ -3,7 +3,8 @@ lm.rootdir = ".."
 
 require "common"
 
-lm:source_set "source_bootstrap" {
+lm:executable "bootstrap" {
+    bindir = "$bin",
     deps = {
         "source_bee",
         "source_lua",
@@ -11,9 +12,8 @@ lm:source_set "source_bootstrap" {
     includes = { "3rd/lua", "." },
     sources = "bootstrap/main.cpp",
     windows = {
-        deps = {
-            "bee_utf8_crt",
-        },
+        deps = "bee_utf8_crt",
+        sources = "bootstrap/bootstrap.rc",
     },
     macos = {
         defines = "LUA_USE_MACOSX",
@@ -38,14 +38,6 @@ lm:source_set "source_bootstrap" {
     android = {
         defines = "LUA_USE_LINUX",
         links = { "m", "dl" }
-    }
-}
-
-lm:executable "bootstrap" {
-    bindir = "$bin",
-    deps = "source_bootstrap",
-    windows = {
-        sources = "bootstrap/bootstrap.rc",
     },
     msvc = {
         ldflags = "/IMPLIB:$obj/bootstrap.lib"
@@ -55,8 +47,6 @@ lm:executable "bootstrap" {
     },
 }
 
-local exe = lm.os == "windows" and ".exe" or ""
-
 lm:copy "copy_script" {
     inputs = "bootstrap/main.lua",
     outputs = "$bin/main.lua",
@@ -64,6 +54,7 @@ lm:copy "copy_script" {
 }
 
 if not lm.notest then
+    local exe = lm.os == "windows" and ".exe" or ""
     local tests = {}
     local fs = require "bee.filesystem"
     local rootdir = fs.path(lm.workdir) / ".."
