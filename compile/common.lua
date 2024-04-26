@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
-lm:lua_source "source_bee" {
+lm:lua_src "source_bee" {
     sources = "3rd/lua-seri/lua-seri.c",
     msvc = {
         flags = "/wd4244"
@@ -108,7 +108,7 @@ lm:source_set "source_bee" {
     }
 }
 
-lm:lua_source "source_bee" {
+lm:lua_src "source_bee" {
     includes = ".",
     defines = {
         lm.EXE ~= "lua" and "BEE_STATIC",
