@@ -33,6 +33,7 @@ namespace bee::lua_epoll {
     };
 
     static net::fd_t ep_tofd(lua_State *L, int idx) {
+        luaL_checktype(L, idx, LUA_TUSERDATA);
         return lua::toudata<net::fd_t>(L, idx);
     }
 
