@@ -1,0 +1,23 @@
+{
+  "version": "0.2.1",
+  "tasks": [
+    {
+      "type": "launch",
+      "taskLabel": "build",
+      "command": "luamake",
+      "args": [
+        "-notest"
+      ],
+      "appliesTo": "/"
+    },
+    {
+      "type": "launch",
+      "taskLabel": "test",
+      "command": "luamake",
+      "args": [
+        "test"
+      ],
+      "appliesTo": "/"
+    }
+  ]
+}
