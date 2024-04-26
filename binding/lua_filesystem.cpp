@@ -134,100 +134,47 @@ namespace bee::lua_filesystem {
 
     class path_ref {
     public:
-        ~path_ref() {
-            switch (st) {
-            case status::ptr:
-            case status::str:
-                break;
-            case status::val:
-                val.~path();
-                break;
-            default:
-                std::unreachable();
+        path_ref(lua_State* L, int idx) {
+            if (lua_type(L, idx) == LUA_TSTRING) {
+                auto str = lua::checkstrview(L, idx);
+#if defined(_WIN32)
+                val.assign(wtf8::u2w(str));
+#else
+                val.assign(std::string { str.data(), str.size() });
+#endif
+                ptr = &val;
+            } else {
+                ptr = &lua::checkudata<fs::path>(L, idx);
             }
-        }
-        path_ref(const fs::path* ptr) noexcept
-            : st { status::ptr }
-            , ptr { ptr } {}
-        path_ref(zstring_view str) noexcept
-            : st { status::str }
-            , str { str } {
         }
         const fs::path* operator->() {
-            switch (st) {
-            case status::ptr:
-                return ptr;
-            case status::str:
-                conv_val();
-                return &val;
-            case status::val:
-                return &val;
-            default:
-                std::unreachable();
-            }
+            return ptr;
         }
         const fs::path& operator*() {
-            switch (st) {
-            case status::ptr:
-                return *ptr;
-            case status::str:
-                conv_val();
-                return val;
-            case status::val:
-                return val;
-            default:
-                std::unreachable();
-            }
+            return *ptr;
         }
         operator const fs::path&() {
-            switch (st) {
-            case status::ptr:
-                return *ptr;
-            case status::str:
-                conv_val();
-                return val;
-            case status::val:
-                return val;
-            default:
-                std::unreachable();
-            }
+            return *ptr;
         }
 
     private:
-        void conv_val() {
-#if defined(_WIN32)
-            new (&val) fs::path { wtf8::u2w(str) };
-#else
-            new (&val) fs::path { std::string { str.data(), str.size() } };
-#endif
-            st = status::val;
-        }
-        enum class status {
-            ptr,
-            str,
-            val,
-        };
-        status st;
-        union {
-            const fs::path* ptr;
-            zstring_view str;
-            fs::path val;
-        };
+        const fs::path* ptr;
+        fs::path val;
     };
 
     class path_view_ref {
     public:
-        path_view_ref(const fs::path* ptr) noexcept
-            : view { ptr->native() } {
-        }
-        path_view_ref(zstring_view view) noexcept
+        path_view_ref(lua_State* L, int idx) {
+            if (lua_type(L, idx) == LUA_TSTRING) {
 #if defined(_WIN32)
-            : str(wtf8::u2w(view))
-            , view { str }
+                str  = wtf8::u2w(lua::checkstrview(L, idx));
+                view = str;
 #else
-            : view { view }
+                view = lua::checkstrview(L, idx);
 #endif
-        {
+            } else {
+                view = lua::checkudata<fs::path>(L, idx).native();
+            }
         }
         operator path_view() const noexcept {
             return view;
@@ -239,24 +186,6 @@ namespace bee::lua_filesystem {
 #endif
         path_view view;
     };
-
-    static fs::path& getpath(lua_State* L, int idx) {
-        return lua::checkudata<fs::path>(L, idx);
-    }
-
-    static path_ref getpathref(lua_State* L, int idx) {
-        if (lua_type(L, idx) == LUA_TSTRING) {
-            return lua::checkstrview(L, idx);
-        }
-        return &getpath(L, idx);
-    }
-
-    static path_view_ref getpathview(lua_State* L, int idx) {
-        if (lua_type(L, idx) == LUA_TSTRING) {
-            return lua::checkstrview(L, idx);
-        }
-        return &getpath(L, idx);
-    }
 
     namespace path {
         static int constructor(lua_State* L) {
@@ -270,100 +199,100 @@ namespace bee::lua_filesystem {
                 lua::newudata<fs::path>(L, std::string { str.data(), str.size() });
 #endif
             } else {
-                lua::newudata<fs::path>(L, getpath(L, 1));
+                lua::newudata<fs::path>(L, lua::checkudata<fs::path>(L, 1));
             }
             return 1;
         }
 
         static int filename(lua_State* L) {
-            const auto& self = getpath(L, 1);
+            const auto& self = lua::checkudata<fs::path>(L, 1);
             lua::newudata<fs::path>(L, self.filename());
             return 1;
         }
 
         static int parent_path(lua_State* L) {
-            const auto& self = getpath(L, 1);
+            const auto& self = lua::checkudata<fs::path>(L, 1);
             lua::newudata<fs::path>(L, self.parent_path());
             return 1;
         }
 
         static int stem(lua_State* L) {
-            const auto& self = getpath(L, 1);
+            const auto& self = lua::checkudata<fs::path>(L, 1);
             lua::newudata<fs::path>(L, self.stem());
             return 1;
         }
 
         static int extension(lua_State* L) {
-            const auto& self = getpath(L, 1);
+            const auto& self = lua::checkudata<fs::path>(L, 1);
             auto str         = tostring(self.extension());
             lua_pushlstring(L, str.data(), str.size());
             return 1;
         }
 
         static int is_absolute(lua_State* L) {
-            const auto& self = getpath(L, 1);
+            const auto& self = lua::checkudata<fs::path>(L, 1);
             lua_pushboolean(L, self.is_absolute());
             return 1;
         }
 
         static int is_relative(lua_State* L) {
-            const auto& self = getpath(L, 1);
+            const auto& self = lua::checkudata<fs::path>(L, 1);
             lua_pushboolean(L, self.is_relative());
             return 1;
         }
 
         static int remove_filename(lua_State* L) {
-            auto& self = getpath(L, 1);
+            auto& self = lua::checkudata<fs::path>(L, 1);
             self.remove_filename();
             lua_settop(L, 1);
             return 1;
         }
 
         static int replace_filename(lua_State* L) {
-            auto& self = getpath(L, 1);
-            auto path  = getpathref(L, 2);
+            auto& self = lua::checkudata<fs::path>(L, 1);
+            path_ref path(L, 2);
             self.replace_filename(path);
             lua_settop(L, 1);
             return 1;
         }
 
         static int replace_extension(lua_State* L) {
-            auto& self = getpath(L, 1);
-            auto path  = getpathref(L, 2);
+            auto& self = lua::checkudata<fs::path>(L, 1);
+            path_ref path(L, 2);
             self.replace_extension(path);
             lua_settop(L, 1);
             return 1;
         }
 
         static int lexically_normal(lua_State* L) {
-            const auto& self = getpath(L, 1);
+            const auto& self = lua::checkudata<fs::path>(L, 1);
             lua::newudata<fs::path>(L, self.lexically_normal());
             return 1;
         }
 
         static int mt_div(lua_State* L) {
-            auto lft = getpathref(L, 1);
-            auto rht = getpathref(L, 2);
+            path_ref lft(L, 1);
+            path_ref rht(L, 2);
             lua::newudata<fs::path>(L, (*lft) / (*rht));
             return 1;
         }
 
         static int mt_concat(lua_State* L) {
-            auto lft = getpathref(L, 1);
-            auto rht = getpathref(L, 2);
+            path_ref lft(L, 1);
+            path_ref rht(L, 2);
             lua::newudata<fs::path>(L, lft->native() + rht->native());
             return 1;
         }
 
         static int mt_eq(lua_State* L) {
-            const auto& lft = getpath(L, 1);
-            const auto& rht = getpath(L, 2);
+            const auto& lft = lua::checkudata<fs::path>(L, 1);
+            const auto& rht = lua::checkudata<fs::path>(L, 2);
             lua_pushboolean(L, path_equal(lft, rht));
             return 1;
         }
 
         static int mt_tostring(lua_State* L) {
-            const auto& self = getpath(L, 1);
+            const auto& self = lua::checkudata<fs::path>(L, 1);
             auto str         = tostring(self);
             lua_pushlstring(L, str.data(), str.size());
             return 1;
@@ -598,21 +527,21 @@ namespace bee::lua_filesystem {
     }
 
     static int status(lua_State* L) {
-        auto p = getpathref(L, 1);
+        path_ref p(L, 1);
         std::error_code ec;
         lua::newudata<fs::file_status>(L, fs::status(p, ec));
         return 1;
     }
 
     static int symlink_status(lua_State* L) {
-        auto p = getpathref(L, 1);
+        path_ref p(L, 1);
         std::error_code ec;
         lua::newudata<fs::file_status>(L, fs::symlink_status(p, ec));
         return 1;
     }
 
     static int exists(lua_State* L) {
-        auto p = getpathref(L, 1);
+        path_ref p(L, 1);
         std::error_code ec;
         auto status = fs::status(p, ec);
         lua_pushboolean(L, fs::exists(status));
@@ -620,7 +549,7 @@ namespace bee::lua_filesystem {
     }
 
     static int is_directory(lua_State* L) {
-        auto p = getpathref(L, 1);
+        path_ref p(L, 1);
         std::error_code ec;
         auto status = fs::status(p, ec);
         lua_pushboolean(L, fs::is_directory(status));
@@ -628,7 +557,7 @@ namespace bee::lua_filesystem {
     }
 
     static int is_regular_file(lua_State* L) {
-        auto p = getpathref(L, 1);
+        path_ref p(L, 1);
         std::error_code ec;
         auto status = fs::status(p, ec);
         lua_pushboolean(L, fs::is_regular_file(status));
@@ -636,7 +565,7 @@ namespace bee::lua_filesystem {
     }
 
     static lua::cxx::status file_size(lua_State* L) {
-        auto p = getpathref(L, 1);
+        path_ref p(L, 1);
         std::error_code ec;
         auto size = fs::file_size(p, ec);
         if (ec) {
@@ -646,7 +575,7 @@ namespace bee::lua_filesystem {
     }
 
     static lua::cxx::status create_directory(lua_State* L) {
-        auto p = getpathref(L, 1);
+        path_ref p(L, 1);
         std::error_code ec;
         auto r = fs::create_directory(p, ec);
         if (ec) {
@@ -657,7 +586,7 @@ namespace bee::lua_filesystem {
     }
 
     static lua::cxx::status create_directories(lua_State* L) {
-        auto p = getpathref(L, 1);
+        path_ref p(L, 1);
         std::error_code ec;
         auto r = fs::create_directories(p, ec);
         if (ec) {
@@ -668,8 +597,8 @@ namespace bee::lua_filesystem {
     }
 
     static lua::cxx::status rename(lua_State* L) {
-        auto from = getpathref(L, 1);
-        auto to   = getpathref(L, 2);
+        path_ref from(L, 1);
+        path_ref to(L, 2);
         std::error_code ec;
         fs::rename(from, to, ec);
         if (ec) {
@@ -679,7 +608,7 @@ namespace bee::lua_filesystem {
     }
 
     static lua::cxx::status remove(lua_State* L) {
-        auto p = getpathref(L, 1);
+        path_ref p(L, 1);
         std::error_code ec;
 #if defined(_WIN32)
         auto r = workaround::remove(p, ec);
@@ -694,7 +623,7 @@ namespace bee::lua_filesystem {
     }
 
     static lua::cxx::status remove_all(lua_State* L) {
-        auto p = getpathref(L, 1);
+        path_ref p(L, 1);
         std::error_code ec;
 #if defined(_WIN32)
         auto r = workaround::remove_all(p, ec);
@@ -717,7 +646,7 @@ namespace bee::lua_filesystem {
             lua::newudata<fs::path>(L, std::move(r));
             return 1;
         }
-        auto p = getpathref(L, 1);
+        path_ref p(L, 1);
         fs::current_path(p, ec);
         if (ec) {
             return pusherror(L, "current_path(path)", ec, p);
@@ -726,8 +655,8 @@ namespace bee::lua_filesystem {
     }
 
     static lua::cxx::status copy(lua_State* L) {
-        auto from    = getpathref(L, 1);
-        auto to      = getpathref(L, 2);
+        path_ref from(L, 1);
+        path_ref to(L, 2);
         auto options = lua::optinteger<fs::copy_options, fs::copy_options::none>(L, 3);
         std::error_code ec;
         fs::copy(from, to, options, ec);
@@ -738,8 +667,8 @@ namespace bee::lua_filesystem {
     }
 
     static lua::cxx::status copy_file(lua_State* L) {
-        auto from    = getpathref(L, 1);
-        auto to      = getpathref(L, 2);
+        path_ref from(L, 1);
+        path_ref to(L, 2);
         auto options = lua::optinteger<fs::copy_options, fs::copy_options::none>(L, 3);
         std::error_code ec;
 #if defined(__MINGW32__)
@@ -755,7 +684,7 @@ namespace bee::lua_filesystem {
     }
 
     static lua::cxx::status absolute(lua_State* L) {
-        auto p = getpathref(L, 1);
+        path_ref p(L, 1);
         std::error_code ec;
         auto r = fs::absolute(p, ec);
         if (ec) {
@@ -766,7 +695,7 @@ namespace bee::lua_filesystem {
     }
 
     static lua::cxx::status canonical(lua_State* L) {
-        auto p = getpathref(L, 1);
+        path_ref p(L, 1);
         std::error_code ec;
         auto r = fs::canonical(p, ec);
         if (ec) {
@@ -777,7 +706,7 @@ namespace bee::lua_filesystem {
     }
 
     static lua::cxx::status relative(lua_State* L) {
-        auto p = getpathref(L, 1);
+        path_ref p(L, 1);
         std::error_code ec;
         if (lua_gettop(L) == 1) {
             fs::path r = fs::relative(p, ec);
@@ -787,8 +716,8 @@ namespace bee::lua_filesystem {
             lua::newudata<fs::path>(L, std::move(r));
             return 1;
         }
-        auto base = getpathref(L, 2);
-        auto r    = fs::relative(p, base, ec);
+        path_ref base(L, 2);
+        auto r = fs::relative(p, base, ec);
         if (ec) {
             return pusherror(L, "relative", ec, p, base);
         }
@@ -798,7 +727,7 @@ namespace bee::lua_filesystem {
 
     static lua::cxx::status last_write_time(lua_State* L) {
         static_assert(std::is_integral_v<fs::file_time_type::duration::rep>);
-        auto p = getpathref(L, 1);
+        path_ref p(L, 1);
         if (lua_gettop(L) == 1) {
             std::error_code ec;
             auto time = fs::last_write_time(p, ec);
@@ -818,7 +747,7 @@ namespace bee::lua_filesystem {
     }
 
     static lua::cxx::status permissions(lua_State* L) {
-        auto p = getpathref(L, 1);
+        path_ref p(L, 1);
         switch (lua_gettop(L)) {
         case 1: {
             std::error_code ec;
@@ -852,8 +781,8 @@ namespace bee::lua_filesystem {
     }
 
     static lua::cxx::status create_symlink(lua_State* L) {
-        auto target = getpathref(L, 1);
-        auto link   = getpathref(L, 2);
+        path_ref target(L, 1);
+        path_ref link(L, 2);
         std::error_code ec;
         fs::create_symlink(target, link, ec);
         if (ec) {
@@ -863,8 +792,8 @@ namespace bee::lua_filesystem {
     }
 
     static lua::cxx::status create_directory_symlink(lua_State* L) {
-        auto target = getpathref(L, 1);
-        auto link   = getpathref(L, 2);
+        path_ref target(L, 1);
+        path_ref link(L, 2);
         std::error_code ec;
         fs::create_directory_symlink(target, link, ec);
         if (ec) {
@@ -874,8 +803,8 @@ namespace bee::lua_filesystem {
     }
 
     static lua::cxx::status create_hard_link(lua_State* L) {
-        auto target = getpathref(L, 1);
-        auto link   = getpathref(L, 2);
+        path_ref target(L, 1);
+        path_ref link(L, 2);
         std::error_code ec;
         fs::create_hard_link(target, link, ec);
         if (ec) {
@@ -935,7 +864,7 @@ namespace bee::lua_filesystem {
     };
 
     static lua::cxx::status pairs(lua_State* L) {
-        auto p            = getpathref(L, 1);
+        path_ref p(L, 1);
         const char* flags = luaL_optstring(L, 2, "");
         luaL_argcheck(L, (flags[0] == '\0' || (flags[0] == 'r' && flags[1] == '\0')), 2, "invalid flags");
         if (flags[0] == 'r') {
@@ -972,8 +901,8 @@ namespace bee::lua_filesystem {
     }
 
     static int filelock(lua_State* L) {
-        auto path = getpathview(L, 1);
-        auto fd   = file_handle::lock(path);
+        path_view_ref path(L, 1);
+        auto fd = file_handle::lock(path);
         if (!fd) {
             return lua::push_error(L, error::sys_errmsg("filelock"));
         }
@@ -988,8 +917,8 @@ namespace bee::lua_filesystem {
     }
 
     static int fullpath(lua_State* L) {
-        auto path = getpathview(L, 1);
-        auto fd   = file_handle::open_link(path);
+        path_view_ref path(L, 1);
+        auto fd = file_handle::open_link(path);
         if (!fd) {
             return lua::push_error(L, error::sys_errmsg("fullpath"));
         }
