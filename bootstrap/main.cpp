@@ -142,7 +142,7 @@ static fs::path getprogdir(lua_State *L) {
         luaL_error(L, "unable to get progdir: %s\n", bee::error::sys_errmsg("exe_path").c_str());
         std::unreachable();
     }
-    return r.value().remove_filename();
+    return (*r).remove_filename();
 }
 
 static void init_cpath(lua_State *L) {
