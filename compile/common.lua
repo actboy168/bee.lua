@@ -243,32 +243,27 @@ lm:source_set "source_lua" {
         "3rd/lua/linit.c",
     },
     defines = "MAKE_LIB",
+    visibility = "default",
     windows = {
         defines = "LUA_BUILD_AS_DLL",
     },
     macos = {
         defines = "LUA_USE_MACOSX",
-        visibility = "default",
     },
     linux = {
         defines = "LUA_USE_LINUX",
-        visibility = "default",
     },
     netbsd = {
         defines = "LUA_USE_LINUX",
-        visibility = "default",
     },
     freebsd = {
         defines = "LUA_USE_LINUX",
-        visibility = "default",
     },
     openbsd = {
         defines = "LUA_USE_LINUX",
-        visibility = "default",
     },
     android = {
         defines = "LUA_USE_LINUX",
-        visibility = "default",
     },
     msvc = {
         sources = ("3rd/lua/fast_setjmp_%s.s"):format(lm.arch)
