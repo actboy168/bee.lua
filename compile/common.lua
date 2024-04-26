@@ -1,5 +1,8 @@
 local lm = require "luamake"
+
 lm:required_version "1.6"
+
+lm.compile_commands = "$builddir"
 
 lm:conf {
     c = "c11",

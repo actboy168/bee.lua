@@ -1,7 +1,4 @@
 local lm = require "luamake"
-lm.rootdir = ".."
-
-require "common"
 
 lm:executable "bootstrap" {
     bindir = "$bin",
@@ -57,7 +54,7 @@ if not lm.notest then
     local exe = lm.os == "windows" and ".exe" or ""
     local tests = {}
     local fs = require "bee.filesystem"
-    local rootdir = fs.path(lm.workdir) / ".."
+    local rootdir = fs.path(lm.workdir)
     for file in fs.pairs(rootdir / "test", "r") do
         if file:extension() == ".lua" then
             tests[#tests+1] = fs.relative(file, rootdir):lexically_normal():string()

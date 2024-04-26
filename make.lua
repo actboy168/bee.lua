@@ -1,10 +1,9 @@
 local lm = require "luamake"
 
-lm.compile_commands = "$builddir"
+require "compile.common"
 
 if lm.EXE == "lua" then
-    lm:import "compile/lua.lua"
-    return
+    require "compile.lua"
+else
+    require "compile.bootstrap"
 end
-
-lm:import "compile/bootstrap.lua"
