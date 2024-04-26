@@ -1,8 +1,7 @@
 local lm = require "luamake"
 lm.rootdir = ".."
 
-require "config"
-lm:import "common.lua"
+require "common"
 
 lm:source_set "source_bootstrap" {
     deps = {

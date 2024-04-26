@@ -1,8 +1,7 @@
 local lm = require "luamake"
 lm.rootdir = ".."
 
-require "config"
-lm:import "common.lua"
+require "common"
 
 lm:lua_dll "bee" {
     deps = "source_bee",
