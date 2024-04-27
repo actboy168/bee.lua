@@ -50,6 +50,9 @@ if lm.sanitize then
     lm:conf {
         mode = "debug",
         flags = "-fsanitize=address",
+        clang_cl = {
+            mode = "release",
+        },
         gcc = {
             ldflags = "-fsanitize=address"
         },
