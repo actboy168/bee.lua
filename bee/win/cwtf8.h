@@ -7,6 +7,7 @@ extern "C" {
 #include <assert.h>
 #include <bee/utility/assume.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #define WTF8_ASSUME(cond) \
