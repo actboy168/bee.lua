@@ -134,13 +134,13 @@ namespace bee::net::afd {
     }
 
     bool afd_poll(const afd_context& ctx, afd_poll_context& poll) noexcept {
-        poll.io_status_block.Status = STATUS_PENDING;
+        poll.io_status_block.Status = NTSTATUS_PENDING;
         poll.afd_poll_info.Events   = bpoll_events_to_afd_events(static_cast<bpoll_event>(poll.afd_poll_info.Events));
         NTSTATUS status             = NtDeviceIoControlFile(ctx.afd_handle, NULL, NULL, &poll.io_status_block, &poll.io_status_block, kIOCTL_AFD_POLL, &poll.afd_poll_info, sizeof(AFD_POLL_INFO), &poll.afd_poll_info, sizeof(AFD_POLL_INFO));
         if (status == NTSTATUS_SUCCESS) {
             return true;
         }
-        if (status == STATUS_PENDING) {
+        if (status == NTSTATUS_PENDING) {
             SetLastError(ERROR_IO_PENDING);
             return false;
         };
