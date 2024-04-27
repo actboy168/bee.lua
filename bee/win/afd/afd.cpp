@@ -140,10 +140,6 @@ namespace bee::net::afd {
         if (status == NTSTATUS_SUCCESS) {
             return true;
         }
-        if (status == NTSTATUS_PENDING) {
-            SetLastError(ERROR_IO_PENDING);
-            return false;
-        };
         SetLastError(RtlNtStatusToDosError(status));
         return false;
     }

@@ -8,7 +8,7 @@
 #include <cassert>
 
 namespace bee::net::afd {
-    constexpr bpoll_event AllowBpollEvents = (bpoll_event::in | bpoll_event::pri | bpoll_event::out | bpoll_event::err | bpoll_event::hup | bpoll_event::rdnorm | bpoll_event::rdband | bpoll_event::wrnorm | bpoll_event::wrand | bpoll_event::msg | bpoll_event::rdhup);
+    constexpr bpoll_event AllowBpollEvents = bpoll_event::in | bpoll_event::pri | bpoll_event::out | bpoll_event::err | bpoll_event::hup | bpoll_event::rdnorm | bpoll_event::rdband | bpoll_event::wrnorm | bpoll_event::wrand | bpoll_event::msg | bpoll_event::rdhup;
 
     poller_fd::poller_fd(fd_t socket, fd_t base_socket) noexcept
         : socket(socket)
