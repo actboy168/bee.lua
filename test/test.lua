@@ -27,6 +27,7 @@ if not lt.options.list then
     print("DEBUG:    ", platform.DEBUG)
 end
 
+require "test_skip"
 --require "test_lua"
 require "test_serialization"
 require "test_filesystem"
