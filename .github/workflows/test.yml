@@ -70,3 +70,40 @@ jobs:
     - run: luamake -notest
     - run: luamake lua test/glibc-version.lua
     - run: luamake -sanitize
+  bsd:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: freebsd
+            version: '14.0'
+            install: pkg install -y ninja libinotify
+          - os: openbsd
+            version: '7.5'
+            install: pkg_add ninja libinotify
+          - os: netbsd
+            version: '10.0'
+            install: pkgin -y install ninja-build libinotify
+    name: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: luamake
+          repository: actboy168/luamake
+          submodules : recursive
+      - uses: actions/checkout@v4
+        with:
+          path: bee.lua
+          repository: actboy168/bee.lua
+          submodules : recursive
+      - uses: cross-platform-actions/action@v0.24.0
+        with:
+          operating_system: ${{ matrix.os }}
+          version: ${{ matrix.version }}
+          run: |
+            sudo ${{ matrix.install }}
+            cd luamake
+            ./compile/build.sh notest
+            cd ../bee.lua
+            ./../luamake/luamake

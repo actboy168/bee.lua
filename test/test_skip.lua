@@ -9,3 +9,7 @@ end
 if platform.os == "openbsd" then
     lt.skip "filewatch"
 end
+
+if platform.os == "netbsd" then
+    lt.skip "filewatch"
+end
