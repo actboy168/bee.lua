@@ -1,16 +1,10 @@
 local lm = require "luamake"
 
-lm:executable "bootstrap" {
-    bindir = "$bin",
-    deps = {
-        "source_bee",
-        "source_lua",
-    },
+lm:src "source_bootstrap" {
     includes = { "3rd/lua", "." },
     sources = "bootstrap/main.cpp",
     windows = {
         deps = "bee_utf8_crt",
-        sources = "bootstrap/bootstrap.rc",
     },
     macos = {
         defines = "LUA_USE_MACOSX",
@@ -35,6 +29,18 @@ lm:executable "bootstrap" {
     android = {
         defines = "LUA_USE_LINUX",
         links = { "m", "dl" }
+    },
+}
+
+lm:executable "bootstrap" {
+    bindir = "$bin",
+    deps = {
+        "source_bee",
+        "source_lua",
+        "source_bootstrap",
+    },
+    windows = {
+        sources = "bootstrap/bootstrap.rc",
     },
     msvc = {
         ldflags = "/IMPLIB:$obj/bootstrap.lib"
