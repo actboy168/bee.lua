@@ -11,6 +11,7 @@ namespace bee::sys {
         assert(path_len > 1);
         dynarray<char> buf(path_len);
         int rv = _NSGetExecutablePath(buf.data(), &path_len);
+        (void)rv;
         assert(rv == 0);
         return fs::path(buf.data(), buf.data() + path_len - 1);
     }
