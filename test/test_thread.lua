@@ -2,6 +2,7 @@ local lt = require "ltest"
 
 local thread = require "bee.thread"
 local fs = require "bee.filesystem"
+local time = require "bee.time"
 local err = thread.channel "errlog"
 
 local function createThread(script, ...)
@@ -325,4 +326,11 @@ function test_thread:test_rpc()
     thread.wait(thd)
     assertNotThreadError()
     thread.reset()
+end
+
+function test_thread:test_sleep()
+    local t1 = time.monotonic()
+    thread.sleep(1)
+    local t2 = time.monotonic()
+    lt.assertEquals(t2 - t1 <= 2, true)
 end
