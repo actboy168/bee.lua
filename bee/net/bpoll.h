@@ -48,6 +48,7 @@ namespace bee::net {
     };
     using bpoll_handle = uintptr_t;
 #endif
+    constexpr bpoll_handle invalid_bpoll_handle = (bpoll_handle)-1;
 
     bpoll_handle bpoll_create() noexcept;
     bool bpoll_close(bpoll_handle handle) noexcept;

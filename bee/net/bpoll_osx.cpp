@@ -14,7 +14,6 @@ namespace bee::net {
     constexpr uint16_t KQUEUE_STATE_REGISTERED = 0x0001;
     constexpr uint16_t KQUEUE_STATE_EPOLLRDHUP = 0x0002;
     constexpr bpoll_event AllowBpollEvents     = bpoll_event::in | bpoll_event::out | bpoll_event::hup | bpoll_event::rdhup | bpoll_event::err;
-    constexpr bpoll_handle InvalidHandle       = (bpoll_handle)-1;
 
     template <typename T>
     static bool invalid_fd(T fd) noexcept {
@@ -164,19 +163,19 @@ namespace bee::net {
     bpoll_handle bpoll_create() noexcept {
         int kq = ::kqueue();
         if (kq == -1) {
-            return InvalidHandle;
+            return invalid_bpoll_handle;
         }
         poller* ep = new (std::nothrow) poller(kq);
         if (ep == NULL) {
             ::close(kq);
             errno = ENOMEM;
-            return InvalidHandle;
+            return invalid_bpoll_handle;
         }
         return (bpoll_handle)ep;
     }
 
     bool bpoll_close(bpoll_handle handle) noexcept {
-        if (handle == InvalidHandle) {
+        if (handle == invalid_bpoll_handle) {
             errno = EBADF;
             return false;
         }
@@ -186,7 +185,7 @@ namespace bee::net {
     }
 
     bool bpoll_ctl_add(bpoll_handle handle, fd_t fd, const bpoll_event_t& event) noexcept {
-        if (handle == InvalidHandle) {
+        if (handle == invalid_bpoll_handle) {
             errno = EBADF;
             return false;
         }
@@ -195,7 +194,7 @@ namespace bee::net {
     }
 
     bool bpoll_ctl_mod(bpoll_handle handle, fd_t fd, const bpoll_event_t& event) noexcept {
-        if (handle == InvalidHandle) {
+        if (handle == invalid_bpoll_handle) {
             errno = EBADF;
             return false;
         }
@@ -204,7 +203,7 @@ namespace bee::net {
     }
 
     bool bpoll_ctl_del(bpoll_handle handle, fd_t fd) noexcept {
-        if (handle == InvalidHandle) {
+        if (handle == invalid_bpoll_handle) {
             errno = EBADF;
             return false;
         }
@@ -217,7 +216,7 @@ namespace bee::net {
     }
 
     int bpoll_wait(bpoll_handle handle, const span<bpoll_event_t>& events, int timeout) noexcept {
-        if (handle == InvalidHandle) {
+        if (handle == invalid_bpoll_handle) {
             errno = EBADF;
             return -1;
         }
