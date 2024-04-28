@@ -46,35 +46,48 @@ namespace bee {
 
     extern "C" NTSTATUS NTAPI NtSetTimerResolution(ULONG RequestedResolution, BOOLEAN Set, PULONG ActualResolution);
 
-    static DWORD GetTimerFlags() noexcept {
+    static bool is_support_hrtimer() noexcept {
         HANDLE timer = CreateWaitableTimerExW(NULL, NULL, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
         if (timer == NULL) {
-            ULONG actual_res = 0;
-            NtSetTimerResolution(10000, TRUE, &actual_res);
-            return 0;
+            return false;
         } else {
             CloseHandle(timer);
             // supported in Windows 10 1803+
-            return CREATE_WAITABLE_TIMER_HIGH_RESOLUTION;
+            return true;
+        }
+    }
+    static bool support_hrtimer = is_support_hrtimer();
+
+    static void hrtimer_start() noexcept {
+        if (!support_hrtimer) {
+            ULONG actual_res = 0;
+            NtSetTimerResolution(10000, TRUE, &actual_res);
         }
     }
 
-    static DWORD TimerFlags = GetTimerFlags();
+    static void hrtimer_end() noexcept {
+        if (!support_hrtimer) {
+            ULONG actual_res = 0;
+            NtSetTimerResolution(10000, FALSE, &actual_res);
+        }
+    }
 
     void thread_sleep(int msec) noexcept {
         if (msec < 0) {
             return;
         }
-        HANDLE timer = CreateWaitableTimerExW(NULL, NULL, TimerFlags, TIMER_ALL_ACCESS);
+        HANDLE timer = CreateWaitableTimerExW(NULL, NULL, support_hrtimer ? CREATE_WAITABLE_TIMER_HIGH_RESOLUTION : 0, TIMER_ALL_ACCESS);
         if (!timer) {
             return;
         }
+        hrtimer_start();
         LARGE_INTEGER time;
         time.QuadPart = -(msec * 10000);
         if (SetWaitableTimer(timer, &time, 0, NULL, NULL, 0)) {
             WaitForSingleObject(timer, INFINITE);
         }
         CloseHandle(timer);
+        hrtimer_end();
     }
 
     void thread_yield() noexcept {
