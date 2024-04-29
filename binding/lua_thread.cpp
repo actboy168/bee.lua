@@ -116,11 +116,6 @@ namespace bee::lua_thread {
         spinlock mutex;
     };
 
-    struct rpc {
-        atomic_semaphore sem = atomic_semaphore(0);
-        void* data           = nullptr;
-    };
-
     static channelmgr g_channel;
     static std::atomic<int> g_thread_id = -1;
     static int THREADID;
@@ -301,28 +296,6 @@ namespace bee::lua_thread {
         return 0;
     }
 
-    static void rpc_metatable(lua_State* L) {}
-
-    static int lrpc_create(lua_State* L) {
-        auto& r = lua::newudata<rpc>(L);
-        lua_pushlightuserdata(L, &r);
-        lua_rotate(L, 1, 1);
-        return 2;
-    }
-
-    static int lrpc_wait(lua_State* L) {
-        auto r = lua::checklightud<struct rpc*>(L, 1);
-        r->sem.acquire();
-        return seri_unpackptr(L, r->data);
-    }
-
-    static int lrpc_return(lua_State* L) {
-        auto r  = lua::checklightud<struct rpc*>(L, 1);
-        r->data = seri_pack(L, 1, NULL);
-        r->sem.release();
-        return 0;
-    }
-
     static void init_threadid(lua_State* L) {
         if (lua_rawgetp(L, LUA_REGISTRYINDEX, &THREADID) != LUA_TNIL) {
             return;
@@ -343,9 +316,6 @@ namespace bee::lua_thread {
             { "reset", lreset },
             { "wait", lwait },
             { "setname", lsetname },
-            { "rpc_create", lrpc_create },
-            { "rpc_wait", lrpc_wait },
-            { "rpc_return", lrpc_return },
             { "preload_module", lua::preload_module },
             { "id", NULL },
             { NULL, NULL },
@@ -365,10 +335,5 @@ namespace bee::lua {
     struct udata<lua_thread::boxchannel> {
         static inline auto name      = "bee::channel";
         static inline auto metatable = bee::lua_thread::channel_metatable;
-    };
-    template <>
-    struct udata<lua_thread::rpc> {
-        static inline auto name      = "bee::rpc";
-        static inline auto metatable = bee::lua_thread::rpc_metatable;
     };
 }

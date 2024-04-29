@@ -293,41 +293,6 @@ function test_thread:test_thread_pop()
     assertNotThreadError()
 end
 
-function test_thread:test_rpc()
-    thread.reset()
-    thread.newchannel "test"
-    local thd = createThread [[
-        local thread = require "bee.thread"
-        local c = thread.channel "test"
-        local quit
-        local cmd = {}
-        function cmd.add(a, b)
-            return a + b
-        end
-        function cmd.exit()
-            quit = true
-            return "ok"
-        end
-        local function dispatch(context, what, ...)
-            thread.rpc_return(context, cmd[what](...))
-            return not quit
-        end
-        while dispatch(c:bpop()) do
-        end
-    ]]
-    local c = thread.channel "test"
-    local function call(...)
-        local r, _ = thread.rpc_create()
-        c:push(r, ...)
-        return thread.rpc_wait(r)
-    end
-    lt.assertEquals(call("add", 1, 2), 3)
-    lt.assertEquals(call("exit"), "ok")
-    thread.wait(thd)
-    assertNotThreadError()
-    thread.reset()
-end
-
 function test_thread:test_sleep()
     local t1 = time.monotonic()
     thread.sleep(1)
