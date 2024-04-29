@@ -18,24 +18,9 @@ local function SimpleClient(protocol, ...)
     return fd
 end
 
-local function assertSuccess(expected, actual, errmsg)
-    if not lt.equals(actual, expected) then
-        lt.failure("expected: %s, actual: %s.%s", lt.stringify(expected), lt.stringify(actual), errmsg or "")
-    end
-end
-
-local function assertFailed(expected_errmsg, actual, actual_errmsg)
-    if actual ~= nil then
-        lt.failure("No failed but expected errmsg: %s", lt.stringify(expected_errmsg))
-    end
-    if not lt.equals(actual_errmsg, expected_errmsg) then
-        lt.failure("expected errmsg: %s, actual errmsg: %s.", lt.stringify(expected_errmsg), lt.stringify(actual_errmsg))
-    end
-end
-
 function m.test_create()
-    assertFailed("maxevents is less than or equal to zero.", epoll.create(-1))
-    assertFailed("maxevents is less than or equal to zero.", epoll.create(0))
+    lt.assertFailed("maxevents is less than or equal to zero.", epoll.create(-1))
+    lt.assertFailed("maxevents is less than or equal to zero.", epoll.create(0))
     local epfd <close> = epoll.create(16)
     lt.assertIsUserdata(epfd)
 end
@@ -43,8 +28,8 @@ end
 function m.test_close()
     local epfd = epoll.create(16)
     local fd <close> = SimpleServer("tcp", "127.0.0.1", 0)
-    assertSuccess(true, epfd:event_add(fd, 0))
-    assertSuccess(true, epfd:close())
+    lt.assertEquals(true, epfd:event_add(fd, 0))
+    lt.assertEquals(true, epfd:close())
 
     lt.assertEquals(epfd:close(), nil)
     lt.assertEquals(epfd:event_add(fd, 0), nil)
@@ -56,16 +41,16 @@ function m.test_event()
     lt.assertIsNil(epfd:event_mod(fd, 0))
     lt.assertIsNil(epfd:event_del(fd))
 
-    assertSuccess(true, epfd:event_add(fd, 0))
+    lt.assertEquals(true, epfd:event_add(fd, 0))
     lt.assertIsNil(epfd:event_add(fd, 0))
-    assertSuccess(true, epfd:event_mod(fd, 0))
-    assertSuccess(true, epfd:event_del(fd))
+    lt.assertEquals(true, epfd:event_mod(fd, 0))
+    lt.assertEquals(true, epfd:event_del(fd))
     lt.assertIsNil(epfd:event_mod(fd, 0))
     lt.assertIsNil(epfd:event_del(fd))
-    assertSuccess(true, epfd:event_add(fd, 0))
+    lt.assertEquals(true, epfd:event_add(fd, 0))
     lt.assertIsNil(epfd:event_add(fd, 0))
-    assertSuccess(true, epfd:event_mod(fd, 0))
-    assertSuccess(true, epfd:event_del(fd))
+    lt.assertEquals(true, epfd:event_mod(fd, 0))
+    lt.assertEquals(true, epfd:event_del(fd))
 
     epfd:close()
 end

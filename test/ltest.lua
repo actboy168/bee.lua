@@ -709,15 +709,24 @@ function m.failure(...)
     failure(...)
 end
 
-function m.assertEquals(actual, expected)
+function m.assertEquals(actual, expected, errmsg)
     if not equals(actual, expected) then
-        failure("expected: %s, actual: %s", stringify(expected), stringify(actual))
+        failure("expected: %s, actual: %s.%s", stringify(expected), stringify(actual), errmsg or "")
     end
 end
 
-function m.assertNotEquals(actual, expected)
+function m.assertNotEquals(actual, expected, errmsg)
     if equals(actual, expected) then
-        failure("Received the not expected value: %s", stringify(actual))
+        failure("Received the not expected value: %s.%s", stringify(actual), errmsg or "")
+    end
+end
+
+function m.assertFailed(expected_errmsg, actual, actual_errmsg)
+    if actual ~= nil then
+        failure("No failed but expected errmsg: %s", stringify(expected_errmsg))
+    end
+    if not equals(actual_errmsg, expected_errmsg) then
+        failure("expected errmsg: %s, actual errmsg: %s.", stringify(expected_errmsg), stringify(actual_errmsg))
     end
 end
 
