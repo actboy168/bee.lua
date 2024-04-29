@@ -3,18 +3,17 @@ local lt = require "ltest"
 local thread = require "bee.thread"
 local fs = require "bee.filesystem"
 local time = require "bee.time"
-local err = thread.channel "errlog"
 
 local function createThread(script, ...)
     return thread.thread(script, ...)
 end
 
 local function assertNotThreadError()
-    lt.assertEquals(err:pop(), false)
+    lt.assertEquals(thread.errlog(), false)
 end
 
 local function assertHasThreadError(m)
-    local ok, msg = err:pop()
+    local ok, msg = thread.errlog()
     lt.assertEquals(ok, true)
     lt.assertEquals(not not string.find(msg, m, nil, true), true)
 end

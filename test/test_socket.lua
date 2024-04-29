@@ -3,7 +3,6 @@ local socket = require "bee.socket"
 local select = require "bee.select"
 local thread = require "bee.thread"
 local fs = require "bee.filesystem"
-local errlog = thread.channel "errlog"
 
 local function simple_select(fd, mode)
     local s <close> = select.create()
@@ -26,7 +25,7 @@ local function simple_select(fd, mode)
 end
 
 local function assertNotThreadError()
-    local ok, msg = errlog:pop()
+    local ok, msg = thread.errlog()
     if ok then
         lt.failure(msg)
     end

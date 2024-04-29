@@ -77,9 +77,6 @@ namespace bee::lua_thread {
 
     class channelmgr {
     public:
-        channelmgr() {
-            channels.emplace(std::make_pair("errlog", std::make_shared<channel>()));
-        }
         bool create(zstring_view name) {
             std::unique_lock<spinlock> lk(mutex);
             std::string namestr { name.data(), name.size() };
@@ -92,14 +89,7 @@ namespace bee::lua_thread {
         }
         void clear() {
             std::unique_lock<spinlock> lk(mutex);
-            auto it = channels.find("errlog");
-            if (it != channels.end()) {
-                auto errlog = it->second;
-                channels.clear();
-                channels.emplace(std::make_pair("errlog", std::move(errlog)));
-            } else {
-                channels.clear();
-            }
+            channels.clear();
         }
         boxchannel query(zstring_view name) {
             std::unique_lock<spinlock> lk(mutex);
@@ -117,6 +107,7 @@ namespace bee::lua_thread {
     };
 
     static channelmgr g_channel;
+    static channel g_errlog;
     static std::atomic<int> g_thread_id = -1;
     static int THREADID;
 
@@ -246,13 +237,8 @@ namespace bee::lua_thread {
         lua_pushcfunction(L, thread_luamain);
         lua_pushlightuserdata(L, ud);
         if (lua_pcall(L, 1, 0, 1) != LUA_OK) {
-            boxchannel errlog = g_channel.query("errlog");
-            if (errlog) {
-                void* errmsg = seri_pack(L, lua_gettop(L) - 1, NULL);
-                errlog->push(errmsg);
-            } else {
-                std::println(stdout, "thread error : {}", lua_tostring(L, -1));
-            }
+            void* errmsg = seri_pack(L, lua_gettop(L) - 1, NULL);
+            g_errlog.push(errmsg);
         }
         lua_close(L);
     }
@@ -271,6 +257,16 @@ namespace bee::lua_thread {
         }
         lua_pushlightuserdata(L, handle);
         return 1;
+    }
+
+    static int lerrlog(lua_State* L) {
+        void* data;
+        if (!g_errlog.pop(data)) {
+            lua_pushboolean(L, 0);
+            return 1;
+        }
+        lua_pushboolean(L, 1);
+        return 1 + seri_unpackptr(L, data);
     }
 
     static int lreset(lua_State* L) {
@@ -311,6 +307,7 @@ namespace bee::lua_thread {
         luaL_Reg lib[] = {
             { "sleep", lsleep },
             { "thread", lthread },
+            { "errlog", lerrlog },
             { "newchannel", lnewchannel },
             { "channel", lchannel },
             { "reset", lreset },
