@@ -38,6 +38,7 @@ namespace bee::net {
             case socket::recv_status::wait:
             case socket::recv_status::close:
             case socket::recv_status::failed:
+                e.clear(std::memory_order_seq_cst);
                 return;
             case socket::recv_status::success:
                 break;
@@ -45,7 +46,6 @@ namespace bee::net {
                 std::unreachable();
             }
         }
-        e.clear(std::memory_order_seq_cst);
     }
 
     fd_t event::fd() const noexcept {

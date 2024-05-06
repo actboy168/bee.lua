@@ -17,8 +17,7 @@ extern "C" {
 namespace bee::lua_channel {
     class channel {
     public:
-        using box        = std::shared_ptr<channel>;
-        using value_type = void*;
+        using box = std::shared_ptr<channel>;
 
         bool init() noexcept {
             if (!ev.open()) {
@@ -29,23 +28,42 @@ namespace bee::lua_channel {
         net::fd_t fd() const noexcept {
             return ev.fd();
         }
-        void push(value_type data) noexcept {
+        void push(lua_State* L, int from) noexcept {
+            void* data = seri_pack(L, from, NULL);
             std::unique_lock<spinlock> lk(mutex);
             queue.push(data);
             ev.set();
         }
-        bool pop(value_type& data) noexcept {
-            std::unique_lock<spinlock> lk(mutex);
-            if (queue.empty()) {
-                return false;
+        int pop(lua_State* L) noexcept {
+            void* data;
+            {
+                std::unique_lock<spinlock> lk(mutex);
+                if (queue.empty()) {
+                    ev.clear();
+                    lua_pushboolean(L, 0);
+                    return 1;
+                }
+                data = queue.front();
+                queue.pop();
             }
-            data = queue.front();
-            queue.pop();
-            return true;
+            lua_pushboolean(L, 1);
+            return 1 + seri_unpackptr(L, data);
+        }
+        void clear() noexcept {
+            std::unique_lock<spinlock> lk(mutex);
+            for (;;) {
+                if (queue.empty()) {
+                    ev.clear();
+                    return;
+                }
+                void* data = queue.front();
+                free(data);
+                queue.pop();
+            }
         }
 
     private:
-        std::queue<value_type> queue;
+        std::queue<void*> queue;
         spinlock mutex;
         net::event ev;
     };
@@ -67,6 +85,9 @@ namespace bee::lua_channel {
         }
         void clear() noexcept {
             std::unique_lock<spinlock> lk(mutex);
+            for (const auto& [_, c] : channels) {
+                c->clear();
+            }
             channels.clear();
         }
         channel::box query(zstring_view name) noexcept {
@@ -87,21 +108,14 @@ namespace bee::lua_channel {
     static channelmgr g_channel;
 
     static int lchannel_push(lua_State* L) {
-        auto& bc     = lua::checkudata<channel::box>(L, 1);
-        void* buffer = seri_pack(L, 1, NULL);
-        bc->push(buffer);
+        auto& bc = lua::checkudata<channel::box>(L, 1);
+        bc->push(L, 1);
         return 0;
     }
 
     static int lchannel_pop(lua_State* L) {
         auto& bc = lua::checkudata<channel::box>(L, 1);
-        void* data;
-        if (!bc->pop(data)) {
-            lua_pushboolean(L, 0);
-            return 1;
-        }
-        lua_pushboolean(L, 1);
-        return 1 + seri_unpackptr(L, data);
+        return bc->pop(L);
     }
 
     static int lchannel_fd(lua_State* L) {

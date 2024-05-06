@@ -10,7 +10,7 @@ end
 
 local test_channel = lt.test "channel"
 
-function test_channel:test_channel_create()
+function test_channel:test_create()
     channel.reset()
     lt.assertErrorMsgEquals("Can't query channel 'test'", channel.query, "test")
     channel.create "test"
@@ -166,21 +166,28 @@ function test_channel:test_fd()
         epfd:event_add(req:fd(), epoll.EPOLLIN)
         local function dispatch(ok, what, ...)
             if not ok then
-                return true
+                return 1
             end
             if what == "exit" then
-                os.exit()
-                return
+                return 0
             end
             res:push(what, ...)
         end
-        for _, event in epfd:wait() do
-            if event & (epoll.EPOLLERR | epoll.EPOLLHUP) ~= 0 then
-                assert(false, "unknown error")
-                return
-            end
-            if event & epoll.EPOLLIN ~= 0 then
-                while not dispatch(req:pop()) do
+        while true do
+            for _, event in epfd:wait() do
+                if event & (epoll.EPOLLERR | epoll.EPOLLHUP) ~= 0 then
+                    assert(false, "unknown error")
+                    return
+                end
+                if event & epoll.EPOLLIN ~= 0 then
+                    while true do
+                        local r = dispatch(req:pop())
+                        if r == 0 then
+                            return
+                        elseif r == 1 then
+                            break
+                        end
+                    end
                 end
             end
         end
@@ -189,15 +196,18 @@ function test_channel:test_fd()
     epfd:event_add(res:fd(), epoll.EPOLLIN)
     local function test_ok(...)
         req:push(...)
-        for _, event in epfd:wait() do
-            if event & (epoll.EPOLLERR | epoll.EPOLLHUP) ~= 0 then
-                lt.failure("unknown error")
-            end
-            if event & epoll.EPOLLIN ~= 0 then
-                local r = table.pack(res:pop())
-                if r[1] == true then
-                    lt.assertEquals(r, table.pack(true, ...))
-                    break
+        local expected = table.pack(true, ...)
+        while true do
+            for _, event in epfd:wait() do
+                if event & (epoll.EPOLLERR | epoll.EPOLLHUP) ~= 0 then
+                    lt.failure("unknown error")
+                end
+                if event & epoll.EPOLLIN ~= 0 then
+                    local actual = table.pack(res:pop())
+                    if actual[1] == true then
+                        lt.assertEquals(actual, expected)
+                        return
+                    end
                 end
             end
         end
