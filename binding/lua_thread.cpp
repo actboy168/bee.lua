@@ -330,7 +330,7 @@ DEFINE_LUAOPEN(thread)
 namespace bee::lua {
     template <>
     struct udata<lua_thread::boxchannel> {
-        static inline auto name      = "bee::channel";
+        static inline auto name      = "bee::legacy_channel";
         static inline auto metatable = bee::lua_thread::channel_metatable;
     };
 }

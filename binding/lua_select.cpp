@@ -218,9 +218,20 @@ namespace bee::lua_select {
         ctx.writeset.clear();
         return 0;
     }
+    static net::fd_t tofd(lua_State* L, int idx) {
+        switch (lua_type(L, 1)) {
+        case LUA_TLIGHTUSERDATA:
+            return lua::tolightud<net::fd_t>(L, idx);
+        case LUA_TUSERDATA:
+            return lua::toudata<net::fd_t>(L, idx);
+        default:
+            luaL_checktype(L, idx, LUA_TUSERDATA);
+            std::unreachable();
+        }
+    }
     static int event_add(lua_State* L) {
         auto& ctx   = lua::checkudata<select_ctx>(L, 1);
-        auto fd     = lua::checkudata<net::fd_t>(L, 2);
+        auto fd     = tofd(L, 2);
         auto events = luaL_checkinteger(L, 3);
         storeref(L, fd);
         if (events & SELECT_READ) {
@@ -238,7 +249,7 @@ namespace bee::lua_select {
     }
     static int event_mod(lua_State* L) {
         auto& ctx   = lua::checkudata<select_ctx>(L, 1);
-        auto fd     = lua::checkudata<net::fd_t>(L, 2);
+        auto fd     = tofd(L, 2);
         auto events = luaL_checkinteger(L, 3);
         if (events & SELECT_READ) {
             ctx.readset.insert(fd);
@@ -255,7 +266,7 @@ namespace bee::lua_select {
     }
     static int event_del(lua_State* L) {
         auto& ctx = lua::checkudata<select_ctx>(L, 1);
-        auto fd   = lua::checkudata<net::fd_t>(L, 2);
+        auto fd   = tofd(L, 2);
         cleanref(L, fd);
         ctx.readset.erase(fd);
         ctx.writeset.erase(fd);

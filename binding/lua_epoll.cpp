@@ -33,8 +33,15 @@ namespace bee::lua_epoll {
     };
 
     static net::fd_t ep_tofd(lua_State *L, int idx) {
-        luaL_checktype(L, idx, LUA_TUSERDATA);
-        return lua::toudata<net::fd_t>(L, idx);
+        switch (lua_type(L, idx)) {
+        case LUA_TLIGHTUSERDATA:
+            return lua::tolightud<net::fd_t>(L, idx);
+        case LUA_TUSERDATA:
+            return lua::toudata<net::fd_t>(L, idx);
+        default:
+            luaL_checktype(L, idx, LUA_TUSERDATA);
+            std::unreachable();
+        }
     }
 
     static int ep_events(lua_State *L) {

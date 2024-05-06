@@ -10,7 +10,7 @@ namespace bee::net {
         ~event() noexcept;
         bool open() noexcept;
         void set() noexcept;
-        void wait() noexcept;
-        fd_t fd() noexcept;
+        void clear() noexcept;
+        fd_t fd() const noexcept;
     };
 }

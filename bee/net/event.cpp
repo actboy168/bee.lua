@@ -17,7 +17,7 @@ namespace bee::net {
     bool event::open() noexcept {
         if (pipe[0] != retired_fd)
             return false;
-        return socket::pair(pipe, socket::fd_flags::none);
+        return socket::pair(pipe, socket::fd_flags::nonblock);
     }
 
     void event::set() noexcept {
@@ -30,7 +30,7 @@ namespace bee::net {
         socket::send(pipe[1], rc, tmp, sizeof(tmp));
     }
 
-    void event::wait() noexcept {
+    void event::clear() noexcept {
         char tmp[128];
         int rc = 0;
         for (;;) {
@@ -48,7 +48,7 @@ namespace bee::net {
         e.clear(std::memory_order_seq_cst);
     }
 
-    fd_t event::fd() noexcept {
+    fd_t event::fd() const noexcept {
         return pipe[0];
     }
 }
