@@ -107,7 +107,7 @@ function test_channel:test_pop_3()
     assertNotThreadError()
     local req = channel.create "testReq"
     local res = channel.create "testRes"
-    local thd = thread.thread [[
+    local thd = thread.create [[
         local thread = require "bee.thread"
         local channel = require "bee.channel"
         local req = channel.query "testReq"
@@ -154,7 +154,7 @@ function test_channel:test_fd()
     assertNotThreadError()
     local req = channel.create "testReq"
     local res = channel.create "testRes"
-    local thd = thread.thread [[
+    local thd = thread.create [[
         local thread = require "bee.thread"
         local channel = require "bee.channel"
         local epoll = require "bee.epoll"

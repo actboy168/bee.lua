@@ -208,7 +208,7 @@ function test_socket:test_pair()
 end
 
 local function createEchoThread(name, ...)
-    return thread.thread(([[
+    return thread.create(([[
     -- %s
     local protocol, address, port = ...
     local socket = require "bee.socket"

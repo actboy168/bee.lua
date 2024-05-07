@@ -16,34 +16,34 @@ extern "C" {
 }
 
 namespace bee::lua_thread {
-    class channel {
+    class errlog {
     public:
-        void push(lua_State* L, int from) noexcept {
-            void* data = seri_pack(L, from, NULL);
-            std::unique_lock<spinlock> lk(mutex);
+        void push(lua_State* L, int idx) noexcept {
+            size_t len      = 0;
+            const char* str = luaL_tolstring(L, idx, &len);
+            std::string data(str, len);
+            std::unique_lock<spinlock> _(mutex);
             queue.push(data);
         }
         int pop(lua_State* L) noexcept {
-            void* data;
-            {
-                std::unique_lock<spinlock> lk(mutex);
-                if (queue.empty()) {
-                    lua_pushboolean(L, 0);
-                    return 1;
-                }
-                data = queue.front();
-                queue.pop();
+            std::unique_lock<spinlock> _(mutex);
+            if (queue.empty()) {
+                lua_pushboolean(L, 0);
+                return 1;
             }
+            auto& data = queue.front();
             lua_pushboolean(L, 1);
-            return 1 + seri_unpackptr(L, data);
+            lua_pushlstring(L, data.data(), data.size());
+            queue.pop();
+            return 2;
         }
 
     private:
-        std::queue<void*> queue;
+        std::queue<std::string> queue;
         spinlock mutex;
     };
 
-    static channel g_errlog;
+    static errlog g_errlog;
     static std::atomic<int> g_thread_id = -1;
     static int THREADID;
 
@@ -108,12 +108,12 @@ namespace bee::lua_thread {
         lua_pushcfunction(L, thread_luamain);
         lua_pushlightuserdata(L, ud);
         if (lua_pcall(L, 1, 0, 1) != LUA_OK) {
-            g_errlog.push(L, lua_gettop(L) - 1);
+            g_errlog.push(L, -1);
         }
         lua_close(L);
     }
 
-    static int lthread(lua_State* L) {
+    static int lcreate(lua_State* L) {
         auto source          = lua::checkstrview(L, 1);
         void* params         = seri_pack(L, 1, NULL);
         int id               = gen_threadid();
@@ -158,7 +158,7 @@ namespace bee::lua_thread {
     static int luaopen(lua_State* L) {
         luaL_Reg lib[] = {
             { "sleep", lsleep },
-            { "thread", lthread },
+            { "create", lcreate },
             { "errlog", lerrlog },
             { "wait", lwait },
             { "setname", lsetname },

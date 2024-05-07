@@ -5,7 +5,7 @@ local fs = require "bee.filesystem"
 local time = require "bee.time"
 
 local function createThread(script, ...)
-    return thread.thread(script, ...)
+    return thread.create(script, ...)
 end
 
 local function assertNotThreadError()
