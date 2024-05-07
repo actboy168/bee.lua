@@ -219,7 +219,7 @@ namespace bee::lua_select {
         return 0;
     }
     static net::fd_t tofd(lua_State* L, int idx) {
-        switch (lua_type(L, 1)) {
+        switch (lua_type(L, idx)) {
         case LUA_TLIGHTUSERDATA:
             return lua::tolightud<net::fd_t>(L, idx);
         case LUA_TUSERDATA:
