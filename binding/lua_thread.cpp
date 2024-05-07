@@ -133,17 +133,6 @@ namespace bee::lua_thread {
         return g_errlog.pop(L);
     }
 
-    static int lreset(lua_State* L) {
-        lua_rawgetp(L, LUA_REGISTRYINDEX, &THREADID);
-        int threadid = (int)lua_tointeger(L, -1);
-        lua_pop(L, 1);
-        if (threadid != 0) {
-            return luaL_error(L, "reset must call from main thread");
-        }
-        g_thread_id = 0;
-        return 0;
-    }
-
     static int lwait(lua_State* L) {
         thread_handle th = lua::checklightud<thread_handle>(L, 1);
         thread_wait(th);
@@ -171,7 +160,6 @@ namespace bee::lua_thread {
             { "sleep", lsleep },
             { "thread", lthread },
             { "errlog", lerrlog },
-            { "reset", lreset },
             { "wait", lwait },
             { "setname", lsetname },
             { "preload_module", lua::preload_module },

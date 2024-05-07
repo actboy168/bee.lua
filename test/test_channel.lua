@@ -105,7 +105,6 @@ end
 function test_channel:test_pop_3()
     channel.reset()
     assertNotThreadError()
-    thread.reset()
     local req = channel.create "testReq"
     local res = channel.create "testRes"
     local thd = thread.thread [[
@@ -153,7 +152,6 @@ end
 function test_channel:test_fd()
     channel.reset()
     assertNotThreadError()
-    thread.reset()
     local req = channel.create "testReq"
     local res = channel.create "testRes"
     local thd = thread.thread [[

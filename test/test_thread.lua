@@ -93,24 +93,11 @@ end
 function test_thread:test_id_2()
     assertNotThreadError()
     lt.assertEquals(thread.id, 0)
-    thread.reset()
-    lt.assertEquals(thread.id, 0)
     local thd = createThread [[
         local thread = require "bee.thread"
         assert(thread.id ~= 0)
     ]]
     thread.wait(thd)
-    assertNotThreadError()
-end
-
-function test_thread:test_reset()
-    assertNotThreadError()
-    local thd = createThread [[
-        local thread = require "bee.thread"
-        thread.reset()
-    ]]
-    thread.wait(thd)
-    assertHasThreadError("reset must call from main thread")
     assertNotThreadError()
 end
 
