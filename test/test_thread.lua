@@ -9,12 +9,12 @@ local function createThread(script, ...)
 end
 
 local function assertNotThreadError()
-    lt.assertEquals(thread.errlog(), false)
+    lt.assertEquals(thread.errlog(), nil)
 end
 
 local function assertHasThreadError(m)
-    local ok, msg = thread.errlog()
-    lt.assertEquals(ok, true)
+    local msg = thread.errlog()
+    lt.assertIsString(msg)
     lt.assertEquals(not not string.find(msg, m, nil, true), true)
 end
 

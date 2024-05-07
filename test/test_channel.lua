@@ -5,7 +5,7 @@ local channel = require "bee.channel"
 local epoll = require "bee.epoll"
 
 local function assertNotThreadError()
-    lt.assertEquals(thread.errlog(), false)
+    lt.assertEquals(thread.errlog(), nil)
 end
 
 local test_channel = lt.test "channel"

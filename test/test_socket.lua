@@ -25,11 +25,10 @@ local function simple_select(fd, mode)
 end
 
 local function assertNotThreadError()
-    local ok, msg = thread.errlog()
-    if ok then
+    local msg = thread.errlog()
+    if msg then
         lt.failure(msg)
     end
-    lt.assertEquals(ok, false)
 end
 
 local function file_exists(filename)

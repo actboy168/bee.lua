@@ -28,14 +28,12 @@ namespace bee::lua_thread {
         int pop(lua_State* L) noexcept {
             std::unique_lock<spinlock> _(mutex);
             if (queue.empty()) {
-                lua_pushboolean(L, 0);
-                return 1;
+                return 0;
             }
             auto& data = queue.front();
-            lua_pushboolean(L, 1);
             lua_pushlstring(L, data.data(), data.size());
             queue.pop();
-            return 2;
+            return 1;
         }
 
     private:
@@ -46,12 +44,6 @@ namespace bee::lua_thread {
     static errlog g_errlog;
     static std::atomic<int> g_thread_id = -1;
     static int THREADID;
-
-    static int lsleep(lua_State* L) {
-        int msec = lua::checkinteger<int>(L, 1);
-        thread_sleep(msec);
-        return 0;
-    }
 
     struct thread_args {
         std::string source;
@@ -133,6 +125,12 @@ namespace bee::lua_thread {
         return g_errlog.pop(L);
     }
 
+    static int lsleep(lua_State* L) {
+        int msec = lua::checkinteger<int>(L, 1);
+        thread_sleep(msec);
+        return 0;
+    }
+
     static int lwait(lua_State* L) {
         thread_handle th = lua::checklightud<thread_handle>(L, 1);
         thread_wait(th);
@@ -157,9 +155,9 @@ namespace bee::lua_thread {
 
     static int luaopen(lua_State* L) {
         luaL_Reg lib[] = {
-            { "sleep", lsleep },
             { "create", lcreate },
             { "errlog", lerrlog },
+            { "sleep", lsleep },
             { "wait", lwait },
             { "setname", lsetname },
             { "preload_module", lua::preload_module },
