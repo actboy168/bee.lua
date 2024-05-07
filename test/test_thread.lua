@@ -79,22 +79,6 @@ function test_thread:test_thread_initargs()
     assertNotThreadError()
 end
 
-function test_thread:test_channel_1()
-    thread.reset()
-    lt.assertErrorMsgEquals("Can't query channel 'test'", thread.channel, "test")
-    thread.newchannel "test"
-    lt.assertIsUserdata(thread.channel "test")
-    lt.assertIsUserdata(thread.channel "test")
-    thread.reset()
-end
-
-function test_thread:test_channel_2()
-    thread.reset()
-    thread.newchannel "test"
-    lt.assertErrorMsgEquals("Duplicate channel 'test'", thread.newchannel, "test")
-    thread.reset()
-end
-
 function test_thread:test_id_1()
     assertNotThreadError()
     lt.assertEquals(thread.id, 0)
@@ -119,19 +103,7 @@ function test_thread:test_id_2()
     assertNotThreadError()
 end
 
-function test_thread:test_reset_1()
-    thread.reset()
-    lt.assertErrorMsgEquals("Can't query channel 'test'", thread.channel, "test")
-    thread.newchannel "test"
-    lt.assertIsUserdata(thread.channel "test")
-    thread.reset()
-    lt.assertErrorMsgEquals("Can't query channel 'test'", thread.channel, "test")
-    thread.newchannel "test"
-    lt.assertIsUserdata(thread.channel "test")
-    thread.reset()
-end
-
-function test_thread:test_reset_2()
+function test_thread:test_reset()
     assertNotThreadError()
     local thd = createThread [[
         local thread = require "bee.thread"
@@ -139,156 +111,6 @@ function test_thread:test_reset_2()
     ]]
     thread.wait(thd)
     assertHasThreadError("reset must call from main thread")
-    assertNotThreadError()
-end
-
-local function TestSuit(f)
-    f(1)
-    f(0.0001)
-    f("TEST")
-    f(true)
-    f(false)
-    f({})
-    f({ 1, 2 })
-    f(1, { 1, 2 })
-    f(1, 2, { A = { B = { C = "D" } } })
-    f(1, nil, 2)
-end
-
-function test_thread:test_pop_1()
-    thread.reset()
-    thread.newchannel "test"
-    local channel = thread.channel "test"
-    local function pack_pop(ok, ...)
-        lt.assertEquals(ok, true)
-        return table.pack(...)
-    end
-    local function test_ok(...)
-        channel:push(...)
-        lt.assertEquals(pack_pop(channel:pop()), table.pack(...))
-        channel:push(...)
-        lt.assertEquals(table.pack(channel:bpop()), table.pack(...))
-    end
-    TestSuit(test_ok)
-    -- 基本和serialization的测试重复，所以failed就不测了
-end
-
-function test_thread:test_pop_2()
-    thread.reset()
-    thread.newchannel "test"
-    local channel = thread.channel "test"
-
-    local function assertIs(expected)
-        local ok, v = channel:pop()
-        lt.assertEquals(ok, true)
-        lt.assertEquals(v, expected)
-    end
-    local function assertEmpty()
-        local ok, v = channel:pop()
-        lt.assertEquals(ok, false)
-        lt.assertEquals(v, nil)
-    end
-
-    assertEmpty()
-
-    channel:push(1024)
-    assertIs(1024)
-    assertEmpty()
-
-    channel:push(1024)
-    channel:push(1025)
-    channel:push(1026)
-    assertIs(1024)
-    assertIs(1025)
-    assertIs(1026)
-    assertEmpty()
-
-    channel:push(1024)
-    channel:push(1025)
-    assertIs(1024)
-    channel:push(1026)
-    assertIs(1025)
-    assertIs(1026)
-    assertEmpty()
-
-    thread.reset()
-end
-
-function test_thread:test_thread_bpop()
-    assertNotThreadError()
-    thread.reset()
-    thread.newchannel "testReq"
-    thread.newchannel "testRes"
-    local thd = createThread [[
-        local thread = require "bee.thread"
-        local req = thread.channel "testReq"
-        local res = thread.channel "testRes"
-        local function dispatch(what, ...)
-            if what == "exit" then
-                return true
-            end
-            res:push(what, ...)
-        end
-        while not dispatch(req:bpop()) do
-        end
-    ]]
-    local req = thread.channel "testReq"
-    local res = thread.channel "testRes"
-    local function test_ok(...)
-        req:push(...)
-        lt.assertEquals(table.pack(res:bpop()), table.pack(...))
-    end
-    TestSuit(test_ok)
-    req:push "exit"
-    thread.wait(thd)
-    assertNotThreadError()
-end
-
-function test_thread:test_thread_pop()
-    assertNotThreadError()
-    thread.reset()
-    thread.newchannel "testReq"
-    thread.newchannel "testRes"
-    local thd = createThread [[
-        local thread = require "bee.thread"
-        local req = thread.channel "testReq"
-        local res = thread.channel "testRes"
-        local function dispatch(ok, what, ...)
-            if not ok then
-                thread.sleep(0)
-                return
-            end
-            if what == "exit" then
-                return true
-            end
-            res:push(what, ...)
-        end
-        while not dispatch(req:pop()) do
-        end
-    ]]
-    local req = thread.channel "testReq"
-    local res = thread.channel "testRes"
-    local function pack_pop(ok, ...)
-        if not ok then
-            return
-        end
-        return table.pack(...)
-    end
-    local function test_ok(...)
-        req:push(...)
-        local t
-        while true do
-            t = pack_pop(res:pop())
-            if t then
-                break
-            end
-            thread.sleep(0)
-        end
-        lt.assertEquals(t, table.pack(...))
-    end
-    TestSuit(test_ok)
-    req:push "exit"
-    thread.wait(thd)
     assertNotThreadError()
 end
 
