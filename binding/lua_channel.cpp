@@ -2,6 +2,7 @@
 #include <bee/lua/binding.h>
 #include <bee/lua/module.h>
 #include <bee/net/event.h>
+#include <bee/net/socket.h>
 #include <bee/thread/spinlock.h>
 
 #include <map>
@@ -162,6 +163,10 @@ namespace bee::lua_channel {
     }
 
     static int luaopen(lua_State* L) {
+        if (!net::socket::initialize()) {
+            lua_pushstring(L, error::sys_errmsg("initialize").c_str());
+            return lua_error(L);
+        }
         luaL_Reg lib[] = {
             { "create", lcreate },
             { "query", lquery },
