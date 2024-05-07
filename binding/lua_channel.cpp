@@ -84,12 +84,14 @@ namespace bee::lua_channel {
             }
             return r->second;
         }
-        void clear() noexcept {
+        void destroy(zstring_view name) noexcept {
             std::unique_lock<spinlock> lk(mutex);
-            for (const auto& [_, c] : channels) {
-                c->clear();
+            std::string namestr { name.data(), name.size() };
+            auto it = channels.find(namestr);
+            if (it != channels.end()) {
+                it->second->clear();
+                channels.erase(it);
             }
-            channels.clear();
         }
         channel::box query(zstring_view name) noexcept {
             std::unique_lock<spinlock> lk(mutex);
@@ -147,6 +149,12 @@ namespace bee::lua_channel {
         return 1;
     }
 
+    static int ldestroy(lua_State* L) {
+        auto name = lua::checkstrview(L, 1);
+        g_channel.destroy(name);
+        return 0;
+    }
+
     static int lquery(lua_State* L) {
         auto name      = lua::checkstrview(L, 1);
         channel::box c = g_channel.query(name);
@@ -157,11 +165,6 @@ namespace bee::lua_channel {
         return 1;
     }
 
-    static int lreset(lua_State* L) {
-        g_channel.clear();
-        return 0;
-    }
-
     static int luaopen(lua_State* L) {
         if (!net::socket::initialize()) {
             lua_pushstring(L, error::sys_errmsg("initialize").c_str());
@@ -169,8 +172,8 @@ namespace bee::lua_channel {
         }
         luaL_Reg lib[] = {
             { "create", lcreate },
+            { "destroy", ldestroy },
             { "query", lquery },
-            { "reset", lreset },
             { NULL, NULL },
         };
         luaL_newlibtable(L, lib);

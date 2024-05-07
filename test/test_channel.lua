@@ -11,27 +11,25 @@ end
 local test_channel = lt.test "channel"
 
 function test_channel:test_create()
-    channel.reset()
     lt.assertErrorMsgEquals("Can't query channel 'test'", channel.query, "test")
     channel.create "test"
     lt.assertIsUserdata(channel.query "test")
     lt.assertIsUserdata(channel.query "test")
-    channel.reset()
+    channel.destroy "test"
     channel.create "test"
     lt.assertErrorMsgEquals("Duplicate channel 'test'", channel.create, "test")
-    channel.reset()
+    channel.destroy "test"
 end
 
 function test_channel:test_reset_1()
-    channel.reset()
     lt.assertErrorMsgEquals("Can't query channel 'test'", channel.query, "test")
     channel.create "test"
     lt.assertIsUserdata(channel.query "test")
-    channel.reset()
+    channel.destroy "test"
     lt.assertErrorMsgEquals("Can't query channel 'test'", channel.query, "test")
     channel.create "test"
     lt.assertIsUserdata(channel.query "test")
-    channel.reset()
+    channel.destroy "test"
 end
 
 local function TestSuit(f)
@@ -48,7 +46,6 @@ local function TestSuit(f)
 end
 
 function test_channel:test_pop_1()
-    channel.reset()
     local chan = channel.create "test"
     local function pack_pop(ok, ...)
         lt.assertEquals(ok, true)
@@ -60,10 +57,10 @@ function test_channel:test_pop_1()
     end
     TestSuit(test_ok)
     -- 基本和serialization的测试重复，所以failed就不测了
+    channel.destroy "test"
 end
 
 function test_channel:test_pop_2()
-    channel.reset()
     local chan = channel.create "test"
 
     local function assertIs(expected)
@@ -98,12 +95,10 @@ function test_channel:test_pop_2()
     assertIs(1025)
     assertIs(1026)
     assertEmpty()
-
-    channel.reset()
+    channel.destroy "test"
 end
 
 function test_channel:test_pop_3()
-    channel.reset()
     assertNotThreadError()
     local req = channel.create "testReq"
     local res = channel.create "testRes"
@@ -146,11 +141,12 @@ function test_channel:test_pop_3()
     TestSuit(test_ok)
     req:push "exit"
     thread.wait(thd)
+    channel.destroy "testReq"
+    channel.destroy "testRes"
     assertNotThreadError()
 end
 
 function test_channel:test_fd()
-    channel.reset()
     assertNotThreadError()
     local req = channel.create "testReq"
     local res = channel.create "testRes"
@@ -213,5 +209,7 @@ function test_channel:test_fd()
     TestSuit(test_ok)
     req:push "exit"
     thread.wait(thd)
+    channel.destroy "testReq"
+    channel.destroy "testRes"
     assertNotThreadError()
 end
