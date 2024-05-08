@@ -1,9 +1,11 @@
 #pragma once
 
 #include <bee/nonstd/bit.h>
+#include <bee/nonstd/print.h>
 #include <bee/nonstd/to_underlying.h>
 #include <bee/nonstd/unreachable.h>
 #include <bee/utility/zstring_view.h>
+#include <bee/reflection.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -151,10 +153,6 @@ namespace bee::lua {
     template <typename T>
     struct udata {};
     template <typename T, typename = void>
-    struct udata_has_name : std::false_type {};
-    template <typename T>
-    struct udata_has_name<T, std::void_t<decltype(udata<T>::name)>> : std::true_type {};
-    template <typename T, typename = void>
     struct udata_has_nupvalue : std::false_type {};
     template <typename T>
     struct udata_has_nupvalue<T, std::void_t<decltype(udata<T>::nupvalue)>> : std::true_type {};
@@ -167,7 +165,7 @@ namespace bee::lua {
 
     template <typename T>
     void getmetatable(lua_State* L) {
-        if (luaL_newmetatable(L, udata<T>::name)) {
+        if (luaL_newmetatable(L, reflection::name_v<T>.data())) {
             if constexpr (!std::is_trivially_destructible<T>::value) {
                 lua_pushcfunction(L, destroyudata<T>);
                 lua_setfield(L, -2, "__gc");
@@ -178,7 +176,6 @@ namespace bee::lua {
 
     template <typename T, typename... Args>
     T& newudata(lua_State* L, Args&&... args) {
-        static_assert(udata_has_name<T>::value);
         int nupvalue = 0;
         if constexpr (udata_has_nupvalue<T>::value) {
             nupvalue = udata<T>::nupvalue;
@@ -192,11 +189,6 @@ namespace bee::lua {
 
     template <typename T>
     T& checkudata(lua_State* L, int arg) {
-        if constexpr (udata_has_name<T>::value) {
-            return *udata_align<T>(luaL_checkudata(L, arg, udata<T>::name));
-        } else {
-            luaL_checktype(L, arg, LUA_TUSERDATA);
-            return toudata<T>(L, arg);
-        }
+        return *udata_align<T>(luaL_checkudata(L, arg, reflection::name_v<T>.data()));
     }
 }
