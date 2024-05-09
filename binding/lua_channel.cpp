@@ -187,7 +187,6 @@ DEFINE_LUAOPEN(channel)
 namespace bee::lua {
     template <>
     struct udata<lua_channel::channel::box> {
-        static inline auto name      = "bee::channel";
         static inline auto metatable = bee::lua_channel::metatable;
     };
 }

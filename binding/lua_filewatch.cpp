@@ -153,7 +153,6 @@ namespace bee::lua {
     template <>
     struct udata<filewatch::watch> {
         static inline int nupvalue   = 1;
-        static inline auto name      = "bee::filewatch";
         static inline auto metatable = bee::lua_filewatch::metatable;
     };
 }

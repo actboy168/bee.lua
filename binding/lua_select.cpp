@@ -327,7 +327,6 @@ namespace bee::lua {
     template <>
     struct udata<lua_select::select_ctx> {
         static inline int nupvalue   = 4;
-        static inline auto name      = "bee::select";
         static inline auto metatable = bee::lua_select::metatable;
     };
 }

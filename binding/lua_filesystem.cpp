@@ -1001,27 +1001,22 @@ DEFINE_LUAOPEN(filesystem)
 namespace bee::lua {
     template <>
     struct udata<fs::path> {
-        static inline auto name      = "bee::path";
         static inline auto metatable = bee::lua_filesystem::path::metatable;
     };
     template <>
     struct udata<fs::file_status> {
-        static inline auto name      = "bee::file_status";
         static inline auto metatable = bee::lua_filesystem::file_status::metatable;
     };
     template <>
     struct udata<fs::directory_entry> {
-        static inline auto name      = "bee::directory_entry";
         static inline auto metatable = bee::lua_filesystem::directory_entry::metatable;
     };
     template <>
     struct udata<fs::recursive_directory_iterator> {
-        static inline auto name      = "bee::pairs_r";
         static inline auto metatable = bee::lua_filesystem::pairs_directory<fs::recursive_directory_iterator>::metatable;
     };
     template <>
     struct udata<fs::directory_iterator> {
-        static inline auto name      = "bee::pairs";
         static inline auto metatable = bee::lua_filesystem::pairs_directory<fs::directory_iterator>::metatable;
     };
 }

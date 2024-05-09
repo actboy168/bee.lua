@@ -552,7 +552,6 @@ namespace bee::lua {
     template <>
     struct udata<subprocess::process> {
         static inline int nupvalue   = 1;
-        static inline auto name      = "bee::subprocess";
         static inline auto metatable = bee::lua_subprocess::process::metatable;
     };
 }

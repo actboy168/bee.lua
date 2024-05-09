@@ -262,7 +262,6 @@ namespace bee::lua {
     template <>
     struct udata<lua_epoll::lua_epoll> {
         static inline int nupvalue   = 2;
-        static inline auto name      = "bee::lua_epoll";
         static inline auto metatable = bee::lua_epoll::metatable;
     };
 }
