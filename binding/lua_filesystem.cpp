@@ -851,7 +851,9 @@ namespace bee::lua_filesystem {
             };
             luaL_setfuncs(L, mt, 0);
         }
-        static lua::cxx::status constructor(lua_State* L, const fs::path& path, fs::directory_options options) {
+        static lua::cxx::status ctor(lua_State* L) {
+            path_ref path(L, 1);
+            auto options = lua::optinteger<fs::directory_options, fs::directory_options::none>(L, 2);
             std::error_code ec;
             lua::newudata<T>(L, path, options, ec);
             if (ec) {
@@ -859,33 +861,15 @@ namespace bee::lua_filesystem {
             }
             lua_pushvalue(L, -1);
             lua_pushcclosure(L, lua::cxx::cfunc<next>, 1);
-            return 2;
+            lua_pushnil(L);
+            lua_pushnil(L);
+            lua_rotate(L, -4, -1);
+            return 4;
         }
     };
 
-    static lua::cxx::status pairs(lua_State* L) {
-        path_ref p(L, 1);
-        auto options = lua::optinteger<fs::directory_options, fs::directory_options::none>(L, 2);
-        if (auto s = pairs_directory<fs::directory_iterator>::constructor(L, p, options); !s) {
-            return s;
-        }
-        lua_pushnil(L);
-        lua_pushnil(L);
-        lua_rotate(L, -4, -1);
-        return 4;
-    }
-
-    static lua::cxx::status pairs_r(lua_State* L) {
-        path_ref p(L, 1);
-        auto options = lua::optinteger<fs::directory_options, fs::directory_options::none>(L, 2);
-        if (auto s = pairs_directory<fs::recursive_directory_iterator>::constructor(L, p, options); !s) {
-            return s;
-        }
-        lua_pushnil(L);
-        lua_pushnil(L);
-        lua_rotate(L, -4, -1);
-        return 4;
-    }
+    using pairs   = pairs_directory<fs::directory_iterator>;
+    using pairs_r = pairs_directory<fs::recursive_directory_iterator>;
 
     static int exe_path(lua_State* L) {
         auto r = sys::exe_path();
@@ -962,8 +946,8 @@ namespace bee::lua_filesystem {
             { "create_directory_symlink", lua::cxx::cfunc<create_directory_symlink> },
             { "create_hard_link", lua::cxx::cfunc<create_hard_link> },
             { "temp_directory_path", lua::cxx::cfunc<temp_directory_path> },
-            { "pairs", lua::cxx::cfunc<pairs> },
-            { "pairs_r", lua::cxx::cfunc<pairs_r> },
+            { "pairs", lua::cxx::cfunc<pairs::ctor> },
+            { "pairs_r", lua::cxx::cfunc<pairs_r::ctor> },
             { "exe_path", exe_path },
             { "dll_path", dll_path },
             { "filelock", filelock },
@@ -1025,10 +1009,10 @@ namespace bee::lua {
     };
     template <>
     struct udata<fs::recursive_directory_iterator> {
-        static inline auto metatable = bee::lua_filesystem::pairs_directory<fs::recursive_directory_iterator>::metatable;
+        static inline auto metatable = bee::lua_filesystem::pairs_r::metatable;
     };
     template <>
     struct udata<fs::directory_iterator> {
-        static inline auto metatable = bee::lua_filesystem::pairs_directory<fs::directory_iterator>::metatable;
+        static inline auto metatable = bee::lua_filesystem::pairs::metatable;
     };
 }
