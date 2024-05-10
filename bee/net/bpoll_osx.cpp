@@ -10,9 +10,9 @@
 #include <limits>
 
 namespace bee::net {
-    constexpr uint16_t KQUEUE_STATE_REGISTERED = 0x0001;
-    constexpr uint16_t KQUEUE_STATE_EPOLLRDHUP = 0x0002;
-    constexpr bpoll_event AllowBpollEvents     = bpoll_event::in | bpoll_event::out | bpoll_event::hup | bpoll_event::rdhup | bpoll_event::err;
+    constexpr uint8_t KQUEUE_STATE_REGISTERED = 0x01;
+    constexpr uint8_t KQUEUE_STATE_EPOLLRDHUP = 0x02;
+    constexpr bpoll_event AllowBpollEvents    = bpoll_event::in | bpoll_event::out | bpoll_event::hup | bpoll_event::rdhup | bpoll_event::err;
 
     struct poller {
         poller(int kq)
@@ -22,20 +22,20 @@ namespace bee::net {
             ::close(kq);
         }
 
-        void set_state(int key, uint16_t val) noexcept {
+        void set_state(fd_t fd, uint8_t val) noexcept {
             if (val == 0) {
-                state.erase(key);
+                state.erase(fd);
             } else {
-                state.insert_or_assign(key, val);
+                state.insert_or_assign(fd, val);
             }
         }
 
-        uint16_t get_state(int key) const noexcept {
-            auto ptr = state.find(key);
+        uint8_t get_state(fd_t fd) const noexcept {
+            auto ptr = state.find(fd);
             return ptr ? *ptr : 0;
         }
 
-        bool set_kevent(int fd, int read_flags, int write_flags, uint16_t kqflags, void* udata) noexcept {
+        bool set_kevent(int fd, int read_flags, int write_flags, uint8_t kqflags, void* udata) noexcept {
             struct kevent ev[2];
             EV_SET(&ev[0], fd, EVFILT_READ, read_flags | EV_RECEIPT, 0, 0, udata);
             EV_SET(&ev[1], fd, EVFILT_WRITE, write_flags | EV_RECEIPT, 0, 0, udata);
@@ -63,8 +63,8 @@ namespace bee::net {
                 errno = EBADF;
                 return false;
             }
-            uint16_t kqflags = get_state(fd);
-            int flags        = 0;
+            uint8_t kqflags = get_state(fd);
+            int flags       = 0;
             if (add) {
                 if (kqflags & KQUEUE_STATE_REGISTERED) {
                     errno = EEXIST;
@@ -138,7 +138,7 @@ namespace bee::net {
         }
 
         int kq;
-        flatmap<int, uint16_t> state;
+        flatmap<fd_t, uint8_t> state;
     };
 
     bpoll_handle bpoll_create() noexcept {
