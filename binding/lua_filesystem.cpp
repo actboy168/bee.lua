@@ -865,16 +865,19 @@ namespace bee::lua_filesystem {
 
     static lua::cxx::status pairs(lua_State* L) {
         path_ref p(L, 1);
-        const char* flags = luaL_optstring(L, 2, "");
-        luaL_argcheck(L, (flags[0] == '\0' || (flags[0] == 'r' && flags[1] == '\0')), 2, "invalid flags");
-        if (flags[0] == 'r') {
-            if (auto s = pairs_directory<fs::recursive_directory_iterator>::constructor(L, p); !s) {
-                return s;
-            }
-        } else {
-            if (auto s = pairs_directory<fs::directory_iterator>::constructor(L, p); !s) {
-                return s;
-            }
+        if (auto s = pairs_directory<fs::directory_iterator>::constructor(L, p); !s) {
+            return s;
+        }
+        lua_pushnil(L);
+        lua_pushnil(L);
+        lua_rotate(L, -4, -1);
+        return 4;
+    }
+
+    static lua::cxx::status pairs_r(lua_State* L) {
+        path_ref p(L, 1);
+        if (auto s = pairs_directory<fs::recursive_directory_iterator>::constructor(L, p); !s) {
+            return s;
         }
         lua_pushnil(L);
         lua_pushnil(L);
@@ -958,6 +961,7 @@ namespace bee::lua_filesystem {
             { "create_hard_link", lua::cxx::cfunc<create_hard_link> },
             { "temp_directory_path", lua::cxx::cfunc<temp_directory_path> },
             { "pairs", lua::cxx::cfunc<pairs> },
+            { "pairs_r", lua::cxx::cfunc<pairs_r> },
             { "exe_path", exe_path },
             { "dll_path", dll_path },
             { "filelock", filelock },

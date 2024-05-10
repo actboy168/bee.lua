@@ -622,10 +622,10 @@ function test_fs:test_copy_file_2()
 end
 
 function test_fs:test_pairs()
-    local function pairs_ok(dir, flags, expected)
+    local function pairs_ok(dir, pairs, expected)
         local fsdir = fs.path(dir)
         local result = {}
-        for path, status in fs.pairs(fsdir, flags) do
+        for path, status in pairs(fsdir) do
             result[path:string()] = status:type()
         end
         lt.assertEquals(result, expected)
@@ -639,7 +639,7 @@ function test_fs:test_pairs()
     fs.create_directories "temp"
     create_file("temp/temp1.txt")
     create_file("temp/temp2.txt")
-    pairs_ok("temp", nil, {
+    pairs_ok("temp", fs.pairs, {
         ["temp/temp1.txt"] = "regular",
         ["temp/temp2.txt"] = "regular",
     })
@@ -650,12 +650,12 @@ function test_fs:test_pairs()
     create_file("temp/temp2.txt")
     create_file("temp/temp/temp1.txt")
     create_file("temp/temp/temp2.txt")
-    pairs_ok("temp", nil, {
+    pairs_ok("temp", fs.pairs, {
         ["temp/temp1.txt"] = "regular",
         ["temp/temp2.txt"] = "regular",
         ["temp/temp"] = "directory",
     })
-    pairs_ok("temp", "r", {
+    pairs_ok("temp", fs.pairs_r, {
         ["temp/temp1.txt"] = "regular",
         ["temp/temp2.txt"] = "regular",
         ["temp/temp"] = "directory",
