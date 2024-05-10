@@ -851,9 +851,9 @@ namespace bee::lua_filesystem {
             };
             luaL_setfuncs(L, mt, 0);
         }
-        static lua::cxx::status constructor(lua_State* L, const fs::path& path) {
+        static lua::cxx::status constructor(lua_State* L, const fs::path& path, fs::directory_options options) {
             std::error_code ec;
-            lua::newudata<T>(L, path, ec);
+            lua::newudata<T>(L, path, options, ec);
             if (ec) {
                 return pusherror(L, "directory_iterator::directory_iterator", ec, path);
             }
@@ -865,7 +865,8 @@ namespace bee::lua_filesystem {
 
     static lua::cxx::status pairs(lua_State* L) {
         path_ref p(L, 1);
-        if (auto s = pairs_directory<fs::directory_iterator>::constructor(L, p); !s) {
+        auto options = lua::optinteger<fs::directory_options, fs::directory_options::none>(L, 2);
+        if (auto s = pairs_directory<fs::directory_iterator>::constructor(L, p, options); !s) {
             return s;
         }
         lua_pushnil(L);
@@ -876,7 +877,8 @@ namespace bee::lua_filesystem {
 
     static lua::cxx::status pairs_r(lua_State* L) {
         path_ref p(L, 1);
-        if (auto s = pairs_directory<fs::recursive_directory_iterator>::constructor(L, p); !s) {
+        auto options = lua::optinteger<fs::directory_options, fs::directory_options::none>(L, 2);
+        if (auto s = pairs_directory<fs::recursive_directory_iterator>::constructor(L, p, options); !s) {
             return s;
         }
         lua_pushnil(L);
@@ -996,6 +998,12 @@ namespace bee::lua_filesystem {
         DEF_ENUM(perm_options, remove);
         DEF_ENUM(perm_options, nofollow);
         lua_setfield(L, -2, "perm_options");
+
+        lua_createtable(L, 0, 3);
+        DEF_ENUM(directory_options, none);
+        DEF_ENUM(directory_options, follow_directory_symlink);
+        DEF_ENUM(directory_options, skip_permission_denied);
+        lua_setfield(L, -2, "directory_options");
         return 1;
     }
 }
