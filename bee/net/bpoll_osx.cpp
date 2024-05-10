@@ -3,7 +3,6 @@
 #include <bee/utility/bitmask.h>
 #include <bee/utility/flatmap.h>
 #include <errno.h>
-#include <poll.h>
 #include <sys/event.h>
 #include <unistd.h>
 
@@ -14,24 +13,6 @@ namespace bee::net {
     constexpr uint16_t KQUEUE_STATE_REGISTERED = 0x0001;
     constexpr uint16_t KQUEUE_STATE_EPOLLRDHUP = 0x0002;
     constexpr bpoll_event AllowBpollEvents     = bpoll_event::in | bpoll_event::out | bpoll_event::hup | bpoll_event::rdhup | bpoll_event::err;
-
-    template <typename T>
-    static bool invalid_fd(T fd) noexcept {
-        static_assert(std::is_integral_v<T>);
-        if constexpr (std::numeric_limits<T>::is_signed) {
-            if (fd < 0) {
-                return true;
-            }
-            return invalid_fd(static_cast<std::make_unsigned_t<T>>(fd));
-        } else if constexpr (sizeof(uint32_t) < sizeof(T)) {
-            if (fd > (std::numeric_limits<uint32_t>::max)()) {
-                return true;
-            }
-            return false;
-        } else {
-            return false;
-        }
-    }
 
     struct poller {
         poller(int kq)
@@ -73,12 +54,12 @@ namespace bee::net {
             return true;
         }
 
-        bool bpoll_ctl(int fd, const bpoll_event_t& ev, bool add) noexcept {
+        bool bpoll_ctl(fd_t fd, const bpoll_event_t& ev, bool add) noexcept {
             if (bitmask_has(ev.events, ~AllowBpollEvents)) {
                 errno = EINVAL;
                 return false;
             }
-            if (invalid_fd(fd)) {
+            if (fd < 0) {
                 errno = EBADF;
                 return false;
             }
@@ -208,7 +189,7 @@ namespace bee::net {
             return false;
         }
         auto ep = (poller*)handle;
-        if (invalid_fd(fd)) {
+        if (fd < 0) {
             errno = EBADF;
             return false;
         }
