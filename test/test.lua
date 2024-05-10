@@ -38,6 +38,7 @@ require "test_epoll"
 require "test_filewatch"
 require "test_time"
 require "test_channel"
+require "test_sys"
 
 do
     local fs = require "bee.filesystem"

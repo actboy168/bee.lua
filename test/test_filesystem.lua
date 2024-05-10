@@ -732,56 +732,6 @@ function test_fs:test_last_write_time()
     last_write_time("temp.txt")
 end
 
---function test_fs:test_exe_path()
---    local function getexe()
---        local i = 0
---        while arg[i] ~= nil do
---            i = i - 1
---        end
---        return fs.path(arg[i + 1])
---    end
---    assertPathEquals(fs.exe_path(), fs.absolute(getexe()))
---end
-
---function test_fs:test_dll_path()
---    local function getdll()
---        local i = 0
---        while arg[i] ~= nil do
---            i = i - 1
---        end
---        return fs.path(arg[i + 1]):parent_path() / ("bee." .. __EXT__)
---    end
---    assertPathEquals(fs.dll_path(), fs.absolute(getdll()))
---end
-
-function test_fs:test_filelock_1()
-    local lock = fs.path("temp.lock")
-    local f1 = lt.assertIsUserdata(fs.filelock(lock))
-    lt.assertEquals(fs.filelock(lock), nil)
-    f1:close()
-    local f2 = lt.assertIsUserdata(fs.filelock(lock))
-    f2:close()
-    fs.remove(fs.path("temp.lock"))
-end
-
-function test_fs:test_filelock_2()
-    local process = shell:runlua([[
-    local fs = require "bee.filesystem"
-    fs.filelock(fs.path("temp.lock"))
-    io.stdout:write "ok"
-    io.stdout:flush()
-    io.read "a"
-]], { stdin = true, stdout = true, stderr = true })
-    lt.assertEquals(process.stdout:read(2), "ok")
-    lt.assertEquals(fs.filelock(fs.path("temp.lock")), nil)
-    process.stdin:close()
-    lt.assertEquals(process.stderr:read "a", "")
-    lt.assertEquals(process:wait(), 0)
-    local f = lt.assertIsUserdata(fs.filelock(fs.path("temp.lock")))
-    f:close()
-    fs.remove(fs.path("temp.lock"))
-end
-
 function test_fs:test_tostring()
     local function test(s)
         lt.assertEquals(fs.path(s):string(), s)
