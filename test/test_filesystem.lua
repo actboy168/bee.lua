@@ -632,7 +632,7 @@ function test_fs:test_pairs()
     end
     local function pairs_failed(dir)
         local fsdir = fs.path(dir)
-        lt.assertError(fsdir.pairs, fsdir)
+        lt.assertError(fs.pairs, fsdir)
     end
 
     fs.remove_all "temp"
