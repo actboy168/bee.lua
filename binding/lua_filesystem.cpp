@@ -954,6 +954,7 @@ namespace bee::lua_filesystem {
             { "fullpath", fullpath },
             { "copy_options", NULL },
             { "perm_options", NULL },
+            { "directory_options", NULL },
             { NULL, NULL },
         };
         luaL_newlibtable(L, lib);

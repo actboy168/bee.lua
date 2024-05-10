@@ -4,8 +4,8 @@
 #include <bee/nonstd/print.h>
 #include <bee/nonstd/to_underlying.h>
 #include <bee/nonstd/unreachable.h>
-#include <bee/utility/zstring_view.h>
 #include <bee/reflection.h>
+#include <bee/utility/zstring_view.h>
 
 #include <algorithm>
 #include <cstdint>
