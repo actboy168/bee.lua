@@ -908,6 +908,7 @@ namespace bee::lua_filesystem {
         DEF_ENUM(directory_options, follow_directory_symlink);
         DEF_ENUM(directory_options, skip_permission_denied);
         lua_setfield(L, -2, "directory_options");
+#undef DEF_ENUM
         return 1;
     }
 }

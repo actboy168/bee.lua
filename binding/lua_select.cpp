@@ -317,6 +317,7 @@ namespace bee::lua_select {
 
         SETENUM(SELECT_READ);
         SETENUM(SELECT_WRITE);
+#undef SETENUM
         return 1;
     }
 }

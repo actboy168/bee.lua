@@ -251,7 +251,7 @@ namespace bee::lua_epoll {
         SETENUM(EPOLLMSG, net::bpoll_event::msg);
         SETENUM(EPOLLRDHUP, net::bpoll_event::rdhup);
         SETENUM(EPOLLONESHOT, net::bpoll_event::oneshot);
-
+#undef SETENUM
         return 1;
     }
 }
