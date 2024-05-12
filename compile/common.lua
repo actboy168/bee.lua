@@ -246,7 +246,6 @@ lm:lua_src "source_bee" {
 lm:source_set "source_lua" {
     sources = {
         "3rd/lua/onelua.c",
-        "3rd/lua/linit.c",
     },
     defines = "MAKE_LIB",
     visibility = "default",

@@ -2,7 +2,10 @@ local lm = require "luamake"
 
 lm:src "source_bootstrap" {
     includes = { "3rd/lua", "." },
-    sources = "bootstrap/main.cpp",
+    sources = {
+        "bootstrap/main.cpp",
+        "bootstrap/bootstrap_init.cpp",
+    },
     windows = {
         deps = "bee_utf8_crt",
     },
