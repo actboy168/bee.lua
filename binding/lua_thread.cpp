@@ -68,7 +68,6 @@ namespace bee::lua_thread {
         thread_args* args = lua::tolightud<thread_args*>(L, 1);
         lua_pushinteger(L, args->id);
         lua_rawsetp(L, LUA_REGISTRYINDEX, &THREADID);
-        lua::preload_module(L);
         lua_gc(L, LUA_GCGEN, 0, 0);
         if (luaL_loadbuffer(L, args->source.data(), args->source.size(), args->source.c_str()) != LUA_OK) {
             free(args->params);
