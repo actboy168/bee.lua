@@ -6,9 +6,10 @@
 #    include <bee/crash/handler_linux.h>
 #else
 namespace bee::crash {
-    class handler {
+    class empty_handler {
     public:
-        handler(const char* dump_path) noexcept {}
+        empty_handler(const char* dump_path) noexcept {}
     };
+    using handler = empty_handler;
 }
 #endif

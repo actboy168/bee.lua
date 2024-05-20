@@ -70,6 +70,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: actboy168/setup-luamake@master
+    - run: sudo apt install binutils
     - run: luamake -notest -sanitize
     - run: luamake lua test/glibc-version.lua
     - run: luamake test -v
