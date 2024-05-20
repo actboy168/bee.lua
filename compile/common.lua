@@ -201,6 +201,7 @@ lm:lua_src "source_bee" {
             "user32",
             "version",
             "synchronization",
+            lm.arch == "x86" and "dbghelp",
         },
     },
     mingw = {
