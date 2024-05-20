@@ -213,7 +213,7 @@ static int loadfile(lua_State *L, const fs::path &filename, const char *chunknam
     return status;
 }
 
-#if defined(_WIN32) && !defined(__SANITIZE_ADDRESS__)
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(__SANITIZE_ADDRESS__)
 #    include <bee/win/crash/handler.h>
 static bee::crash::handler handler(L".");
 #endif
