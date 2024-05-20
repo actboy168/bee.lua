@@ -83,10 +83,9 @@ namespace bee::crash {
 
     LONG handler::handle_exception(EXCEPTION_POINTERS* exinfo) noexcept {
         handler* current_handler = handler_.load();
-        DWORD code               = exinfo->ExceptionRecord->ExceptionCode;
-        LONG action;
-        bool success = false;
+        bool success             = false;
 #if defined(_MSC_VER) && !defined(__clang__)
+        DWORD code              = exinfo->ExceptionRecord->ExceptionCode;
         bool is_debug_exception = (code == EXCEPTION_BREAKPOINT) || (code == EXCEPTION_SINGLE_STEP) || (code == DBG_PRINTEXCEPTION_C) || (code == DBG_PRINTEXCEPTION_WIDE_C);
 #else
         bool is_debug_exception = false;
@@ -95,15 +94,12 @@ namespace bee::crash {
             success = current_handler->notify_write_dump(exinfo);
         }
         if (success) {
-            action = EXCEPTION_EXECUTE_HANDLER;
+            return EXCEPTION_EXECUTE_HANDLER;
+        } else if (current_handler->previous_filter_) {
+            return current_handler->previous_filter_(exinfo);
         } else {
-            if (current_handler->previous_filter_) {
-                action = current_handler->previous_filter_(exinfo);
-            } else {
-                action = EXCEPTION_CONTINUE_SEARCH;
-            }
+            return EXCEPTION_CONTINUE_SEARCH;
         }
-        return action;
     }
 
     void handler::handle_invalid_parameter(const wchar_t* expression, const wchar_t* function, const wchar_t* file, unsigned int line, uintptr_t reserved) noexcept {
