@@ -1,12 +1,45 @@
 #include <bee/utility/nanoid.h>
 #include <bee/win/crash/handler.h>
 #include <bee/win/crash/stacktrace.h>
+#include <io.h>
 
 #include <atomic>
 #include <cassert>
 #include <cstdio>
 
 namespace bee::crash {
+    struct console {
+        console() {
+            HANDLE h = (HANDLE)_get_osfhandle(_fileno(stdout));
+            if (FILE_TYPE_CHAR == GetFileType(h)) {
+                handle = h;
+            } else {
+                handle = NULL;
+            }
+        }
+        template <class char_t, size_t n>
+        void print(const char_t (&str)[n]) noexcept {
+            if (handle) {
+                if constexpr (std::is_same_v<std::remove_cv_t<char_t>, char>) {
+                    WriteConsoleA(handle, str, (DWORD)(n - 1), NULL, NULL);
+                } else if constexpr (std::is_same_v<std::remove_cv_t<char_t>, wchar_t>) {
+                    WriteConsoleW(handle, str, (DWORD)(n - 1), NULL, NULL);
+                }
+            }
+        }
+        template <class char_t, size_t n>
+        void print(char_t (&str)[n]) noexcept {
+            if (handle) {
+                if constexpr (std::is_same_v<std::remove_cv_t<char_t>, char>) {
+                    WriteConsoleA(handle, str, (DWORD)strlen(str), NULL, NULL);
+                } else if constexpr (std::is_same_v<std::remove_cv_t<char_t>, wchar_t>) {
+                    WriteConsoleW(handle, str, (DWORD)wcslen(str), NULL, NULL);
+                }
+            }
+        }
+        HANDLE handle;
+    };
+
 #ifndef DBG_PRINTEXCEPTION_WIDE_C
 #    define DBG_PRINTEXCEPTION_WIDE_C ((DWORD)0x4001000A)
 #endif
@@ -84,10 +117,12 @@ namespace bee::crash {
             if (current_handler->previous_iph_) {
                 current_handler->previous_iph_(expression, function, file, line, reserved);
             } else {
-#ifdef _DEBUG
+#if defined(_MSC_VER)
+#    if !defined(NDEBUG)
                 _invalid_parameter(expression, function, file, line, reserved);
-#else
+#    else
                 _invalid_parameter_noinfo();
+#    endif
 #endif
             }
         }
@@ -165,7 +200,10 @@ namespace bee::crash {
                 break;
             }
         } while (false);
-        wprintf(L"\n\nCrash log generated at: %s\n", dump_path_);
+        console c;
+        c.print(L"\n\nCrash log generated at: ");
+        c.print(dump_path_);
+        c.print(L"\n");
         return true;
     }
 }

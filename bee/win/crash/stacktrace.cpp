@@ -1,8 +1,13 @@
+// clang-format off
+#include <initguid.h>
+// clang-format on
+
 #include <DbgEng.h>
 #include <DbgHelp.h>
 #include <bee/utility/span.h>
 #include <bee/win/crash/stacktrace.h>
 
+#include <cstdint>
 #include <deque>
 
 namespace bee::crash {
@@ -197,7 +202,7 @@ namespace bee::crash {
             if (line != 0) {
                 constexpr size_t max_line_num = sizeof("(4294967295): ") - 1;
                 sb.expansion(max_line_num);
-                const int ret = std::snprintf(sb.remaining_data(), max_line_num + 1, "(%u): ", line);
+                const int ret = std::snprintf(sb.remaining_data(), max_line_num + 1, "(%u): ", static_cast<unsigned int>(line));
                 if (ret <= 0) {
                     std::abort();
                 }
