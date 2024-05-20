@@ -4,103 +4,21 @@
 
 #include <DbgEng.h>
 #include <DbgHelp.h>
+#include <bee/crash/stacktrace_win.h>
+#include <bee/crash/strbuilder.h>
 #include <bee/utility/span.h>
-#include <bee/win/crash/stacktrace.h>
 
 #include <cstdint>
 #include <deque>
+#include <functional>
 
 namespace bee::crash {
-    template <class char_t, size_t N = 1024>
-    struct basic_strbuilder {
-        struct node {
-            char_t data[N];
-            size_t size;
-            node() noexcept
-                : data()
-                , size(0) {}
-            void append(const char_t* str, size_t n) noexcept {
-                if (n > remaining_size()) {
-                    std::abort();
-                }
-                memcpy(remaining_data(), str, n * sizeof(char_t));
-                size += n;
-            }
-            void append(size_t n) noexcept {
-                if (n > remaining_size()) {
-                    std::abort();
-                }
-                size += n;
-            }
-            char_t* remaining_data() noexcept {
-                return data + size;
-            }
-            size_t remaining_size() const noexcept {
-                return N - size;
-            }
-        };
-        basic_strbuilder() noexcept
-            : deque() {
-            deque.emplace_back();
-        }
-        char_t* remaining_data() noexcept {
-            return deque.back().remaining_data();
-        }
-        size_t remaining_size() const noexcept {
-            return deque.back().remaining_size();
-        }
-        void expansion(size_t n) noexcept {
-            if (n > remaining_size()) {
-                deque.emplace_back();
-                if (n > remaining_size()) {
-                    std::abort();
-                }
-            }
-        }
-        void append(const char_t* str, size_t n) noexcept {
-            auto& back = deque.back();
-            if (n <= remaining_size()) {
-                back.append(str, n);
-            } else {
-                deque.emplace_back().append(str, n);
-            }
-        }
-        void append(size_t n) noexcept {
-            auto& back = deque.back();
-            back.append(n);
-        }
-        template <class T, size_t n>
-        basic_strbuilder& operator+=(T (&str)[n]) noexcept {
-            append((const char_t*)str, n - 1);
-            return *this;
-        }
-        basic_strbuilder& operator+=(const std::basic_string_view<char_t>& s) noexcept {
-            append(s.data(), s.size());
-            return *this;
-        }
-        std::basic_string<char_t> to_string() const noexcept {
-            size_t size = 0;
-            for (auto& s : deque) {
-                size += s.size;
-            }
-            std::basic_string<char_t> r(size, '\0');
-            size_t pos = 0;
-            for (auto& s : deque) {
-                memcpy(r.data() + pos, s.data, sizeof(char_t) * s.size);
-                pos += s.size;
-            }
-            return r;
-        }
-        std::deque<node> deque;
-    };
-    using strbuilder = basic_strbuilder<char>;
-
     class dbg_eng_data {
     public:
         dbg_eng_data() noexcept {
             AcquireSRWLockExclusive(&srw);
         }
-        ~dbg_eng_data() {
+        ~dbg_eng_data() noexcept {
             ReleaseSRWLockExclusive(&srw);
         }
         dbg_eng_data(const dbg_eng_data&)            = delete;
@@ -156,7 +74,7 @@ namespace bee::crash {
             locked_data.uninitialize();
         }
 
-        void get_description(strbuilder& sb, const void* const address) {
+        void get_description(strbuilder& sb, const void* const address) noexcept {
             ULONG new_size       = 0;
             ULONG64 displacement = 0;
             for (;;) {
@@ -181,7 +99,7 @@ namespace bee::crash {
             }
         }
 
-        void source_file(strbuilder& sb, const void* const address, ULONG* const line) {
+        void source_file(strbuilder& sb, const void* const address, ULONG* const line) noexcept {
             ULONG new_size = 0;
             for (;;) {
                 HRESULT hr = debug_symbols->GetLineByOffset(reinterpret_cast<uintptr_t>(address), line, sb.remaining_data(), static_cast<ULONG>(sb.remaining_size()), &new_size, nullptr);
@@ -196,7 +114,7 @@ namespace bee::crash {
             }
         }
 
-        void address_to_string(strbuilder& sb, const void* const address) {
+        void address_to_string(strbuilder& sb, const void* const address) noexcept {
             ULONG line = 0;
             source_file(sb, address, &line);
             if (line != 0) {
@@ -221,7 +139,7 @@ namespace bee::crash {
         inline static HMODULE dbgeng               = nullptr;
     };
 
-    static size_t stacktrace(const span<void*>& backtrace, uint16_t skip, const CONTEXT* context) {
+    static void unwind(const CONTEXT* ctx, uint16_t skip, std::function<bool(void*)> func) noexcept {
 #if defined(_M_X64)
         CONTEXT Context;
         UNWIND_HISTORY_TABLE UnwindHistoryTable;
@@ -229,8 +147,7 @@ namespace bee::crash {
         PVOID HandlerData;
         ULONG64 EstablisherFrame;
         ULONG64 ImageBase;
-        size_t Frame = 0;
-        memcpy(&Context, context, sizeof(CONTEXT));
+        memcpy(&Context, ctx, sizeof(CONTEXT));
         RtlZeroMemory(&UnwindHistoryTable, sizeof(UNWIND_HISTORY_TABLE));
         for (;;) {
             RuntimeFunction = RtlLookupFunctionEntry(Context.Rip, &ImageBase, &UnwindHistoryTable);
@@ -247,15 +164,13 @@ namespace bee::crash {
                 skip--;
                 continue;
             }
-            if (Frame >= backtrace.size()) {
+            if (!func((void*)Context.Rip)) {
                 break;
             }
-            backtrace[Frame++] = (void*)Context.Rip;
         }
-        return Frame;
 #elif defined(_M_IX86)
         CONTEXT Context;
-        memcpy(&Context, context, sizeof(CONTEXT));
+        memcpy(&Context, ctx, sizeof(CONTEXT));
         STACKFRAME64 s;
         memset(&s, 0, sizeof(s));
         s.AddrPC.Offset    = Context.Eip;
@@ -264,7 +179,6 @@ namespace bee::crash {
         s.AddrFrame.Mode   = AddrModeFlat;
         s.AddrStack.Offset = Context.Esp;
         s.AddrStack.Mode   = AddrModeFlat;
-        size_t Frame       = 0;
         for (;;) {
             if (!StackWalk64(IMAGE_FILE_MACHINE_I386, GetCurrentProcess(), GetCurrentThread(), &s, (PVOID)&Context, NULL, SymFunctionTableAccess64, SymGetModuleBase64, NULL)) {
                 break;
@@ -276,37 +190,35 @@ namespace bee::crash {
                 skip--;
                 continue;
             }
-            if (Frame >= backtrace.size()) {
+            if (!func((void*)s.AddrReturn.Offset)) {
                 break;
             }
-            backtrace[Frame++] = (void*)s.AddrReturn.Offset;
         }
-        return Frame;
 #else
 #    error "Platform not supported!"
 #endif
     }
 
-    std::string stacktrace(const CONTEXT* context) {
+    std::string stacktrace(const CONTEXT* ctx) noexcept {
         dbg_eng_data locked_data;
         if (!locked_data.try_initialize()) {
             return {};
         }
-        void* frames[4096];
-        size_t size = stacktrace(frames, 0, context);
         strbuilder sb;
-        for (size_t i = 0; i < size; ++i) {
+        unsigned int i = 0;
+        unwind(ctx, 0, [&sb, &locked_data, &i](void* pc) -> bool {
             constexpr size_t max_entry_num = sizeof("65536> ") - 1;
             sb.expansion(max_entry_num);
-            const int ret = std::snprintf(sb.remaining_data(), max_entry_num + 1, "%u> ", static_cast<unsigned int>(i));
+            const int ret = std::snprintf(sb.remaining_data(), max_entry_num + 1, "%u> ", i++);
             if (ret <= 0) {
                 std::abort();
             }
             sb.append(ret);
-            locked_data.address_to_string(sb, frames[i]);
+            locked_data.address_to_string(sb, pc);
             sb.expansion(1);
             sb += L"\n";
-        }
+            return true;
+        });
         return sb.to_string();
     }
 }

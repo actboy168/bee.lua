@@ -6,7 +6,7 @@
 namespace bee::crash {
     class handler {
     public:
-        handler(const wchar_t* dump_path) noexcept;
+        handler(const char* dump_path) noexcept;
         ~handler() noexcept;
         handler(const handler&)            = delete;
         handler& operator=(const handler&) = delete;
@@ -19,7 +19,7 @@ namespace bee::crash {
         bool notify_write_dump(EXCEPTION_POINTERS* exinfo) noexcept;
         bool write_dump(DWORD thread_id, HANDLE thread_handle, EXCEPTION_POINTERS* exinfo) noexcept;
 
-        wchar_t dump_path_[MAX_PATH];
+        wchar_t dump_path_[1024];
         atomic_semaphore start_semaphore_ { 0 };
         atomic_semaphore finish_semaphore_ { 0 };
         LPTOP_LEVEL_EXCEPTION_FILTER previous_filter_ = NULL;

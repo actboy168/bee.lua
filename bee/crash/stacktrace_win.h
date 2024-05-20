@@ -5,5 +5,5 @@
 #include <string>
 
 namespace bee::crash {
-    std::string stacktrace(const CONTEXT* context);
+    std::string stacktrace(const CONTEXT* ctx) noexcept;
 }

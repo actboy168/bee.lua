@@ -213,10 +213,8 @@ static int loadfile(lua_State *L, const fs::path &filename, const char *chunknam
     return status;
 }
 
-#if defined(_MSC_VER) && !defined(__clang__) && !defined(__SANITIZE_ADDRESS__)
-#    include <bee/win/crash/handler.h>
-static bee::crash::handler handler(L".");
-#endif
+#include <bee/crash/handler.h>
+static bee::crash::handler handler(".");
 
 static int handle_script(lua_State *L) {
     auto progdir = getprogdir(L);

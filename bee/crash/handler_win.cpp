@@ -1,6 +1,7 @@
-#include <bee/utility/nanoid.h>
-#include <bee/win/crash/handler.h>
-#include <bee/win/crash/stacktrace.h>
+#include <bee/crash/handler_win.h>
+#include <bee/crash/nanoid.h>
+#include <bee/crash/stacktrace_win.h>
+#include <bee/win/wtf8.h>
 #include <io.h>
 
 #include <atomic>
@@ -46,10 +47,10 @@ namespace bee::crash {
     static std::atomic<handler*> handler_        = nullptr;
     constexpr int kHandlerThreadInitialStackSize = 64 * 1024;
 
-    handler::handler(const wchar_t* dump_path) noexcept {
+    handler::handler(const char* dump_path) noexcept {
         handler* expected = nullptr;
         if (handler_.compare_exchange_strong(expected, this)) {
-            _snwprintf_s(dump_path_, sizeof(dump_path_) / sizeof(dump_path_[0]), _TRUNCATE, L"%s/crash_%s.log", dump_path, wnanoid().c_str());
+            _snwprintf_s(dump_path_, sizeof(dump_path_) / sizeof(dump_path_[0]), _TRUNCATE, L"%s/crash_%s.log", wtf8::u2w(dump_path).c_str(), wnanoid().c_str());
             DWORD thread_id;
             thread_ = CreateThread(NULL, kHandlerThreadInitialStackSize, thread_func, this, 0, &thread_id);
             assert(thread_ != NULL);
@@ -70,8 +71,8 @@ namespace bee::crash {
         thread_ = NULL;
     }
 
-    DWORD handler::thread_func(void* parameter) noexcept {
-        handler* self = reinterpret_cast<handler*>(parameter);
+    DWORD handler::thread_func(void* arg) noexcept {
+        handler* self = reinterpret_cast<handler*>(arg);
         assert(self);
         for (;;) {
             self->start_semaphore_.acquire();
@@ -170,7 +171,7 @@ namespace bee::crash {
     struct writefile {
         writefile(const wchar_t* filename) noexcept
             : file(CreateFileW(filename, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)) {}
-        ~writefile() {
+        ~writefile() noexcept {
             if (file != INVALID_HANDLE_VALUE) {
                 CloseHandle(file);
             }

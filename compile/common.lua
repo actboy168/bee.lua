@@ -211,8 +211,12 @@ lm:lua_src "source_bee" {
         }
     },
     linux = {
-        links = "stdc++fs",
-        ldflags = "-pthread"
+        ldflags = "-pthread",
+        links = {
+            "stdc++fs",
+            "unwind",
+            "bfd",
+        }
     },
     macos = {
         frameworks = {

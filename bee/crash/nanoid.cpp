@@ -1,4 +1,4 @@
-#include <bee/utility/nanoid.h>
+#include <bee/crash/nanoid.h>
 
 #include <cmath>
 #include <cstdint>
