@@ -86,7 +86,12 @@ namespace bee::crash {
         DWORD code               = exinfo->ExceptionRecord->ExceptionCode;
         LONG action;
         bool success = false;
-        if ((code != EXCEPTION_BREAKPOINT) && (code != EXCEPTION_SINGLE_STEP) && (code != DBG_PRINTEXCEPTION_C) && (code != DBG_PRINTEXCEPTION_WIDE_C)) {
+#if defined(_MSC_VER) && !defined(__clang__)
+        bool is_debug_exception = (code == EXCEPTION_BREAKPOINT) || (code == EXCEPTION_SINGLE_STEP) || (code == DBG_PRINTEXCEPTION_C) || (code == DBG_PRINTEXCEPTION_WIDE_C);
+#else
+        bool is_debug_exception = false;
+#endif
+        if (!is_debug_exception) {
             success = current_handler->notify_write_dump(exinfo);
         }
         if (success) {
