@@ -19,7 +19,7 @@ namespace bee::crash {
     }
 
     struct address_finder {
-        asymbol **syms;
+        asymbol **syms = NULL;
         bfd_vma pc;
         const char *filename;
         const char *functionname;
@@ -51,7 +51,6 @@ namespace bee::crash {
         const char *file;
         bfd_vma address;
         bfd_vma base;
-
         static int iter(struct dl_phdr_info *info, size_t size, void *data) noexcept {
             struct module_finder *f = (struct module_finder *)data;
             ElfW(Addr) load_base    = info->dlpi_addr;
@@ -67,7 +66,6 @@ namespace bee::crash {
             }
             return 0;
         }
-
         static module_finder find(bfd_vma pc) noexcept {
             struct module_finder f = { .address = pc };
             dl_iterate_phdr(module_finder::iter, &f);
@@ -79,26 +77,27 @@ namespace bee::crash {
         }
     };
 
-    static void address_to_string(const char *modulename, bfd_vma addr, strbuilder &sb) noexcept {
+    static bool address_to_string(const char *modulename, bfd_vma addr, strbuilder &sb) noexcept {
         bfd *abfd = bfd_openr(modulename, NULL);
         if (abfd == NULL) {
-            exit(1);
+            return false;
         }
         if (bfd_check_format(abfd, bfd_archive)) {
-            exit(1);
+            return false;
         }
         char **matching;
         if (!bfd_check_format_matches(abfd, bfd_object, &matching)) {
-            exit(1);
+            return false;
         }
         address_finder f;
         if ((bfd_get_file_flags(abfd) & HAS_SYMS) != 0) {
             unsigned int size;
             long symcount = bfd_read_minisymbols(abfd, false, (void **)&f.syms, &size);
-            if (symcount == 0)
+            if (symcount == 0) {
                 symcount = bfd_read_minisymbols(abfd, true, (void **)&f.syms, &size);
+            }
             if (symcount < 0) {
-                exit(1);
+                return false;
             }
         }
 
@@ -134,19 +133,12 @@ namespace bee::crash {
 #else
             strbuilder_append(sb, f.functionname);
 #endif
-        } else {
-            constexpr size_t max_num = 32;
-            sb.expansion(max_num);
-            const int ret = std::snprintf(sb.remaining_data(), max_num + 1, "[0x%llx]", (long long unsigned int)addr);
-            if (ret <= 0) {
-                std::abort();
-            }
-            sb.append(ret);
         }
         if (f.syms != NULL) {
             free(f.syms);
         }
         bfd_close(abfd);
+        return f.found;
     }
 
     struct stacktrace_impl {
@@ -165,7 +157,15 @@ namespace bee::crash {
             }
             sb.append(ret);
             auto f = module_finder::find((bfd_vma)pc);
-            address_to_string(f.file, f.address, sb);
+            if (!address_to_string(f.file, f.address, sb)) {
+                constexpr size_t max_num = 32;
+                sb.expansion(max_num);
+                const int ret = std::snprintf(sb.remaining_data(), max_num + 1, "[0x%llx]", (long long unsigned int)(f.base + f.address));
+                if (ret <= 0) {
+                    std::abort();
+                }
+                sb.append(ret);
+            }
             sb += "\n";
         }
         std::string to_string() noexcept {

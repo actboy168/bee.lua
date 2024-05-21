@@ -4,7 +4,7 @@
 
 #include <DbgEng.h>
 #include <DbgHelp.h>
-#include <bee/crash/stacktrace_win.h>
+#include <bee/crash/stacktrace.h>
 #include <bee/crash/strbuilder.h>
 #include <bee/utility/span.h>
 

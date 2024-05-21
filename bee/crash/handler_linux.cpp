@@ -1,7 +1,7 @@
 #include <bee/crash/allocator.h>
 #include <bee/crash/handler_linux.h>
 #include <bee/crash/nanoid.h>
-#include <bee/crash/stacktrace_linux.h>
+#include <bee/crash/stacktrace.h>
 #include <bee/crash/unwind_linux.h>
 #include <errno.h>
 #include <fcntl.h>
