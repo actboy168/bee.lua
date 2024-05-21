@@ -1,4 +1,4 @@
-#include <bee/crash/stacktrace_linux.h>
+#include <bee/crash/stacktrace.h>
 #include <bee/crash/strbuilder.h>
 #include <bfd.h>
 #include <link.h>
