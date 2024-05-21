@@ -1,3 +1,7 @@
+#if defined(_M_IX86)
+#    include <DbgHelp.h>
+#endif
+
 #include <bee/crash/unwind_win.h>
 
 namespace bee::crash {
