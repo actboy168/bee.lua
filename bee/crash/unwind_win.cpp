@@ -1,5 +1,8 @@
 #if defined(_M_IX86)
+// clang-format off
+#    include <windows.h>
 #    include <DbgHelp.h>
+// clang-format on
 #endif
 
 #include <bee/crash/unwind_win.h>
