@@ -23,8 +23,9 @@
 #endif
 
 namespace bee::crash {
-    constexpr int kExceptionSignals[] = { SIGSEGV, SIGABRT, SIGFPE, SIGILL, SIGBUS, SIGTRAP };
-    constexpr int kNumHandledSignals  = sizeof(kExceptionSignals) / sizeof(kExceptionSignals[0]);
+    constexpr int kExceptionSignals[]  = { SIGSEGV, SIGABRT, SIGFPE, SIGILL, SIGBUS, SIGTRAP };
+    constexpr int kNumHandledSignals   = sizeof(kExceptionSignals) / sizeof(kExceptionSignals[0]);
+    constexpr unsigned kChildStackSize = 16000;
 
     static struct sigaction old_handlers[kNumHandledSignals];
     static stack_t old_stack;
@@ -96,23 +97,10 @@ namespace bee::crash {
     }
 
     static void signal_handler(int sig, siginfo_t* info, void* uc) noexcept {
-        struct sigaction cur_handler;
-        if (sigaction(sig, NULL, &cur_handler) == 0 && cur_handler.sa_sigaction == signal_handler && (cur_handler.sa_flags & SA_SIGINFO) == 0) {
-            sigemptyset(&cur_handler.sa_mask);
-            sigaddset(&cur_handler.sa_mask, sig);
-            cur_handler.sa_sigaction = signal_handler;
-            cur_handler.sa_flags     = SA_ONSTACK | SA_SIGINFO;
-            if (sigaction(sig, &cur_handler, NULL) == -1) {
-                install_default_handler(sig);
-            }
-            return;
-        }
-
         install_default_handler(sig);
         if (!handler_.load()->handle_signal(sig, info, uc)) {
             uninstall_handlers();
         }
-
         if (info->si_code <= 0 || sig == SIGABRT) {
             if (tgkill(getpid(), syscall(__NR_gettid), sig) < 0) {
                 _exit(1);
@@ -174,24 +162,9 @@ namespace bee::crash {
         if (signal_trusted || (signal_pid_trusted && info->si_pid == getpid())) {
             prctl(PR_SET_DUMPABLE, 1, 0, 0, 0);
         }
-        memset(&context, 0, sizeof(context));
-        memcpy(&context.siginfo, info, sizeof(siginfo_t));
-        memcpy(&context.context, uc, sizeof(ucontext_t));
-#if defined(__aarch64__)
-        ucontext_t* uc_ptr = (ucontext_t*)uc;
-        struct fpsimd_context* fp_ptr =
-            (struct fpsimd_context*)&uc_ptr->uc_mcontext.__reserved;
-        if (fp_ptr->head.magic == FPSIMD_MAGIC) {
-            memcpy(&context.float_state, fp_ptr, sizeof(context.float_state));
-        }
-#else
-        ucontext_t* uc_ptr = (ucontext_t*)uc;
-        if (uc_ptr->uc_mcontext.fpregs) {
-            memcpy(&context.float_state, uc_ptr->uc_mcontext.fpregs, sizeof(context.float_state));
-        }
-#endif
-        context.tid                           = syscall(__NR_gettid);
-        static const unsigned kChildStackSize = 16000;
+        memcpy(&context, uc, sizeof(ucontext_t));
+        tid = syscall(__NR_gettid);
+        pid = getpid();
         allocator alloc;
         uint8_t* stack = reinterpret_cast<uint8_t*>(alloc.allocate(kChildStackSize));
         if (!stack)
@@ -201,7 +174,6 @@ namespace bee::crash {
         for (int i = 0; i < 16; ++i) {
             *p++ = 0;
         }
-        pid = getpid();
         if (pipe(fdes) == -1) {
             fdes[0] = fdes[1] = -1;
             return false;
@@ -278,7 +250,7 @@ namespace bee::crash {
     }
 
     bool handler::write_dump() noexcept {
-        auto str = get_stacktrace(&context.context);
+        auto str = get_stacktrace(&context);
         do {
             writefile file(dump_path_);
             if (!file) {
