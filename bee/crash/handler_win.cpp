@@ -1,6 +1,7 @@
 #include <bee/crash/handler_win.h>
 #include <bee/crash/nanoid.h>
 #include <bee/crash/stacktrace_win.h>
+#include <bee/crash/unwind_win.h>
 #include <bee/win/wtf8.h>
 #include <io.h>
 
@@ -188,8 +189,23 @@ namespace bee::crash {
         }
         HANDLE file;
     };
+
+    static std::string get_stacktrace(const CONTEXT* ctx) noexcept {
+        stacktrace s;
+        if (!s.initialize()) {
+            return {};
+        }
+        constexpr auto func = +[](void* pc, void* ud) {
+            stacktrace* s = (stacktrace*)ud;
+            s->add_frame(pc);
+            return true;
+        };
+        unwind(ctx, 0, func, &s);
+        return s.to_string();
+    }
+
     bool handler::write_dump(DWORD thread_id, HANDLE thread_handle, EXCEPTION_POINTERS* exinfo) noexcept {
-        auto str = stacktrace(exinfo->ContextRecord);
+        auto str = get_stacktrace(exinfo->ContextRecord);
         do {
             writefile file(dump_path_);
             if (!file) {

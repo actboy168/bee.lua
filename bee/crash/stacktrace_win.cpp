@@ -6,7 +6,6 @@
 #include <DbgHelp.h>
 #include <bee/crash/stacktrace_win.h>
 #include <bee/crash/strbuilder.h>
-#include <bee/crash/unwind_win.h>
 #include <bee/utility/span.h>
 
 #include <cstdint>
@@ -140,32 +139,44 @@ namespace bee::crash {
         inline static HMODULE dbgeng               = nullptr;
     };
 
-    struct unwind_ud {
+    struct stacktrace_impl {
         dbg_eng_data locked_data;
         strbuilder sb;
         unsigned int i = 0;
+
+        bool initialize() noexcept {
+            return locked_data.try_initialize();
+        }
+        void add_frame(void* pc) noexcept {
+            constexpr size_t max_entry_num = sizeof("65536> ") - 1;
+            sb.expansion(max_entry_num);
+            const int ret = std::snprintf(sb.remaining_data(), max_entry_num + 1, "%u> ", i++);
+            if (ret <= 0) {
+                std::abort();
+            }
+            sb.append(ret);
+            locked_data.address_to_string(sb, pc);
+            sb += L"\n";
+        }
+        std::string to_string() noexcept {
+            return sb.to_string();
+        }
     };
 
-    static bool unwind_func(void* pc, void* ud_) noexcept {
-        struct unwind_ud* ud           = (struct unwind_ud*)ud_;
-        constexpr size_t max_entry_num = sizeof("65536> ") - 1;
-        ud->sb.expansion(max_entry_num);
-        const int ret = std::snprintf(ud->sb.remaining_data(), max_entry_num + 1, "%u> ", ud->i++);
-        if (ret <= 0) {
-            std::abort();
-        }
-        ud->sb.append(ret);
-        ud->locked_data.address_to_string(ud->sb, pc);
-        ud->sb += L"\n";
-        return true;
+    stacktrace::stacktrace() noexcept
+        : impl(new stacktrace_impl) {}
+
+    stacktrace::~stacktrace() noexcept {
+        delete impl;
     }
 
-    std::string stacktrace(const CONTEXT* ctx) noexcept {
-        struct unwind_ud ud;
-        if (!ud.locked_data.try_initialize()) {
-            return {};
-        }
-        unwind(ctx, 0, unwind_func, &ud);
-        return ud.sb.to_string();
+    bool stacktrace::initialize() noexcept {
+        return impl->initialize();
+    }
+    void stacktrace::add_frame(void* pc) noexcept {
+        impl->add_frame(pc);
+    }
+    std::string stacktrace::to_string() noexcept {
+        return impl->to_string();
     }
 }

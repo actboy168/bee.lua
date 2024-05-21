@@ -2,6 +2,7 @@
 #include <bee/crash/handler_linux.h>
 #include <bee/crash/nanoid.h>
 #include <bee/crash/stacktrace_linux.h>
+#include <bee/crash/unwind_linux.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
@@ -261,8 +262,23 @@ namespace bee::crash {
         }
         int file;
     };
+
+    static std::string get_stacktrace(ucontext_t* ctx) noexcept {
+        stacktrace s;
+        if (!s.initialize()) {
+            return {};
+        }
+        constexpr auto func = +[](void* pc, void* ud) {
+            stacktrace* s = (stacktrace*)ud;
+            s->add_frame(pc);
+            return true;
+        };
+        unwind(ctx, 0, func, &s);
+        return s.to_string();
+    }
+
     bool handler::write_dump() noexcept {
-        auto str = stacktrace(&context.context);
+        auto str = get_stacktrace(&context.context);
         do {
             writefile file(dump_path_);
             if (!file) {

@@ -1,9 +1,15 @@
 #pragma once
 
-#include <sys/ucontext.h>
-
 #include <string>
 
 namespace bee::crash {
-    std::string stacktrace(ucontext_t* ctx) noexcept;
+    struct stacktrace_impl;
+    struct stacktrace {
+        stacktrace() noexcept;
+        ~stacktrace() noexcept;
+        bool initialize() noexcept;
+        void add_frame(void* pc) noexcept;
+        std::string to_string() noexcept;
+        stacktrace_impl* impl;
+    };
 }

@@ -1,6 +1,5 @@
 #include <bee/crash/stacktrace_linux.h>
 #include <bee/crash/strbuilder.h>
-#include <bee/crash/unwind_linux.h>
 #include <bfd.h>
 #include <link.h>
 
@@ -150,30 +149,44 @@ namespace bee::crash {
         bfd_close(abfd);
     }
 
-    struct unwind_ud {
+    struct stacktrace_impl {
         strbuilder sb;
         unsigned int i = 0;
+
+        bool initialize() noexcept {
+            return true;
+        }
+        void add_frame(void *pc) noexcept {
+            constexpr size_t max_entry_num = sizeof("65536> ") - 1;
+            sb.expansion(max_entry_num);
+            const int ret = std::snprintf(sb.remaining_data(), max_entry_num + 1, "%u> ", i++);
+            if (ret <= 0) {
+                std::abort();
+            }
+            sb.append(ret);
+            auto f = module_finder::find((bfd_vma)pc);
+            address_to_string(f.file, f.address, sb);
+            sb += "\n";
+        }
+        std::string to_string() noexcept {
+            return sb.to_string();
+        }
     };
 
-    static bool unwind_func(void *pc, void *ud_) noexcept {
-        struct unwind_ud *ud           = (struct unwind_ud *)ud_;
-        constexpr size_t max_entry_num = sizeof("65536> ") - 1;
-        ud->sb.expansion(max_entry_num);
-        const int ret = std::snprintf(ud->sb.remaining_data(), max_entry_num + 1, "%u> ", ud->i++);
-        if (ret <= 0) {
-            std::abort();
-        }
-        ud->sb.append(ret);
-        auto f = module_finder::find((bfd_vma)pc);
-        address_to_string(f.file, f.address, ud->sb);
-        ud->sb += "\n";
-        return true;
+    stacktrace::stacktrace() noexcept
+        : impl(new stacktrace_impl) {}
+
+    stacktrace::~stacktrace() noexcept {
+        delete impl;
     }
 
-    std::string stacktrace(ucontext_t *ctx) noexcept {
-        struct unwind_ud ud;
-        bfd_init();
-        unwind(ctx, 0, unwind_func, &ud);
-        return ud.sb.to_string();
+    bool stacktrace::initialize() noexcept {
+        return impl->initialize();
+    }
+    void stacktrace::add_frame(void *pc) noexcept {
+        impl->add_frame(pc);
+    }
+    std::string stacktrace::to_string() noexcept {
+        return impl->to_string();
     }
 }
