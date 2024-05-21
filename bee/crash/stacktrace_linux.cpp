@@ -1,8 +1,7 @@
-#define UNW_LOCAL_ONLY
 #include <bee/crash/stacktrace_linux.h>
 #include <bee/crash/strbuilder.h>
+#include <bee/crash/unwind_linux.h>
 #include <bfd.h>
-#include <libunwind.h>
 #include <link.h>
 
 #include <cstdio>
@@ -151,30 +150,30 @@ namespace bee::crash {
         bfd_close(abfd);
     }
 
-    std::string stacktrace(ucontext_t *ctx) noexcept {
+    struct unwind_ud {
         strbuilder sb;
-        unw_cursor_t cursor;
-        unw_init_local(&cursor, ctx);
-        bfd_init();
         unsigned int i = 0;
-        while (unw_step(&cursor) > 0) {
-            unw_word_t pc;
-            unw_get_reg(&cursor, UNW_REG_IP, &pc);
-            if (pc == 0) {
-                break;
-            }
-            constexpr size_t max_entry_num = sizeof("65536> ") - 1;
-            sb.expansion(max_entry_num);
-            const int ret = std::snprintf(sb.remaining_data(), max_entry_num + 1, "%u> ", i++);
-            if (ret <= 0) {
-                std::abort();
-            }
-            sb.append(ret);
-            auto f = module_finder::find((bfd_vma)pc);
-            address_to_string(f.file, f.address, sb);
-            sb.expansion(1);
-            sb += "\n";
+    };
+
+    static bool unwind_func(void *pc, void *ud_) noexcept {
+        struct unwind_ud *ud           = (struct unwind_ud *)ud_;
+        constexpr size_t max_entry_num = sizeof("65536> ") - 1;
+        ud->sb.expansion(max_entry_num);
+        const int ret = std::snprintf(ud->sb.remaining_data(), max_entry_num + 1, "%u> ", ud->i++);
+        if (ret <= 0) {
+            std::abort();
         }
-        return sb.to_string();
+        ud->sb.append(ret);
+        auto f = module_finder::find((bfd_vma)pc);
+        address_to_string(f.file, f.address, ud->sb);
+        ud->sb += "\n";
+        return true;
+    }
+
+    std::string stacktrace(ucontext_t *ctx) noexcept {
+        struct unwind_ud ud;
+        bfd_init();
+        unwind(ctx, 0, unwind_func, &ud);
+        return ud.sb.to_string();
     }
 }

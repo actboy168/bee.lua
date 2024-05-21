@@ -6,6 +6,7 @@
 #include <DbgHelp.h>
 #include <bee/crash/stacktrace_win.h>
 #include <bee/crash/strbuilder.h>
+#include <bee/crash/unwind_win.h>
 #include <bee/utility/span.h>
 
 #include <cstdint>
@@ -139,86 +140,32 @@ namespace bee::crash {
         inline static HMODULE dbgeng               = nullptr;
     };
 
-    static void unwind(const CONTEXT* ctx, uint16_t skip, std::function<bool(void*)> func) noexcept {
-#if defined(_M_X64)
-        CONTEXT Context;
-        UNWIND_HISTORY_TABLE UnwindHistoryTable;
-        PRUNTIME_FUNCTION RuntimeFunction;
-        PVOID HandlerData;
-        ULONG64 EstablisherFrame;
-        ULONG64 ImageBase;
-        memcpy(&Context, ctx, sizeof(CONTEXT));
-        RtlZeroMemory(&UnwindHistoryTable, sizeof(UNWIND_HISTORY_TABLE));
-        for (;;) {
-            RuntimeFunction = RtlLookupFunctionEntry(Context.Rip, &ImageBase, &UnwindHistoryTable);
-            if (!RuntimeFunction) {
-                Context.Rip = (ULONG64)(*(PULONG64)Context.Rsp);
-                Context.Rsp += 8;
-            } else {
-                RtlVirtualUnwind(UNW_FLAG_NHANDLER, ImageBase, Context.Rip, RuntimeFunction, &Context, &HandlerData, &EstablisherFrame, NULL);
-            }
-            if (!Context.Rip) {
-                break;
-            }
-            if (skip > 0) {
-                skip--;
-                continue;
-            }
-            if (!func((void*)Context.Rip)) {
-                break;
-            }
+    struct unwind_ud {
+        dbg_eng_data locked_data;
+        strbuilder sb;
+        unsigned int i = 0;
+    };
+
+    static bool unwind_func(void* pc, void* ud_) noexcept {
+        struct unwind_ud* ud           = (struct unwind_ud*)ud_;
+        constexpr size_t max_entry_num = sizeof("65536> ") - 1;
+        ud->sb.expansion(max_entry_num);
+        const int ret = std::snprintf(ud->sb.remaining_data(), max_entry_num + 1, "%u> ", ud->i++);
+        if (ret <= 0) {
+            std::abort();
         }
-#elif defined(_M_IX86)
-        CONTEXT Context;
-        memcpy(&Context, ctx, sizeof(CONTEXT));
-        STACKFRAME64 s;
-        memset(&s, 0, sizeof(s));
-        s.AddrPC.Offset    = Context.Eip;
-        s.AddrPC.Mode      = AddrModeFlat;
-        s.AddrFrame.Offset = Context.Ebp;
-        s.AddrFrame.Mode   = AddrModeFlat;
-        s.AddrStack.Offset = Context.Esp;
-        s.AddrStack.Mode   = AddrModeFlat;
-        for (;;) {
-            if (!StackWalk64(IMAGE_FILE_MACHINE_I386, GetCurrentProcess(), GetCurrentThread(), &s, (PVOID)&Context, NULL, SymFunctionTableAccess64, SymGetModuleBase64, NULL)) {
-                break;
-            }
-            if (!s.AddrReturn.Offset) {
-                break;
-            }
-            if (skip > 0) {
-                skip--;
-                continue;
-            }
-            if (!func((void*)s.AddrReturn.Offset)) {
-                break;
-            }
-        }
-#else
-#    error "Platform not supported!"
-#endif
+        ud->sb.append(ret);
+        ud->locked_data.address_to_string(ud->sb, pc);
+        ud->sb += L"\n";
+        return true;
     }
 
     std::string stacktrace(const CONTEXT* ctx) noexcept {
-        dbg_eng_data locked_data;
-        if (!locked_data.try_initialize()) {
+        struct unwind_ud ud;
+        if (!ud.locked_data.try_initialize()) {
             return {};
         }
-        strbuilder sb;
-        unsigned int i = 0;
-        unwind(ctx, 0, [&sb, &locked_data, &i](void* pc) -> bool {
-            constexpr size_t max_entry_num = sizeof("65536> ") - 1;
-            sb.expansion(max_entry_num);
-            const int ret = std::snprintf(sb.remaining_data(), max_entry_num + 1, "%u> ", i++);
-            if (ret <= 0) {
-                std::abort();
-            }
-            sb.append(ret);
-            locked_data.address_to_string(sb, pc);
-            sb.expansion(1);
-            sb += L"\n";
-            return true;
-        });
-        return sb.to_string();
+        unwind(ctx, 0, unwind_func, &ud);
+        return ud.sb.to_string();
     }
 }

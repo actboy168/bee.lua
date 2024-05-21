@@ -61,13 +61,13 @@ namespace bee {
 
     std::string nanoid() {
         static std::mt19937 random(std::random_device {}());
-        constexpr std::string_view dict = "_-0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        constexpr std::string_view dict = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
         constexpr size_t size           = 21;
         return nanoid_generate(random, dict, size);
     }
     std::wstring wnanoid() {
         static std::mt19937 random(std::random_device {}());
-        constexpr std::wstring_view dict = L"_-0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        constexpr std::wstring_view dict = L"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
         constexpr size_t size            = 21;
         return nanoid_generate(random, dict, size);
     }
