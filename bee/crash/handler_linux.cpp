@@ -107,9 +107,8 @@ namespace bee::crash {
             return;
         }
 
-        if (handler_.load()->handle_signal(sig, info, uc)) {
-            install_default_handler(sig);
-        } else {
+        install_default_handler(sig);
+        if (!handler_.load()->handle_signal(sig, info, uc)) {
             uninstall_handlers();
         }
 
@@ -204,6 +203,7 @@ namespace bee::crash {
         pid = getpid();
         if (pipe(fdes) == -1) {
             fdes[0] = fdes[1] = -1;
+            return false;
         }
         const pid_t child = clone(thread_func, stack, CLONE_FS | CLONE_UNTRACED, this, NULL, NULL, NULL);
         if (child == -1) {
