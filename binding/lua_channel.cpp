@@ -1,6 +1,7 @@
 #include <bee/error.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/module.h>
+#include <bee/lua/udata.h>
 #include <bee/net/event.h>
 #include <bee/net/socket.h>
 #include <bee/thread/spinlock.h>

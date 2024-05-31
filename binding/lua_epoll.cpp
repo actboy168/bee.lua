@@ -3,6 +3,7 @@
 #include <bee/lua/error.h>
 #include <bee/lua/luaref.h>
 #include <bee/lua/module.h>
+#include <bee/lua/udata.h>
 #include <bee/net/bpoll.h>
 #include <bee/nonstd/to_underlying.h>
 #include <bee/utility/dynarray.h>

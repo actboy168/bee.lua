@@ -2,6 +2,7 @@
 #include <bee/filewatch.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/module.h>
+#include <bee/lua/udata.h>
 #include <bee/nonstd/filesystem.h>
 #include <bee/nonstd/unreachable.h>
 

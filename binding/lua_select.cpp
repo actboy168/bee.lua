@@ -1,5 +1,6 @@
 ﻿#include <bee/lua/binding.h>
 #include <bee/lua/module.h>
+#include <bee/lua/udata.h>
 #if defined(_WIN32)
 #    include <winsock.h>
 #else

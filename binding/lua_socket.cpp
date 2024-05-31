@@ -2,6 +2,7 @@
 #include <bee/lua/binding.h>
 #include <bee/lua/error.h>
 #include <bee/lua/module.h>
+#include <bee/lua/udata.h>
 #include <bee/net/endpoint.h>
 #include <bee/net/socket.h>
 #include <bee/nonstd/unreachable.h>

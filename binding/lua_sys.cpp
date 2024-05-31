@@ -3,6 +3,7 @@
 #include <bee/lua/error.h>
 #include <bee/lua/file.h>
 #include <bee/lua/module.h>
+#include <bee/lua/udata.h>
 #include <bee/nonstd/filesystem.h>
 #include <bee/sys/file_handle.h>
 #include <bee/sys/path.h>

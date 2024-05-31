@@ -4,6 +4,7 @@
 #include <bee/lua/error.h>
 #include <bee/lua/module.h>
 #include <bee/lua/narrow.h>
+#include <bee/lua/udata.h>
 #include <bee/nonstd/filesystem.h>
 #include <bee/nonstd/format.h>
 #include <bee/nonstd/unreachable.h>
