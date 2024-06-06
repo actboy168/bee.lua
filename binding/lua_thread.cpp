@@ -16,12 +16,19 @@ extern "C" {
 }
 
 namespace bee::lua_thread {
+    static const char* errmsg(lua_State* L, int idx) {
+        const char* msg = lua_tostring(L, idx);
+        if (msg == NULL) {
+            msg = lua_pushfstring(L, "(error object is a %s value)", luaL_typename(L, idx));
+            lua_replace(L, idx);
+        }
+        return msg;
+    }
+
     class errlog {
     public:
         void push(lua_State* L, int idx) noexcept {
-            size_t len      = 0;
-            const char* str = luaL_tolstring(L, idx, &len);
-            std::string data(str, len);
+            std::string data(errmsg(L, idx));
             std::unique_lock<spinlock> _(mutex);
             queue.push(data);
         }
@@ -51,7 +58,7 @@ namespace bee::lua_thread {
         void* params;
     };
 
-    static int gen_threadid() {
+    static int gen_threadid() noexcept {
         for (;;) {
             int id = g_thread_id;
             if (g_thread_id.compare_exchange_weak(id, id + 1)) {
@@ -83,14 +90,7 @@ namespace bee::lua_thread {
     }
 
     static int msghandler(lua_State* L) {
-        const char* msg = lua_tostring(L, 1);
-        if (msg == NULL) {
-            if (luaL_callmeta(L, 1, "__tostring") && lua_type(L, -1) == LUA_TSTRING)
-                return 1;
-            else
-                msg = lua_pushfstring(L, "(error object is a %s value)", luaL_typename(L, 1));
-        }
-        luaL_traceback(L, L, msg, 1);
+        luaL_traceback(L, L, errmsg(L, 1), 1);
         return 1;
     }
 
