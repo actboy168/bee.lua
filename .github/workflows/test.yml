@@ -74,6 +74,35 @@ jobs:
     - run: luamake -notest -sanitize
     - run: luamake lua test/glibc-version.lua
     - run: luamake test -v
+  linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [aarch64, armv7, riscv64]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          path: luamake
+          repository: actboy168/luamake
+          submodules : recursive
+      - uses: uraimo/run-on-arch-action@v2
+        with:
+          arch: ${{ matrix.arch }}
+          distro: ubuntu20.04
+          dockerRunArgs: |
+            --volume "${PWD}:/actboy168"
+          install: |
+            apt-get update -q -y
+            apt-get install -q -y gcc g++ ninja-build
+          run: |
+            pushd luamake
+            ./compile/build.sh notest
+            popd
+            ./luamake/luamake -notest -sanitize
+            ./luamake/luamake lua test/glibc-version.lua
+            ./luamake/luamake test -v
   bsd:
     runs-on: ubuntu-latest
     strategy:
