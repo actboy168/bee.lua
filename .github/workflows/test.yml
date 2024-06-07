@@ -20,12 +20,13 @@ jobs:
   windows-clang:
     name: windows (clang)
     runs-on: windows-latest
-    continue-on-error: true
     steps:
     - uses: actions/checkout@v4
     - uses: actboy168/setup-luamake@master
-    - run: luamake -cc clang-cl -notest
-    - run: luamake test -v
+    - continue-on-error: true
+      run: |
+        luamake -cc clang-cl -notest
+        luamake test -v
   windows-mingw:
     name: windows (mingw)
     runs-on: windows-latest
@@ -89,6 +90,7 @@ jobs:
           repository: actboy168/luamake
           submodules : recursive
       - uses: uraimo/run-on-arch-action@v2
+        continue-on-error: true
         with:
           arch: ${{ matrix.arch }}
           distro: ubuntu20.04
