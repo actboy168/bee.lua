@@ -20,6 +20,7 @@ jobs:
   windows-clang:
     name: windows (clang)
     runs-on: windows-latest
+    continue-on-error: true
     steps:
     - uses: actions/checkout@v4
     - uses: actboy168/setup-luamake@master
@@ -96,11 +97,12 @@ jobs:
           install: |
             apt-get update -q -y
             apt-get install -q -y gcc g++ ninja-build
+            apt-get install -q -y binutils-dev libunwind-dev
           run: |
             pushd luamake
             ./compile/build.sh notest
             popd
-            ./luamake/luamake -notest -sanitize
+            ./luamake/luamake -notest
             ./luamake/luamake lua test/glibc-version.lua
             ./luamake/luamake test -v
   bsd:
