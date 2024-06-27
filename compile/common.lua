@@ -28,6 +28,10 @@ lm:conf {
             "-Wl,-E",
             "-static-libgcc",
         },
+        defines = {
+            "PACKAGE=\"bee.lua\"",
+            "PACKAGE_VERSION=1",
+        }
     },
     netbsd = {
         crt = "static",
