@@ -365,23 +365,25 @@ function test_subprocess:test_cwd()
 end
 
 function test_subprocess:test_select()
-    local process_set = {}
+    local progs = {}
     for i = 1, 10 do
-        process_set[i] = shell:runlua [[
+        progs[i] = shell:runlua [[
         ]]
+        lt.assertIsUserdata(progs[i])
     end
-    while #process_set > 0 do
-        local ok = subprocess.select(process_set)
+    while #progs > 0 do
+        local ok = subprocess.select(progs)
         lt.assertEquals(ok, true)
         local i = 1
-        while i <= #process_set do
-            local process = process_set[i]
-            if process:is_running() then
+        while i <= #progs do
+            local prog = progs[i]
+            if prog:is_running() then
                 i = i + 1
             else
-                process:wait()
-                process:detach()
-                table.remove(process_set, i)
+                local exitcode = prog:wait()
+                lt.assertEquals(exitcode, 0)
+                prog:detach()
+                table.remove(progs, i)
             end
         end
     end
