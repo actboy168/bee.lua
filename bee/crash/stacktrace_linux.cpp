@@ -1,6 +1,10 @@
 #include <bee/crash/stacktrace.h>
 #include <bee/crash/strbuilder.h>
+
+#define PACKAGE "bee.lua"
+#define PACKAGE_VERSION 1
 #include <bfd.h>
+
 #include <link.h>
 
 #include <cstdio>
