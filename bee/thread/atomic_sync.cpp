@@ -49,7 +49,10 @@ static void futex_wait(const int* ptr, int val, const FutexTimespec* timeout) {
 #    if defined(__linux__)
     ::syscall(SYS_futex, ptr, FUTEX_WAIT | FUTEX_PRIVATE_FLAG, val, timeout, 0, 0);
 #    elif defined(__NetBSD__)
-    ::syscall(SYS___futex, ptr, FUTEX_WAIT | FUTEX_PRIVATE_FLAG, val, timeout, 0, 0, 0);
+    struct timespec ts;
+    ts.tv_sec = timeout->tv_sec;
+    ts.tv_nsec = timeout->tv_nsec;
+    ::syscall(SYS___futex, ptr, FUTEX_WAIT | FUTEX_PRIVATE_FLAG, val, &ts, 0, 0, 0);
 #    elif defined(__OpenBSD__)
     static_assert(sizeof(FutexTimespec) == sizeof(timespec));
     ::futex((uint32_t*)const_cast<int*>(ptr), FUTEX_WAIT | FUTEX_PRIVATE_FLAG, val, (const timespec*)timeout, 0);
