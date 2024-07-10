@@ -27,6 +27,9 @@ if not lt.options.list then
     print("DEBUG:    ", platform.DEBUG)
 end
 
+local crash = require "bee.crash"
+local _ = crash.create_handler "-"
+
 require "test_skip"
 --require "test_lua"
 require "test_serialization"

@@ -133,7 +133,11 @@ namespace bee::crash {
     handler::handler(const char* dump_path) noexcept {
         handler* expected = nullptr;
         if (handler_.compare_exchange_strong(expected, this)) {
-            snprintf(dump_path_, sizeof(dump_path_) / sizeof(dump_path_[0]), "%s/crash_%s.log", dump_path, nanoid().c_str());
+            if (dump_path[0] == '-' && dump_path[1] == '\0') {
+                dump_path_[0] = '\0';
+            } else {
+                snprintf(dump_path_, sizeof(dump_path_) / sizeof(dump_path_[0]), "%s/crash_%s.log", dump_path, nanoid().c_str());
+            }
             memset(&context, 0, sizeof(context));
             install_altstack();
             install_handlers();
@@ -251,6 +255,10 @@ namespace bee::crash {
 
     bool handler::write_dump() noexcept {
         auto str = get_stacktrace(&context);
+        if (dump_path_[0] == L'\0') {
+            printf(L"\n\nCrash log: \n%s\n", str.c_str());
+            return true;
+        }
         do {
             writefile file(dump_path_);
             if (!file) {

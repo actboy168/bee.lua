@@ -213,9 +213,6 @@ static int loadfile(lua_State *L, const fs::path &filename, const char *chunknam
     return status;
 }
 
-#include <bee/crash/handler.h>
-static bee::crash::handler handler(".");
-
 static int handle_script(lua_State *L) {
     auto progdir = getprogdir(L);
     int status   = loadfile(L, progdir / "main.lua", "=(bootstrap.lua)");

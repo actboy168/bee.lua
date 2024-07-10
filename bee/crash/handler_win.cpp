@@ -39,6 +39,16 @@ namespace bee::crash {
                 }
             }
         }
+        template <class char_t>
+        void print(const std::basic_string<char_t>& str) noexcept {
+            if (handle) {
+                if constexpr (std::is_same_v<std::remove_cv_t<char_t>, char>) {
+                    WriteConsoleA(handle, str.data(), (DWORD)str.size(), NULL, NULL);
+                } else if constexpr (std::is_same_v<std::remove_cv_t<char_t>, wchar_t>) {
+                    WriteConsoleW(handle, str.data(), (DWORD)str.size(), NULL, NULL);
+                }
+            }
+        }
         HANDLE handle;
     };
 
@@ -51,7 +61,11 @@ namespace bee::crash {
     handler::handler(const char* dump_path) noexcept {
         handler* expected = nullptr;
         if (handler_.compare_exchange_strong(expected, this)) {
-            _snwprintf_s(dump_path_, sizeof(dump_path_) / sizeof(dump_path_[0]), _TRUNCATE, L"%s/crash_%s.log", wtf8::u2w(dump_path).c_str(), wnanoid().c_str());
+            if (dump_path[0] == '-' && dump_path[1] == '\0') {
+                dump_path_[0] = L'\0';
+            } else {
+                _snwprintf_s(dump_path_, sizeof(dump_path_) / sizeof(dump_path_[0]), _TRUNCATE, L"%s/crash_%s.log", wtf8::u2w(dump_path).c_str(), wnanoid().c_str());
+            }
             DWORD thread_id;
             thread_ = CreateThread(NULL, kHandlerThreadInitialStackSize, thread_func, this, 0, &thread_id);
             assert(thread_ != NULL);
@@ -206,6 +220,13 @@ namespace bee::crash {
 
     bool handler::write_dump(DWORD thread_id, HANDLE thread_handle, EXCEPTION_POINTERS* exinfo) noexcept {
         auto str = get_stacktrace(exinfo->ContextRecord);
+        if (dump_path_[0] == L'\0') {
+            console c;
+            c.print(L"\n\nCrash log: \n");
+            c.print(str);
+            c.print(L"\n");
+            return true;
+        }
         do {
             writefile file(dump_path_);
             if (!file) {
