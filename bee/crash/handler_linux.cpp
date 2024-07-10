@@ -256,7 +256,7 @@ namespace bee::crash {
     bool handler::write_dump() noexcept {
         auto str = get_stacktrace(&context);
         if (dump_path_[0] == L'\0') {
-            printf(L"\n\nCrash log: \n%s\n", str.c_str());
+            printf("\n\nCrash log: \n%s\n", str.c_str());
             return true;
         }
         do {
