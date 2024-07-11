@@ -13,3 +13,9 @@
 #        define BEE_ASSUME(cond) ((cond) ? (void)(0) : __builtin_unreachable())
 #    endif
 #endif
+
+#if defined(NDEBUG)
+#    define BEE_EXPECTS(cond) static_cast<void>(0)
+#else
+#    define BEE_EXPECTS(cond) ((cond) ? static_cast<void>(0) : std::terminate())
+#endif
