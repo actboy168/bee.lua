@@ -4,7 +4,6 @@
 #define PACKAGE "bee.lua"
 #define PACKAGE_VERSION 1
 #include <bfd.h>
-
 #include <link.h>
 
 #include <cstdio>
@@ -33,12 +32,25 @@ namespace bee::crash {
             auto f = (address_finder *)(data);
             if (f->found)
                 return;
+#ifdef bfd_get_section_flags
+            if ((bfd_get_section_flags(abfd, section) & SEC_ALLOC) == 0)
+                return;
+#else
             if ((bfd_section_flags(section) & SEC_ALLOC) == 0)
                 return;
+#endif
+#ifdef bfd_get_section_vma
+            bfd_vma vma = bfd_get_section_vma(abfd, section);
+#else
             bfd_vma vma = bfd_section_vma(section);
+#endif
             if (f->pc < vma)
                 return;
+#ifdef bfd_get_section_size
+            bfd_size_type size = bfd_get_section_size(section);
+#else
             bfd_size_type size = bfd_section_size(section);
+#endif
             if (f->pc >= vma + size)
                 return;
             f->found = bfd_find_nearest_line(abfd, section, f->syms, f->pc - vma, &f->filename, &f->functionname, &f->line);
