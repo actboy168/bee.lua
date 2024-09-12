@@ -102,7 +102,7 @@ namespace bee::crash {
             uninstall_handlers();
         }
         if (info->si_code <= 0 || sig == SIGABRT) {
-            if (tgkill(getpid(), syscall(__NR_gettid), sig) < 0) {
+            if (::syscall(SYS_tgkill, getpid(), ::syscall(__NR_gettid), sig) < 0) {
                 _exit(1);
             }
         }
