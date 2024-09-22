@@ -118,7 +118,7 @@ FMT_API void format_windows_error(buffer<char>& out, int error_code,
                                   const char* message) noexcept;
 }
 
-FMT_API std::system_error vwindows_error(int error_code, string_view format_str,
+FMT_API std::system_error vwindows_error(int error_code, string_view fmt,
                                          format_args args);
 
 /**
@@ -146,10 +146,10 @@ FMT_API std::system_error vwindows_error(int error_code, string_view format_str,
  *                                "cannot open file '{}'", filename);
  *     }
  */
-template <typename... Args>
-std::system_error windows_error(int error_code, string_view message,
-                                const Args&... args) {
-  return vwindows_error(error_code, message, fmt::make_format_args(args...));
+template <typename... T>
+auto windows_error(int error_code, string_view message, const T&... args)
+    -> std::system_error {
+  return vwindows_error(error_code, message, vargs<T...>{{args...}});
 }
 
 // Reports a Windows error without throwing an exception.
@@ -164,8 +164,8 @@ inline auto system_category() noexcept -> const std::error_category& {
 // std::system is not available on some platforms such as iOS (#2248).
 #ifdef __OSX__
 template <typename S, typename... Args, typename Char = char_t<S>>
-void say(const S& format_str, Args&&... args) {
-  std::system(format("say \"{}\"", format(format_str, args...)).c_str());
+void say(const S& fmt, Args&&... args) {
+  std::system(format("say \"{}\"", format(fmt, args...)).c_str());
 }
 #endif
 
@@ -213,7 +213,7 @@ class buffered_file {
 
   template <typename... T>
   inline void print(string_view fmt, const T&... args) {
-    const auto& vargs = fmt::make_format_args(args...);
+    fmt::vargs<T...> vargs = {{args...}};
     detail::is_locking<T...>() ? fmt::vprint_buffered(file_, fmt, vargs)
                                : fmt::vprint(file_, fmt, vargs);
   }
@@ -358,16 +358,28 @@ struct ostream_params {
 #  endif
 };
 
-class file_buffer final : public buffer<char> {
+}  // namespace detail
+
+FMT_INLINE_VARIABLE constexpr auto buffer_size = detail::buffer_size();
+
+/// A fast buffered output stream for writing from a single thread. Writing from
+/// multiple threads without external synchronization may result in a data race.
+class FMT_API ostream : private detail::buffer<char> {
  private:
   file file_;
 
-  FMT_API static void grow(buffer<char>& buf, size_t);
+  ostream(cstring_view path, const detail::ostream_params& params);
+
+  static void grow(buffer<char>& buf, size_t);
 
  public:
-  FMT_API file_buffer(cstring_view path, const ostream_params& params);
-  FMT_API file_buffer(file_buffer&& other) noexcept;
-  FMT_API ~file_buffer();
+  ostream(ostream&& other) noexcept;
+  ~ostream();
+
+  operator writer() {
+    detail::buffer<char>& buf = *this;
+    return buf;
+  }
 
   void flush() {
     if (size() == 0) return;
@@ -375,42 +387,18 @@ class file_buffer final : public buffer<char> {
     clear();
   }
 
+  template <typename... T>
+  friend auto output_file(cstring_view path, T... params) -> ostream;
+
   void close() {
     flush();
     file_.close();
   }
-};
-
-}  // namespace detail
-
-constexpr auto buffer_size = detail::buffer_size();
-
-/// A fast output stream for writing from a single thread. Writing from
-/// multiple threads without external synchronization may result in a data race.
-class FMT_API ostream {
- private:
-  FMT_MSC_WARNING(suppress : 4251)
-  detail::file_buffer buffer_;
-
-  ostream(cstring_view path, const detail::ostream_params& params)
-      : buffer_(path, params) {}
-
- public:
-  ostream(ostream&& other) : buffer_(std::move(other.buffer_)) {}
-
-  ~ostream();
-
-  void flush() { buffer_.flush(); }
-
-  template <typename... T>
-  friend auto output_file(cstring_view path, T... params) -> ostream;
-
-  void close() { buffer_.close(); }
 
   /// Formats `args` according to specifications in `fmt` and writes the
   /// output to the file.
   template <typename... T> void print(format_string<T...> fmt, T&&... args) {
-    vformat_to(appender(buffer_), fmt, fmt::make_format_args(args...));
+    vformat_to(appender(*this), fmt.str, vargs<T...>{{args...}});
   }
 };
 
