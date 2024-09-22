@@ -516,17 +516,14 @@ DEFINE_LUAOPEN(socket)
 namespace bee::lua {
     template <>
     struct udata<net::fd_t> {
-        static inline int nupvalue   = 1;
         static inline auto metatable = bee::lua_socket::fd::metatable;
     };
     template <>
     struct udata<lua_socket::fd_no_ownership> {
-        static inline int nupvalue   = 1;
         static inline auto metatable = bee::lua_socket::fd::metatable_no_ownership;
     };
     template <>
     struct udata<net::endpoint> {
-        static inline int nupvalue   = 0;
         static inline auto metatable = bee::lua_socket::endpoint::metatable;
     };
 }
