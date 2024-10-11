@@ -8,8 +8,12 @@
 
 #endif
 
-#include <lua.h>
-#include <lauxlib.h>
+#ifdef __cplusplus
+#    include <lua.hpp>
+#else
+#    include <lauxlib.h>
+#    include <lua.h>
+#endif
 #include <stdlib.h>
 #include <stdint.h>
 #include <assert.h>
@@ -92,14 +96,14 @@ struct read_block {
 
 inline static struct block *
 blk_alloc(void) {
-	struct block *b = malloc(sizeof(struct block));
+	struct block *b = (struct block *)malloc(sizeof(struct block));
 	b->next = NULL;
 	return b;
 }
 
 static inline void
 wb_push(struct write_block *b, const void *buf, int sz) {
-	const char * buffer = buf;
+	const char * buffer = (const char *)buf;
 	if (b->ptr == BLOCK_SIZE) {
 _again:
 		b->current = b->current->next = blk_alloc();
@@ -355,7 +359,7 @@ mark_table(lua_State *L, struct write_block *b, int index) {
 	}
 	if (id < MAX_REFERENCE) {
 		b->r[id].object = obj;
-		b->r[id].address = addr;
+		b->r[id].address = (uint8_t*)addr;
 	} else {
 		++id;
 		lua_pushinteger(L, id);
@@ -383,12 +387,12 @@ wb_table(lua_State *L, struct write_block *wb, int index) {
 static int
 ref_ancestor(lua_State *L, struct write_block *b, int index) {
 	struct stack *s = &b->s;
-	int n = s->depth;
-	if (n == 0 || n >= MAX_DEPTH)
+	int depth = s->depth;
+	if (depth == 0 || depth >= MAX_DEPTH)
 		return 0;
 	int i;
 	const void * obj = lua_topointer(L, index);
-	for (i=n-1;i>=0;i--) {
+	for (i=depth-1;i>=0;i--) {
 		const void * ancestor = lua_topointer(L, s->ancestor[i]);
 		if (ancestor == obj) {
 			uint8_t n = COMBINE_TYPE(TYPE_REF, i);
@@ -610,7 +614,7 @@ static void unpack_one(lua_State *L, struct read_block *rb);
 static int
 get_extend_integer(lua_State *L, struct read_block *rb) {
 	uint8_t type;
-	const uint8_t *t = rb_read(rb, sizeof(type));
+	const uint8_t *t = (const uint8_t *)rb_read(rb, sizeof(type));
 	if (t==NULL) {
 		invalid_stream(L,rb);
 	}
@@ -752,7 +756,7 @@ push_value(lua_State *L, struct read_block *rb, int type, int cookie) {
 static void
 unpack_one(lua_State *L, struct read_block *rb) {
 	uint8_t type;
-	const uint8_t *t = rb_read(rb, sizeof(type));
+	const uint8_t *t = (const uint8_t *)rb_read(rb, sizeof(type));
 	if (t==NULL) {
 		invalid_stream(L, rb);
 	}
@@ -762,7 +766,7 @@ unpack_one(lua_State *L, struct read_block *rb) {
 
 static void *
 seri(struct block *b, int len) {
-	uint8_t * buffer = malloc(len + 4);
+	uint8_t * buffer = (uint8_t *)malloc(len + 4);
 	memcpy(buffer, &len, 4);	// write length
 	uint8_t * ptr = buffer + 4;
 	while(len>0) {
@@ -797,7 +801,7 @@ seri_unpack(lua_State *L, void *buffer) {
 			luaL_checkstack(L,LUA_MINSTACK,NULL);
 		}
 		uint8_t type = 0;
-		const uint8_t *t = rb_read(&rb, sizeof(type));
+		const uint8_t *t = (const uint8_t *)rb_read(&rb, sizeof(type));
 		if (t==NULL)
 			break;
 		type = *t;

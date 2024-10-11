@@ -67,7 +67,7 @@ if lm.sanitize then
 end
 
 lm:lua_src "source_bee" {
-    sources = "3rd/lua-seri/lua-seri.c",
+    sources = "3rd/lua-seri/lua-seri.cpp",
     msvc = {
         flags = "/wd4244"
     }

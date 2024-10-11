@@ -1,9 +1,6 @@
+#include <3rd/lua-seri/lua-seri.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/module.h>
-
-extern "C" {
-#include <3rd/lua-seri/lua-seri.h>
-}
 
 namespace bee::lua_serialization {
     static int unpack(lua_State* L) {

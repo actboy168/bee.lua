@@ -1,3 +1,4 @@
+#include <3rd/lua-seri/lua-seri.h>
 #include <bee/error.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/module.h>
@@ -11,10 +12,6 @@
 #include <mutex>
 #include <queue>
 #include <string>
-
-extern "C" {
-#include <3rd/lua-seri/lua-seri.h>
-}
 
 namespace bee::lua_channel {
     class channel {
