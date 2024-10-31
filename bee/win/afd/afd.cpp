@@ -50,8 +50,8 @@ namespace bee::net::afd {
 #define RTL_CONSTANT_OBJECT_ATTRIBUTES(ObjectName, Attributes) \
     { sizeof(OBJECT_ATTRIBUTES), NULL, ObjectName, Attributes, NULL, NULL }
 
-    static UNICODE_STRING afd__device_name          = RTL_CONSTANT_STRING(L"\\Device\\Afd\\Wepoll");
-    static OBJECT_ATTRIBUTES afd__device_attributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&afd__device_name, 0);
+    static UNICODE_STRING afd_device_name          = RTL_CONSTANT_STRING(L"\\Device\\Afd\\bee\\epoll");
+    static OBJECT_ATTRIBUTES afd_device_attributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&afd_device_name, 0);
 
     static uint32_t bpoll_events_to_afd_events(bpoll_event bpoll_events) noexcept {
         uint32_t afd_events = AFD_POLL_LOCAL_CLOSE;
@@ -101,7 +101,7 @@ namespace bee::net::afd {
             return false;
         }
         IO_STATUS_BLOCK iosb;
-        NTSTATUS status = NtCreateFile(&ctx.afd_handle, SYNCHRONIZE, &afd__device_attributes, &iosb, NULL, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, kFILE_OPEN, 0, NULL, 0);
+        NTSTATUS status = NtCreateFile(&ctx.afd_handle, SYNCHRONIZE, &afd_device_attributes, &iosb, NULL, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, kFILE_OPEN, 0, NULL, 0);
         if (status != NTSTATUS_SUCCESS) {
             CloseHandle(ctx.iocp_handle);
             SetLastError(RtlNtStatusToDosError(status));

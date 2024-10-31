@@ -7,19 +7,19 @@ namespace bee::net {
     bpoll_handle bpoll_create() noexcept {
         afd::afd_context ctx;
         if (!afd::afd_create(ctx)) {
-            return retired_fd;
+            return invalid_bpoll_handle;
         }
         afd::poller* ep = new (std::nothrow) afd::poller(std::move(ctx));
         if (ep == NULL) {
             afd::afd_destroy(ctx);
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            return retired_fd;
+            return invalid_bpoll_handle;
         }
         return (fd_t)ep;
     }
 
     bool bpoll_close(bpoll_handle handle) noexcept {
-        if (handle == retired_fd) {
+        if (handle == invalid_bpoll_handle) {
             SetLastError(ERROR_INVALID_HANDLE);
             return false;
         }
@@ -29,7 +29,7 @@ namespace bee::net {
     }
 
     bool bpoll_ctl_add(bpoll_handle handle, fd_t socket, const bpoll_event_t& event) noexcept {
-        if (handle == retired_fd) {
+        if (handle == invalid_bpoll_handle) {
             SetLastError(ERROR_INVALID_HANDLE);
             return false;
         }
@@ -47,7 +47,7 @@ namespace bee::net {
     }
 
     bool bpoll_ctl_mod(bpoll_handle handle, fd_t socket, const bpoll_event_t& event) noexcept {
-        if (handle == retired_fd) {
+        if (handle == invalid_bpoll_handle) {
             SetLastError(ERROR_INVALID_HANDLE);
             return false;
         }
@@ -65,7 +65,7 @@ namespace bee::net {
     }
 
     bool bpoll_ctl_del(bpoll_handle handle, fd_t socket) noexcept {
-        if (handle == retired_fd) {
+        if (handle == invalid_bpoll_handle) {
             SetLastError(ERROR_INVALID_HANDLE);
             return false;
         }
@@ -83,7 +83,7 @@ namespace bee::net {
     }
 
     int bpoll_wait(bpoll_handle handle, const span<bpoll_event_t>& events, int timeout) noexcept {
-        if (handle == retired_fd) {
+        if (handle == invalid_bpoll_handle) {
             SetLastError(ERROR_INVALID_HANDLE);
             return -1;
         }
