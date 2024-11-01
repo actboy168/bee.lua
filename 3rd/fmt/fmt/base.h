@@ -146,6 +146,8 @@
 // Use the provided definition.
 #elif defined(__GNUC__) && !defined(__EXCEPTIONS)
 #  define FMT_USE_EXCEPTIONS 0
+#elif defined(__clang__) && !defined(__cpp_exceptions)
+#  define FMT_USE_EXCEPTIONS 0
 #elif FMT_MSC_VERSION && !_HAS_EXCEPTIONS
 #  define FMT_USE_EXCEPTIONS 0
 #else
@@ -332,6 +334,13 @@ struct monostate {
 #  define FMT_ENABLE_IF(...) fmt::enable_if_t<(__VA_ARGS__), int> = 0
 #endif
 
+template <typename T> constexpr auto min_of(T a, T b) -> T {
+  return a < b ? a : b;
+}
+template <typename T> constexpr auto max_of(T a, T b) -> T {
+  return a > b ? a : b;
+}
+
 namespace detail {
 // Suppresses "unused variable" warnings with the method described in
 // https://herbsutter.com/2009/10/18/mailbag-shutting-up-compiler-warnings/.
@@ -394,7 +403,7 @@ inline auto map(uint128_opt) -> monostate { return {}; }
 #endif
 
 #ifndef FMT_USE_BITINT
-#  define FMT_USE_BITINT (FMT_CLANG_VERSION >= 1400)
+#  define FMT_USE_BITINT (FMT_CLANG_VERSION >= 1500)
 #endif
 
 #if FMT_USE_BITINT
@@ -562,8 +571,8 @@ template <typename Char> class basic_string_view {
 
   // Lexicographically compare this string reference to other.
   FMT_CONSTEXPR auto compare(basic_string_view other) const -> int {
-    size_t str_size = size_ < other.size_ ? size_ : other.size_;
-    int result = detail::compare(data_, other.data_, str_size);
+    int result =
+        detail::compare(data_, other.data_, min_of(size_, other.size_));
     if (result != 0) return result;
     return size_ == other.size_ ? 0 : (size_ < other.size_ ? -1 : 1);
   }
@@ -714,7 +723,7 @@ class basic_specs {
     max_fill_size = 4
   };
 
-  unsigned long data_ = 1 << fill_size_shift;
+  size_t data_ = 1 << fill_size_shift;
 
   // Character (code unit) type is erased to prevent template bloat.
   char fill_data_[max_fill_size] = {' '};
@@ -793,7 +802,8 @@ class basic_specs {
   template <typename Char> constexpr auto fill_unit() const -> Char {
     using uchar = unsigned char;
     return static_cast<Char>(static_cast<uchar>(fill_data_[0]) |
-                             (static_cast<uchar>(fill_data_[1]) << 8));
+                             (static_cast<uchar>(fill_data_[1]) << 8) |
+                             (static_cast<uchar>(fill_data_[2]) << 16));
   }
 
   FMT_CONSTEXPR void set_fill(char c) {
@@ -809,6 +819,7 @@ class basic_specs {
       unsigned uchar = static_cast<detail::unsigned_char<Char>>(s[0]);
       fill_data_[0] = static_cast<char>(uchar);
       fill_data_[1] = static_cast<char>(uchar >> 8);
+      fill_data_[2] = static_cast<char>(uchar >> 16);
       return;
     }
     FMT_ASSERT(size <= max_fill_size, "invalid fill");
@@ -1627,12 +1638,12 @@ template <typename... T> struct arg_pack {};
 template <typename Char, int NUM_ARGS, int NUM_NAMED_ARGS, bool DYNAMIC_NAMES>
 class format_string_checker {
  private:
-  type types_[NUM_ARGS > 0 ? NUM_ARGS : 1];
-  named_arg_info<Char> named_args_[NUM_NAMED_ARGS > 0 ? NUM_NAMED_ARGS : 1];
+  type types_[max_of(1, NUM_ARGS)];
+  named_arg_info<Char> named_args_[max_of(1, NUM_NAMED_ARGS)];
   compile_parse_context<Char> context_;
 
   using parse_func = auto (*)(parse_context<Char>&) -> const Char*;
-  parse_func parse_funcs_[NUM_ARGS > 0 ? NUM_ARGS : 1];
+  parse_func parse_funcs_[max_of(1, NUM_ARGS)];
 
  public:
   template <typename... T>
@@ -1694,7 +1705,7 @@ template <typename T> class buffer {
  protected:
   // Don't initialize ptr_ since it is not accessed to save a few cycles.
   FMT_MSC_WARNING(suppress : 26495)
-  FMT_CONSTEXPR20 buffer(grow_fun grow, size_t sz) noexcept
+  FMT_CONSTEXPR buffer(grow_fun grow, size_t sz) noexcept
       : size_(sz), capacity_(sz), grow_(grow) {}
 
   constexpr buffer(grow_fun grow, T* p = nullptr, size_t sz = 0,
@@ -1740,7 +1751,7 @@ template <typename T> class buffer {
   // the new elements may not be initialized.
   FMT_CONSTEXPR void try_resize(size_t count) {
     try_reserve(count);
-    size_ = count <= capacity_ ? count : capacity_;
+    size_ = min_of(count, capacity_);
   }
 
   // Tries increasing the buffer capacity to `new_capacity`. It can increase the
@@ -1788,9 +1799,9 @@ template <typename T> class buffer {
 };
 
 struct buffer_traits {
-  explicit buffer_traits(size_t) {}
-  auto count() const -> size_t { return 0; }
-  auto limit(size_t size) -> size_t { return size; }
+  constexpr explicit buffer_traits(size_t) {}
+  constexpr auto count() const -> size_t { return 0; }
+  constexpr auto limit(size_t size) const -> size_t { return size; }
 };
 
 class fixed_buffer_traits {
@@ -1799,12 +1810,12 @@ class fixed_buffer_traits {
   size_t limit_;
 
  public:
-  explicit fixed_buffer_traits(size_t limit) : limit_(limit) {}
-  auto count() const -> size_t { return count_; }
-  auto limit(size_t size) -> size_t {
+  constexpr explicit fixed_buffer_traits(size_t limit) : limit_(limit) {}
+  constexpr auto count() const -> size_t { return count_; }
+  FMT_CONSTEXPR auto limit(size_t size) -> size_t {
     size_t n = limit_ > count_ ? limit_ - count_ : 0;
     count_ += size;
-    return size < n ? size : n;
+    return min_of(size, n);
   }
 };
 
@@ -1962,12 +1973,34 @@ template <typename T = char> class counting_buffer : public buffer<T> {
 template <typename T>
 struct is_back_insert_iterator<basic_appender<T>> : std::true_type {};
 
+template <typename OutputIt, typename InputIt, typename = void>
+struct has_back_insert_iterator_container_append : std::false_type {};
+template <typename OutputIt, typename InputIt>
+struct has_back_insert_iterator_container_append<
+    OutputIt, InputIt,
+    void_t<decltype(get_container(std::declval<OutputIt>())
+                        .append(std::declval<InputIt>(),
+                                std::declval<InputIt>()))>> : std::true_type {};
+
 // An optimized version of std::copy with the output value type (T).
 template <typename T, typename InputIt, typename OutputIt,
-          FMT_ENABLE_IF(is_back_insert_iterator<OutputIt>::value)>
+          FMT_ENABLE_IF(is_back_insert_iterator<OutputIt>::value&&
+                            has_back_insert_iterator_container_append<
+                                OutputIt, InputIt>::value)>
 FMT_CONSTEXPR20 auto copy(InputIt begin, InputIt end, OutputIt out)
     -> OutputIt {
   get_container(out).append(begin, end);
+  return out;
+}
+
+template <typename T, typename InputIt, typename OutputIt,
+          FMT_ENABLE_IF(is_back_insert_iterator<OutputIt>::value &&
+                        !has_back_insert_iterator_container_append<
+                            OutputIt, InputIt>::value)>
+FMT_CONSTEXPR20 auto copy(InputIt begin, InputIt end, OutputIt out)
+    -> OutputIt {
+  auto& c = get_container(out);
+  c.insert(c.end(), begin, end);
   return out;
 }
 
@@ -2146,7 +2179,8 @@ template <typename Context> class value {
   template <typename T, FMT_ENABLE_IF(is_named_arg<T>::value)>
   value(const T& named_arg) : value(named_arg.value) {}
 
-  template <typename T, FMT_ENABLE_IF(use_formatter<T>::value)>
+  template <typename T,
+            FMT_ENABLE_IF(use_formatter<T>::value || !FMT_BUILTIN_TYPES)>
   FMT_CONSTEXPR20 FMT_INLINE value(T& x) : value(x, custom_tag()) {}
 
   FMT_ALWAYS_INLINE value(const named_arg_info<char_type>* args, size_t size)
@@ -2220,9 +2254,12 @@ struct locale_ref {
 
  public:
   constexpr locale_ref() : locale_(nullptr) {}
-  template <typename Locale> explicit locale_ref(const Locale& loc);
-  explicit operator bool() const noexcept { return locale_ != nullptr; }
-#endif
+
+  template <typename Locale, FMT_ENABLE_IF(sizeof(Locale::collate) != 0)>
+  locale_ref(const Locale& loc);
+
+  inline explicit operator bool() const noexcept { return locale_ != nullptr; }
+#endif  // FMT_USE_LOCALE
 
   template <typename Locale> auto get() const -> Locale;
 };
@@ -2251,8 +2288,7 @@ template <typename Context, size_t NUM_ARGS, size_t NUM_NAMED_ARGS,
           unsigned long long DESC>
 struct named_arg_store {
   // args_[0].named_args points to named_args to avoid bloating format_args.
-  // +1 to workaround a bug in gcc 7.5 that causes duplicated-branches warning.
-  arg_t<Context, NUM_ARGS> args[1 + (NUM_ARGS != 0 ? NUM_ARGS : +1)];
+  arg_t<Context, NUM_ARGS> args[1 + NUM_ARGS];
   named_arg_info<typename Context::char_type> named_args[NUM_NAMED_ARGS];
 
   template <typename... T>
@@ -2286,7 +2322,7 @@ struct format_arg_store {
   // +1 to workaround a bug in gcc 7.5 that causes duplicated-branches warning.
   using type =
       conditional_t<NUM_NAMED_ARGS == 0,
-                    arg_t<Context, NUM_ARGS>[NUM_ARGS != 0 ? NUM_ARGS : +1],
+                    arg_t<Context, NUM_ARGS>[max_of<size_t>(1, NUM_ARGS)],
                     named_arg_store<Context, NUM_ARGS, NUM_NAMED_ARGS, DESC>>;
   type args;
 };
@@ -2372,11 +2408,6 @@ template <typename T> class basic_appender {
   detail::buffer<T>* container;
 
  public:
-  using iterator_category = int;
-  using value_type = T;
-  using pointer = T*;
-  using reference = T&;
-  using difference_type = decltype(pointer() - pointer());
   using container_type = detail::buffer<T>;
 
   FMT_CONSTEXPR basic_appender(detail::buffer<T>& buf) : container(&buf) {}
@@ -2596,7 +2627,7 @@ class context : private detail::locale_ref {
   void operator=(const context&) = delete;
 
   FMT_CONSTEXPR auto arg(int id) const -> format_arg { return args_.get(id); }
-  auto arg(string_view name) -> format_arg { return args_.get(name); }
+  inline auto arg(string_view name) -> format_arg { return args_.get(name); }
   FMT_CONSTEXPR auto arg_id(string_view name) -> int {
     return args_.get_id(name);
   }
@@ -2605,7 +2636,7 @@ class context : private detail::locale_ref {
   FMT_CONSTEXPR auto out() -> iterator { return out_; }
 
   // Advances the begin iterator to `it`.
-  void advance_to(iterator) {}
+  FMT_CONSTEXPR void advance_to(iterator) {}
 
   FMT_CONSTEXPR auto locale() -> detail::locale_ref { return *this; }
 };
@@ -2627,12 +2658,14 @@ inline auto runtime(string_view s) -> runtime_format_string<> { return {{s}}; }
 /// A compile-time format string.
 template <typename... T> struct fstring {
  private:
-  static constexpr int num_static_named_args =
+  static constexpr size_t num_static_named_args =
       detail::count_static_named_args<T...>();
 
-  using checker = detail::format_string_checker<
-      char, static_cast<int>(sizeof...(T)), num_static_named_args,
-      num_static_named_args != detail::count_named_args<T...>()>;
+  using checker =
+      detail::format_string_checker<char, static_cast<int>(sizeof...(T)),
+                                    static_cast<int>(num_static_named_args),
+                                    num_static_named_args !=
+                                        detail::count_named_args<T...>()>;
 
   using arg_pack = detail::arg_pack<T...>;
 
@@ -2657,8 +2690,9 @@ template <typename... T> struct fstring {
   template <typename S,
             FMT_ENABLE_IF(std::is_convertible<const S&, string_view>::value)>
   FMT_CONSTEVAL FMT_ALWAYS_INLINE fstring(const S& s) : str(s) {
+    auto sv = string_view(str);
     if (FMT_USE_CONSTEVAL)
-      detail::parse_format_string<char>(s, checker(s, arg_pack()));
+      detail::parse_format_string<char>(sv, checker(sv, arg_pack()));
 #ifdef FMT_ENFORCE_COMPILE_STRING
     static_assert(
         FMT_USE_CONSTEVAL && sizeof(s) != 0,
