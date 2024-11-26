@@ -1,6 +1,16 @@
 #include <bee/net/endpoint.h>
 #if defined(_WIN32)
 #    include <Ws2tcpip.h>
+// see the https://blogs.msdn.microsoft.com/commandline/2017/12/19/af_unix-comes-to-windows/
+//
+// need Windows SDK >= 17063
+// #include <afunix.h>
+//
+#    define UNIX_PATH_MAX 108
+struct sockaddr_un {
+    unsigned short sun_family;
+    char sun_path[UNIX_PATH_MAX];
+};
 #else
 #    include <arpa/inet.h>
 #    include <netdb.h>
@@ -19,19 +29,6 @@
 
 #include <array>
 #include <limits>
-
-// see the https://blogs.msdn.microsoft.com/commandline/2017/12/19/af_unix-comes-to-windows/
-#if defined(_WIN32)
-//
-// need Windows SDK >= 17063
-// #include <afunix.h>
-//
-#    define UNIX_PATH_MAX 108
-struct sockaddr_un {
-    unsigned short sun_family;
-    char sun_path[UNIX_PATH_MAX];
-};
-#endif
 
 namespace bee::net {
     static_assert(sizeof(sockaddr_in) <= kMaxEndpointSize);
@@ -196,7 +193,6 @@ namespace bee::net {
     std::tuple<un_format, zstring_view> endpoint::get_unix() const noexcept {
         const sockaddr* sa = addr();
         if (sa->sa_family != AF_UNIX) {
-            assert(false);
             return { un_format::invalid, {} };
         }
         const char* path = ((struct sockaddr_un*)sa)->sun_path;
@@ -232,7 +228,6 @@ namespace bee::net {
         case AF_INET6:
             return ntohs(((struct sockaddr_in6*)sa)->sin6_port);
         default:
-            assert(false);
             return 0;
         }
     }
@@ -253,6 +248,7 @@ namespace bee::net {
         m_size = kMaxEndpointSize;
         return &m_size;
     }
+
     bool endpoint::operator==(const endpoint& o) const noexcept {
         return m_size == o.m_size && (0 == memcmp(m_data, o.m_data, m_size));
     }
