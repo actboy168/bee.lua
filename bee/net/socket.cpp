@@ -23,20 +23,19 @@
 #    endif
 #endif
 
-#include <bee/error.h>
 #include <bee/net/endpoint.h>
 #include <bee/net/socket.h>
 #include <bee/nonstd/unreachable.h>
-
-#include <cassert>
-
-#define net_success(x) ((x) == 0)
 
 #if defined(__MINGW32__)
 #    define WSA_FLAG_NO_HANDLE_INHERIT 0x80
 #endif
 
 namespace bee::net::socket {
+    static bool net_success(int x) noexcept {
+        return x == 0;
+    }
+
 #if defined(_WIN32)
     static_assert(sizeof(SOCKET) == sizeof(fd_t));
 
@@ -229,15 +228,8 @@ namespace bee::net::socket {
         const int ok           = ::ioctlsocket(s, FIONBIO, &nonblock);
         return net_success(ok);
     }
-    static bool set_cloexec(fd_t s, bool set) noexcept {
-        if (set) {
-            DWORD flags = 0;
-            (void)flags;
-            assert(::GetHandleInformation((HANDLE)s, &flags) && (flags & HANDLE_FLAG_INHERIT) == 0);
-            return true;
-        } else {
-            return !!SetHandleInformation((HANDLE)s, HANDLE_FLAG_INHERIT, 0);
-        }
+    static bool set_cloexec(fd_t s) noexcept {
+        return true;
     }
 #elif defined(__APPLE__)
     static bool set_nonblock(int fd, bool set) noexcept {
@@ -255,10 +247,10 @@ namespace bee::net::socket {
         while (!net_success(r) && errno == EINTR);
         return net_success(r);
     }
-    static bool set_cloexec(fd_t fd, bool set) noexcept {
+    static bool set_cloexec(fd_t fd) noexcept {
         int ok;
         do
-            ok = ::ioctl(fd, set ? FIOCLEX : FIONCLEX);
+            ok = ::ioctl(fd, FIOCLEX);
         while (!net_success(ok) && errno == EINTR);
         return net_success(ok);
     }
@@ -313,7 +305,7 @@ namespace bee::net::socket {
         if (fd == retired_fd) {
             return retired_fd;
         }
-        if (!set_cloexec(fd, true)) {
+        if (!set_cloexec(fd)) {
             internal_close(fd);
             return retired_fd;
         }
@@ -454,7 +446,7 @@ namespace bee::net::socket {
 #if defined(_WIN32) || defined(__APPLE__)
         const fd_t fd = ::accept(s, addr, addrlen);
         if (fd != retired_fd) {
-            if (!set_cloexec(fd, true)) {
+            if (!set_cloexec(fd)) {
                 internal_close(fd);
                 return retired_fd;
             }
@@ -672,10 +664,10 @@ namespace bee::net::socket {
         if (!net_success(ok)) {
             return false;
         }
-        if (!set_cloexec(temp[0], true)) {
+        if (!set_cloexec(temp[0])) {
             goto fail;
         }
-        if (!set_cloexec(temp[1], true)) {
+        if (!set_cloexec(temp[1])) {
             goto fail;
         }
         if (!set_nonblock(temp[0], fd_flags == fd_flags::nonblock)) {
@@ -724,10 +716,10 @@ namespace bee::net::socket {
         if (!net_success(ok)) {
             return false;
         }
-        if (!set_cloexec(temp[0], true)) {
+        if (!set_cloexec(temp[0])) {
             goto fail;
         }
-        if (!set_cloexec(temp[1], true)) {
+        if (!set_cloexec(temp[1])) {
             goto fail;
         }
         if (!set_nonblock(temp[0], fd_flags == fd_flags::nonblock)) {
