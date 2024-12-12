@@ -40,6 +40,31 @@ namespace bee::lua_socket {
                 std::unreachable();
             }
         }
+        static int mt_tostring(lua_State* L) {
+            const auto& ep = lua::checkudata<net::endpoint>(L, 1);
+            switch (ep.get_family()) {
+            case net::family::inet: {
+                auto [ip, port] = ep.get_inet();
+                lua_pushfstring(L, "%s:%d", ip.data(), port);
+                return 1;
+            }
+            case net::family::inet6: {
+                auto [ip, port] = ep.get_inet6();
+                lua_pushfstring(L, "%s:%d", ip.data(), port);
+                return 1;
+            }
+            case net::family::unix: {
+                auto [type, path] = ep.get_unix();
+                lua_pushlstring(L, path.data(), path.size());
+                return 1;
+            }
+            case net::family::unknown:
+                lua_pushstring(L, "<unknown>");
+                return 1;
+            default:
+                std::unreachable();
+            }
+        }
         static int mt_eq(lua_State* L) {
             const auto& a = lua::checkudata<net::endpoint>(L, 1);
             const auto& b = lua::checkudata<net::endpoint>(L, 2);
@@ -55,6 +80,7 @@ namespace bee::lua_socket {
             luaL_setfuncs(L, lib, 0);
             lua_setfield(L, -2, "__index");
             luaL_Reg mt[] = {
+                { "__tostring", mt_tostring },
                 { "__eq", mt_eq },
                 { NULL, NULL },
             };
