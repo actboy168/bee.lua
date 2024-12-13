@@ -250,6 +250,31 @@ namespace bee::net {
     }
 
     bool endpoint::operator==(const endpoint& o) const noexcept {
-        return m_size == o.m_size && (0 == memcmp(m_data, o.m_data, m_size));
+        if (get_family() != o.get_family())
+            return false;
+        const sockaddr* saddr = addr();
+        switch (saddr->sa_family) {
+        case AF_INET: {
+            const sockaddr_in* sa = (struct sockaddr_in*)saddr;
+            const sockaddr_in* sb = (struct sockaddr_in*)o.addr();
+            if (sa->sin_port != sb->sin_port)
+                return false;
+            return 0 == memcmp(&sa->sin_addr, &sb->sin_addr, sizeof(sa->sin_addr));
+        }
+        case AF_INET6: {
+            const sockaddr_in6* sa = (struct sockaddr_in6*)saddr;
+            const sockaddr_in6* sb = (struct sockaddr_in6*)o.addr();
+            if (sa->sin6_port != sb->sin6_port)
+                return false;
+            return 0 == memcmp(&sa->sin6_addr, &sb->sin6_addr, sizeof(sa->sin6_addr));
+        }
+        case AF_UNIX: {
+            auto [type_a, path_a] = get_unix();
+            auto [type_b, path_b] = o.get_unix();
+            return (type_a == type_b) && (path_a == path_b);
+        }
+        default:
+            return false;
+        }
     }
 }

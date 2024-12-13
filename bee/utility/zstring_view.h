@@ -65,11 +65,11 @@ namespace bee {
         using string_view_base::size;
     };
     template <class CharT, class Traits>
-    constexpr bool operator==(const basic_zstring_view<CharT, Traits>& lhs, const basic_zstring_view<CharT, Traits>& rhs) noexcept {
-        return lhs.compare(rhs) == 0;
+    constexpr bool operator==(basic_zstring_view<CharT, Traits> lhs, basic_zstring_view<CharT, Traits> rhs) noexcept {
+        return lhs.size() == rhs.size() && Traits::compare(lhs.data(), rhs.data(), lhs.size()) == 0;
     }
     template <class CharT, class Traits, size_t N>
-    constexpr bool operator==(const basic_zstring_view<CharT, Traits>& lhs, const CharT (&rhs)[N]) noexcept {
+    constexpr bool operator==(basic_zstring_view<CharT, Traits> lhs, const CharT (&rhs)[N]) noexcept {
         static_assert(N > 0);
         return lhs.size() == (N - 1) && Traits::compare(lhs.data(), rhs, (N - 1)) == 0;
     }
