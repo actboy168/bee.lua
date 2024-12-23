@@ -1,4 +1,4 @@
-#include <bee/error.h>
+#include <bee/lua/error.h>
 #include <bee/nonstd/format.h>
 
 #if defined(_WIN32)
@@ -8,7 +8,7 @@
 #    include <errno.h>
 #endif
 
-namespace bee::error {
+namespace bee::lua {
 #if defined(_WIN32)
 
     class windows_category : public std::error_category {
@@ -56,40 +56,64 @@ namespace bee::error {
         }
     };
 #endif
-
-    std::string errmsg(std::string_view msg, std::error_code ec) noexcept {
-        return std::format("{}: ({}:{}){}", msg, ec.category().name(), ec.value(), ec.message());
+    void push_error(lua_State* L, std::string_view msg, std::error_code ec) {
+        lua_pushfstring(L, "%s: (%s:%d)%s", msg.data(), ec.category().name(), ec.value(), ec.message().c_str());
     }
-
-    std::string crt_errmsg(std::string_view msg, std::errc err) noexcept {
-        return errmsg(msg, std::make_error_code(err));
+    void push_crt_error(lua_State* L, std::string_view msg, std::errc err) {
+        push_error(L, msg, std::make_error_code(err));
     }
-
-    std::string crt_errmsg(std::string_view msg) noexcept {
-        return crt_errmsg(msg, (std::errc)errno);
+    void push_crt_error(lua_State* L, std::string_view msg) {
+        push_crt_error(L, msg, (std::errc)errno);
     }
-
-    std::string sys_errmsg(std::string_view msg) noexcept {
+    void push_sys_error(lua_State* L, std::string_view msg) {
 #if defined(_WIN32)
-        return errmsg(msg, std::error_code(::GetLastError(), windows_category()));
+        push_error(L, msg, std::error_code(::GetLastError(), windows_category()));
 #else
-        return errmsg(msg, std::error_code(errno, std::system_category()));
+        push_error(L, msg, std::error_code(errno, std::system_category()));
 #endif
     }
-
-    std::string net_errmsg(std::string_view msg, int err) noexcept {
+    void push_net_error(lua_State* L, std::string_view msg, int err) {
 #if defined(_WIN32)
-        return errmsg(msg, std::error_code(err, windows_category()));
+        push_error(L, msg, std::error_code(err, windows_category()));
 #else
-        return errmsg(msg, std::error_code(err, std::system_category()));
+        push_error(L, msg, std::error_code(err, std::system_category()));
 #endif
     }
-
-    std::string net_errmsg(std::string_view msg) noexcept {
+    void push_net_error(lua_State* L, std::string_view msg) {
 #if defined(_WIN32)
-        return net_errmsg(msg, ::WSAGetLastError());
+        push_net_error(L, msg, ::WSAGetLastError());
 #else
-        return net_errmsg(msg, errno);
+        push_net_error(L, msg, errno);
 #endif
+    }
+    int return_error(lua_State* L, std::string_view msg) {
+        lua_pushnil(L);
+        lua_pushlstring(L, msg.data(), msg.size());
+        return 2;
+    }
+    int return_crt_error(lua_State* L, std::string_view msg, std::errc err) {
+        lua_pushnil(L);
+        push_crt_error(L, msg, err);
+        return 2;
+    }
+    int return_crt_error(lua_State* L, std::string_view msg) {
+        lua_pushnil(L);
+        push_crt_error(L, msg);
+        return 2;
+    }
+    int return_sys_error(lua_State* L, std::string_view msg) {
+        lua_pushnil(L);
+        push_sys_error(L, msg);
+        return 2;
+    }
+    int return_net_error(lua_State* L, std::string_view msg, int err) {
+        lua_pushnil(L);
+        push_net_error(L, msg, err);
+        return 2;
+    }
+    int return_net_error(lua_State* L, std::string_view msg) {
+        lua_pushnil(L);
+        push_net_error(L, msg);
+        return 2;
     }
 }

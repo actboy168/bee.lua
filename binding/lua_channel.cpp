@@ -1,6 +1,6 @@
 #include <3rd/lua-seri/lua-seri.h>
-#include <bee/error.h>
 #include <bee/lua/binding.h>
+#include <bee/lua/error.h>
 #include <bee/lua/module.h>
 #include <bee/lua/udata.h>
 #include <bee/net/event.h>
@@ -165,7 +165,7 @@ namespace bee::lua_channel {
 
     static int luaopen(lua_State* L) {
         if (!net::socket::initialize()) {
-            lua_pushstring(L, error::sys_errmsg("initialize").c_str());
+            lua::push_sys_error(L, "initialize");
             return lua_error(L);
         }
         luaL_Reg lib[] = {

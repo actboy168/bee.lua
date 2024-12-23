@@ -1,4 +1,3 @@
-#include <bee/error.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/error.h>
 #include <bee/lua/file.h>
@@ -46,7 +45,7 @@ namespace bee::lua_sys {
     static int exe_path(lua_State* L) {
         auto r = sys::exe_path();
         if (!r) {
-            return lua::push_error(L, error::sys_errmsg("exe_path"));
+            return lua::return_sys_error(L, "exe_path");
         }
         lua::new_path(L, std::move(*r));
         return 1;
@@ -55,7 +54,7 @@ namespace bee::lua_sys {
     static int dll_path(lua_State* L) {
         auto r = sys::dll_path();
         if (!r) {
-            return lua::push_error(L, error::sys_errmsg("dll_path"));
+            return lua::return_sys_error(L, "dll_path");
         }
         lua::new_path(L, std::move(*r));
         return 1;
@@ -65,13 +64,13 @@ namespace bee::lua_sys {
         path_view_ref path(L, 1);
         auto fd = file_handle::lock(path);
         if (!fd) {
-            return lua::push_error(L, error::sys_errmsg("filelock"));
+            return lua::return_sys_error(L, "filelock");
         }
         auto f = fd.to_file(file_handle::mode::write);
         if (!f) {
-            auto errmsg = error::crt_errmsg("filelock");
+            int r = lua::return_crt_error(L, "filelock");
             fd.close();
-            return lua::push_error(L, errmsg);
+            return r;
         }
         lua::newfile(L, f);
         return 1;
@@ -81,13 +80,16 @@ namespace bee::lua_sys {
         path_view_ref path(L, 1);
         auto fd = file_handle::open_link(path);
         if (!fd) {
-            return lua::push_error(L, error::sys_errmsg("fullpath"));
+            return lua::return_sys_error(L, "fullpath");
         }
         auto fullpath = fd.path();
         fd.close();
         if (!fullpath) {
-            return lua::push_error(L, error::sys_errmsg("fullpath"));
+            int r = lua::return_sys_error(L, "fullpath");
+            fd.close();
+            return r;
         }
+        fd.close();
         lua::new_path(L, std::move(*fullpath));
         return 1;
     }

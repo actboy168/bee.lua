@@ -2,11 +2,20 @@
 
 #include <lua.hpp>
 #include <string_view>
+#include <system_error>
 
 namespace bee::lua {
-    inline int push_error(lua_State* L, std::string_view error) {
-        lua_pushnil(L);
-        lua_pushlstring(L, error.data(), error.size());
-        return 2;
-    }
+    void push_error(lua_State* L, std::string_view msg, std::error_code ec);
+    void push_crt_error(lua_State* L, std::string_view msg, std::errc err);
+    void push_crt_error(lua_State* L, std::string_view msg);
+    void push_sys_error(lua_State* L, std::string_view msg);
+    void push_net_error(lua_State* L, std::string_view msg, int err);
+    void push_net_error(lua_State* L, std::string_view msg);
+
+    int return_error(lua_State* L, std::string_view msg);
+    int return_crt_error(lua_State* L, std::string_view msg, std::errc err);
+    int return_crt_error(lua_State* L, std::string_view msg);
+    int return_sys_error(lua_State* L, std::string_view msg);
+    int return_net_error(lua_State* L, std::string_view msg, int err);
+    int return_net_error(lua_State* L, std::string_view msg);
 }

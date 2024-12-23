@@ -1,4 +1,3 @@
-#include <bee/error.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/cxx_status.h>
 #include <bee/lua/error.h>
@@ -111,8 +110,7 @@ namespace bee::lua_filesystem {
     template <typename... Args>
     static void lua_pusherrmsg(lua_State* L, std::error_code ec, std::format_string<Args...> fmt, Args... args) {
         auto msg = std::format(fmt, std::forward<Args>(args)...);
-        auto str = error::errmsg(msg, ec);
-        lua_pushlstring(L, str.data(), str.size());
+        lua::push_error(L, msg, ec);
     }
 
     [[nodiscard]] static lua::cxx::status pusherror(lua_State* L, std::string_view op, std::error_code ec) {

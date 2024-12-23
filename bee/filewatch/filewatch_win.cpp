@@ -1,5 +1,4 @@
 #include <Windows.h>
-#include <bee/error.h>
 #include <bee/filewatch/filewatch.h>
 #include <bee/nonstd/unreachable.h>
 #include <bee/win/wtf8.h>

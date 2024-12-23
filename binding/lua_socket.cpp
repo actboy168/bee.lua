@@ -1,5 +1,4 @@
-﻿#include <bee/error.h>
-#include <bee/lua/binding.h>
+﻿#include <bee/lua/binding.h>
 #include <bee/lua/error.h>
 #include <bee/lua/module.h>
 #include <bee/lua/udata.h>
@@ -8,10 +7,6 @@
 #include <bee/nonstd/unreachable.h>
 
 namespace bee::lua_socket {
-    static int push_neterror(lua_State* L, std::string_view msg) {
-        return lua::push_error(L, error::net_errmsg(msg));
-    }
-
     namespace endpoint {
         static int value(lua_State* L) {
             const auto& ep = lua::checkudata<net::endpoint>(L, 1);
@@ -104,7 +99,7 @@ namespace bee::lua_socket {
                 lua::newudata<net::fd_t>(L, newfd);
                 return 1;
             case net::socket::status::failed:
-                return push_neterror(L, "accept");
+                return lua::return_net_error(L, "accept");
             default:
                 std::unreachable();
             }
@@ -126,7 +121,7 @@ namespace bee::lua_socket {
                 luaL_pushresultsize(&b, rc);
                 return 1;
             case net::socket::recv_status::failed:
-                return push_neterror(L, "recv");
+                return lua::return_net_error(L, "recv");
             default:
                 std::unreachable();
             }
@@ -142,7 +137,7 @@ namespace bee::lua_socket {
                 lua_pushinteger(L, rc);
                 return 1;
             case net::socket::status::failed:
-                return push_neterror(L, "send");
+                return lua::return_net_error(L, "send");
             default:
                 std::unreachable();
             }
@@ -163,7 +158,7 @@ namespace bee::lua_socket {
                 lua_pushboolean(L, 0);
                 return 1;
             case net::socket::status::failed:
-                return push_neterror(L, "recvfrom");
+                return lua::return_net_error(L, "recvfrom");
             default:
                 std::unreachable();
             }
@@ -181,14 +176,14 @@ namespace bee::lua_socket {
                 lua_pushinteger(L, rc);
                 return 1;
             case net::socket::status::failed:
-                return push_neterror(L, "sendto");
+                return lua::return_net_error(L, "sendto");
             default:
                 std::unreachable();
             }
         }
         static int shutdown(lua_State* L, net::fd_t fd, net::socket::shutdown_flag flag) {
             if (!net::socket::shutdown(fd, flag)) {
-                return push_neterror(L, "shutdown");
+                return lua::return_net_error(L, "shutdown");
             }
             lua_pushboolean(L, 1);
             return 1;
@@ -204,19 +199,19 @@ namespace bee::lua_socket {
             case 'w':
                 return shutdown(L, fd, net::socket::shutdown_flag::write);
             default:
-                return lua::push_error(L, "invalid flag");
+                return lua::return_error(L, "invalid flag");
             }
         }
         static int status(lua_State* L, net::fd_t fd) {
             int err = 0;
             if (!net::socket::errcode(fd, err)) {
-                return push_neterror(L, "getsockopt(SO_ERROR)");
+                return lua::return_net_error(L, "getsockopt(SO_ERROR)");
             }
             if (!err) {
                 lua_pushboolean(L, 1);
                 return 1;
             }
-            return lua::push_error(L, error::net_errmsg("status", err));
+            return lua::return_net_error(L, "status", err);
         }
         static int info(lua_State* L, net::fd_t fd) {
             auto which = lua::checkstrview(L, 2);
@@ -225,13 +220,13 @@ namespace bee::lua_socket {
                 if (net::socket::getpeername(fd, ep)) {
                     return 1;
                 }
-                return push_neterror(L, "getpeername");
+                return lua::return_net_error(L, "getpeername");
             } else if (which == "socket") {
                 auto& ep = lua::newudata<net::endpoint>(L);
                 if (net::socket::getsockname(fd, ep)) {
                     return 1;
                 }
-                return push_neterror(L, "getsockname");
+                return lua::return_net_error(L, "getsockname");
             }
             return 0;
         }
@@ -245,7 +240,7 @@ namespace bee::lua_socket {
             auto value                      = lua::checkinteger<int>(L, 3);
             bool ok                         = net::socket::setoption(fd, opt, value);
             if (!ok) {
-                return push_neterror(L, "setsockopt");
+                return lua::return_net_error(L, "setsockopt");
             }
             lua_pushboolean(L, 1);
             return 1;
@@ -261,7 +256,7 @@ namespace bee::lua_socket {
                 lua_pushboolean(L, 0);
                 return 1;
             case net::socket::status::failed:
-                return push_neterror(L, "connect");
+                return lua::return_net_error(L, "connect");
             default:
                 std::unreachable();
             }
@@ -270,7 +265,7 @@ namespace bee::lua_socket {
             net::endpoint stack_ep;
             const auto& ep = to_endpoint(L, 2, stack_ep);
             if (!net::socket::bind(fd, ep)) {
-                return push_neterror(L, "bind");
+                return lua::return_net_error(L, "bind");
             }
             lua_pushboolean(L, 1);
             return 1;
@@ -279,7 +274,7 @@ namespace bee::lua_socket {
             constexpr int kDefaultBackLog = 5;
             auto backlog                  = lua::optinteger<int, kDefaultBackLog>(L, 2);
             if (!net::socket::listen(fd, backlog)) {
-                return push_neterror(L, "listen");
+                return lua::return_net_error(L, "listen");
             }
             lua_pushboolean(L, 1);
             return 1;
@@ -317,7 +312,7 @@ namespace bee::lua_socket {
             if (fd != net::retired_fd) {
                 if (!net::socket::close(fd)) {
                     fd = net::retired_fd;
-                    return push_neterror(L, "close");
+                    return lua::return_net_error(L, "close");
                 }
                 fd = net::retired_fd;
             }
@@ -414,7 +409,7 @@ namespace bee::lua_socket {
         auto protocol = (net::socket::protocol)luaL_checkoption(L, 1, NULL, opts);
         auto fd       = net::socket::open(protocol);
         if (fd == net::retired_fd) {
-            return push_neterror(L, "socket");
+            return lua::return_net_error(L, "socket");
         }
         lua::newudata<net::fd_t>(L, fd);
         return 1;
@@ -476,7 +471,7 @@ namespace bee::lua_socket {
     static int l_pair(lua_State* L) {
         net::fd_t sv[2];
         if (!net::socket::pair(sv)) {
-            return push_neterror(L, "socketpair");
+            return lua::return_net_error(L, "socketpair");
         }
         lua::newudata<net::fd_t>(L, sv[0]);
         lua::newudata<net::fd_t>(L, sv[1]);
@@ -495,7 +490,7 @@ namespace bee::lua_socket {
 
     static int luaopen(lua_State* L) {
         if (!net::socket::initialize()) {
-            lua_pushstring(L, error::sys_errmsg("initialize").c_str());
+            lua::push_sys_error(L, "initialize");
             return lua_error(L);
         }
         luaL_Reg lib[] = {

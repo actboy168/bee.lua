@@ -6,16 +6,13 @@
 #else
 #    include <sys/select.h>
 #endif
-#include <bee/error.h>
+#include <bee/lua/error.h>
 #include <bee/net/socket.h>
 #include <bee/thread/simplethread.h>
 
 #include <set>
 
 namespace bee::lua_select {
-    static void push_neterror(lua_State* L, std::string_view msg) {
-        lua_pushstring(L, error::net_errmsg(msg).c_str());
-    }
 #if defined(_WIN32)
     struct socket_set {
         struct storage {
@@ -207,7 +204,7 @@ namespace bee::lua_select {
         }
 #endif
         if (ok < 0) {
-            push_neterror(L, "select");
+            lua::push_net_error(L, "select");
             return lua_error(L);
         }
         lua_getiuservalue(L, 1, 3);

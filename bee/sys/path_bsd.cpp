@@ -1,4 +1,3 @@
-#include <bee/error.h>
 #include <bee/sys/path.h>
 #include <unistd.h>
 

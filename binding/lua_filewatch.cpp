@@ -1,8 +1,8 @@
-#include <bee/error.h>
 #include <bee/filewatch.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/module.h>
 #include <bee/lua/udata.h>
+#include <bee/lua/error.h>
 #include <bee/nonstd/filesystem.h>
 #include <bee/nonstd/unreachable.h>
 
@@ -33,7 +33,7 @@ namespace bee::lua_filewatch {
         std::error_code ec;
         fs::path abspath = fs::absolute(path, ec);
         if (ec) {
-            lua_pushstring(L, error::errmsg("fs::absolute", ec).c_str());
+            lua::push_error(L, "fs::absolute", ec);
             lua_error(L);
             return 0;
         }

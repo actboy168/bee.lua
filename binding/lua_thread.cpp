@@ -1,6 +1,6 @@
 #include <3rd/lua-seri/lua-seri.h>
-#include <bee/error.h>
 #include <bee/lua/binding.h>
+#include <bee/lua/error.h>
 #include <bee/lua/module.h>
 #include <bee/thread/setname.h>
 #include <bee/thread/simplethread.h>
@@ -111,7 +111,7 @@ namespace bee::lua_thread {
         if (!handle) {
             free(params);
             delete args;
-            lua_pushstring(L, error::sys_errmsg("thread_create").c_str());
+            lua::push_sys_error(L, "thread_create");
             return lua_error(L);
         }
         lua_pushlightuserdata(L, handle);

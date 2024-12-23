@@ -23,7 +23,6 @@ struct sockaddr_un {
 #        define UNIX_PATH_MAX (sizeof(sockaddr_un::sun_path) / sizeof(sockaddr_un::sun_path[0]))
 #    endif
 #endif
-#include <bee/error.h>
 #include <bee/net/ip.h>
 #include <bee/nonstd/charconv.h>
 

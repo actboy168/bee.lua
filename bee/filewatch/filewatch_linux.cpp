@@ -1,4 +1,3 @@
-#include <bee/error.h>
 #include <bee/filewatch/filewatch.h>
 #include <bee/nonstd/filesystem.h>
 #include <bee/nonstd/unreachable.h>

@@ -1,4 +1,3 @@
-#include <bee/error.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/error.h>
 #include <bee/lua/luaref.h>
@@ -60,12 +59,12 @@ namespace bee::lua_epoll {
     static int ep_wait(lua_State *L) {
         auto &ep = lua::checkudata<lua_epoll>(L, 1);
         if (ep.fd == net::invalid_bpoll_handle) {
-            return lua::push_error(L, error::crt_errmsg("epoll_wait", std::errc::bad_file_descriptor));
+            return lua::return_crt_error(L, "epoll_wait", std::errc::bad_file_descriptor);
         }
         int timeout = lua::optinteger<int, -1>(L, 2);
         int n       = net::bpoll_wait(ep.fd, ep.events, timeout);
         if (n == -1) {
-            return lua::push_error(L, error::net_errmsg("epoll_wait"));
+            return lua::return_net_error(L, "epoll_wait");
         }
         ep.i = 0;
         ep.n = n;
@@ -76,7 +75,7 @@ namespace bee::lua_epoll {
     static int ep_close(lua_State *L) {
         auto &ep = lua::checkudata<lua_epoll>(L, 1);
         if (!ep.close()) {
-            return lua::push_error(L, error::net_errmsg("epoll_close"));
+            return lua::return_net_error(L, "epoll_close");
         }
         lua_pushboolean(L, 1);
         return 1;
@@ -127,7 +126,7 @@ namespace bee::lua_epoll {
     static int ep_event_add(lua_State *L) {
         auto &ep = lua::checkudata<lua_epoll>(L, 1);
         if (ep.fd == net::invalid_bpoll_handle) {
-            return lua::push_error(L, error::crt_errmsg("epoll_ctl", std::errc::bad_file_descriptor));
+            return lua::return_crt_error(L, "epoll_ctl", std::errc::bad_file_descriptor);
         }
         net::fd_t fd = ep_tofd(L, 2);
         if (lua_isnoneornil(L, 4)) {
@@ -137,14 +136,14 @@ namespace bee::lua_epoll {
         }
         int r = luaref_ref(ep.ref, L);
         if (r == LUA_NOREF) {
-            return lua::push_error(L, "Too many events.");
+            return lua::return_error(L, "Too many events.");
         }
         net::bpoll_event_t ev;
         ev.events   = static_cast<decltype(ev.events)>(luaL_checkinteger(L, 3));
         ev.data.u32 = r;
         if (!net::bpoll_ctl_add(ep.fd, fd, ev)) {
             luaref_unref(ep.ref, r);
-            return lua::push_error(L, error::net_errmsg("epoll_ctl"));
+            return lua::return_net_error(L, "epoll_ctl");
         }
         storeref(L, r);
         lua_pushboolean(L, 1);
@@ -154,18 +153,18 @@ namespace bee::lua_epoll {
     static int ep_event_mod(lua_State *L) {
         auto &ep = lua::checkudata<lua_epoll>(L, 1);
         if (ep.fd == net::invalid_bpoll_handle) {
-            return lua::push_error(L, error::crt_errmsg("epoll_ctl", std::errc::bad_file_descriptor));
+            return lua::return_crt_error(L, "epoll_ctl", std::errc::bad_file_descriptor);
         }
         net::fd_t fd = ep_tofd(L, 2);
         int r        = findref(L);
         if (r == LUA_NOREF) {
-            return lua::push_error(L, "event is not initialized.");
+            return lua::return_error(L, "event is not initialized.");
         }
         net::bpoll_event_t ev;
         ev.events   = static_cast<decltype(ev.events)>(luaL_checkinteger(L, 3));
         ev.data.u32 = r;
         if (!net::bpoll_ctl_mod(ep.fd, fd, ev)) {
-            return lua::push_error(L, error::net_errmsg("epoll_ctl"));
+            return lua::return_net_error(L, "epoll_ctl");
         }
         if (lua_gettop(L) >= 4) {
             lua_pushvalue(L, 4);
@@ -178,11 +177,11 @@ namespace bee::lua_epoll {
     static int ep_event_del(lua_State *L) {
         auto &ep = lua::checkudata<lua_epoll>(L, 1);
         if (ep.fd == net::invalid_bpoll_handle) {
-            return lua::push_error(L, error::crt_errmsg("epoll_ctl", std::errc::bad_file_descriptor));
+            return lua::return_crt_error(L, "epoll_ctl", std::errc::bad_file_descriptor);
         }
         net::fd_t fd = ep_tofd(L, 2);
         if (!net::bpoll_ctl_del(ep.fd, fd)) {
-            return lua::push_error(L, error::net_errmsg("epoll_ctl"));
+            return lua::return_net_error(L, "epoll_ctl");
         }
         int r = cleanref(L);
         if (r != LUA_NOREF) {
@@ -214,11 +213,11 @@ namespace bee::lua_epoll {
     static int ep_create(lua_State *L) {
         lua_Integer max_events = luaL_checkinteger(L, 1);
         if (max_events <= 0) {
-            return lua::push_error(L, "maxevents is less than or equal to zero.");
+            return lua::return_error(L, "maxevents is less than or equal to zero.");
         }
         net::bpoll_handle epfd = net::bpoll_create();
         if (epfd == (net::bpoll_handle)-1) {
-            return lua::push_error(L, error::net_errmsg("epoll_create"));
+            return lua::return_net_error(L, "epoll_create");
         }
         lua::newudata<lua_epoll>(L, L, epfd, (size_t)max_events);
         lua_newtable(L);

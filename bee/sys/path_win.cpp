@@ -1,5 +1,4 @@
 #include <Windows.h>
-#include <bee/error.h>
 #include <bee/sys/path.h>
 #include <bee/utility/dynarray.h>
 #include <shlobj.h>
