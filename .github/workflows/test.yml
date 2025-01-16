@@ -68,7 +68,7 @@ jobs:
     - run: luamake test -v
   linux-x86_64:
     name: linux (x86_64)
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
     - uses: actboy168/setup-luamake@master
@@ -92,7 +92,7 @@ jobs:
         continue-on-error: true
         with:
           arch: ${{ matrix.arch }}
-          distro: ubuntu20.04
+          distro: ubuntu22.04
           dockerRunArgs: |
             --volume "${PWD}:/actboy168"
           install: |
