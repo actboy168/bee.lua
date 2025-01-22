@@ -17,9 +17,11 @@
     <!-- light C function -->
     <DisplayString Condition="(func.p->val.tt_) == 0x16">{func.p-&gt;val.value_.f, na}</DisplayString>
     <!-- Lua closure -->
-    <DisplayString Condition="(func.p->val.tt_) == 0x46">{((char *)((GCUnion *)(func.p-&gt;val.value_.gc))-&gt;cl.l.p-&gt;source)+8+sizeof(double)*2, na}</DisplayString>
+    <DisplayString Condition="(func.p->val.tt_) == 0x46">{((Closure *)(func.p-&gt;val.value_.gc))-&gt;l, na}</DisplayString>
     <!-- C closure -->
-    <DisplayString Condition="(func.p->val.tt_) == 0x66">{((GCUnion *)(func.p-&gt;val.value_.gc))-&gt;cl.c.f, na}</DisplayString>
+    <DisplayString Condition="(func.p->val.tt_) == 0x66">{((Closure *)(func.p-&gt;val.value_.gc))-&gt;c, na}</DisplayString>
+    <!-- EOF -->
+    <DisplayString Condition="(func.p->val.tt_) == 0x00">&lt;---Stack Bottom---&gt;</DisplayString>
     <Expand>
       <ExpandedItem>func</ExpandedItem>
     </Expand>
@@ -32,12 +34,12 @@
   </Type>
   <Type Name="TValue">
     <DisplayString Condition="tt_ == 0x16">{value_.f, na}</DisplayString>
-    <DisplayString Condition="tt_ == 0x46">{((GCUnion *)(value_.gc))-&gt;cl.l.p, na}</DisplayString>
-    <DisplayString Condition="tt_ == 0x66">{((GCUnion *)(value_.gc))-&gt;cl.c.f, na}</DisplayString>
+    <DisplayString Condition="tt_ == 0x46">{((Closure *)(value_.gc))-&gt;l, na}</DisplayString>
+    <DisplayString Condition="tt_ == 0x66">{((Closure *)(value_.gc))-&gt;c, na}</DisplayString>
     <Expand>
       <ExpandedItem Condition="tt_ == 0x16">value_.f</ExpandedItem>
-      <ExpandedItem Condition="tt_ == 0x46">((GCUnion *)(value_.gc))-&gt;cl.l</ExpandedItem>
-      <ExpandedItem Condition="tt_ == 0x66">((GCUnion *)(value_.gc))-&gt;cl.c</ExpandedItem>
+      <ExpandedItem Condition="tt_ == 0x46">((Closure *)(value_.gc))-&gt;l</ExpandedItem>
+      <ExpandedItem Condition="tt_ == 0x66">((Closure *)(value_.gc))-&gt;c</ExpandedItem>
     </Expand>
   </Type>
   <Type Name="CClosure">
