@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
   <Type Name="lua_State">
-    <DisplayString>[thread top=]{top.p-(ci->func.p+1)}</DisplayString>
+    <DisplayString>[thread top=]{top.p-(ci-&gt;func.p+1)}</DisplayString>
     <Expand>
-      <Item Name="[stack top]">top.p-(ci->func.p+1)</Item>
-      <Item Name="[call]" Condition="ci->func.p->val.tt_!=0">ci->func.p</Item>
+      <Item Name="[stack top]">top.p-(ci-&gt;func.p+1)</Item>
+      <Item Name="[call]" Condition="ci->func.p->val.tt_!=0">ci-&gt;func.p</Item>
       <Item Name="[callinfo]">"------------------------------------"</Item>
       <LinkedListItems>
         <HeadPointer>ci</HeadPointer>
@@ -15,11 +15,11 @@
   </Type>
   <Type Name="CallInfo">
     <!-- light C function -->
-    <DisplayString Condition="(func.p->val.tt_) == 0x16">{func.p->val.value_.f, na}</DisplayString>
+    <DisplayString Condition="(func.p->val.tt_) == 0x16">{func.p-&gt;val.value_.f, na}</DisplayString>
     <!-- Lua closure -->
-    <DisplayString Condition="(func.p->val.tt_) == 0x46">{((char *)((GCUnion *)(func.p->val.value_.gc))->cl.l.p->source)+8+sizeof(double)*2, na}</DisplayString>
+    <DisplayString Condition="(func.p->val.tt_) == 0x46">{((char *)((GCUnion *)(func.p-&gt;val.value_.gc))-&gt;cl.l.p-&gt;source)+8+sizeof(double)*2, na}</DisplayString>
     <!-- C closure -->
-    <DisplayString Condition="(func.p->val.tt_) == 0x66">{((GCUnion *)(func.p->val.value_.gc))->cl.c.f, na}</DisplayString>
+    <DisplayString Condition="(func.p->val.tt_) == 0x66">{((GCUnion *)(func.p-&gt;val.value_.gc))-&gt;cl.c.f, na}</DisplayString>
     <Expand>
       <ExpandedItem>func</ExpandedItem>
     </Expand>
@@ -32,12 +32,12 @@
   </Type>
   <Type Name="TValue">
     <DisplayString Condition="tt_ == 0x16">{value_.f, na}</DisplayString>
-    <DisplayString Condition="tt_ == 0x46">{((GCUnion *)(value_.gc))->cl.l.p, na}</DisplayString>
-    <DisplayString Condition="tt_ == 0x66">{((GCUnion *)(value_.gc))->cl.c.f, na}</DisplayString>
+    <DisplayString Condition="tt_ == 0x46">{((GCUnion *)(value_.gc))-&gt;cl.l.p, na}</DisplayString>
+    <DisplayString Condition="tt_ == 0x66">{((GCUnion *)(value_.gc))-&gt;cl.c.f, na}</DisplayString>
     <Expand>
       <ExpandedItem Condition="tt_ == 0x16">value_.f</ExpandedItem>
-      <ExpandedItem Condition="tt_ == 0x46">((GCUnion *)(value_.gc))->cl.l</ExpandedItem>
-      <ExpandedItem Condition="tt_ == 0x66">((GCUnion *)(value_.gc))->cl.c</ExpandedItem>
+      <ExpandedItem Condition="tt_ == 0x46">((GCUnion *)(value_.gc))-&gt;cl.l</ExpandedItem>
+      <ExpandedItem Condition="tt_ == 0x66">((GCUnion *)(value_.gc))-&gt;cl.c</ExpandedItem>
     </Expand>
   </Type>
   <Type Name="CClosure">
