@@ -14,9 +14,12 @@
     </Expand>
   </Type>
   <Type Name="CallInfo">
-    <DisplayString Condition="(func.p->val.tt_) == 0x46">{((char *)((GCUnion *)(func.p->val.value_.gc))->cl.l.p->source)+8+sizeof(double)*2}</DisplayString>
-    <DisplayString Condition="(func.p->val.tt_) == 0x16">{func.p->val.value_.f}</DisplayString>
-    <DisplayString Condition="(func.p->val.tt_) == 0x66">{((GCUnion *)(func.p->val.value_.gc))->cl.c.f}</DisplayString>
+    <!-- light C function -->
+    <DisplayString Condition="(func.p->val.tt_) == 0x16">{func.p->val.value_.f, na}</DisplayString>
+    <!-- Lua closure -->
+    <DisplayString Condition="(func.p->val.tt_) == 0x46">{((char *)((GCUnion *)(func.p->val.value_.gc))->cl.l.p->source)+8+sizeof(double)*2, na}</DisplayString>
+    <!-- C closure -->
+    <DisplayString Condition="(func.p->val.tt_) == 0x66">{((GCUnion *)(func.p->val.value_.gc))->cl.c.f, na}</DisplayString>
     <Expand>
       <ExpandedItem>func</ExpandedItem>
     </Expand>
@@ -28,12 +31,12 @@
     </Expand>
   </Type>
   <Type Name="TValue">
-    <DisplayString Condition="tt_ == 0x46">{((GCUnion *)(value_.gc))->cl.l.p}</DisplayString>
-    <DisplayString Condition="tt_ == 0x16">{value_.f}</DisplayString>
-    <DisplayString Condition="tt_ == 0x66">{((GCUnion *)(value_.gc))->cl.c.f}</DisplayString>
+    <DisplayString Condition="tt_ == 0x16">{value_.f, na}</DisplayString>
+    <DisplayString Condition="tt_ == 0x46">{((GCUnion *)(value_.gc))->cl.l.p, na}</DisplayString>
+    <DisplayString Condition="tt_ == 0x66">{((GCUnion *)(value_.gc))->cl.c.f, na}</DisplayString>
     <Expand>
-      <ExpandedItem Condition="tt_ == 0x46">((GCUnion *)(value_.gc))->cl.l</ExpandedItem>
       <ExpandedItem Condition="tt_ == 0x16">value_.f</ExpandedItem>
+      <ExpandedItem Condition="tt_ == 0x46">((GCUnion *)(value_.gc))->cl.l</ExpandedItem>
       <ExpandedItem Condition="tt_ == 0x66">((GCUnion *)(value_.gc))->cl.c</ExpandedItem>
     </Expand>
   </Type>
@@ -58,6 +61,6 @@
     </Expand>
   </Type>
   <Type Name="TString">
-    <DisplayString>{(char *)(this)+8+sizeof(double)*2}</DisplayString>
+    <DisplayString>{(char *)(this)+8+sizeof(double)*2, na}</DisplayString>
   </Type>
 </AutoVisualizer>
