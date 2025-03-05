@@ -20,12 +20,13 @@ namespace bee {
                 x *= UINT64_C(0xc4ceb9fe1a85ec53);
                 x ^= x >> 33U;
                 return static_cast<size_t>(x);
-            } else {
-                static_assert(std::is_trivially_copy_constructible_v<T>);
+            } else if constexpr (sizeof(v) <= sizeof(uint64_t) && std::is_trivially_copy_constructible_v<T>) {
                 uint64_t i = 0;
                 memcpy(&i, &v, sizeof(v));
                 flatmap_hash<uint64_t> h;
                 return h(i);
+            } else {
+                return std::hash<T> {}(v);
             }
         }
     };
@@ -92,11 +93,7 @@ namespace bee {
         using bucket = std::conditional_t<sizeof(bucket_kv) <= sizeof(bucket_vk), bucket_kv, bucket_vk>;
         static_assert(sizeof(bucket) <= 3 * sizeof(size_t));
 
-        flatmap() noexcept
-            : KeyHash()
-            , KeyEqual() {
-        }
-
+        flatmap() noexcept = default;
         flatmap(flatmap &&rhs) noexcept {
             std::swap(m_mask, rhs.m_mask);
             std::swap(m_maxsize, rhs.m_maxsize);
@@ -105,10 +102,12 @@ namespace bee {
         }
 
         flatmap &operator=(flatmap &&rhs) noexcept {
-            std::swap(m_mask, rhs.m_mask);
-            std::swap(m_maxsize, rhs.m_maxsize);
-            std::swap(m_size, rhs.m_size);
-            std::swap(m_buckets, rhs.m_buckets);
+            if (this != &rhs) {
+                std::swap(m_mask, rhs.m_mask);
+                std::swap(m_maxsize, rhs.m_maxsize);
+                std::swap(m_size, rhs.m_size);
+                std::swap(m_buckets, rhs.m_buckets);
+            }
             return *this;
         }
 
@@ -176,7 +175,12 @@ namespace bee {
 
         template <typename MappedType>
         void insert_or_assign(const key_type &key, MappedType obj) {
-            auto [_, value] = find_or_insert(key);
+            auto [found, value] = find_or_insert(key);
+            if constexpr (!std::is_trivially_destructible<mapped_type>::value) {
+                if (found) {
+                    value->~mapped_type();
+                }
+            }
             new (value) mapped_type { std::forward<mapped_type>(obj) };
         }
 
