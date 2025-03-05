@@ -27,7 +27,8 @@
 
 // Check FMT_CPLUSPLUS to suppress a bogus warning in MSVC.
 #  if FMT_CPLUSPLUS >= 201703L
-#    if FMT_HAS_INCLUDE(<filesystem>)
+#    if FMT_HAS_INCLUDE(<filesystem>) && \
+        (!defined(FMT_CPP_LIB_FILESYSTEM) || FMT_CPP_LIB_FILESYSTEM != 0)
 #      include <filesystem>
 #    endif
 #    if FMT_HAS_INCLUDE(<variant>)
@@ -112,7 +113,6 @@ void write_escaped_path(basic_memory_buffer<Char>& quoted,
 
 }  // namespace detail
 
-FMT_EXPORT
 template <typename Char> struct formatter<std::filesystem::path, Char> {
  private:
   format_specs specs_;
@@ -181,9 +181,9 @@ FMT_END_NAMESPACE
 #endif  // FMT_CPP_LIB_FILESYSTEM
 
 FMT_BEGIN_NAMESPACE
-FMT_EXPORT
 template <std::size_t N, typename Char>
-struct formatter<std::bitset<N>, Char> : nested_formatter<string_view> {
+struct formatter<std::bitset<N>, Char>
+    : nested_formatter<basic_string_view<Char>, Char> {
  private:
   // Functor because C++11 doesn't support generic lambdas.
   struct writer {
@@ -203,18 +203,16 @@ struct formatter<std::bitset<N>, Char> : nested_formatter<string_view> {
   template <typename FormatContext>
   auto format(const std::bitset<N>& bs, FormatContext& ctx) const
       -> decltype(ctx.out()) {
-    return write_padded(ctx, writer{bs});
+    return this->write_padded(ctx, writer{bs});
   }
 };
 
-FMT_EXPORT
 template <typename Char>
 struct formatter<std::thread::id, Char> : basic_ostream_formatter<Char> {};
 FMT_END_NAMESPACE
 
 #ifdef __cpp_lib_optional
 FMT_BEGIN_NAMESPACE
-FMT_EXPORT
 template <typename T, typename Char>
 struct formatter<std::optional<T>, Char,
                  std::enable_if_t<is_formattable<T, Char>::value>> {
@@ -277,7 +275,6 @@ FMT_END_NAMESPACE
 #ifdef __cpp_lib_expected
 FMT_BEGIN_NAMESPACE
 
-FMT_EXPORT
 template <typename T, typename E, typename Char>
 struct formatter<std::expected<T, E>, Char,
                  std::enable_if_t<(std::is_void<T>::value ||
@@ -309,7 +306,6 @@ FMT_END_NAMESPACE
 
 #ifdef __cpp_lib_source_location
 FMT_BEGIN_NAMESPACE
-FMT_EXPORT
 template <> struct formatter<std::source_location> {
   FMT_CONSTEXPR auto parse(parse_context<>& ctx) { return ctx.begin(); }
 
@@ -365,7 +361,6 @@ template <typename T, typename C> struct is_variant_formattable {
       detail::is_variant_formattable_<T, C>::value;
 };
 
-FMT_EXPORT
 template <typename Char> struct formatter<std::monostate, Char> {
   FMT_CONSTEXPR auto parse(parse_context<Char>& ctx) -> const Char* {
     return ctx.begin();
@@ -378,7 +373,6 @@ template <typename Char> struct formatter<std::monostate, Char> {
   }
 };
 
-FMT_EXPORT
 template <typename Variant, typename Char>
 struct formatter<
     Variant, Char,
@@ -412,7 +406,6 @@ FMT_END_NAMESPACE
 #endif  // FMT_CPP_LIB_VARIANT
 
 FMT_BEGIN_NAMESPACE
-FMT_EXPORT
 template <> struct formatter<std::error_code> {
  private:
   format_specs specs_;
@@ -518,7 +511,6 @@ auto write_demangled_name(OutputIt out, const std::type_info& ti) -> OutputIt {
 
 }  // namespace detail
 
-FMT_EXPORT
 template <typename Char>
 struct formatter<std::type_info, Char  // DEPRECATED! Mixing code unit types.
                  > {
@@ -535,7 +527,6 @@ struct formatter<std::type_info, Char  // DEPRECATED! Mixing code unit types.
 };
 #endif
 
-FMT_EXPORT
 template <typename T, typename Char>
 struct formatter<
     T, Char,  // DEPRECATED! Mixing code unit types.
@@ -601,7 +592,6 @@ struct is_bit_reference_like<std::__bit_const_reference<C>> {
 // We can't use std::vector<bool, Allocator>::reference and
 // std::bitset<N>::reference because the compiler can't deduce Allocator and N
 // in partial specialization.
-FMT_EXPORT
 template <typename BitRef, typename Char>
 struct formatter<BitRef, Char,
                  enable_if_t<detail::is_bit_reference_like<BitRef>::value>>
@@ -621,7 +611,6 @@ template <typename T> auto ptr(const std::shared_ptr<T>& p) -> const void* {
   return p.get();
 }
 
-FMT_EXPORT
 template <typename T, typename Char>
 struct formatter<std::atomic<T>, Char,
                  enable_if_t<is_formattable<T, Char>::value>>
@@ -634,7 +623,6 @@ struct formatter<std::atomic<T>, Char,
 };
 
 #ifdef __cpp_lib_atomic_flag_test
-FMT_EXPORT
 template <typename Char>
 struct formatter<std::atomic_flag, Char> : formatter<bool, Char> {
   template <typename FormatContext>
@@ -645,7 +633,6 @@ struct formatter<std::atomic_flag, Char> : formatter<bool, Char> {
 };
 #endif  // __cpp_lib_atomic_flag_test
 
-FMT_EXPORT
 template <typename T, typename Char> struct formatter<std::complex<T>, Char> {
  private:
   detail::dynamic_format_specs<Char> specs_;
@@ -694,9 +681,7 @@ template <typename T, typename Char> struct formatter<std::complex<T>, Char> {
 
     auto outer_specs = format_specs();
     outer_specs.width = specs.width;
-    auto fill = specs.template fill<Char>();
-    if (fill)
-      outer_specs.set_fill(basic_string_view<Char>(fill, specs.fill_size()));
+    outer_specs.copy_fill_from(specs);
     outer_specs.set_align(specs.align());
 
     specs.width = 0;
@@ -710,7 +695,6 @@ template <typename T, typename Char> struct formatter<std::complex<T>, Char> {
   }
 };
 
-FMT_EXPORT
 template <typename T, typename Char>
 struct formatter<std::reference_wrapper<T>, Char,
                  enable_if_t<is_formattable<remove_cvref_t<T>, Char>::value>>

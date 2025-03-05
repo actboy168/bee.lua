@@ -41,13 +41,12 @@
 #include "base.h"
 
 #ifndef FMT_MODULE
-#  include <cmath>             // std::signbit
-#  include <cstddef>           // std::byte
-#  include <cstdint>           // uint32_t
-#  include <cstring>           // std::memcpy
-#  include <initializer_list>  // std::initializer_list
-#  include <limits>            // std::numeric_limits
-#  include <new>               // std::bad_alloc
+#  include <cmath>    // std::signbit
+#  include <cstddef>  // std::byte
+#  include <cstdint>  // uint32_t
+#  include <cstring>  // std::memcpy
+#  include <limits>   // std::numeric_limits
+#  include <new>      // std::bad_alloc
 #  if defined(__GLIBCXX__) && !defined(_GLIBCXX_USE_DUAL_ABI)
 // Workaround for pre gcc 5 libstdc++.
 #    include <memory>  // std::allocator_traits
@@ -69,7 +68,7 @@
 #  endif
 
 #  if FMT_MSC_VERSION
-#    include <intrin.h>  // _BitScanReverse[64], _BitScanForward[64], _umul128
+#    include <intrin.h>  // _BitScanReverse[64], _umul128
 #  endif
 #endif  // FMT_MODULE
 
@@ -152,20 +151,6 @@ FMT_END_NAMESPACE
 #  endif  // FMT_USE_EXCEPTIONS
 #endif    // FMT_THROW
 
-#ifdef FMT_NO_UNIQUE_ADDRESS
-// Use the provided definition.
-#elif FMT_CPLUSPLUS < 202002L
-// Not supported.
-#elif FMT_HAS_CPP_ATTRIBUTE(no_unique_address)
-#  define FMT_NO_UNIQUE_ADDRESS [[no_unique_address]]
-// VS2019 v16.10 and later except clang-cl (https://reviews.llvm.org/D110485).
-#elif FMT_MSC_VERSION >= 1929 && !FMT_CLANG_VERSION
-#  define FMT_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
-#endif
-#ifndef FMT_NO_UNIQUE_ADDRESS
-#  define FMT_NO_UNIQUE_ADDRESS
-#endif
-
 // Defining FMT_REDUCE_INT_INSTANTIATIONS to 1, will reduce the number of
 // integer formatter template instantiations to just one by only using the
 // largest integer type. This results in a reduction in binary size but will
@@ -242,7 +227,9 @@ FMT_CONSTEXPR inline void abort_fuzzing_if(bool condition) {
 #if defined(FMT_USE_STRING_VIEW)
 template <typename Char> using std_string_view = std::basic_string_view<Char>;
 #else
-template <typename T> struct std_string_view {};
+template <typename Char> struct std_string_view {
+  operator basic_string_view<Char>() const;
+};
 #endif
 
 template <typename Char, Char... C> struct string_literal {
@@ -420,17 +407,17 @@ template <> constexpr auto num_bits<uint128_fallback>() -> int { return 128; }
 // and 128-bit pointers to uint128_fallback.
 template <typename To, typename From, FMT_ENABLE_IF(sizeof(To) > sizeof(From))>
 inline auto bit_cast(const From& from) -> To {
-  constexpr auto size = static_cast<int>(sizeof(From) / sizeof(unsigned));
+  constexpr auto size = static_cast<int>(sizeof(From) / sizeof(unsigned short));
   struct data_t {
-    unsigned value[static_cast<unsigned>(size)];
+    unsigned short value[static_cast<unsigned>(size)];
   } data = bit_cast<data_t>(from);
   auto result = To();
   if (const_check(is_big_endian())) {
     for (int i = 0; i < size; ++i)
-      result = (result << num_bits<unsigned>()) | data.value[i];
+      result = (result << num_bits<unsigned short>()) | data.value[i];
   } else {
     for (int i = size - 1; i >= 0; --i)
-      result = (result << num_bits<unsigned>()) | data.value[i];
+      result = (result << num_bits<unsigned short>()) | data.value[i];
   }
   return result;
 }
@@ -506,8 +493,8 @@ constexpr auto to_pointer(OutputIt, size_t) -> T* {
 template <typename T>
 FMT_CONSTEXPR20 auto to_pointer(basic_appender<T> it, size_t n) -> T* {
   buffer<T>& buf = get_container(it);
+  buf.try_reserve(buf.size() + n);
   auto size = buf.size();
-  buf.try_reserve(size + n);
   if (buf.capacity() < size + n) return nullptr;
   buf.try_resize(size + n);
   return buf.data() + size;
@@ -892,7 +879,7 @@ class basic_memory_buffer : public detail::buffer<T> {
 using memory_buffer = basic_memory_buffer<char>;
 
 template <size_t SIZE>
-FMT_NODISCARD auto to_string(basic_memory_buffer<char, SIZE>& buf)
+FMT_NODISCARD auto to_string(const basic_memory_buffer<char, SIZE>& buf)
     -> std::string {
   auto size = buf.size();
   detail::assume(size < std::string().max_size());
@@ -938,14 +925,6 @@ template <typename T, size_t SIZE, typename Allocator>
 struct is_contiguous<basic_memory_buffer<T, SIZE, Allocator>> : std::true_type {
 };
 
-FMT_END_EXPORT
-namespace detail {
-FMT_API auto write_console(int fd, string_view text) -> bool;
-FMT_API void print(FILE*, string_view);
-}  // namespace detail
-
-FMT_BEGIN_EXPORT
-
 // Suppress a misleading warning in older versions of clang.
 FMT_PRAGMA_CLANG(diagnostic ignored "-Wweak-vtables")
 
@@ -954,6 +933,14 @@ class FMT_SO_VISIBILITY("default") format_error : public std::runtime_error {
  public:
   using std::runtime_error::runtime_error;
 };
+
+class loc_value;
+
+FMT_END_EXPORT
+namespace detail {
+FMT_API auto write_console(int fd, string_view text) -> bool;
+FMT_API void print(FILE*, string_view);
+}  // namespace detail
 
 namespace detail {
 template <typename Char, size_t N> struct fixed_string {
@@ -965,112 +952,18 @@ template <typename Char, size_t N> struct fixed_string {
 };
 
 // Converts a compile-time string to basic_string_view.
-template <typename Char, size_t N>
+FMT_EXPORT template <typename Char, size_t N>
 constexpr auto compile_string_to_view(const Char (&s)[N])
     -> basic_string_view<Char> {
   // Remove trailing NUL character if needed. Won't be present if this is used
   // with a raw character array (i.e. not defined as a string).
   return {s, N - (std::char_traits<Char>::to_int_type(s[N - 1]) == 0 ? 1 : 0)};
 }
-template <typename Char>
+FMT_EXPORT template <typename Char>
 constexpr auto compile_string_to_view(basic_string_view<Char> s)
     -> basic_string_view<Char> {
   return s;
 }
-}  // namespace detail
-
-// A generic formatting context with custom output iterator and character
-// (code unit) support. Char is the format string code unit type which can be
-// different from OutputIt::value_type.
-template <typename OutputIt, typename Char> class generic_context {
- private:
-  OutputIt out_;
-  basic_format_args<generic_context> args_;
-  detail::locale_ref loc_;
-
- public:
-  using char_type = Char;
-  using iterator = OutputIt;
-  using parse_context_type FMT_DEPRECATED = parse_context<Char>;
-  template <typename T>
-  using formatter_type FMT_DEPRECATED = formatter<T, Char>;
-  enum { builtin_types = FMT_BUILTIN_TYPES };
-
-  constexpr generic_context(OutputIt out,
-                            basic_format_args<generic_context> args,
-                            detail::locale_ref loc = {})
-      : out_(out), args_(args), loc_(loc) {}
-  generic_context(generic_context&&) = default;
-  generic_context(const generic_context&) = delete;
-  void operator=(const generic_context&) = delete;
-
-  constexpr auto arg(int id) const -> basic_format_arg<generic_context> {
-    return args_.get(id);
-  }
-  auto arg(basic_string_view<Char> name) -> basic_format_arg<generic_context> {
-    return args_.get(name);
-  }
-  FMT_CONSTEXPR auto arg_id(basic_string_view<Char> name) -> int {
-    return args_.get_id(name);
-  }
-
-  FMT_CONSTEXPR auto out() -> iterator { return out_; }
-
-  void advance_to(iterator it) {
-    if (!detail::is_back_insert_iterator<iterator>()) out_ = it;
-  }
-
-  FMT_CONSTEXPR auto locale() -> detail::locale_ref { return loc_; }
-};
-
-class loc_value {
- private:
-  basic_format_arg<context> value_;
-
- public:
-  template <typename T, FMT_ENABLE_IF(!detail::is_float128<T>::value)>
-  loc_value(T value) : value_(value) {}
-
-  template <typename T, FMT_ENABLE_IF(detail::is_float128<T>::value)>
-  loc_value(T) {}
-
-  template <typename Visitor> auto visit(Visitor&& vis) -> decltype(vis(0)) {
-    return value_.visit(vis);
-  }
-};
-
-// A locale facet that formats values in UTF-8.
-// It is parameterized on the locale to avoid the heavy <locale> include.
-template <typename Locale> class format_facet : public Locale::facet {
- private:
-  std::string separator_;
-  std::string grouping_;
-  std::string decimal_point_;
-
- protected:
-  virtual auto do_put(appender out, loc_value val,
-                      const format_specs& specs) const -> bool;
-
- public:
-  static FMT_API typename Locale::id id;
-
-  explicit format_facet(Locale& loc);
-  explicit format_facet(string_view sep = "",
-                        std::initializer_list<unsigned char> g = {3},
-                        std::string decimal_point = ".")
-      : separator_(sep.data(), sep.size()),
-        grouping_(g.begin(), g.end()),
-        decimal_point_(decimal_point) {}
-
-  auto put(appender out, loc_value val, const format_specs& specs) const
-      -> bool {
-    return do_put(out, val, specs);
-  }
-};
-
-FMT_END_EXPORT
-
-namespace detail {
 
 // Returns true if value is negative, false otherwise.
 // Same as `value < 0` but doesn't produce warnings if T is an unsigned type.
@@ -1312,7 +1205,7 @@ FMT_CONSTEXPR FMT_INLINE auto format_decimal(Char* out, UInt value,
 }
 
 template <typename Char, typename UInt, typename OutputIt,
-          FMT_ENABLE_IF(is_back_insert_iterator<OutputIt>::value)>
+          FMT_ENABLE_IF(!std::is_pointer<remove_cvref_t<OutputIt>>::value)>
 FMT_CONSTEXPR auto format_decimal(OutputIt out, UInt value, int num_digits)
     -> OutputIt {
   if (auto ptr = to_pointer<Char>(out, to_unsigned(num_digits))) {
@@ -1790,7 +1683,7 @@ FMT_API auto is_printable(uint32_t cp) -> bool;
 
 inline auto needs_escape(uint32_t cp) -> bool {
   if (cp < 0x20 || cp == 0x7f || cp == '"' || cp == '\\') return true;
-  if (FMT_OPTIMIZE_SIZE > 1) return false;
+  if (const_check(FMT_OPTIMIZE_SIZE > 1)) return false;
   return !is_printable(cp);
 }
 
@@ -1813,7 +1706,7 @@ auto find_escape(const Char* begin, const Char* end)
 
 inline auto find_escape(const char* begin, const char* end)
     -> find_escape_result<char> {
-  if (!use_utf8) return find_escape<char>(begin, end);
+  if (const_check(!use_utf8)) return find_escape<char>(begin, end);
   auto result = find_escape_result<char>{end, nullptr, 0};
   for_each_codepoint(string_view(begin, to_unsigned(end - begin)),
                      [&](uint32_t cp, string_view sv) {
@@ -1948,7 +1841,9 @@ template <typename Char> class digit_grouping {
   }
 
  public:
-  explicit digit_grouping(locale_ref loc, bool localized = true) {
+  template <typename Locale,
+            FMT_ENABLE_IF(std::is_same<Locale, locale_ref>::value)>
+  explicit digit_grouping(Locale loc, bool localized = true) {
     if (!localized) return;
     auto sep = thousands_sep<Char>(loc);
     grouping_ = sep.grouping;
@@ -2050,8 +1945,8 @@ FMT_API auto write_loc(appender out, loc_value value, const format_specs& specs,
                        locale_ref loc) -> bool;
 #endif
 template <typename OutputIt>
-inline auto write_loc(OutputIt, loc_value, const format_specs&, locale_ref)
-    -> bool {
+inline auto write_loc(OutputIt, const loc_value&, const format_specs&,
+                      locale_ref) -> bool {
   return false;
 }
 
@@ -2437,7 +2332,7 @@ template <typename Char, typename OutputIt, typename DecimalFP,
           typename Grouping = digit_grouping<Char>>
 FMT_CONSTEXPR20 auto do_write_float(OutputIt out, const DecimalFP& f,
                                     const format_specs& specs, sign s,
-                                    locale_ref loc) -> OutputIt {
+                                    int exp_upper, locale_ref loc) -> OutputIt {
   auto significand = f.significand;
   int significand_size = get_significand_size(f);
   const Char zero = static_cast<Char>('0');
@@ -2453,7 +2348,7 @@ FMT_CONSTEXPR20 auto do_write_float(OutputIt out, const DecimalFP& f,
     if (specs.type() == presentation_type::fixed) return false;
     // Use the fixed notation if the exponent is in [exp_lower, exp_upper),
     // e.g. 0.0001 instead of 1e-04. Otherwise use the exponent notation.
-    const int exp_lower = -4, exp_upper = 16;
+    const int exp_lower = -4;
     return output_exp < exp_lower ||
            output_exp >= (specs.precision > 0 ? specs.precision : exp_upper);
   };
@@ -2556,12 +2451,13 @@ template <typename Char> class fallback_digit_grouping {
 template <typename Char, typename OutputIt, typename DecimalFP>
 FMT_CONSTEXPR20 auto write_float(OutputIt out, const DecimalFP& f,
                                  const format_specs& specs, sign s,
-                                 locale_ref loc) -> OutputIt {
+                                 int exp_upper, locale_ref loc) -> OutputIt {
   if (is_constant_evaluated()) {
     return do_write_float<Char, OutputIt, DecimalFP,
-                          fallback_digit_grouping<Char>>(out, f, specs, s, loc);
+                          fallback_digit_grouping<Char>>(out, f, specs, s,
+                                                         exp_upper, loc);
   } else {
-    return do_write_float<Char>(out, f, specs, s, loc);
+    return do_write_float<Char>(out, f, specs, s, exp_upper, loc);
   }
 }
 
@@ -3393,6 +3289,14 @@ FMT_CONSTEXPR20 auto format_float(Float value, int precision,
   return exp;
 }
 
+// Numbers with exponents greater or equal to the returned value will use
+// the exponential notation.
+template <typename T> constexpr auto exp_upper() -> int {
+  return std::numeric_limits<T>::digits10 != 0
+             ? min_of(16, std::numeric_limits<T>::digits10 + 1)
+             : 16;
+}
+
 template <typename Char, typename OutputIt, typename T>
 FMT_CONSTEXPR20 auto write_float(OutputIt out, T value, format_specs specs,
                                  locale_ref loc) -> OutputIt {
@@ -3408,6 +3312,7 @@ FMT_CONSTEXPR20 auto write_float(OutputIt out, T value, format_specs specs,
     if (specs.width != 0) --specs.width;
   }
 
+  constexpr int exp_upper = detail::exp_upper<T>();
   int precision = specs.precision;
   if (precision < 0) {
     if (specs.type() != presentation_type::none) {
@@ -3416,7 +3321,7 @@ FMT_CONSTEXPR20 auto write_float(OutputIt out, T value, format_specs specs,
       // Use Dragonbox for the shortest format.
       using floaty = conditional_t<sizeof(T) >= sizeof(double), double, float>;
       auto dec = dragonbox::to_decimal(static_cast<floaty>(value));
-      return write_float<Char>(out, dec, specs, s, loc);
+      return write_float<Char>(out, dec, specs, s, exp_upper, loc);
     }
   }
 
@@ -3444,7 +3349,7 @@ FMT_CONSTEXPR20 auto write_float(OutputIt out, T value, format_specs specs,
 
   specs.precision = precision;
   auto f = big_decimal_fp{buffer.data(), static_cast<int>(buffer.size()), exp};
-  return write_float<Char>(out, f, specs, s, loc);
+  return write_float<Char>(out, f, specs, s, exp_upper, loc);
 }
 
 template <typename Char, typename OutputIt, typename T,
@@ -3471,7 +3376,7 @@ FMT_CONSTEXPR20 auto write(OutputIt out, T value) -> OutputIt {
     return write_nonfinite<Char>(out, std::isnan(value), specs, s);
 
   auto dec = dragonbox::to_decimal(static_cast<floaty>(value));
-  return write_float<Char>(out, dec, specs, s, {});
+  return write_float<Char>(out, dec, specs, s, exp_upper<T>(), {});
 }
 
 template <typename Char, typename OutputIt, typename T,
@@ -3748,6 +3653,12 @@ FMT_CONSTEXPR auto native_formatter<T, Char, TYPE>::format(
   return write<Char>(ctx.out(), val, specs, ctx.locale());
 }
 
+// DEPRECATED! https://github.com/fmtlib/fmt/issues/4292.
+template <typename T, typename Enable = void>
+struct is_locale : std::false_type {};
+template <typename T>
+struct is_locale<T, void_t<decltype(T::classic())>> : std::true_type {};
+
 // DEPRECATED!
 template <typename Char = char> struct vformat_args {
   using type = basic_format_args<buffered_context<Char>>;
@@ -3766,6 +3677,95 @@ void vformat_to(buffer<Char>& buf, basic_string_view<Char> fmt,
 }  // namespace detail
 
 FMT_BEGIN_EXPORT
+
+// A generic formatting context with custom output iterator and character
+// (code unit) support. Char is the format string code unit type which can be
+// different from OutputIt::value_type.
+template <typename OutputIt, typename Char> class generic_context {
+ private:
+  OutputIt out_;
+  basic_format_args<generic_context> args_;
+  detail::locale_ref loc_;
+
+ public:
+  using char_type = Char;
+  using iterator = OutputIt;
+  using parse_context_type FMT_DEPRECATED = parse_context<Char>;
+  template <typename T>
+  using formatter_type FMT_DEPRECATED = formatter<T, Char>;
+  enum { builtin_types = FMT_BUILTIN_TYPES };
+
+  constexpr generic_context(OutputIt out,
+                            basic_format_args<generic_context> args,
+                            detail::locale_ref loc = {})
+      : out_(out), args_(args), loc_(loc) {}
+  generic_context(generic_context&&) = default;
+  generic_context(const generic_context&) = delete;
+  void operator=(const generic_context&) = delete;
+
+  constexpr auto arg(int id) const -> basic_format_arg<generic_context> {
+    return args_.get(id);
+  }
+  auto arg(basic_string_view<Char> name) const
+      -> basic_format_arg<generic_context> {
+    return args_.get(name);
+  }
+  constexpr auto arg_id(basic_string_view<Char> name) const -> int {
+    return args_.get_id(name);
+  }
+
+  constexpr auto out() const -> iterator { return out_; }
+
+  void advance_to(iterator it) {
+    if (!detail::is_back_insert_iterator<iterator>()) out_ = it;
+  }
+
+  constexpr auto locale() const -> detail::locale_ref { return loc_; }
+};
+
+class loc_value {
+ private:
+  basic_format_arg<context> value_;
+
+ public:
+  template <typename T, FMT_ENABLE_IF(!detail::is_float128<T>::value)>
+  loc_value(T value) : value_(value) {}
+
+  template <typename T, FMT_ENABLE_IF(detail::is_float128<T>::value)>
+  loc_value(T) {}
+
+  template <typename Visitor> auto visit(Visitor&& vis) -> decltype(vis(0)) {
+    return value_.visit(vis);
+  }
+};
+
+// A locale facet that formats values in UTF-8.
+// It is parameterized on the locale to avoid the heavy <locale> include.
+template <typename Locale> class format_facet : public Locale::facet {
+ private:
+  std::string separator_;
+  std::string grouping_;
+  std::string decimal_point_;
+
+ protected:
+  virtual auto do_put(appender out, loc_value val,
+                      const format_specs& specs) const -> bool;
+
+ public:
+  static FMT_API typename Locale::id id;
+
+  explicit format_facet(Locale& loc);
+  explicit format_facet(string_view sep = "", std::string grouping = "\3",
+                        std::string decimal_point = ".")
+      : separator_(sep.data(), sep.size()),
+        grouping_(grouping),
+        decimal_point_(decimal_point) {}
+
+  auto put(appender out, loc_value val, const format_specs& specs) const
+      -> bool {
+    return do_put(out, val, specs);
+  }
+};
 
 #define FMT_FORMAT_AS(Type, Base)                                   \
   template <typename Char>                                          \
@@ -3835,7 +3835,7 @@ template <typename T> auto ptr(T p) -> const void* {
  * **Example**:
  *
  *     enum class color { red, green, blue };
- *     auto s = fmt::format("{}", fmt::underlying(color::red));
+ *     auto s = fmt::format("{}", fmt::underlying(color::red));  // s == "0"
  */
 template <typename Enum>
 constexpr auto underlying(Enum e) noexcept -> underlying_t<Enum> {
@@ -3917,14 +3917,14 @@ template <typename T> struct formatter<group_digits_view<T>> : formatter<T> {
   }
 
   template <typename FormatContext>
-  auto format(group_digits_view<T> t, FormatContext& ctx) const
+  auto format(group_digits_view<T> view, FormatContext& ctx) const
       -> decltype(ctx.out()) {
     auto specs = specs_;
     detail::handle_dynamic_spec(specs.dynamic_width(), specs.width,
                                 specs.width_ref, ctx);
     detail::handle_dynamic_spec(specs.dynamic_precision(), specs.precision,
                                 specs.precision_ref, ctx);
-    auto arg = detail::make_write_int_arg(t.value, specs.sign());
+    auto arg = detail::make_write_int_arg(view.value, specs.sign());
     return detail::write_int(
         ctx.out(), static_cast<detail::uint64_or_128_t<T>>(arg.abs_value),
         arg.prefix, specs, detail::digit_grouping<char>("\3", ","));
@@ -3980,8 +3980,7 @@ template <typename T, typename Char = char> struct nested_formatter {
     write(basic_appender<Char>(buf));
     auto specs = format_specs();
     specs.width = width_;
-    specs.set_fill(
-        basic_string_view<Char>(specs_.fill<Char>(), specs_.fill_size()));
+    specs.copy_fill_from(specs_);
     specs.set_align(specs_.align());
     return detail::write<Char>(
         ctx.out(), basic_string_view<Char>(buf.data(), buf.size()), specs);
@@ -3994,9 +3993,9 @@ template <typename T, typename Char = char> struct nested_formatter {
 
 inline namespace literals {
 #if FMT_USE_NONTYPE_TEMPLATE_ARGS
-template <detail::fixed_string Str> constexpr auto operator""_a() {
-  using char_t = remove_cvref_t<decltype(Str.data[0])>;
-  return detail::udl_arg<char_t, sizeof(Str.data) / sizeof(char_t), Str>();
+template <detail::fixed_string S> constexpr auto operator""_a() {
+  using char_t = remove_cvref_t<decltype(*S.data)>;
+  return detail::udl_arg<char_t, sizeof(S.data) / sizeof(char_t), S>();
 }
 #else
 /**
@@ -4039,16 +4038,16 @@ class format_int {
   }
 
  public:
-  explicit FMT_CONSTEXPR20 format_int(int value) : str_(format_signed(value)) {}
-  explicit FMT_CONSTEXPR20 format_int(long value)
+  FMT_CONSTEXPR20 explicit format_int(int value) : str_(format_signed(value)) {}
+  FMT_CONSTEXPR20 explicit format_int(long value)
       : str_(format_signed(value)) {}
-  explicit FMT_CONSTEXPR20 format_int(long long value)
+  FMT_CONSTEXPR20 explicit format_int(long long value)
       : str_(format_signed(value)) {}
-  explicit FMT_CONSTEXPR20 format_int(unsigned value)
+  FMT_CONSTEXPR20 explicit format_int(unsigned value)
       : str_(format_unsigned(value)) {}
-  explicit FMT_CONSTEXPR20 format_int(unsigned long value)
+  FMT_CONSTEXPR20 explicit format_int(unsigned long value)
       : str_(format_unsigned(value)) {}
-  explicit FMT_CONSTEXPR20 format_int(unsigned long long value)
+  FMT_CONSTEXPR20 explicit format_int(unsigned long long value)
       : str_(format_unsigned(value)) {}
 
   /// Returns the number of characters written to the output buffer.
@@ -4071,25 +4070,24 @@ class format_int {
   inline auto str() const -> std::string { return {str_, size()}; }
 };
 
-#define FMT_STRING_IMPL(s, base)                                           \
-  [] {                                                                     \
-    /* Use the hidden visibility as a workaround for a GCC bug (#1973). */ \
-    /* Use a macro-like name to avoid shadowing warnings. */               \
-    struct FMT_VISIBILITY("hidden") FMT_COMPILE_STRING : base {            \
-      using char_type = fmt::remove_cvref_t<decltype(s[0])>;               \
-      FMT_CONSTEXPR explicit operator fmt::basic_string_view<char_type>()  \
-          const {                                                          \
-        return fmt::detail::compile_string_to_view<char_type>(s);          \
-      }                                                                    \
-    };                                                                     \
-    using FMT_STRING_VIEW =                                                \
-        fmt::basic_string_view<typename FMT_COMPILE_STRING::char_type>;    \
-    fmt::detail::ignore_unused(FMT_STRING_VIEW(FMT_COMPILE_STRING()));     \
-    return FMT_COMPILE_STRING();                                           \
+#define FMT_STRING_IMPL(s, base)                                              \
+  [] {                                                                        \
+    /* Use the hidden visibility as a workaround for a GCC bug (#1973). */    \
+    /* Use a macro-like name to avoid shadowing warnings. */                  \
+    struct FMT_VISIBILITY("hidden") FMT_COMPILE_STRING : base {               \
+      using char_type = fmt::remove_cvref_t<decltype(s[0])>;                  \
+      constexpr explicit operator fmt::basic_string_view<char_type>() const { \
+        return fmt::detail::compile_string_to_view<char_type>(s);             \
+      }                                                                       \
+    };                                                                        \
+    using FMT_STRING_VIEW =                                                   \
+        fmt::basic_string_view<typename FMT_COMPILE_STRING::char_type>;       \
+    fmt::detail::ignore_unused(FMT_STRING_VIEW(FMT_COMPILE_STRING()));        \
+    return FMT_COMPILE_STRING();                                              \
   }()
 
 /**
- * Constructs a compile-time format string from a string literal `s`.
+ * Constructs a legacy compile-time format string from a string literal `s`.
  *
  * **Example**:
  *
@@ -4142,41 +4140,46 @@ FMT_API void format_system_error(detail::buffer<char>& out, int error_code,
 // Can be used to report errors from destructors.
 FMT_API void report_system_error(int error_code, const char* message) noexcept;
 
-inline auto vformat(detail::locale_ref loc, string_view fmt, format_args args)
+template <typename Locale, FMT_ENABLE_IF(detail::is_locale<Locale>::value)>
+inline auto vformat(const Locale& loc, string_view fmt, format_args args)
     -> std::string {
   auto buf = memory_buffer();
-  detail::vformat_to(buf, fmt, args, loc);
+  detail::vformat_to(buf, fmt, args, detail::locale_ref(loc));
   return {buf.data(), buf.size()};
 }
 
-template <typename... T>
-FMT_INLINE auto format(detail::locale_ref loc, format_string<T...> fmt,
-                       T&&... args) -> std::string {
+template <typename Locale, typename... T,
+          FMT_ENABLE_IF(detail::is_locale<Locale>::value)>
+FMT_INLINE auto format(const Locale& loc, format_string<T...> fmt, T&&... args)
+    -> std::string {
   return vformat(loc, fmt.str, vargs<T...>{{args...}});
 }
 
-template <typename OutputIt,
+template <typename OutputIt, typename Locale,
           FMT_ENABLE_IF(detail::is_output_iterator<OutputIt, char>::value)>
-auto vformat_to(OutputIt out, detail::locale_ref loc, string_view fmt,
+auto vformat_to(OutputIt out, const Locale& loc, string_view fmt,
                 format_args args) -> OutputIt {
   auto&& buf = detail::get_buffer<char>(out);
-  detail::vformat_to(buf, fmt, args, loc);
+  detail::vformat_to(buf, fmt, args, detail::locale_ref(loc));
   return detail::get_iterator(buf, out);
 }
 
-template <typename OutputIt, typename... T,
-          FMT_ENABLE_IF(detail::is_output_iterator<OutputIt, char>::value)>
-FMT_INLINE auto format_to(OutputIt out, detail::locale_ref loc,
+template <typename OutputIt, typename Locale, typename... T,
+          FMT_ENABLE_IF(detail::is_output_iterator<OutputIt, char>::value&&
+                            detail::is_locale<Locale>::value)>
+FMT_INLINE auto format_to(OutputIt out, const Locale& loc,
                           format_string<T...> fmt, T&&... args) -> OutputIt {
   return fmt::vformat_to(out, loc, fmt.str, vargs<T...>{{args...}});
 }
 
-template <typename... T>
-FMT_NODISCARD FMT_INLINE auto formatted_size(detail::locale_ref loc,
+template <typename Locale, typename... T,
+          FMT_ENABLE_IF(detail::is_locale<Locale>::value)>
+FMT_NODISCARD FMT_INLINE auto formatted_size(const Locale& loc,
                                              format_string<T...> fmt,
                                              T&&... args) -> size_t {
   auto buf = detail::counting_buffer<>();
-  detail::vformat_to(buf, fmt.str, vargs<T...>{{args...}}, loc);
+  detail::vformat_to(buf, fmt.str, vargs<T...>{{args...}},
+                     detail::locale_ref(loc));
   return buf.count();
 }
 
@@ -4209,8 +4212,7 @@ FMT_NODISCARD auto to_string(T value) -> std::string {
   // The buffer should be large enough to store the number including the sign
   // or "false" for bool.
   char buffer[max_of(detail::digits10<T>() + 2, 5)];
-  char* begin = buffer;
-  return {buffer, detail::write<char>(begin, value)};
+  return {buffer, detail::write<char>(buffer, value)};
 }
 
 template <typename T, FMT_ENABLE_IF(detail::use_format_as<T>::value)>
