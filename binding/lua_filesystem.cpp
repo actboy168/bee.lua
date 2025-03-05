@@ -110,7 +110,7 @@ namespace bee::lua_filesystem {
     template <typename... Args>
     static void lua_pusherrmsg(lua_State* L, std::error_code ec, std::format_string<Args...> fmt, Args... args) {
         auto msg = std::format(fmt, std::forward<Args>(args)...);
-        lua::push_error(L, msg, ec);
+        lua::push_sys_error(L, msg, ec.value());
     }
 
     [[nodiscard]] static lua::cxx::status pusherror(lua_State* L, std::string_view op, std::error_code ec) {

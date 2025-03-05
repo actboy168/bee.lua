@@ -25,7 +25,7 @@ namespace bee::lua_windows {
         luaL_Stream* p = lua::tofile(L, 1);
         auto mode      = lua::checkstrview(L, 2);
         if (!p || !p->closef || !p->f) {
-            return lua::return_crt_error(L, "filemode", std::errc::bad_file_descriptor);
+            return lua::return_error(L, "bad file descriptor");
         }
         int ok = _setmode(_fileno(p->f), mode[0] == 'b' ? _O_BINARY : _O_TEXT);
         if (ok == -1) {
@@ -50,7 +50,7 @@ namespace bee::lua_windows {
         luaL_Stream* p = lua::tofile(L, 1);
         auto msg       = wtf8::u2w(lua::checkstrview(L, 2));
         if (!p || !p->closef || !p->f) {
-            return lua::return_crt_error(L, "write_console", std::errc::bad_file_descriptor);
+            return lua::return_error(L, "bad file descriptor");
         }
         HANDLE handle = (HANDLE)_get_osfhandle(_fileno(p->f));
         DWORD written = 0;

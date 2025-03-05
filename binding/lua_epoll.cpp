@@ -59,7 +59,7 @@ namespace bee::lua_epoll {
     static int ep_wait(lua_State *L) {
         auto &ep = lua::checkudata<lua_epoll>(L, 1);
         if (ep.fd == net::invalid_bpoll_handle) {
-            return lua::return_crt_error(L, "epoll_wait", std::errc::bad_file_descriptor);
+            return lua::return_error(L, "bad file descriptor");
         }
         int timeout = lua::optinteger<int, -1>(L, 2);
         int n       = net::bpoll_wait(ep.fd, ep.events, timeout);
@@ -126,7 +126,7 @@ namespace bee::lua_epoll {
     static int ep_event_add(lua_State *L) {
         auto &ep = lua::checkudata<lua_epoll>(L, 1);
         if (ep.fd == net::invalid_bpoll_handle) {
-            return lua::return_crt_error(L, "epoll_ctl", std::errc::bad_file_descriptor);
+            return lua::return_error(L, "bad file descriptor");
         }
         net::fd_t fd = ep_tofd(L, 2);
         if (lua_isnoneornil(L, 4)) {
@@ -153,7 +153,7 @@ namespace bee::lua_epoll {
     static int ep_event_mod(lua_State *L) {
         auto &ep = lua::checkudata<lua_epoll>(L, 1);
         if (ep.fd == net::invalid_bpoll_handle) {
-            return lua::return_crt_error(L, "epoll_ctl", std::errc::bad_file_descriptor);
+            return lua::return_error(L, "bad file descriptor");
         }
         net::fd_t fd = ep_tofd(L, 2);
         int r        = findref(L);
@@ -177,7 +177,7 @@ namespace bee::lua_epoll {
     static int ep_event_del(lua_State *L) {
         auto &ep = lua::checkudata<lua_epoll>(L, 1);
         if (ep.fd == net::invalid_bpoll_handle) {
-            return lua::return_crt_error(L, "epoll_ctl", std::errc::bad_file_descriptor);
+            return lua::return_error(L, "bad file descriptor");
         }
         net::fd_t fd = ep_tofd(L, 2);
         if (!net::bpoll_ctl_del(ep.fd, fd)) {

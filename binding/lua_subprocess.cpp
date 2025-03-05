@@ -441,7 +441,7 @@ namespace bee::lua_subprocess {
     static int peek(lua_State* L) {
         luaL_Stream* p = lua::tofile(L, 1);
         if (!p->closef) {
-            return lua::return_crt_error(L, "subprocess::peek", std::errc::broken_pipe);
+            return lua::return_error(L, "bad file descriptor");
         }
         int n = subprocess::pipe::peek(file_handle::from_file(p->f));
         if (n < 0) {
