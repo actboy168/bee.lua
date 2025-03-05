@@ -1,8 +1,6 @@
 #include <bee/lua/error.h>
 #include <bee/nonstd/format.h>
 
-#include <system_error>
-
 #if defined(_WIN32)
 #    include <Windows.h>
 #    include <bee/win/cwtf8.h>
@@ -63,7 +61,9 @@ namespace bee::lua {
         return ::WSAGetLastError();
     }
 #else
-    using sys_category = std::generic_category;
+    static const std::error_category& sys_category() {
+        return std::generic_category();
+    }
     static int last_sys_error() {
         return errno;
     }
