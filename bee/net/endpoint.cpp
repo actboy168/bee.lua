@@ -85,6 +85,14 @@ namespace bee::net {
             }
             addrinfo* info = nullptr;
         };
+
+        const char* inet_ntop_wrapper(int af, const void* src, char* dst, socklen_t size) {
+#if !defined(__MINGW32__)
+            return inet_ntop(af, src, dst, size);
+#else
+            return inet_ntop(af, const_cast<void*>(src), dst, size);
+#endif
+        }
     }
 
     bool endpoint::ctor_hostname(endpoint& ep, zstring_view name, uint16_t port) noexcept {
@@ -106,13 +114,13 @@ namespace bee::net {
             if (info->ai_addrlen != sizeof(sockaddr_in)) {
                 return false;
             }
-            ep.assgin(*(const sockaddr_in*)info->ai_addr);
+            ep.assign(*(const sockaddr_in*)info->ai_addr);
             return true;
         } else if (info->ai_family == AF_INET6) {
             if (info->ai_addrlen != sizeof(sockaddr_in6)) {
                 return false;
             }
-            ep.assgin(*(const sockaddr_in6*)info->ai_addr);
+            ep.assign(*(const sockaddr_in6*)info->ai_addr);
             return true;
         } else {
             return false;
@@ -127,7 +135,7 @@ namespace bee::net {
         su.sun_family = AF_UNIX;
         memset(su.sun_path, 0, UNIX_PATH_MAX);
         memcpy(su.sun_path, path.data(), path.size() + 1);
-        ep.assgin(su);
+        ep.assign(su);
         return true;
     }
 
@@ -136,7 +144,7 @@ namespace bee::net {
         if (1 == inet_pton(AF_INET, ip.data(), &sa4.sin_addr)) {
             sa4.sin_family = AF_INET;
             sa4.sin_port   = htons(port);
-            ep.assgin(sa4);
+            ep.assign(sa4);
             return true;
         }
         return false;
@@ -147,7 +155,7 @@ namespace bee::net {
         if (1 == inet_pton(AF_INET6, ip.data(), &sa6.sin6_addr)) {
             sa6.sin6_family = AF_INET6;
             sa6.sin6_port   = htons(port);
-            ep.assgin(sa6);
+            ep.assign(sa6);
             return true;
         }
         return false;
@@ -159,7 +167,7 @@ namespace bee::net {
         sa4.sin_port   = htons(port);
         sa4.sin_addr   = std::bit_cast<decltype(sa4.sin_addr)>(ip::inet_pton_v4("127.0.0.1"));
         endpoint ep;
-        ep.assgin(sa4);
+        ep.assign(sa4);
         return ep;
     }
 
@@ -170,22 +178,14 @@ namespace bee::net {
     std::tuple<std::string, uint16_t> endpoint::get_inet() const noexcept {
         const sockaddr* sa = addr();
         char tmp[sizeof "255.255.255.255"];
-#if !defined(__MINGW32__)
-        const char* s = inet_ntop(AF_INET, (const void*)&((struct sockaddr_in*)sa)->sin_addr, tmp, sizeof tmp);
-#else
-        const char* s = inet_ntop(AF_INET, (void*)&((struct sockaddr_in*)sa)->sin_addr, tmp, sizeof tmp);
-#endif
+        const char* s = inet_ntop_wrapper(AF_INET, &((struct sockaddr_in*)sa)->sin_addr, tmp, sizeof tmp);
         return { std::string(s), ntohs(((struct sockaddr_in*)sa)->sin_port) };
     }
 
     std::tuple<std::string, uint16_t> endpoint::get_inet6() const noexcept {
         const sockaddr* sa = addr();
         char tmp[sizeof "ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255"];
-#if !defined(__MINGW32__)
-        const char* s = inet_ntop(AF_INET6, (const void*)&((const struct sockaddr_in6*)sa)->sin6_addr, tmp, sizeof tmp);
-#else
-        const char* s = inet_ntop(AF_INET6, (void*)&((const struct sockaddr_in6*)sa)->sin6_addr, tmp, sizeof tmp);
-#endif
+        const char* s = inet_ntop_wrapper(AF_INET6, &((const struct sockaddr_in6*)sa)->sin6_addr, tmp, sizeof tmp);
         return { std::string(s), ntohs(((struct sockaddr_in6*)sa)->sin6_port) };
     }
 

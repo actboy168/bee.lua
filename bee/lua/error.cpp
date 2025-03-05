@@ -24,7 +24,7 @@ namespace bee::lua {
             return "Windows";
         }
         std::string message(int error_code) const override {
-            wchar_t* message           = 0;
+            wchar_t* message           = nullptr;
             const unsigned long result = ::FormatMessageW(
                 FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
                 NULL,

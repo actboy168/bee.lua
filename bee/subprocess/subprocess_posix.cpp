@@ -4,7 +4,6 @@
 #include <bee/subprocess.h>
 #include <bee/utility/dynarray.h>
 #include <errno.h>
-#include <memory.h>
 #include <signal.h>
 #include <spawn.h>
 #include <sys/socket.h>
@@ -13,6 +12,7 @@
 #include <unistd.h>
 
 #include <cassert>
+#include <cstring>
 
 #if defined(__APPLE__)
 #    include <crt_externs.h>
@@ -69,7 +69,7 @@ namespace bee::subprocess {
         std::vector<char*> envs;
         for (; *es; ++es) {
             std::string str = *es;
-            auto pos        = str.find(L'=');
+            auto pos        = str.find('=');
             std::string key = str.substr(0, pos);
             std::string val = str.substr(pos + 1, str.length());
             auto it         = set_env_.find(key);

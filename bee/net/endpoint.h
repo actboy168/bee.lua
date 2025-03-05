@@ -46,7 +46,7 @@ namespace bee::net {
         socklen_t* out_addrlen() noexcept;
         bool operator==(const endpoint& o) const noexcept;
         template <typename SOCKADDR>
-        void assgin(const SOCKADDR& v) noexcept {
+        void assign(const SOCKADDR& v) noexcept {
             m_size = (socklen_t)sizeof(v);
             memcpy(m_data, &v, sizeof(v));
         }

@@ -2,7 +2,7 @@
 #include <bee/win/unicode.h>
 
 namespace bee::win {
-    std::wstring u2w(zstring_view str) noexcept {
+    static std::wstring u2w(zstring_view str) noexcept {
         if (str.empty()) {
             return L"";
         }
@@ -15,7 +15,7 @@ namespace bee::win {
         return wresult;
     }
 
-    std::string w2u(wzstring_view wstr) noexcept {
+    static std::string w2u(wzstring_view wstr) noexcept {
         if (wstr.empty()) {
             return "";
         }
@@ -28,7 +28,7 @@ namespace bee::win {
         return result;
     }
 
-    std::wstring a2w(zstring_view str) noexcept {
+    static std::wstring a2w(zstring_view str) noexcept {
         if (str.empty()) {
             return L"";
         }
@@ -41,7 +41,7 @@ namespace bee::win {
         return wresult;
     }
 
-    std::string w2a(wzstring_view wstr) noexcept {
+    static std::string w2a(wzstring_view wstr) noexcept {
         if (wstr.empty()) {
             return "";
         }

@@ -47,7 +47,7 @@ namespace bee::net::socket {
             initialized = rc == 0;
 #else
             initialized = true;
-#    if !defined(MSG_NOSIGNA) && !defined(SO_NOSIGPIPE)
+#    if !defined(MSG_NOSIGNAL) && !defined(SO_NOSIGPIPE)
             struct sigaction sa;
             sa.sa_handler = SIG_IGN;
             sa.sa_flags   = 0;
