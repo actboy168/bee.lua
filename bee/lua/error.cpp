@@ -1,6 +1,8 @@
 #include <bee/lua/error.h>
 #include <bee/nonstd/format.h>
 
+#include <system_error>
+
 #if defined(_WIN32)
 #    include <Windows.h>
 #    include <bee/win/cwtf8.h>
