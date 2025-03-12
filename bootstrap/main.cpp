@@ -4,14 +4,8 @@
 
 #if defined(_WIN32)
 #    include <3rd/lua/bee_utf8_crt.h>
-#    include <bee/win/wtf8.h>
 #endif
 
-#include <bee/lua/error.h>
-#include <bee/lua/module.h>
-#include <bee/nonstd/filesystem.h>
-#include <bee/nonstd/unreachable.h>
-#include <bee/sys/path.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -136,90 +130,30 @@ static int pushargs(lua_State *L) {
     return n;
 }
 
-static fs::path getprogdir(lua_State *L) {
-    auto r = bee::sys::exe_path();
-    if (!r) {
-        bee::lua::push_sys_error(L, "exe_path");
-        luaL_error(L, "unable to get progdir: %s\n", lua_tostring(L, -1));
-        std::unreachable();
-    }
-    return (*r).remove_filename();
-}
-
-static void init_cpath(lua_State *L) {
-    lua_getglobal(L, "package");
-    auto progdir = getprogdir(L);
-#if defined(_WIN32)
-    progdir /= L"?.dll";
-    auto wstr = progdir.generic_wstring();
-    auto str  = bee::wtf8::w2u(wstr);
-#else
-    progdir /= L"?.so";
-    auto str = progdir.generic_string();
-#endif
-    lua_pushlstring(L, str.data(), str.size());
-    lua_setfield(L, -2, "cpath");
-    lua_pop(L, 1);
-}
-
-typedef struct LoadF {
-    int n;             /* number of pre-read characters */
-    FILE *f;           /* file being read */
-    char buff[BUFSIZ]; /* area for reading file */
-} LoadF;
-
-static const char *getF(lua_State *L, void *ud, size_t *size) {
-    LoadF *lf = (LoadF *)ud;
-    (void)L;           /* not used */
-    if (lf->n > 0) {   /* are there pre-read characters to be read? */
-        *size = lf->n; /* return them (chars already in buffer) */
-        lf->n = 0;     /* no more pre-read characters */
-    } else {           /* read a block from file */
-        /* 'fread' can return > 0 *and* set the EOF flag. If next call to
-           'getF' called 'fread', it might still wait for user input.
-           The next check avoids this problem. */
-        if (feof(lf->f)) return NULL;
-        *size = fread(lf->buff, 1, sizeof(lf->buff), lf->f); /* read block */
-    }
-    return lf->buff;
-}
-
-static int errfile(lua_State *L, const char *what, int fnameindex) {
-    const char *serr     = strerror(errno);
-    const char *filename = lua_tostring(L, fnameindex) + 1;
-    lua_pushfstring(L, "cannot %s %s: %s", what, filename, serr);
-    lua_remove(L, fnameindex);
-    return LUA_ERRFILE;
-}
-
-static int loadfile(lua_State *L, const fs::path &filename, const char *chunkname) {
-    LoadF lf;
-    int status, readstatus;
-    int fnameindex = lua_gettop(L) + 1; /* index of filename on the stack */
-    lua_pushstring(L, chunkname);
-#if defined(_WIN32)
-    lf.f = _wfopen(filename.c_str(), L"r");
-#else
-    lf.f = fopen(filename.c_str(), "r");
-#endif
-    if (lf.f == NULL) return errfile(L, "open", fnameindex);
-    lf.n       = 0;
-    status     = lua_load(L, getF, &lf, lua_tostring(L, -1), "t");
-    readstatus = ferror(lf.f);
-    if (readstatus) {
-        lua_settop(L, fnameindex); /* ignore results from 'lua_load' */
-        return errfile(L, "read", fnameindex);
-    }
-    lua_remove(L, fnameindex);
-    return status;
-}
+static constexpr std::string_view bootstrap = R"BOOTSTRAP(
+    local function loadfile(filename)
+        local file  = assert(io.open(filename))
+        local str  = file:read "a"
+        file:close()
+        return load(str, "=(main.lua)")
+    end
+    local sys = require "bee.sys"
+    local platform = require "bee.platform"
+    local progdir = sys.exe_path():parent_path()
+    local mainlua = (progdir / "main.lua"):string()
+    if platform.os == "windows" then
+        package.cpath = (progdir / "?.dll"):string()
+    else
+        package.cpath = (progdir / "?.so"):string()
+    end
+    assert(loadfile(mainlua))()
+)BOOTSTRAP";
 
 static int handle_script(lua_State *L) {
-    auto progdir = getprogdir(L);
-    int status   = loadfile(L, progdir / "main.lua", "=(bootstrap.lua)");
+    int status = luaL_loadbuffer(L, bootstrap.data(), bootstrap.size(), "=(bootstrap.lua)");
     if (status == LUA_OK) {
-        int n  = pushargs(L); /* push arguments to script */
-        status = docall(L, n, LUA_MULTRET);
+        int n  = pushargs(L);
+        status = docall(L, n, 0);
     }
     return report(L, status);
 }
@@ -235,8 +169,7 @@ static int pmain(lua_State *L) {
     if (argv[0] && argv[0][0]) progname = argv[0];
     lua_pushboolean(L, 1); /* signal for libraries to ignore env. vars. */
     lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
-    luaL_openlibs(L); /* open standard libraries */
-    init_cpath(L);
+    luaL_openlibs(L);              /* open standard libraries */
     createargtable(L, argv, argc); /* create table 'arg' */
     lua_gc(L, LUA_GCGEN, 0, 0);    /* GC in generational mode */
     if (handle_script(L) != LUA_OK)
