@@ -10,8 +10,8 @@
 #    if defined freopen
 #        undef freopen
 #    endif
-#    if defined popen
-#        undef popen
+#    if defined _popen
+#        undef _popen
 #    endif
 #    if defined system
 #        undef system
@@ -30,7 +30,7 @@
 #    endif
 #    define fopen(...) utf8_fopen(__VA_ARGS__)
 #    define freopen(...) utf8_freopen(__VA_ARGS__)
-#    define popen(...) utf8_popen(__VA_ARGS__)
+#    define _popen(...) utf8_popen(__VA_ARGS__)
 #    define system(...) utf8_system(__VA_ARGS__)
 #    define remove(...) utf8_remove(__VA_ARGS__)
 #    define rename(...) utf8_rename(__VA_ARGS__)
