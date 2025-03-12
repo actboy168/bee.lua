@@ -146,7 +146,7 @@ static constexpr std::string_view bootstrap = R"BOOTSTRAP(
     else
         package.cpath = (progdir / "?.so"):string()
     end
-    assert(loadfile(mainlua))()
+    assert(loadfile(mainlua))(...)
 )BOOTSTRAP";
 
 static int handle_script(lua_State *L) {
