@@ -157,7 +157,7 @@ namespace bee::lua_channel {
         auto name      = lua::checkstrview(L, 1);
         channel::box c = g_channel.query(name);
         if (!c) {
-            return luaL_error(L, "Can't query channel '%s'", name.data());
+            return 0;
         }
         lua::newudata<channel::box>(L, c);
         return 1;

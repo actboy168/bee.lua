@@ -11,7 +11,7 @@ end
 local test_channel = lt.test "channel"
 
 function test_channel:test_create()
-    lt.assertErrorMsgEquals("Can't query channel 'test'", channel.query, "test")
+    lt.assertIsNil(channel.query "test")
     channel.create "test"
     lt.assertIsUserdata(channel.query "test")
     lt.assertIsUserdata(channel.query "test")
@@ -22,11 +22,11 @@ function test_channel:test_create()
 end
 
 function test_channel:test_reset_1()
-    lt.assertErrorMsgEquals("Can't query channel 'test'", channel.query, "test")
+    lt.assertIsNil(channel.query "test")
     channel.create "test"
     lt.assertIsUserdata(channel.query "test")
     channel.destroy "test"
-    lt.assertErrorMsgEquals("Can't query channel 'test'", channel.query, "test")
+    lt.assertIsNil(channel.query "test")
     channel.create "test"
     lt.assertIsUserdata(channel.query "test")
     channel.destroy "test"
