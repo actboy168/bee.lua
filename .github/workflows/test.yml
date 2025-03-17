@@ -23,8 +23,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: actboy168/setup-luamake@master
-    - continue-on-error: true
-      run: |
+    - run: |
         luamake -cc clang-cl -notest
         luamake test -v
   windows-mingw:
@@ -50,41 +49,30 @@ jobs:
       run: |
         ./luamake/luamake -notest
         ./luamake/luamake test -v
-  macos-x86_64:
-    name: macos (x86_64)
-    runs-on: macos-latest
+  macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14-large, macos-14]
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
     - uses: actboy168/setup-luamake@master
     - run: luamake -arch x86_64 -notest -sanitize
     - run: luamake test -v
-  macos-arm64:
-    name: macos (arm64)
-    runs-on: macos-14
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actboy168/setup-luamake@master
-    - run: luamake -arch arm64 -notest -sanitize
-    - run: luamake test -v
-  linux-x86_64:
-    name: linux (x86_64)
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actboy168/setup-luamake@master
-    - run: luamake -notest -sanitize
-    - run: luamake lua test/glibc-version.lua
-    - run: luamake test -v
-  linux-arm:
-    name: linux (arm64)
-    runs-on: ubuntu-22.04-arm
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actboy168/setup-luamake@master
-    - run: luamake -notest -sanitize
-    - run: luamake lua test/glibc-version.lua
-    - run: luamake test -v
   linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-22.04-arm]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actboy168/setup-luamake@master
+    - run: luamake -notest -sanitize
+    - run: luamake lua test/glibc-version.lua
+    - run: luamake test -v
+  linux-qemu:
     strategy:
       fail-fast: false
       matrix:
@@ -98,7 +86,6 @@ jobs:
           repository: actboy168/luamake
           submodules : recursive
       - uses: uraimo/run-on-arch-action@v2
-        continue-on-error: true
         with:
           arch: ${{ matrix.arch }}
           distro: ubuntu22.04
