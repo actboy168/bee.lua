@@ -131,8 +131,8 @@ jobs:
           version: ${{ matrix.version }}
           run: |
             sudo ${{ matrix.install }}
-            pushd luamake
+            cd luamake
             ./compile/build.sh notest
-            popd
+            cd ..
             ./luamake/luamake -noetst
             ./luamake/luamake test -v
