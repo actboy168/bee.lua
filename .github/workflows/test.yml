@@ -109,13 +109,13 @@ jobs:
       matrix:
         include:
           - os: freebsd
-            version: '14.0'
+            version: '14.2'
             install: pkg install -y ninja libinotify
           - os: openbsd
-            version: '7.5'
+            version: '7.6'
             install: pkg_add ninja libinotify
           - os: netbsd
-            version: '10.0'
+            version: '10.1'
             install: pkgin -y install ninja-build libinotify
     name: ${{ matrix.os }}
     steps:
@@ -129,7 +129,7 @@ jobs:
           path: bee.lua
           repository: actboy168/bee.lua
           submodules : recursive
-      - uses: cross-platform-actions/action@v0.24.0
+      - uses: cross-platform-actions/action@v0.27.0
         with:
           operating_system: ${{ matrix.os }}
           version: ${{ matrix.version }}
