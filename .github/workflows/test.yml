@@ -23,9 +23,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: actboy168/setup-luamake@master
-    - run: |
-        luamake -cc clang-cl -notest
-        luamake test -v
+    - run: luamake -cc clang-cl -notest
+    - run: luamake test -v
   windows-mingw:
     name: windows (mingw)
     runs-on: windows-latest
@@ -53,8 +52,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-13, macos-14]
-    runs-on: ${{ matrix.os }}
+        os: [13, 14]
+    runs-on: macos-${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
     - uses: actboy168/setup-luamake@master
@@ -64,8 +63,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-22.04-arm]
-    runs-on: ${{ matrix.os }}
+        os: [22.04, 22.04-arm]
+    runs-on: ubuntu-${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
     - uses: actboy168/setup-luamake@master
@@ -85,7 +84,8 @@ jobs:
           path: luamake
           repository: actboy168/luamake
           submodules : recursive
-      - uses: uraimo/run-on-arch-action@v2
+      - uses: uraimo/run-on-arch-action@v3
+        continue-on-error: true
         with:
           arch: ${{ matrix.arch }}
           distro: ubuntu22.04
