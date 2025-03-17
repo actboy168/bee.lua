@@ -120,22 +120,19 @@ jobs:
     name: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           path: luamake
           repository: actboy168/luamake
           submodules : recursive
-      - uses: actions/checkout@v4
-        with:
-          path: bee.lua
-          repository: actboy168/bee.lua
       - uses: cross-platform-actions/action@v0.27.0
         with:
           operating_system: ${{ matrix.os }}
           version: ${{ matrix.version }}
           run: |
             sudo ${{ matrix.install }}
-            cd luamake
+            pushd luamake
             ./compile/build.sh notest
-            cd ../bee.lua
-            ./../luamake/luamake -noetst
-            ./../luamake/luamake test -v
+            popd
+            ./luamake/luamake -noetst
+            ./luamake/luamake test -v
