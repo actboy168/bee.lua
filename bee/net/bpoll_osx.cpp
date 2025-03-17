@@ -2,6 +2,7 @@
 #include <bee/nonstd/to_underlying.h>
 #include <bee/utility/bitmask.h>
 #include <bee/utility/flatmap.h>
+#include <bee/utility/hybrid_array.h>
 #include <errno.h>
 #include <sys/event.h>
 #include <unistd.h>
@@ -96,7 +97,7 @@ namespace bee::net {
         }
 
         int bpoll_wait(const span<bpoll_event_t>& events, int timeout) noexcept {
-            struct kevent kev[events.size()];
+            hybrid_array<struct kevent, 256> kev(events.size());
             struct timespec t, *timeop = &t;
             if (timeout < 0) {
                 timeop = NULL;
@@ -104,7 +105,7 @@ namespace bee::net {
                 t.tv_sec  = timeout / 1000l;
                 t.tv_nsec = timeout % 1000l * 1000000l;
             }
-            int n = ::kevent(kq, NULL, 0, kev, events.size(), timeop);
+            int n = ::kevent(kq, NULL, 0, kev.data(), kev.size(), timeop);
             if (n == -1) {
                 return -1;
             }
