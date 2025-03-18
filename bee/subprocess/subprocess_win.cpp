@@ -342,8 +342,12 @@ namespace bee::subprocess {
     }
 
     static void startupinfo_release(STARTUPINFOW& si) noexcept {
-        ::CloseHandle(si.hStdInput);
-        ::CloseHandle(si.hStdOutput);
+        if (si.hStdInput != INVALID_HANDLE_VALUE) {
+            ::CloseHandle(si.hStdInput);
+        }
+        if (si.hStdOutput != INVALID_HANDLE_VALUE) {
+            ::CloseHandle(si.hStdOutput);
+        }
         if (si.hStdError != INVALID_HANDLE_VALUE && si.hStdOutput != si.hStdError) {
             ::CloseHandle(si.hStdError);
         }
@@ -373,6 +377,10 @@ namespace bee::subprocess {
             ::SetHandleInformation(si.hStdInput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
             ::SetHandleInformation(si.hStdOutput, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
             ::SetHandleInformation(si.hStdError, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+        } else {
+            si.hStdInput  = INVALID_HANDLE_VALUE;
+            si.hStdOutput = INVALID_HANDLE_VALUE;
+            si.hStdError  = INVALID_HANDLE_VALUE;
         }
         if (hide_window_) {
             si.dwFlags |= STARTF_USESHOWWINDOW;
