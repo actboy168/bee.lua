@@ -33,16 +33,18 @@ namespace bee::lua_time {
     } G;
 
 #if defined(_WIN32)
-    static int64_t tomsec(FILETIME* f) {
-        int64_t t = ((int64_t)f->dwHighDateTime << 32) | f->dwLowDateTime;
+    static int64_t tomsec(FILETIME& f) {
+        int64_t t = ((int64_t)f.dwHighDateTime << 32) | f.dwLowDateTime;
         return t / 10000ll;
     }
+
+    constexpr int64_t WindowsToUnixEpochOffset = 11644473600000ll;
 
     static int lua_time(lua_State* L) {
         FILETIME f;
         GetSystemTimePreciseAsFileTime(&f);
-        int64_t t = tomsec(&f);
-        t -= 11644473600000ll;
+        int64_t t = tomsec(f);
+        t -= WindowsToUnixEpochOffset;
         lua_pushinteger(L, t);
         return 1;
     }
@@ -112,7 +114,7 @@ namespace bee::lua_time {
             lua_pushinteger(L, 0);
             return 1;
         }
-        lua_pushinteger(L, tomsec(&kernel) + tomsec(&user));
+        lua_pushinteger(L, tomsec(kernel) + tomsec(user));
         return 1;
     }
 #else

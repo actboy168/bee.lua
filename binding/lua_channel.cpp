@@ -73,6 +73,7 @@ namespace bee::lua_channel {
             std::unique_lock<spinlock> lk(mutex);
             channel* c = new channel;
             if (!c->init()) {
+                delete c;
                 return nullptr;
             }
             std::string namestr { name.data(), name.size() };
