@@ -20,7 +20,7 @@ if lm.os == "windows" then
         },
         msvc = {
             flags = "/wd4334",
-            sources = ("3rd/lua/fast_setjmp_%s.s"):format(lm.arch)
+            sources = ("3rd/lua-patch/fast_setjmp_%s.s"):format(lm.arch)
         }
     }
     lm:executable "lua" {
@@ -30,8 +30,8 @@ if lm.os == "windows" then
         },
         includes = ".",
         sources = {
-            "3rd/lua/bee_lua.c",
-            "3rd/lua/bee_utf8_main.c",
+            "3rd/lua-patch/bee_lua.c",
+            "3rd/lua-patch/bee_utf8_main.c",
         }
     }
     lm:executable "luac" {
@@ -39,14 +39,14 @@ if lm.os == "windows" then
         includes = ".",
         sources = {
             "3rd/lua/onelua.c",
-            "3rd/lua/bee_utf8_main.c",
+            "3rd/lua-patch/bee_utf8_main.c",
         },
         defines = {
             "MAKE_LUAC",
         },
         msvc = {
             flags = "/wd4334",
-            sources = ("3rd/lua/fast_setjmp_%s.s"):format(lm.arch),
+            sources = ("3rd/lua-patch/fast_setjmp_%s.s"):format(lm.arch),
         }
     }
     return

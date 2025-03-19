@@ -274,13 +274,13 @@ lm:source_set "source_lua" {
         defines = "LUA_USE_LINUX",
     },
     msvc = {
-        sources = ("3rd/lua/fast_setjmp_%s.s"):format(lm.arch)
+        sources = ("3rd/lua-patch/fast_setjmp_%s.s"):format(lm.arch)
     },
 }
 
 if lm.os == "windows" then
     lm:source_set "bee_utf8_crt" {
         includes = ".",
-        sources = "3rd/lua/bee_utf8_crt.cpp",
+        sources = "3rd/lua-patch/bee_utf8_crt.cpp",
     }
 end

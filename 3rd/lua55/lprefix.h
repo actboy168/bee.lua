@@ -39,7 +39,37 @@
 #define _CRT_SECURE_NO_WARNINGS  /* avoid warnings about ISO C functions */
 #endif
 
+#include "../lua-patch/bee_utf8_prefix.h"
+
 #endif			/* } */
+
+#include "../lua-patch/luai_devent.h"
+#include <stdlib.h>
+
+#if !defined(NDEBUG)
+
+#include "../lua-patch/bee_assert.h"
+
+#    if defined(lua_assert)
+#        undef lua_assert
+#    endif
+#    if defined(luai_apicheck)
+#        undef luai_apicheck
+#    endif
+#    define lua_assert(expression)       (void)((!!(expression)) || (_bee_lua_assert  (   #expression, __FILE__, (unsigned)(__LINE__)), 0))
+#    define luai_apicheck(l, expression) (void)((!!(expression)) || (_bee_lua_apicheck(l, #expression, __FILE__, (unsigned)(__LINE__)), 0))
+#endif
+
+#define l_randomizePivot(L) (~0)
+
+#if defined(_MSC_VER) && !defined(__SANITIZE_ADDRESS__)
+
+#include "../lua-patch/fast_setjmp.h"
+
+#define LUAI_THROW(L,c) fast_longjmp((c)->b, 1)
+#define LUAI_TRY(L,c,f,ud) if (fast_setjmp((c)->b) == 0) ((f)(L, ud))
+#define luai_jmpbuf     jmp_buf
 
 #endif
 
+#endif
