@@ -249,7 +249,8 @@ lm:lua_src "source_bee" {
 }
 
 lm:source_set "source_lua" {
-    sources = lm.luaversion == "lua55" and "3rd/lua55/onelua.c"  or "3rd/lua/onelua.c",
+    includes = lm.luaversion == "lua55" and "3rd/lua55/" or "3rd/lua/",
+    sources = lm.luaversion == "lua55" and "3rd/lua55/onelua.c" or "3rd/lua/onelua.c",
     defines = "MAKE_LIB",
     visibility = "default",
     windows = {
