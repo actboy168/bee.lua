@@ -1,7 +1,10 @@
 local lm = require "luamake"
 
 lm:src "source_bootstrap" {
-    includes = { "3rd/lua", "." },
+    includes = {
+        ".",
+        lm.luaversion == "lua55" and "3rd/lua55/" or "3rd/lua/",
+    },
     sources = {
         "bootstrap/main.cpp",
         "bootstrap/bootstrap_init.cpp",

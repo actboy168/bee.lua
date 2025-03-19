@@ -107,7 +107,7 @@ end
 lm:source_set "source_bee" {
     includes = {
         ".",
-        "3rd/lua/",
+        lm.luaversion == "lua55" and "3rd/lua55/" or "3rd/lua/",
     },
     sources = "bee/**/*.cpp",
     msvc = lm.analyze and {
@@ -249,9 +249,7 @@ lm:lua_src "source_bee" {
 }
 
 lm:source_set "source_lua" {
-    sources = {
-        "3rd/lua/onelua.c",
-    },
+    sources = lm.luaversion == "lua55" and "3rd/lua55/onelua.c"  or "3rd/lua/onelua.c",
     defines = "MAKE_LIB",
     visibility = "default",
     windows = {

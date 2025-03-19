@@ -14,6 +14,14 @@
 #include <lua.hpp>
 #include <string_view>
 
+#if LUA_VERSION_NUM >= 505
+#    if defined(_WIN32)
+#        define lua_writestringerror(s, p) utf8_ConsoleError(s, p)
+#    else
+#        define lua_writestringerror(s, p) (fprintf(stderr, (s), (p)), fflush(stderr))
+#    endif
+#endif
+
 #if !defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
 #    define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 #endif

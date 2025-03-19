@@ -17,6 +17,27 @@ static const luaL_Reg loadedlibs[] = {
     { NULL, NULL }
 };
 
+#if LUA_VERSION_NUM >= 505
+
+extern "C" void luaL_openselectedlibs(lua_State *L, int load, int preload) {
+    int mask;
+    const luaL_Reg *lib;
+    luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
+    for (lib = loadedlibs, mask = 1; lib->name != NULL; lib++, mask <<= 1) {
+        if (load & mask) {
+            luaL_requiref(L, lib->name, lib->func, 1);
+            lua_pop(L, 1);
+        } else if (preload & mask) {
+            lua_pushcfunction(L, lib->func);
+            lua_setfield(L, -2, lib->name);
+        }
+    }
+    lua_pop(L, 1);
+    ::bee::lua::preload_module(L);
+}
+
+#else
+
 extern "C" void luaL_openlibs(lua_State *L) {
     const luaL_Reg *lib;
     for (lib = loadedlibs; lib->func; lib++) {
@@ -25,3 +46,5 @@ extern "C" void luaL_openlibs(lua_State *L) {
     }
     ::bee::lua::preload_module(L);
 }
+
+#endif

@@ -30,7 +30,9 @@ namespace bee::lua {
         luaL_Stream* p = tolstream(L);
         if (isclosed(p))
             luaL_error(L, "attempt to use a closed file");
+#if LUA_VERSION_NUM < 505
         lua_assert(p->f);
+#endif
         return p->f;
     }
     static int test_eof(lua_State* L, FILE* f) {
@@ -139,7 +141,9 @@ namespace bee::lua {
             return luaL_error(L, "file is already closed");
         lua_settop(L, 1);
         int n = g_read(L, p->f, 2);
+#if LUA_VERSION_NUM < 505
         lua_assert(n > 0);
+#endif
         if (lua_toboolean(L, -n))
             return n;
         else {
