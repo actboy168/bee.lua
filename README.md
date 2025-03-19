@@ -13,14 +13,20 @@ Lua runtime and toolset
 
 ## Lua patch
 
-* Enable ansi escape code on windows
-* String encoding on windows using utf8
-* Remove randomness when traversing the table
-* Fast setjmp on windows
-* Add error hook (for debugger)
-* Add resume/yield hook (for debugger)
-* Enable lua_assert in debug mode
-* Disable tail calls in debug mode (for debugger)
+| Feature                                           | Lua5.4 | Lua5.5 |
+|---------------------------------------------------|--------|--------|
+| Enable ansi escape code on windows                |   🟩  |   🟩  |
+| String encoding on windows using utf8             |   🟩  |   🟩  |
+| Remove randomness when traversing the table       |   🟩  |   🟨  |
+| Fast setjmp on windows                            |   🟩  |   🟩  |
+| Enable lua_assert in debug mode                   |   🟩  |   🟩  |
+| Add error hook (for debugger)                     |   🟩  |   🟥  |
+| Add resume/yield hook (for debugger)              |   🟩  |   🟥  |
+| Disable tail calls in debug mode (for debugger)   |   🟩  |   🟥  |
+
+* 🟩 Already supported.
+* 🟥 Not implemented.
+* 🟨 Unnecessary.
 
 ## 3rd Party Libraries
 
