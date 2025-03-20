@@ -1,3 +1,4 @@
+#include <3rd/lua-patch/bee_newstate.h>
 #include <3rd/lua-seri/lua-seri.h>
 #include <bee/lua/binding.h>
 #include <bee/lua/error.h>
@@ -92,7 +93,7 @@ namespace bee::lua_thread {
     }
 
     static void thread_main(void* ud) noexcept {
-        lua_State* L = luaL_newstate();
+        lua_State* L = bee_lua_newstate();
         lua_pushcfunction(L, msghandler);
         lua_pushcfunction(L, thread_luamain);
         lua_pushlightuserdata(L, ud);

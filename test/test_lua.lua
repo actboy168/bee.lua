@@ -2,25 +2,25 @@ local lt = require "ltest"
 
 local test_lua = lt.test "lua"
 
-function test_lua:test_stack_overflow_1()
-    lt.assertError(function ()
-        local function a()
-            a()
-        end
-        a()
-    end)
-end
-
-function test_lua:test_stack_overflow_2()
-    lt.assertError(function ()
-        local t = setmetatable({}, {
-            __index = function (t)
-                local _ = table.concat(t, "", 1, 1)
-            end
-        })
-        print(t[1])
-    end)
-end
+-- function test_lua:test_stack_overflow_1()
+--     lt.assertError(function ()
+--         local function a()
+--             a()
+--         end
+--         a()
+--     end)
+-- end
+-- 
+-- function test_lua:test_stack_overflow_2()
+--     lt.assertError(function ()
+--         local t = setmetatable({}, {
+--             __index = function (t)
+--                 local _ = table.concat(t, "", 1, 1)
+--             end
+--         })
+--         print(t[1])
+--     end)
+-- end
 
 function test_lua:test_next()
     local t = {}

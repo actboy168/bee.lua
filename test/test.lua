@@ -32,7 +32,7 @@ local crash = require "bee.crash"
 local _ = crash.create_handler "-"
 
 require "test_skip"
---require "test_lua"
+require "test_lua"
 require "test_serialization"
 require "test_filesystem"
 require "test_thread"

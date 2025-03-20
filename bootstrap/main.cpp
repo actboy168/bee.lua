@@ -14,13 +14,8 @@
 #include <lua.hpp>
 #include <string_view>
 
-#if LUA_VERSION_NUM >= 505
-#    if defined(_WIN32)
-#        define lua_writestringerror(s, p) utf8_ConsoleError(s, p)
-#    else
-#        define lua_writestringerror(s, p) (fprintf(stderr, (s), (p)), fflush(stderr))
-#    endif
-#endif
+#include "3rd/lua-patch/bee_lua55.h"
+#include "3rd/lua-patch/bee_newstate.h"
 
 #if !defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
 #    define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
@@ -195,7 +190,7 @@ extern "C" int utf8_main(int argc, char **argv) {
 int main(int argc, char **argv) {
 #endif
     int status, result;
-    lua_State *L = luaL_newstate(); /* create state */
+    lua_State *L = bee_lua_newstate(); /* create state */
     if (L == NULL) {
         l_message(argv[0], "cannot create state: not enough memory");
         return EXIT_FAILURE;
