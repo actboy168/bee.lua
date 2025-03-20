@@ -30,21 +30,24 @@ if lm.os == "windows" then
             "3rd/lua-patch/bee_utf8_main.c",
         }
     }
-    lm:executable "luac" {
-        deps = "bee_utf8_crt",
-        includes = ".",
-        sources = {
-            "3rd/lua/onelua.c",
-            "3rd/lua-patch/bee_utf8_main.c",
-        },
-        defines = {
-            "MAKE_LUAC",
-        },
-        msvc = {
-            flags = "/wd4334",
-            sources = ("3rd/lua-patch/fast_setjmp_%s.s"):format(lm.arch),
+    if lm.lua ~= "55" then
+        ---@TODO lua55's luac is not working
+        lm:executable "luac" {
+            deps = "bee_utf8_crt",
+            includes = ".",
+            sources = {
+                lm.luadir / "onelua.c",
+                "3rd/lua-patch/bee_utf8_main.c",
+            },
+            defines = {
+                "MAKE_LUAC",
+            },
+            msvc = {
+                flags = "/wd4334",
+                sources = ("3rd/lua-patch/fast_setjmp_%s.s"):format(lm.arch),
+            }
         }
-    }
+    end
     return
 end
 
@@ -60,7 +63,7 @@ lm:shared_library "bee" {
 
 lm:executable "lua" {
     deps = "source_lua",
-    sources = "3rd/lua/lua.c",
+    sources = lm.luadir / "lua.c",
     macos = {
         defines = "LUA_USE_MACOSX",
         links = { "m", "dl" },
