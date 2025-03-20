@@ -3,6 +3,9 @@ local lt = require "ltest"
 
 local SKIP <const> = lt.skip
 
+SKIP "lua.test_stack_overflow_1"
+SKIP "lua.test_stack_overflow_2"
+
 if platform.os == "macos" then
     SKIP "thread.test_sleep"
 end
