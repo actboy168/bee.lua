@@ -1,18 +1,11 @@
 local lm = require "luamake"
 
-lm:lua_dll "bee" {
-    deps = "source_bee",
-    windows = {
-        export_luaopen = "off"
-    },
-}
-
 if lm.os == "windows" then
-    lm:shared_library(lm.luaversion == "lua55" and "lua55" or "lua54") {
+    lm:shared_library(lm.lua == "55" and "lua55" or "lua54") {
         deps = "bee_utf8_crt",
         sources = {
-            "3rd/lua/onelua.c",
-            "3rd/lua/linit.c",
+            lm.luadir / "onelua.c",
+            lm.luadir / "linit.c",
         },
         defines = {
             "MAKE_LIB",
@@ -26,11 +19,11 @@ if lm.os == "windows" then
     lm:executable "lua" {
         deps = {
             "bee_utf8_crt",
-            lm.luaversion == "lua55" and "lua55" or "lua54",
+            lm.lua == "55" and "lua55" or "lua54",
         },
         includes = {
             ".",
-            lm.luaversion == "lua55" and "3rd/lua55/" or "3rd/lua/",
+            lm.luadir,
         },
         sources = {
             "3rd/lua-patch/bee_lua.c",
@@ -54,6 +47,16 @@ if lm.os == "windows" then
     }
     return
 end
+
+lm:shared_library "bee" {
+    deps = {
+        "source_bee",
+        lm.lua == "55" and "lua55" or "lua54",
+    },
+    windows = {
+        export_luaopen = "off"
+    },
+}
 
 lm:executable "lua" {
     deps = "source_lua",

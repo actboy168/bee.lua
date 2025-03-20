@@ -1,6 +1,6 @@
 local lm = require "luamake"
 
---lm.luaversion = "lua55"
+--lm.lua = "55"
 
 require "compile.common"
 

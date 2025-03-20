@@ -4,6 +4,8 @@ lm:required_version "1.6"
 
 lm.compile_commands = "$builddir"
 
+lm.luadir = lm:path(lm.lua == "55" and "3rd/lua55" or "3rd/lua")
+
 lm:conf {
     c = "c11",
     cxx = "c++17",
@@ -66,7 +68,41 @@ if lm.sanitize then
     }
 end
 
-lm:lua_src "source_bee" {
+lm:source_set "source_lua" {
+    includes = lm.luadir,
+    sources = {
+        lm.luadir / "onelua.c",
+    },
+    defines = "MAKE_LIB",
+    visibility = "default",
+    windows = {
+        defines = "LUA_BUILD_AS_DLL",
+    },
+    macos = {
+        defines = "LUA_USE_MACOSX",
+    },
+    linux = {
+        defines = "LUA_USE_LINUX",
+    },
+    netbsd = {
+        defines = "LUA_USE_LINUX",
+    },
+    freebsd = {
+        defines = "LUA_USE_LINUX",
+    },
+    openbsd = {
+        defines = "LUA_USE_LINUX",
+    },
+    android = {
+        defines = "LUA_USE_LINUX",
+    },
+    msvc = {
+        sources = ("3rd/lua-patch/fast_setjmp_%s.s"):format(lm.arch)
+    },
+}
+
+lm:source_set "source_bee" {
+    includes = lm.luadir,
     sources = "3rd/lua-seri/lua-seri.cpp",
     msvc = {
         flags = "/wd4244"
@@ -107,7 +143,7 @@ end
 lm:source_set "source_bee" {
     includes = {
         ".",
-        lm.luaversion == "lua55" and "3rd/lua55/" or "3rd/lua/",
+        lm.luadir,
     },
     sources = "bee/**/*.cpp",
     msvc = lm.analyze and {
@@ -174,15 +210,18 @@ lm:source_set "source_bee" {
     }
 }
 
-lm:lua_src "source_bee" {
-    includes = ".",
+lm:source_set "source_bee" {
+    includes = {
+        ".",
+        lm.luadir,
+    },
     defines = {
         lm.EXE ~= "lua" and "BEE_STATIC",
     },
     sources = {
         "binding/*.cpp",
         "3rd/lua-patch/bee_newstate.c",
-        lm.EXE == "lua" and lm.luaversion == "lua55" and "3rd/lua-patch/bee_utf8_crt.cpp",
+        lm.EXE == "lua" and lm.lua == "55" and "3rd/lua-patch/bee_utf8_crt.cpp",
     },
     msvc = lm.analyze and {
         flags = "/analyze",
@@ -249,39 +288,6 @@ lm:lua_src "source_bee" {
         links = ":libinotify.a",
         linkdirs = "/usr/local/lib/inotify",
         ldflags = "-pthread"
-    },
-}
-
-lm:source_set "source_lua" {
-    includes = lm.luaversion == "lua55" and "3rd/lua55/" or "3rd/lua/",
-    sources = {
-        lm.luaversion == "lua55" and "3rd/lua55/onelua.c" or "3rd/lua/onelua.c",
-    },
-    defines = "MAKE_LIB",
-    visibility = "default",
-    windows = {
-        defines = "LUA_BUILD_AS_DLL",
-    },
-    macos = {
-        defines = "LUA_USE_MACOSX",
-    },
-    linux = {
-        defines = "LUA_USE_LINUX",
-    },
-    netbsd = {
-        defines = "LUA_USE_LINUX",
-    },
-    freebsd = {
-        defines = "LUA_USE_LINUX",
-    },
-    openbsd = {
-        defines = "LUA_USE_LINUX",
-    },
-    android = {
-        defines = "LUA_USE_LINUX",
-    },
-    msvc = {
-        sources = ("3rd/lua-patch/fast_setjmp_%s.s"):format(lm.arch)
     },
 }
 
