@@ -8,7 +8,7 @@ lm:lua_dll "bee" {
 }
 
 if lm.os == "windows" then
-    lm:shared_library "lua54" {
+    lm:shared_library(lm.luaversion == "lua55" and "lua55" or "lua54") {
         deps = "bee_utf8_crt",
         sources = {
             "3rd/lua/onelua.c",
@@ -25,10 +25,13 @@ if lm.os == "windows" then
     }
     lm:executable "lua" {
         deps = {
-            "lua54",
             "bee_utf8_crt",
+            lm.luaversion == "lua55" and "lua55" or "lua54",
         },
-        includes = ".",
+        includes = {
+            ".",
+            lm.luaversion == "lua55" and "3rd/lua55/" or "3rd/lua/",
+        },
         sources = {
             "3rd/lua-patch/bee_lua.c",
             "3rd/lua-patch/bee_utf8_main.c",

@@ -179,7 +179,11 @@ lm:lua_src "source_bee" {
     defines = {
         lm.EXE ~= "lua" and "BEE_STATIC",
     },
-    sources = "binding/*.cpp",
+    sources = {
+        "binding/*.cpp",
+        "3rd/lua-patch/bee_newstate.c",
+        lm.EXE == "lua" and lm.luaversion == "lua55" and "3rd/lua-patch/bee_utf8_crt.cpp",
+    },
     msvc = lm.analyze and {
         flags = "/analyze",
     },
@@ -252,7 +256,6 @@ lm:source_set "source_lua" {
     includes = lm.luaversion == "lua55" and "3rd/lua55/" or "3rd/lua/",
     sources = {
         lm.luaversion == "lua55" and "3rd/lua55/onelua.c" or "3rd/lua/onelua.c",
-        "3rd/lua-patch/bee_newstate.c",
     },
     defines = "MAKE_LIB",
     visibility = "default",
