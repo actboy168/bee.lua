@@ -25,6 +25,7 @@ if not lt.options.list then
     print("Compiler: ", platform.CompilerVersion)
     print("CRT:      ", platform.CRTVersion)
     print("DEBUG:    ", platform.DEBUG)
+    print("Lua:      ", _VERSION:match "^Lua (.*)$" or "Unknown")
 end
 
 local crash = require "bee.crash"
