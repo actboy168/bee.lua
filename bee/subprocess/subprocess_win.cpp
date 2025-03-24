@@ -1,4 +1,3 @@
-#include <Shobjidl.h>
 #include <Windows.h>
 #include <bee/net/socket.h>
 #include <bee/nonstd/bit.h>
@@ -11,7 +10,6 @@
 
 #include <deque>
 #include <memory>
-#include <thread>
 
 #define SIGKILL 9
 
@@ -241,41 +239,6 @@ namespace bee::subprocess {
         return wnd;
     }
 
-    static bool hide_taskbar(HWND w) noexcept {
-        ITaskbarList* taskbar = nullptr;
-        if (!SUCCEEDED(::CoInitializeEx(NULL, COINIT_MULTITHREADED))) {
-            return false;
-        }
-        if (SUCCEEDED(CoCreateInstance(CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, IID_ITaskbarList, (void**)&taskbar))) {
-            taskbar->HrInit();
-            taskbar->DeleteTab(w);
-            taskbar->Release();
-            return true;
-        }
-        return false;
-    }
-
-    static void hide_console(process& proc) noexcept {
-        std::thread thd([&]() {
-            auto dup_proc = proc.dup();
-            if (!dup_proc) {
-                return;
-            }
-            for (;; std::this_thread::sleep_for(std::chrono::milliseconds(10))) {
-                if (!dup_proc->is_running()) {
-                    return;
-                }
-                HWND wnd = console_window(dup_proc->get_id());
-                if (wnd) {
-                    SetWindowPos(wnd, NULL, -10000, -10000, 0, 0, SWP_HIDEWINDOW);
-                    hide_taskbar(wnd);
-                    return;
-                }
-            }
-        });
-        thd.detach();
-    }
-
     spawn::spawn() noexcept {
         fds_[0] = INVALID_HANDLE_VALUE;
         fds_[1] = INVALID_HANDLE_VALUE;
@@ -302,7 +265,6 @@ namespace bee::subprocess {
             flags_ |= CREATE_NO_WINDOW;
             break;
         case console::eNew:
-        case console::eHide:
             flags_ |= CREATE_NEW_CONSOLE;
             break;
         default:
@@ -393,9 +355,6 @@ namespace bee::subprocess {
         startupinfo_release(si);
         if (!detached_) {
             join_job(pi_.native_handle());
-        }
-        if (console_ == console::eHide) {
-            hide_console(pi_);
         }
         return true;
     }

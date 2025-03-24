@@ -31,7 +31,6 @@ namespace bee::subprocess {
         eDisable,
         eNew,
         eDetached,
-        eHide,
     };
     class envbuilder {
     public:
