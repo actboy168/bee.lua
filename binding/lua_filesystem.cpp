@@ -107,24 +107,21 @@ namespace bee::lua_filesystem {
 #endif
     }
 
-    template <typename... Args>
-    static void lua_pusherrmsg(lua_State* L, std::error_code ec, std::format_string<Args...> fmt, Args... args) {
-        auto msg = std::format(fmt, std::forward<Args>(args)...);
-        lua::push_sys_error(L, msg, ec.value());
-    }
-
     [[nodiscard]] static lua::cxx::status pusherror(lua_State* L, std::string_view op, std::error_code ec) {
-        lua_pusherrmsg(L, ec, "{}", op);
+        auto msg = std::format("{}", op);
+        lua::push_sys_error(L, msg, ec.value());
         return lua::cxx::error;
     }
 
     [[nodiscard]] static lua::cxx::status pusherror(lua_State* L, std::string_view op, std::error_code ec, const fs::path& path1) {
-        lua_pusherrmsg(L, ec, "{}: \"{}\"", op, tostring(path1));
+        auto msg = std::format("{}: \"{}\"", op, tostring(path1));
+        lua::push_sys_error(L, msg, ec.value());
         return lua::cxx::error;
     }
 
     [[nodiscard]] static lua::cxx::status pusherror(lua_State* L, std::string_view op, std::error_code ec, const fs::path& path1, const fs::path& path2) {
-        lua_pusherrmsg(L, ec, "{}: \"{}\", \"{}\"", op, tostring(path1), tostring(path2));
+        auto msg = std::format("{}: \"{}\", \"{}\"", op, tostring(path1), tostring(path2));
+        lua::push_sys_error(L, msg, ec.value());
         return lua::cxx::error;
     }
 
