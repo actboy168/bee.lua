@@ -228,7 +228,7 @@ void utf8_ConsoleNewLine() {
 
 void utf8_ConsoleError(const char* fmt, const char* param) {
     size_t len = (size_t)snprintf(NULL, 0, fmt, param);
-    std::string str(len, '\0');
+    std::string str(len + 1, '\0');
     snprintf(str.data(), str.size(), fmt, param);
     ConsoleWrite(stderr, str);
 }
