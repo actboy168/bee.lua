@@ -231,12 +231,12 @@ void utf8_ConsoleError(const char* fmt, const char* param) {
     std::array<char, 256> buffer;
     size_t len = (size_t)snprintf(buffer.data(), buffer.size(), fmt, param);
     if (len < buffer.size()) {
-        ConsoleWrite(stderr, buffer.data());
+        ConsoleWrite(stderr, buffer);
         return;
     }
     bee::dynarray<char> str(len + 1);
     snprintf(str.data(), str.size(), fmt, param);
-    ConsoleWrite(stderr, str.data());
+    ConsoleWrite(stderr, str);
 }
 
 #endif
