@@ -10,8 +10,9 @@
 #    include "bee_utf8_crt.h"
 
 #    include <Windows.h>
-#    include <bee/win/cwtf8.h>
+#    include <bee/utility/dynarray.h>
 #    include <bee/utility/zstring_view.h>
+#    include <bee/win/cwtf8.h>
 #    include <io.h>
 
 #    include <array>
@@ -227,10 +228,15 @@ void utf8_ConsoleNewLine() {
 }
 
 void utf8_ConsoleError(const char* fmt, const char* param) {
-    size_t len = (size_t)snprintf(NULL, 0, fmt, param);
-    std::string str(len, '\0');
-    snprintf(str.data(), str.size(), fmt, param);
-    ConsoleWrite(stderr, str);
+    std::array<char, 256> buffer;
+    size_t len = (size_t)snprintf(buffer.data(), buffer.size(), fmt, param);
+    if (len < buffer.size()) {
+        ConsoleWrite(stderr, { buffer.data(), len });
+        return;
+    }
+    bee::dynarray<char> str(len + 1);
+    len = snprintf(str.data(), str.size(), fmt, param);
+    ConsoleWrite(stderr, { str.data(), len });
 }
 
 #endif
