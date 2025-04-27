@@ -96,9 +96,10 @@ lm:source_set "source_lua" {
     android = {
         defines = "LUA_USE_LINUX",
     },
-    msvc = {
-        sources = ("3rd/lua-patch/fast_setjmp_%s.s"):format(lm.arch)
-    },
+    msvc = lm.fast_setjmp ~= "off" and {
+        defines = "BEE_FAST_SETJMP",
+        sources = ("3rd/lua-patch/fast_setjmp_%s.s"):format(lm.arch),
+    }
 }
 
 lm:source_set "source_bee" {

@@ -11,9 +11,9 @@ if lm.os == "windows" then
             "MAKE_LIB",
             "LUA_BUILD_AS_DLL",
         },
-        msvc = {
-            flags = "/wd4334",
-            sources = ("3rd/lua-patch/fast_setjmp_%s.s"):format(lm.arch)
+        msvc = lm.fast_setjmp ~= "off" and {
+            defines = "BEE_FAST_SETJMP",
+            sources = ("3rd/lua-patch/fast_setjmp_%s.s"):format(lm.arch),
         }
     }
     lm:executable "lua" {
@@ -42,8 +42,8 @@ if lm.os == "windows" then
             defines = {
                 "MAKE_LUAC",
             },
-            msvc = {
-                flags = "/wd4334",
+            msvc = lm.fast_setjmp ~= "off" and {
+                defines = "BEE_FAST_SETJMP",
                 sources = ("3rd/lua-patch/fast_setjmp_%s.s"):format(lm.arch),
             }
         }
