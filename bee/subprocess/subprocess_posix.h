@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bee/subprocess/common.h>
+#include <bee/utility/path_view.h>
 
 #include <cstdint>
 #include <map>
@@ -11,12 +12,12 @@
 namespace bee::subprocess {
     class envbuilder {
     public:
-        void set(const std::string& key, const std::string& value) noexcept;
-        void del(const std::string& key) noexcept;
+        void set(std::string_view key, std::string_view value) noexcept;
+        void del(std::string_view key) noexcept;
         environment release() noexcept;
 
     private:
-        std::map<std::string, std::optional<std::string>> set_env_;
+        std::map<std::string_view, std::optional<std::string_view>> set_env_;
     };
 
     using process_id     = pid_t;
@@ -71,7 +72,7 @@ namespace bee::subprocess {
         void detached() noexcept;
         void redirect(stdio type, file_handle f) noexcept;
         void env(environment&& env) noexcept;
-        bool exec(args_t& args, const char* cwd) noexcept;
+        bool exec(args_t& args, path_view cwd) noexcept;
 
     private:
         environment env_ = nullptr;

@@ -38,15 +38,15 @@ namespace bee::subprocess {
         data_.emplace_back(tmp.release());
     }
 
-    void envbuilder::set(const std::string& key, const std::string& value) noexcept {
+    void envbuilder::set(std::string_view key, std::string_view value) noexcept {
         set_env_[key] = value;
     }
 
-    void envbuilder::del(const std::string& key) noexcept {
+    void envbuilder::del(std::string_view key) noexcept {
         set_env_[key] = std::nullopt;
     }
 
-    static void env_append(std::vector<char*>& envs, const std::string& k, const std::string& v) noexcept {
+    static void env_append(std::vector<char*>& envs, std::string_view k, std::string_view v) noexcept {
         size_t n = k.size() + v.size() + 2;
         dynarray<char> tmp(n);
         memcpy(tmp.data(), k.data(), k.size());
@@ -68,11 +68,11 @@ namespace bee::subprocess {
         }
         std::vector<char*> envs;
         for (; *es; ++es) {
-            std::string str = *es;
-            auto pos        = str.find('=');
-            std::string key = str.substr(0, pos);
-            std::string val = str.substr(pos + 1, str.length());
-            auto it         = set_env_.find(key);
+            std::string_view str = *es;
+            auto pos             = str.find('=');
+            std::string_view key = str.substr(0, pos);
+            std::string_view val = str.substr(pos + 1, str.length());
+            auto it              = set_env_.find(key);
             if (it == set_env_.end()) {
                 env_append(envs, key, val);
             } else {
@@ -83,7 +83,7 @@ namespace bee::subprocess {
             }
         }
         for (auto& e : set_env_) {
-            const std::string& key = e.first;
+            const std::string_view& key = e.first;
             if (e.second.has_value()) {
                 env_append(envs, key, *e.second);
             }
@@ -140,7 +140,7 @@ namespace bee::subprocess {
 #    define USE_POSIX_SPAWN 1
 #endif
 
-    bool spawn::exec(args_t& args, const char* cwd) noexcept {
+    bool spawn::exec(args_t& args, path_view cwd) noexcept {
         if (args.size() == 0) {
             return false;
         }
@@ -152,8 +152,8 @@ namespace bee::subprocess {
             return false;
         }
         char** arguments = args.data();
-        if (cwd) {
-            if (int err = posix_spawn_file_actions_addchdir_np(&actions, cwd)) {
+        if (!cwd.empty()) {
+            if (int err = posix_spawn_file_actions_addchdir_np(&actions, cwd.data())) {
                 posix_spawn_file_actions_destroy(&actions);
                 errno = err;
                 return false;
@@ -215,8 +215,10 @@ namespace bee::subprocess {
             if (env_) {
                 environ = env_;
             }
-            if (cwd && chdir(cwd)) {
-                _exit(127);
+            if (!cwd.empty()) {
+                if (chdir(cwd.data())) {
+                    _exit(127);
+                }
             }
             // if (suspended_) {
             //     ::kill(getpid(), SIGSTOP);

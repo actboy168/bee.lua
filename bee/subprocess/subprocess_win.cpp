@@ -142,12 +142,19 @@ namespace bee::subprocess {
         return res.string();
     }
 
-    void envbuilder::set(const std::wstring& key, const std::wstring& value) noexcept {
-        set_env_[key] = value;
+    void envbuilder::set(std::string_view key, std::string_view value) noexcept {
+        set_env_[wtf8::u2w(key)] = value;
     }
 
-    void envbuilder::del(const std::wstring& key) noexcept {
-        set_env_[key] = std::nullopt;
+    void envbuilder::del(std::string_view key) noexcept {
+        set_env_[wtf8::u2w(key)] = std::nullopt;
+    }
+
+    static void env_append(strbuilder<wchar_t>& envs, const std::wstring& k, std::string_view v) noexcept {
+        envs += k;
+        envs += L"=";
+        envs += wtf8::u2w(v);
+        envs += L"\0";
     }
 
     static void env_append(strbuilder<wchar_t>& envs, const std::wstring& k, const std::wstring& v) noexcept {
@@ -315,7 +322,7 @@ namespace bee::subprocess {
         }
     }
 
-    bool spawn::exec(const args_t& args, const wchar_t* cwd) noexcept {
+    bool spawn::exec(const args_t& args, path_view cwd) noexcept {
         if (args.size() == 0) {
             return false;
         }
@@ -348,7 +355,7 @@ namespace bee::subprocess {
             si.dwFlags |= STARTF_USESHOWWINDOW;
             si.wShowWindow = SW_HIDE;
         }
-        if (!::CreateProcessW(application, command_line.data(), NULL, NULL, inherit_handle_, flags_ | NORMAL_PRIORITY_CLASS, env_, cwd, &si, (LPPROCESS_INFORMATION)&pi_)) {
+        if (!::CreateProcessW(application, command_line.data(), NULL, NULL, inherit_handle_, flags_ | NORMAL_PRIORITY_CLASS, env_, cwd.empty()? nullptr: cwd.data(), &si, (LPPROCESS_INFORMATION)&pi_)) {
             startupinfo_release(si);
             return false;
         }

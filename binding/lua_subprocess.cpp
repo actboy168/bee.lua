@@ -2,6 +2,7 @@
 #include <bee/lua/error.h>
 #include <bee/lua/file.h>
 #include <bee/lua/module.h>
+#include <bee/lua/path_view_ref.h>
 #include <bee/lua/udata.h>
 #include <bee/nonstd/filesystem.h>
 #include <bee/subprocess.h>
@@ -13,26 +14,11 @@
 
 #if defined(_WIN32)
 #    include <Windows.h>
-#    include <bee/win/wtf8.h>
 #else
 #    include <unistd.h>
 #endif
 
 namespace bee::lua_subprocess {
-#if defined(_WIN32)
-    using string_type = std::wstring;
-#else
-    using string_type = std::string;
-#endif
-    static string_type checkstring(lua_State* L, int idx) {
-        auto str = lua::checkstrview(L, idx);
-#if defined(_WIN32)
-        return wtf8::u2w(str);
-#else
-        return string_type { str.data(), str.size() };
-#endif
-    }
-
     namespace process {
         static auto& to(lua_State* L, int idx) {
             return lua::checkudata<subprocess::process>(L, idx);
@@ -201,22 +187,18 @@ namespace bee::lua_subprocess {
     }
 
     namespace spawn {
-        static std::optional<string_type> cast_cwd(lua_State* L) {
+        static path_view_ref cast_cwd(lua_State* L) {
             lua_getfield(L, 1, "cwd");
             switch (lua_type(L, -1)) {
-            case LUA_TSTRING: {
-                auto ret = checkstring(L, -1);
-                lua_pop(L, 1);
-                return ret;
-            }
+            case LUA_TSTRING:
             case LUA_TUSERDATA: {
-                const auto& path = lua::checkudata<fs::path>(L, -1);
+                auto str = path_view_ref(L, -1);
                 lua_pop(L, 1);
-                return path.native();
+                return str;
             }
             default:
                 lua_pop(L, 1);
-                return std::nullopt;
+                return {};
             }
         }
 
@@ -313,9 +295,9 @@ namespace bee::lua_subprocess {
                 lua_pushnil(L);
                 while (lua_next(L, -2)) {
                     if (LUA_TSTRING == lua_type(L, -1)) {
-                        builder.set(checkstring(L, -2), checkstring(L, -1));
+                        builder.set(lua::checkstrview(L, -2), lua::checkstrview(L, -1));
                     } else {
-                        builder.del(checkstring(L, -2));
+                        builder.del(lua::checkstrview(L, -2));
                     }
                     lua_pop(L, 1);
                 }
@@ -393,7 +375,7 @@ namespace bee::lua_subprocess {
             file_handle f_stdin  = cast_stdio(L, spawn, "stdin", subprocess::stdio::eInput);
             file_handle f_stdout = cast_stdio(L, spawn, "stdout", subprocess::stdio::eOutput);
             file_handle f_stderr = cast_stdio(L, spawn, "stderr", subprocess::stdio::eError, f_stdout);
-            if (!spawn.exec(args, cwd ? cwd->c_str() : 0)) {
+            if (!spawn.exec(args, cwd)) {
                 return lua::return_sys_error(L, "subprocess::spawn");
             }
             process::constructor(L, spawn);

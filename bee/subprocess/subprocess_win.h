@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bee/subprocess/common.h>
+#include <bee/utility/path_view.h>
 
 #include <cstdint>
 #include <map>
@@ -34,13 +35,13 @@ namespace bee::subprocess {
     };
     class envbuilder {
     public:
-        void set(const std::wstring& key, const std::wstring& value) noexcept;
-        void del(const std::wstring& key) noexcept;
+        void set(std::string_view key, std::string_view value) noexcept;
+        void del(std::string_view key) noexcept;
         environment release() noexcept;
 
     private:
         using less = ignore_case::less<std::wstring>;
-        std::map<std::wstring, std::optional<std::wstring>, less> set_env_;
+        std::map<std::wstring, std::optional<std::string_view>, less> set_env_;
     };
 
     using os_handle      = void*;
@@ -107,7 +108,7 @@ namespace bee::subprocess {
         void detached() noexcept;
         void redirect(stdio type, file_handle h) noexcept;
         void env(environment&& env) noexcept;
-        bool exec(const args_t& args, const wchar_t* cwd) noexcept;
+        bool exec(const args_t& args, path_view cwd) noexcept;
 
     private:
         environment env_ = nullptr;

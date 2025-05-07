@@ -2,46 +2,16 @@
 #include <bee/lua/error.h>
 #include <bee/lua/file.h>
 #include <bee/lua/module.h>
-#include <bee/lua/udata.h>
+#include <bee/lua/path_view_ref.h>
 #include <bee/nonstd/filesystem.h>
 #include <bee/sys/file_handle.h>
 #include <bee/sys/path.h>
-
-#if defined(_WIN32)
-#    include <Windows.h>
-#    include <bee/win/wtf8.h>
-#endif
 
 namespace bee::lua {
     fs::path& new_path(lua_State* L, fs::path&& path);
 }
 
 namespace bee::lua_sys {
-    class path_view_ref {
-    public:
-        path_view_ref(lua_State* L, int idx) {
-            if (lua_type(L, idx) == LUA_TSTRING) {
-#if defined(_WIN32)
-                str  = wtf8::u2w(lua::checkstrview(L, idx));
-                view = str;
-#else
-                view = lua::checkstrview(L, idx);
-#endif
-            } else {
-                view = lua::checkudata<fs::path>(L, idx).native();
-            }
-        }
-        operator path_view() const noexcept {
-            return view;
-        }
-
-    private:
-#if defined(_WIN32)
-        std::wstring str;
-#endif
-        path_view view;
-    };
-
     static int exe_path(lua_State* L) {
         auto r = sys::exe_path();
         if (!r) {
