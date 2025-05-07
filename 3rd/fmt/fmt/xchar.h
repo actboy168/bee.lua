@@ -112,10 +112,6 @@ inline auto runtime(wstring_view s) -> runtime_format_string<wchar_t> {
   return {{s}};
 }
 
-template <> struct is_char<wchar_t> : std::true_type {};
-template <> struct is_char<char16_t> : std::true_type {};
-template <> struct is_char<char32_t> : std::true_type {};
-
 #ifdef __cpp_char8_t
 template <> struct is_char<char8_t> : bool_constant<detail::is_utf8_enabled> {};
 #endif
@@ -155,7 +151,7 @@ auto join(std::initializer_list<T> list, wstring_view sep)
 
 template <typename Tuple, FMT_ENABLE_IF(is_tuple_like<Tuple>::value)>
 auto join(const Tuple& tuple, basic_string_view<wchar_t> sep)
-    -> tuple_join_view<wchar_t, Tuple> {
+    -> tuple_join_view<Tuple, wchar_t> {
   return {tuple, sep};
 }
 

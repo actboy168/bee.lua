@@ -11,7 +11,6 @@
 #ifndef FMT_MODULE
 #  include <initializer_list>
 #  include <iterator>
-#  include <string>
 #  include <tuple>
 #  include <type_traits>
 #  include <utility>
@@ -45,12 +44,11 @@ template <typename T> class is_set {
 };
 
 // C array overload
-template <typename T, std::size_t N>
+template <typename T, size_t N>
 auto range_begin(const T (&arr)[N]) -> const T* {
   return arr;
 }
-template <typename T, std::size_t N>
-auto range_end(const T (&arr)[N]) -> const T* {
+template <typename T, size_t N> auto range_end(const T (&arr)[N]) -> const T* {
   return arr + N;
 }
 
@@ -208,7 +206,7 @@ template <typename Char, typename... T>
 using result_t = std::tuple<formatter<remove_cvref_t<T>, Char>...>;
 
 using std::get;
-template <typename Tuple, typename Char, std::size_t... Is>
+template <typename Tuple, typename Char, size_t... Is>
 auto get_formatters(index_sequence<Is...>)
     -> result_t<Char, decltype(get<Is>(std::declval<Tuple>()))...>;
 }  // namespace tuple
@@ -219,7 +217,7 @@ template <typename R> struct range_reference_type_impl {
   using type = decltype(*detail::range_begin(std::declval<R&>()));
 };
 
-template <typename T, std::size_t N> struct range_reference_type_impl<T[N]> {
+template <typename T, size_t N> struct range_reference_type_impl<T[N]> {
   using type = T&;
 };
 
@@ -670,7 +668,7 @@ struct formatter<join_view<It, Sentinel, Char>, Char> {
   }
 };
 
-template <typename Char, typename Tuple> struct tuple_join_view : detail::view {
+template <typename Tuple, typename Char> struct tuple_join_view : detail::view {
   const Tuple& tuple;
   basic_string_view<Char> sep;
 
@@ -685,15 +683,15 @@ template <typename Char, typename Tuple> struct tuple_join_view : detail::view {
 #  define FMT_TUPLE_JOIN_SPECIFIERS 0
 #endif
 
-template <typename Char, typename Tuple>
-struct formatter<tuple_join_view<Char, Tuple>, Char,
+template <typename Tuple, typename Char>
+struct formatter<tuple_join_view<Tuple, Char>, Char,
                  enable_if_t<is_tuple_like<Tuple>::value>> {
   FMT_CONSTEXPR auto parse(parse_context<Char>& ctx) -> const Char* {
     return do_parse(ctx, std::tuple_size<Tuple>());
   }
 
   template <typename FormatContext>
-  auto format(const tuple_join_view<Char, Tuple>& value,
+  auto format(const tuple_join_view<Tuple, Char>& value,
               FormatContext& ctx) const -> typename FormatContext::iterator {
     return do_format(value, ctx, std::tuple_size<Tuple>());
   }
@@ -725,14 +723,14 @@ struct formatter<tuple_join_view<Char, Tuple>, Char,
   }
 
   template <typename FormatContext>
-  auto do_format(const tuple_join_view<Char, Tuple>&, FormatContext& ctx,
+  auto do_format(const tuple_join_view<Tuple, Char>&, FormatContext& ctx,
                  std::integral_constant<size_t, 0>) const ->
       typename FormatContext::iterator {
     return ctx.out();
   }
 
   template <typename FormatContext, size_t N>
-  auto do_format(const tuple_join_view<Char, Tuple>& value, FormatContext& ctx,
+  auto do_format(const tuple_join_view<Tuple, Char>& value, FormatContext& ctx,
                  std::integral_constant<size_t, N>) const ->
       typename FormatContext::iterator {
     using std::get;
@@ -774,13 +772,13 @@ struct formatter<
     : formatter<detail::all<typename T::container_type>, Char> {
   using all = detail::all<typename T::container_type>;
   template <typename FormatContext>
-  auto format(const T& t, FormatContext& ctx) const -> decltype(ctx.out()) {
+  auto format(const T& value, FormatContext& ctx) const -> decltype(ctx.out()) {
     struct getter : T {
-      static auto get(const T& t) -> all {
-        return {t.*(&getter::c)};  // Access c through the derived class.
+      static auto get(const T& v) -> all {
+        return {v.*(&getter::c)};  // Access c through the derived class.
       }
     };
-    return formatter<all>::format(getter::get(t), ctx);
+    return formatter<all>::format(getter::get(value), ctx);
   }
 };
 
@@ -825,7 +823,7 @@ auto join(Range&& r, string_view sep)
  */
 template <typename Tuple, FMT_ENABLE_IF(is_tuple_like<Tuple>::value)>
 FMT_CONSTEXPR auto join(const Tuple& tuple, string_view sep)
-    -> tuple_join_view<char, Tuple> {
+    -> tuple_join_view<Tuple, char> {
   return {tuple, sep};
 }
 

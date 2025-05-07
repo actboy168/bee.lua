@@ -1097,7 +1097,7 @@ template <> struct cache_accessor<double> {
     return {r.high(), r.low() == 0};
   }
 
-  static auto compute_delta(cache_entry_type const& cache, int beta) noexcept
+  static auto compute_delta(const cache_entry_type& cache, int beta) noexcept
       -> uint32_t {
     return static_cast<uint32_t>(cache.high() >> (64 - 1 - beta));
   }
@@ -1526,9 +1526,8 @@ template <typename F> class glibc_file : public file_base<F> {
   }
 
   void init_buffer() {
-    if (this->file_->_IO_write_ptr) return;
+    if (this->file_->_IO_write_ptr < this->file_->_IO_write_end) return;
     // Force buffer initialization by placing and removing a char in a buffer.
-    assume(this->file_->_IO_write_ptr >= this->file_->_IO_write_end);
     putc_unlocked(0, this->file_);
     --this->file_->_IO_write_ptr;
   }
