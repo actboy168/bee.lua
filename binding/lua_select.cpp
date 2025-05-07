@@ -15,41 +15,41 @@
 namespace bee::lua_select {
 #if defined(_WIN32)
     struct socket_set {
-        struct storage {
-            uint32_t fd_count;
-            SOCKET fd_array[1];
-        };
         socket_set()
             : set(nullptr)
             , cap(0) {
             reset(FD_SETSIZE);
         }
-        ~socket_set() {
-            clear();
-        }
-        void clear() {
-            if (set) {
-                delete[] (reinterpret_cast<uint8_t*>(set));
-            }
-        }
         void reset(size_t n) {
             if (n > cap) {
-                clear();
-                set = reinterpret_cast<storage*>(new uint8_t[sizeof(uint32_t) + sizeof(SOCKET) * n]);
+                set.reset(new std::byte[sizeof(uint32_t) + n * sizeof(SOCKET)]);
                 cap = n;
             }
-            set->fd_count = 0;
+            auto fdset      = ptr();
+            fdset->fd_count = 0;
         }
         fd_set* ptr() {
-            return reinterpret_cast<fd_set*>(set);
+            return reinterpret_cast<fd_set*>(set.get());
         }
-        void insert(SOCKET fd) {
-            set->fd_array[set->fd_count++] = fd;
+        const fd_set* ptr() const {
+            return reinterpret_cast<const fd_set*>(set.get());
         }
-        storage* set;
+        const SOCKET* get(uint32_t i) const {
+            auto fdset = ptr();
+            if (i >= fdset->fd_count) {
+                return nullptr;
+            }
+            return &fdset->fd_array[i];
+        }
+        void add(SOCKET fd) {
+            auto fdset                         = ptr();
+            fdset->fd_array[fdset->fd_count++] = fd;
+        }
+
+    private:
+        std::unique_ptr<std::byte[]> set;
         size_t cap;
     };
-
 #endif
 
     struct select_ctx {
@@ -58,7 +58,8 @@ namespace bee::lua_select {
 #if defined(_WIN32)
         socket_set readfds;
         socket_set writefds;
-        unsigned int i;
+        uint32_t i;
+        bool r;
 #else
         fd_set readfds;
         fd_set writefds;
@@ -109,23 +110,23 @@ namespace bee::lua_select {
     static int pairs_events(lua_State* L) {
         auto& ctx = lua::toudata<select_ctx>(L, lua_upvalueindex(1));
 #if defined(_WIN32)
-        auto rset = ctx.readfds.ptr();
-        auto wset = ctx.writefds.ptr();
-        auto rlen = rset->fd_count;
-        if (ctx.i < rset->fd_count) {
-            auto fd = rset->fd_array[ctx.i];
-            findref(L, lua_upvalueindex(1), (net::fd_t)fd);
-            lua_pushinteger(L, SELECT_READ);
-            ++ctx.i;
-            return 2;
+        if (ctx.r) {
+            if (auto fd = ctx.readfds.get(ctx.i)) {
+                findref(L, lua_upvalueindex(1), (net::fd_t)*fd);
+                lua_pushinteger(L, SELECT_READ);
+                ++ctx.i;
+                return 2;
+            }
+            ctx.i = 0;
+            ctx.r = false;
         }
-        if (ctx.i < rlen + wset->fd_count) {
-            auto fd = wset->fd_array[ctx.i - rlen];
-            findref(L, lua_upvalueindex(1), (net::fd_t)fd);
+        if (auto fd = ctx.writefds.get(ctx.i)) {
+            findref(L, lua_upvalueindex(1), (net::fd_t)*fd);
             lua_pushinteger(L, SELECT_WRITE);
             ++ctx.i;
             return 2;
         }
+        return 0;
 #else
         for (; ctx.i <= ctx.maxfd; ++ctx.i) {
             lua_Integer event = 0;
@@ -142,8 +143,8 @@ namespace bee::lua_select {
                 return 2;
             }
         }
-#endif
         return 0;
+#endif
     }
     static int empty_events(lua_State* L) {
         return 0;
@@ -169,13 +170,14 @@ namespace bee::lua_select {
         }
 #if defined(_WIN32)
         ctx.i = 0;
+        ctx.r = true;
         ctx.readfds.reset(ctx.readset.size());
         for (auto fd : ctx.readset) {
-            ctx.readfds.insert(fd);
+            ctx.readfds.add(fd);
         }
         ctx.writefds.reset(ctx.writeset.size());
         for (auto fd : ctx.writeset) {
-            ctx.writefds.insert(fd);
+            ctx.writefds.add(fd);
         }
         int ok = ::select(0, ctx.readfds.ptr(), ctx.writefds.ptr(), ctx.writefds.ptr(), timeop);
 #else
