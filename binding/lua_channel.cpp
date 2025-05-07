@@ -69,7 +69,7 @@ namespace bee::lua_channel {
 
     class channelmgr {
     public:
-        channel::box create(zstring_view name) noexcept {
+        channel::box create(std::string_view name) noexcept {
             std::unique_lock<spinlock> lk(mutex);
             channel* c = new channel;
             if (!c->init()) {
@@ -83,7 +83,7 @@ namespace bee::lua_channel {
             }
             return r->second;
         }
-        void destroy(zstring_view name) noexcept {
+        void destroy(std::string_view name) noexcept {
             std::unique_lock<spinlock> lk(mutex);
             std::string namestr { name.data(), name.size() };
             auto it = channels.find(namestr);
@@ -92,7 +92,7 @@ namespace bee::lua_channel {
                 channels.erase(it);
             }
         }
-        channel::box query(zstring_view name) noexcept {
+        channel::box query(std::string_view name) noexcept {
             std::unique_lock<spinlock> lk(mutex);
             std::string namestr { name.data(), name.size() };
             auto it = channels.find(namestr);

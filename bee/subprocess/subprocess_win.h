@@ -1,11 +1,11 @@
 #pragma once
 
 #include <bee/subprocess/common.h>
-#include <bee/utility/zstring_view.h>
 
 #include <cstdint>
 #include <map>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace bee::subprocess {
@@ -78,7 +78,7 @@ namespace bee::subprocess {
     };
 
     struct args_t {
-        void push(zstring_view v) noexcept;
+        void push(std::string_view v) noexcept;
         void push(const std::wstring& v) noexcept;
         std::wstring& operator[](size_t i) noexcept {
             return data_[i];

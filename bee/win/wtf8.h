@@ -1,10 +1,9 @@
 #pragma once
 
-#include <bee/utility/zstring_view.h>
-
 #include <string>
+#include <string_view>
 
 namespace bee::wtf8 {
-    std::wstring u2w(zstring_view str) noexcept;
-    std::string w2u(wzstring_view wstr) noexcept;
+    std::wstring u2w(std::string_view str) noexcept;
+    std::string w2u(std::wstring_view wstr) noexcept;
 }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <bee/utility/zstring_view.h>
+#include <string_view>
 
 namespace bee {
-    void thread_setname(zstring_view name) noexcept;
+    void thread_setname(std::string_view name) noexcept;
 }

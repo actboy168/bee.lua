@@ -14,7 +14,7 @@
 #define SIGKILL 9
 
 namespace bee::subprocess {
-    void args_t::push(zstring_view v) noexcept {
+    void args_t::push(std::string_view v) noexcept {
         data_.emplace_back(wtf8::u2w(v));
     }
     void args_t::push(const std::wstring& v) noexcept {

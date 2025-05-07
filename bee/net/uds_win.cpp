@@ -21,7 +21,7 @@
 namespace bee::net::socket {
 
     namespace fileutil {
-        static FILE* open(zstring_view filename, const wchar_t* mode) noexcept {
+        static FILE* open(std::string_view filename, const wchar_t* mode) noexcept {
 #if defined(_MSC_VER)
 #    pragma warning(push)
 #    pragma warning(disable : 4996)
@@ -48,7 +48,7 @@ namespace bee::net::socket {
         }
     }
 
-    static std::string file_read(zstring_view filename) noexcept {
+    static std::string file_read(std::string_view filename) noexcept {
         FILE* f = fileutil::open(filename, L"rb");
         if (!f) {
             return std::string();
@@ -59,7 +59,7 @@ namespace bee::net::socket {
         return result;
     }
 
-    static bool file_write(zstring_view filename, const std::string& value) noexcept {
+    static bool file_write(std::string_view filename, const std::string& value) noexcept {
         FILE* f = fileutil::open(filename, L"wb");
         if (!f) {
             return false;
@@ -87,7 +87,7 @@ namespace bee::net::socket {
         return true;
     }
 
-    static bool write_tcp_port(zstring_view path, fd_t s) noexcept {
+    static bool write_tcp_port(std::string_view path, fd_t s) noexcept {
         endpoint ep;
         if (socket::getsockname(s, ep)) {
             auto tcpport = ep.get_port();

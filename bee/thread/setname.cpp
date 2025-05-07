@@ -42,7 +42,7 @@ namespace bee {
     }
 #endif
 
-    void thread_setname(zstring_view name) noexcept {
+    void thread_setname(std::string_view name) noexcept {
 #if defined(_WIN32)
         using SetThreadDescriptionProc = HRESULT(WINAPI*)(HANDLE, PCWSTR);
         if (HMODULE kernel32 = GetModuleHandleW(L"kernel32.dll")) {

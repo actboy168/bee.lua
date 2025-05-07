@@ -1,11 +1,10 @@
 #pragma once
 
-#include <bee/utility/zstring_view.h>
-
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <type_traits>
 
@@ -38,7 +37,7 @@ namespace bee::net {
         endpoint() noexcept;
         std::tuple<std::string, uint16_t> get_inet() const noexcept;
         std::tuple<std::string, uint16_t> get_inet6() const noexcept;
-        std::tuple<un_format, zstring_view> get_unix() const noexcept;
+        std::tuple<un_format, std::string_view> get_unix() const noexcept;
         family get_family() const noexcept;
         uint16_t get_port() const noexcept;
         const sockaddr* addr() const noexcept;
@@ -52,10 +51,10 @@ namespace bee::net {
             memcpy(m_data, &v, sizeof(v));
         }
 
-        static bool ctor_hostname(endpoint& ep, zstring_view name, uint16_t port) noexcept;
-        static bool ctor_unix(endpoint& ep, zstring_view path) noexcept;
-        static bool ctor_inet(endpoint& ep, zstring_view ip, uint16_t port) noexcept;
-        static bool ctor_inet6(endpoint& ep, zstring_view ip, uint16_t port) noexcept;
+        static bool ctor_hostname(endpoint& ep, std::string_view name, uint16_t port) noexcept;
+        static bool ctor_unix(endpoint& ep, std::string_view path) noexcept;
+        static bool ctor_inet(endpoint& ep, std::string_view ip, uint16_t port) noexcept;
+        static bool ctor_inet6(endpoint& ep, std::string_view ip, uint16_t port) noexcept;
         static endpoint from_localhost(uint16_t port) noexcept;
 
     private:

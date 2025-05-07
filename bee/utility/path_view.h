@@ -1,11 +1,11 @@
 #pragma once
 
-#include <bee/utility/zstring_view.h>
+#include <string_view>
 
 namespace bee {
 #if defined(_WIN32)
-    using path_view = wzstring_view;
+    using path_view = std::wstring_view;
 #else
-    using path_view = zstring_view;
+    using path_view = std::string_view;
 #endif
 }

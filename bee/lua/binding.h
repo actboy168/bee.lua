@@ -5,15 +5,15 @@
 #include <bee/nonstd/to_underlying.h>
 #include <bee/nonstd/unreachable.h>
 #include <bee/reflection.h>
-#include <bee/utility/zstring_view.h>
 
 #include <algorithm>
 #include <cstdint>
 #include <limits>
 #include <lua.hpp>
+#include <string_view>
 
 namespace bee::lua {
-    inline zstring_view checkstrview(lua_State* L, int idx) {
+    inline std::string_view checkstrview(lua_State* L, int idx) {
         size_t len      = 0;
         const char* buf = luaL_checklstring(L, idx, &len);
         return { buf, len };

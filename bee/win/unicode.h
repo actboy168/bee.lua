@@ -1,10 +1,9 @@
 #pragma once
 
-#include <bee/utility/zstring_view.h>
-
 #include <string>
+#include <string_view>
 
 namespace bee::win {
-    std::string a2u(zstring_view str) noexcept;
-    std::string u2a(zstring_view str) noexcept;
+    std::string a2u(std::string_view str) noexcept;
+    std::string u2a(std::string_view str) noexcept;
 }

@@ -2,7 +2,7 @@
 #include <bee/win/wtf8.h>
 
 namespace bee::wtf8 {
-    std::wstring u2w(zstring_view str) noexcept {
+    std::wstring u2w(std::string_view str) noexcept {
         if (str.empty()) {
             return L"";
         }
@@ -15,7 +15,7 @@ namespace bee::wtf8 {
         return wresult;
     }
 
-    std::string w2u(wzstring_view wstr) noexcept {
+    std::string w2u(std::wstring_view wstr) noexcept {
         if (wstr.empty()) {
             return "";
         }

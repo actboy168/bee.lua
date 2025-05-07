@@ -11,7 +11,6 @@
 
 #    include <Windows.h>
 #    include <bee/utility/dynarray.h>
-#    include <bee/utility/zstring_view.h>
 #    include <bee/win/cwtf8.h>
 #    include <io.h>
 
@@ -19,6 +18,7 @@
 #    include <atomic>
 #    include <cassert>
 #    include <string>
+#    include <string_view>
 
 namespace {
     struct spinlock {
@@ -47,7 +47,7 @@ namespace {
         }
         std::atomic<bool> l = { false };
     };
-    std::wstring u2w(bee::zstring_view str) noexcept {
+    std::wstring u2w(std::string_view str) noexcept {
         if (str.empty()) {
             return L"";
         }
@@ -198,7 +198,7 @@ unsigned long __stdcall utf8_FormatMessageA(
     return (unsigned long)len;
 }
 
-static void ConsoleWrite(FILE* stream, bee::zstring_view str) {
+static void ConsoleWrite(FILE* stream, std::string_view str) {
     HANDLE handle = (HANDLE)_get_osfhandle(_fileno(stream));
     if (FILE_TYPE_CHAR == GetFileType(handle)) {
         auto r = u2w(str);

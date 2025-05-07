@@ -36,7 +36,7 @@ namespace bee::net {
 
     namespace {
         struct AddrInfo {
-            AddrInfo(zstring_view name, const char* port) noexcept {
+            AddrInfo(std::string_view name, const char* port) noexcept {
                 addrinfo hint  = {};
                 hint.ai_family = AF_UNSPEC;
                 if (needsnolookup(name)) {
@@ -61,7 +61,7 @@ namespace bee::net {
             const addrinfo* operator->() const noexcept {
                 return info;
             }
-            static bool needsnolookup(zstring_view name) noexcept {
+            static bool needsnolookup(std::string_view name) noexcept {
                 size_t pos = name.find_first_not_of("0123456789.");
                 if (pos == std::string_view::npos) {
                     return true;
@@ -95,7 +95,7 @@ namespace bee::net {
         }
     }
 
-    bool endpoint::ctor_hostname(endpoint& ep, zstring_view name, uint16_t port) noexcept {
+    bool endpoint::ctor_hostname(endpoint& ep, std::string_view name, uint16_t port) noexcept {
         constexpr auto portn = std::numeric_limits<uint16_t>::digits10 + 1;
         char portstr[portn + 1];
         if (auto [p, ec] = std::to_chars(portstr, portstr + portn, port); ec != std::errc()) {
@@ -127,7 +127,7 @@ namespace bee::net {
         }
     }
 
-    bool endpoint::ctor_unix(endpoint& ep, zstring_view path) noexcept {
+    bool endpoint::ctor_unix(endpoint& ep, std::string_view path) noexcept {
         if (path.size() >= UNIX_PATH_MAX) {
             return false;
         }
@@ -139,7 +139,7 @@ namespace bee::net {
         return true;
     }
 
-    bool endpoint::ctor_inet(endpoint& ep, zstring_view ip, uint16_t port) noexcept {
+    bool endpoint::ctor_inet(endpoint& ep, std::string_view ip, uint16_t port) noexcept {
         struct sockaddr_in sa4;
         if (1 == inet_pton(AF_INET, ip.data(), &sa4.sin_addr)) {
             sa4.sin_family = AF_INET;
@@ -150,7 +150,7 @@ namespace bee::net {
         return false;
     }
 
-    bool endpoint::ctor_inet6(endpoint& ep, zstring_view ip, uint16_t port) noexcept {
+    bool endpoint::ctor_inet6(endpoint& ep, std::string_view ip, uint16_t port) noexcept {
         struct sockaddr_in6 sa6;
         if (1 == inet_pton(AF_INET6, ip.data(), &sa6.sin6_addr)) {
             sa6.sin6_family = AF_INET6;
@@ -189,7 +189,7 @@ namespace bee::net {
         return { std::string(s), ntohs(((struct sockaddr_in6*)sa)->sin6_port) };
     }
 
-    std::tuple<un_format, zstring_view> endpoint::get_unix() const noexcept {
+    std::tuple<un_format, std::string_view> endpoint::get_unix() const noexcept {
         const sockaddr* sa = addr();
         if (sa->sa_family != AF_UNIX) {
             return { un_format::invalid, {} };

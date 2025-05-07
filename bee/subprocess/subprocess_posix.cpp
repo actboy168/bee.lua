@@ -33,7 +33,7 @@ namespace bee::subprocess {
         data_.emplace_back(str);
     }
 
-    void args_t::push(zstring_view str) noexcept {
+    void args_t::push(std::string_view str) noexcept {
         dynarray<char> tmp(str.data(), str.size() + 1);
         data_.emplace_back(tmp.release());
     }
