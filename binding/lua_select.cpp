@@ -11,6 +11,7 @@
 #include <bee/thread/simplethread.h>
 
 #include <set>
+#include <memory>
 
 namespace bee::lua_select {
 #if defined(_WIN32)
