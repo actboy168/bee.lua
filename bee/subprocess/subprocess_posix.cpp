@@ -83,7 +83,7 @@ namespace bee::subprocess {
             }
         }
         for (auto& e : set_env_) {
-            const std::string_view& key = e.first;
+            const auto& key = e.first;
             if (e.second.has_value()) {
                 env_append(envs, key, *e.second);
             }

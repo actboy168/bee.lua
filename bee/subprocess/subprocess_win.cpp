@@ -150,14 +150,14 @@ namespace bee::subprocess {
         set_env_[wtf8::u2w(key)] = std::nullopt;
     }
 
-    static void env_append(strbuilder<wchar_t>& envs, const std::wstring& k, std::string_view v) noexcept {
+    static void env_append(strbuilder<wchar_t>& envs, std::wstring_view k, std::string_view v) noexcept {
         envs += k;
         envs += L"=";
         envs += wtf8::u2w(v);
         envs += L"\0";
     }
 
-    static void env_append(strbuilder<wchar_t>& envs, const std::wstring& k, const std::wstring& v) noexcept {
+    static void env_append(strbuilder<wchar_t>& envs, std::wstring_view k, std::wstring_view v) noexcept {
         envs += k;
         envs += L"=";
         envs += v;
@@ -175,11 +175,11 @@ namespace bee::subprocess {
         strbuilder<wchar_t> res(1024);
         wchar_t* escp = es;
         while (*escp != L'\0') {
-            std::wstring str = escp;
-            auto pos         = str.find(L'=');
-            std::wstring key = str.substr(0, pos);
-            std::wstring val = str.substr(pos + 1, str.length());
-            const auto it    = set_env_.find(key);
+            std::wstring_view str = escp;
+            auto pos              = str.find(L'=');
+            std::wstring_view key = str.substr(0, pos);
+            std::wstring_view val = str.substr(pos + 1, str.length());
+            const auto it         = set_env_.find(std::wstring { key });
             if (it == set_env_.end()) {
                 env_append(res, key, val);
             } else {
@@ -191,7 +191,7 @@ namespace bee::subprocess {
             escp += str.length() + 1;
         }
         for (auto& e : set_env_) {
-            const std::wstring& key = e.first;
+            const auto& key = e.first;
             if (e.second.has_value()) {
                 env_append(res, key, *e.second);
             }
@@ -355,7 +355,7 @@ namespace bee::subprocess {
             si.dwFlags |= STARTF_USESHOWWINDOW;
             si.wShowWindow = SW_HIDE;
         }
-        if (!::CreateProcessW(application, command_line.data(), NULL, NULL, inherit_handle_, flags_ | NORMAL_PRIORITY_CLASS, env_, cwd.empty()? nullptr: cwd.data(), &si, (LPPROCESS_INFORMATION)&pi_)) {
+        if (!::CreateProcessW(application, command_line.data(), NULL, NULL, inherit_handle_, flags_ | NORMAL_PRIORITY_CLASS, env_, cwd.empty() ? nullptr : cwd.data(), &si, (LPPROCESS_INFORMATION)&pi_)) {
             startupinfo_release(si);
             return false;
         }
