@@ -82,7 +82,7 @@ inline void wtf8_to_utf16(const char* input, size_t length, wchar_t* output, siz
     for (size_t i = 0; i < length;) {
         uint8_t n = wtf8_decode(&input[i], &code_point);
         WTF8_ASSUME(n > 0);
-        if (code_point > 0x10000) {
+        if (code_point > 0xFFFF) {
             WTF8_ASSUME(code_point < 0x10FFFF);
             *output++ = (((code_point - 0x10000) >> 10) + 0xD800);
             *output++ = ((code_point - 0x10000) & 0x3FF) + 0xDC00;

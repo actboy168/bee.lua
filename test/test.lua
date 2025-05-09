@@ -44,6 +44,10 @@ require "test_time"
 require "test_channel"
 require "test_sys"
 
+if platform.os == "windows" then
+    require "test_windows"
+end
+
 do
     local fs = require "bee.filesystem"
     if lt.options.touch then
