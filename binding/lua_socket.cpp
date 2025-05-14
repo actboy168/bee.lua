@@ -114,7 +114,40 @@ namespace bee::lua_socket {
                 return lua::checkudata<net::endpoint>(L, idx);
             }
         }
-
+        static int connect(lua_State* L, net::fd_t fd) {
+            net::endpoint stack_ep;
+            const auto& ep = to_endpoint(L, 2, stack_ep);
+            switch (net::socket::connect(fd, ep)) {
+            case net::socket::status::success:
+                lua_pushboolean(L, 1);
+                return 1;
+            case net::socket::status::wait:
+                lua_pushboolean(L, 0);
+                return 1;
+            case net::socket::status::failed:
+                return lua::return_net_error(L, "connect");
+            default:
+                std::unreachable();
+            }
+        }
+        static int bind(lua_State* L, net::fd_t fd) {
+            net::endpoint stack_ep;
+            const auto& ep = to_endpoint(L, 2, stack_ep);
+            if (!net::socket::bind(fd, ep)) {
+                return lua::return_net_error(L, "bind");
+            }
+            lua_pushboolean(L, 1);
+            return 1;
+        }
+        static int listen(lua_State* L, net::fd_t fd) {
+            constexpr int kDefaultBackLog = 5;
+            auto backlog                  = lua::optinteger<int, kDefaultBackLog>(L, 2);
+            if (!net::socket::listen(fd, backlog)) {
+                return lua::return_net_error(L, "listen");
+            }
+            lua_pushboolean(L, 1);
+            return 1;
+        }
         static int accept(lua_State* L, net::fd_t fd) {
             net::fd_t newfd;
             switch (net::socket::accept(fd, newfd)) {
@@ -256,10 +289,6 @@ namespace bee::lua_socket {
             }
             return 0;
         }
-        static int handle(lua_State* L, net::fd_t fd) {
-            lua_pushlightuserdata(L, (void*)(intptr_t)fd);
-            return 1;
-        }
         static int option(lua_State* L, net::fd_t fd) {
             static const char* const opts[] = { "reuseaddr", "sndbuf", "rcvbuf", NULL };
             auto opt                        = (net::socket::option)luaL_checkoption(L, 2, NULL, opts);
@@ -271,38 +300,8 @@ namespace bee::lua_socket {
             lua_pushboolean(L, 1);
             return 1;
         }
-        static int connect(lua_State* L, net::fd_t fd) {
-            net::endpoint stack_ep;
-            const auto& ep = to_endpoint(L, 2, stack_ep);
-            switch (net::socket::connect(fd, ep)) {
-            case net::socket::status::success:
-                lua_pushboolean(L, 1);
-                return 1;
-            case net::socket::status::wait:
-                lua_pushboolean(L, 0);
-                return 1;
-            case net::socket::status::failed:
-                return lua::return_net_error(L, "connect");
-            default:
-                std::unreachable();
-            }
-        }
-        static int bind(lua_State* L, net::fd_t fd) {
-            net::endpoint stack_ep;
-            const auto& ep = to_endpoint(L, 2, stack_ep);
-            if (!net::socket::bind(fd, ep)) {
-                return lua::return_net_error(L, "bind");
-            }
-            lua_pushboolean(L, 1);
-            return 1;
-        }
-        static int listen(lua_State* L, net::fd_t fd) {
-            constexpr int kDefaultBackLog = 5;
-            auto backlog                  = lua::optinteger<int, kDefaultBackLog>(L, 2);
-            if (!net::socket::listen(fd, backlog)) {
-                return lua::return_net_error(L, "listen");
-            }
-            lua_pushboolean(L, 1);
+        static int handle(lua_State* L, net::fd_t fd) {
+            lua_pushlightuserdata(L, (void*)(intptr_t)fd);
             return 1;
         }
         static int detach(lua_State* L) {
