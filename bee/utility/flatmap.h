@@ -176,7 +176,7 @@ namespace bee {
         template <typename MappedType>
         void insert_or_assign(const key_type &key, MappedType obj) {
             auto [found, value] = find_or_insert(key);
-            if constexpr (!std::is_trivially_destructible<mapped_type>::value) {
+            if constexpr (!std::is_trivially_destructible_v<mapped_type>) {
                 if (found) {
                     value->~mapped_type();
                 }
@@ -233,7 +233,7 @@ namespace bee {
         }
 
         void clear() noexcept {
-            if constexpr (!std::is_trivially_destructible<bucket>::value) {
+            if constexpr (!std::is_trivially_destructible_v<bucket>) {
                 if (m_size != 0) {
                     for (size_t i = 0; i < m_mask + 1; ++i) {
                         if (m_buckets[i].dib != 0) {

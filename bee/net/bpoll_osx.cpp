@@ -8,7 +8,6 @@
 #include <unistd.h>
 
 #include <cassert>
-#include <limits>
 
 namespace bee::net {
     constexpr uint8_t KQUEUE_STATE_REGISTERED = 0x01;

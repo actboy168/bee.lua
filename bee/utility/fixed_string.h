@@ -3,7 +3,6 @@
 #include <cstddef>
 #include <cstdlib>
 #include <exception>
-#include <string_view>
 #include <bee/utility/assume.h>
 
 namespace bee {

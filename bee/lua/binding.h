@@ -6,7 +6,6 @@
 #include <bee/nonstd/unreachable.h>
 #include <bee/reflection.h>
 
-#include <algorithm>
 #include <cstdint>
 #include <limits>
 #include <lua.hpp>

@@ -2,7 +2,6 @@
 
 #include <cstring>
 #include <deque>
-#include <string_view>
 
 namespace bee {
     template <class char_t, size_t N = 1024>

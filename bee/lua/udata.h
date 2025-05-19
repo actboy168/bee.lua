@@ -2,10 +2,9 @@
 
 #include <bee/reflection.h>
 
-#include <algorithm>
 #include <cstdint>
-#include <limits>
 #include <lua.hpp>
+#include <type_traits>
 
 namespace bee::lua {
     union lua_maxalign_t {
@@ -56,7 +55,7 @@ namespace bee::lua {
     template <typename T>
     void getmetatable(lua_State* L) {
         if (luaL_newmetatable(L, reflection::name_v<T>.data())) {
-            if constexpr (!std::is_trivially_destructible<T>::value) {
+            if constexpr (!std::is_trivially_destructible_v<T>) {
                 lua_pushcfunction(L, udata_destroy<T>);
                 lua_setfield(L, -2, "__gc");
             }
