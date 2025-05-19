@@ -15,6 +15,8 @@
 #include "lua.h"
 
 
+#define l_numbits(t)	cast_int(sizeof(t) * CHAR_BIT)
+
 /*
 ** 'l_mem' is a signed integer big enough to count the total memory
 ** used by Lua.  (It is signed due to the use of debt in several
@@ -33,7 +35,7 @@ typedef unsigned long lu_mem;
 #endif				/* } */
 
 #define MAX_LMEM  \
-	cast(l_mem, (cast(lu_mem, 1) << (sizeof(l_mem) * 8 - 1)) - 1)
+	cast(l_mem, (cast(lu_mem, 1) << (l_numbits(l_mem) - 1)) - 1)
 
 
 /* chars used as small naturals (so that 'char' is reserved for characters) */
@@ -61,7 +63,7 @@ typedef lu_byte TStatus;
 ** floor of the log2 of the maximum signed value for integral type 't'.
 ** (That is, maximum 'n' such that '2^n' fits in the given signed type.)
 */
-#define log2maxs(t)	cast_int(sizeof(t) * 8 - 2)
+#define log2maxs(t)	(l_numbits(t) - 2)
 
 
 /*
@@ -135,13 +137,15 @@ typedef LUAI_UACINT l_uacInt;
 #define cast_voidp(i)	cast(void *, (i))
 #define cast_num(i)	cast(lua_Number, (i))
 #define cast_int(i)	cast(int, (i))
+#define cast_short(i)	cast(short, (i))
 #define cast_uint(i)	cast(unsigned int, (i))
-#define cast_ulong(i)	cast(unsigned long, (i))
 #define cast_byte(i)	cast(lu_byte, (i))
 #define cast_uchar(i)	cast(unsigned char, (i))
 #define cast_char(i)	cast(char, (i))
 #define cast_charp(i)	cast(char *, (i))
 #define cast_sizet(i)	cast(size_t, (i))
+#define cast_Integer(i)	cast(lua_Integer, (i))
+#define cast_Inst(i)	cast(Instruction, (i))
 
 
 /* cast a signed lua_Integer to lua_Unsigned */

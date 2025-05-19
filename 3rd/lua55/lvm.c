@@ -327,7 +327,7 @@ lu_byte luaV_finishget (lua_State *L, const TValue *t, TValue *key,
 ** Finish a table assignment 't[key] = val'.
 ** About anchoring the table before the call to 'luaH_finishset':
 ** This call may trigger an emergency collection. When loop>0,
-** the table being acessed is a field in some metatable. If this
+** the table being accessed is a field in some metatable. If this
 ** metatable is weak and the table is not anchored, this collection
 ** could collect that table while it is being updated.
 */
@@ -774,7 +774,7 @@ lua_Number luaV_modf (lua_State *L, lua_Number m, lua_Number n) {
 
 
 /* number of bits in an integer */
-#define NBITS	cast_int(sizeof(lua_Integer) * CHAR_BIT)
+#define NBITS	l_numbits(lua_Integer)
 
 
 /*
