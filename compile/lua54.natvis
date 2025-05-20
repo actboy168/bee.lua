@@ -8,11 +8,16 @@
       <Synthetic Name="[callinfo]">
         <DisplayString>------------------------------------</DisplayString>
       </Synthetic>
-      <LinkedListItems>
-        <HeadPointer>ci</HeadPointer>
-        <NextPointer>previous</NextPointer>
-        <ValueNode>this</ValueNode>
-      </LinkedListItems>
+      <CustomListItems>
+        <Variable Name="it" InitialValue="ci"/>
+        <Variable Name="i" InitialValue="0"/>
+        <Loop>
+          <Break Condition="!it"/>
+          <Item Name="[{i}]">it</Item>
+          <Exec>i = i + 1</Exec>
+          <Exec>it = it-&gt;previous</Exec>
+        </Loop>
+      </CustomListItems>
     </Expand>
   </Type>
   <Type Name="CallInfo">
@@ -25,7 +30,38 @@
     <!-- EOF -->
     <DisplayString Condition="(func.p->val.tt_) == 0x00">&lt;---Stack Bottom---&gt;</DisplayString>
     <Expand>
-      <ExpandedItem>func</ExpandedItem>
+      <CustomListItems>
+        <Variable Name="v_proto" InitialValue="(Proto*)0"/>
+        <Variable Name="v_currentpc" InitialValue="0"/>
+        <Variable Name="v_baseline" InitialValue="0"/>
+        <Variable Name="v_basepc" InitialValue="0"/>
+        <Variable Name="v_i" InitialValue="0"/>
+        <If Condition="(func.p->val.tt_) == 0x46">
+          <Exec>v_proto = ((Closure *)(func.p-&gt;val.value_.gc))-&gt;l.p</Exec>
+          <Exec>v_currentpc = u.l.savedpc - v_proto-&gt;code - 1</Exec>
+          <If Condition="v_proto->lineinfo">
+            <If Condition="(v_proto->sizeabslineinfo == 0) || (v_currentpc &lt; v_proto->abslineinfo[0].pc)">
+              <Exec>v_baseline = v_proto-&gt;linedefined</Exec>
+              <Exec>v_basepc = -1</Exec>
+            </If>
+            <Else>
+              <Exec>v_i = v_currentpc / 128 - 1</Exec>
+              <Loop>
+                <Break Condition="v_i + 1 >= v_proto->sizeabslineinfo || v_currentpc &lt; v_proto->abslineinfo[v_i + 1].pc"/>
+                <Exec>v_i = v_i + 1</Exec>
+              </Loop>
+              <Exec>v_baseline = v_proto-&gt;abslineinfo[v_i].line</Exec>
+              <Exec>v_basepc = v_proto-&gt;abslineinfo[v_i].pc</Exec>
+            </Else>
+            <Loop>
+              <Break Condition="v_basepc >= v_currentpc"/>
+              <Exec>v_basepc = v_basepc + 1</Exec>
+              <Exec>v_baseline = v_baseline + v_proto-&gt;lineinfo[v_basepc]</Exec>
+            </Loop>
+            <Item Name="currentline">v_baseline</Item>
+          </If>
+        </If>
+      </CustomListItems>
     </Expand>
   </Type>
   <Type Name="StackValue">
