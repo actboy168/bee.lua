@@ -30,13 +30,12 @@ namespace bee {
             int64_t minor_version;
             int64_t patch_version;
         };
-#    if defined(_M_ARM64) || defined(__aarch64__)
-#        define msgSend objc_msgSend
-#    else
-#        define msgSend objc_msgSend_stret
-#    endif
         // NSOperatingSystemVersion version = [processInfo operatingSystemVersion]
-        OSVersion version = reinterpret_cast<OSVersion (*)(id, SEL)>(msgSend)(processInfo, sel_getUid("operatingSystemVersion"));
+#    if defined(_M_ARM64) || defined(__aarch64__)
+        OSVersion version = reinterpret_cast<OSVersion (*)(id, SEL)>(objc_msgSend)(processInfo, sel_getUid("operatingSystemVersion"));
+#    else
+        OSVersion version = reinterpret_cast<OSVersion (*)(id, SEL)>(objc_msgSend_stret)(processInfo, sel_getUid("operatingSystemVersion"));
+#    endif
         return {
             static_cast<uint32_t>(version.major_version),
             static_cast<uint32_t>(version.minor_version),
