@@ -58,6 +58,7 @@
 #    endif
 #    define lua_assert(expression)       (void)((!!(expression)) || (_bee_lua_assert  (   #expression, __FILE__, (unsigned)(__LINE__)), 0))
 #    define luai_apicheck(l, expression) (void)((!!(expression)) || (_bee_lua_apicheck(l, #expression, __FILE__, (unsigned)(__LINE__)), 0))
+#    define assert_code(c) c
 #endif
 
 #define l_randomizePivot(L) (~0)

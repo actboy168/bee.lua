@@ -4,7 +4,9 @@
 
 #if LUA_VERSION_NUM >= 505
 
+#    include <stdio.h>
 #    include <stdlib.h>
+#    include <string.h>
 
 #    include "bee_lua55.h"
 

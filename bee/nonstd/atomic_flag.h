@@ -2,6 +2,10 @@
 
 #include <atomic>
 
+#if __has_include(<version>)
+#    include <version>
+#endif
+
 namespace bee {
 #if defined(__cpp_lib_atomic_flag_test)  // c++20
     using std::atomic_flag;
