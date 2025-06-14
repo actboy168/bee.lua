@@ -7,6 +7,7 @@
 #    include <mstcpip.h>
 #    include <mswsock.h>
 #else
+#    include <errno.h>
 #    include <fcntl.h>
 #    include <netinet/in.h>
 #    include <netinet/tcp.h>

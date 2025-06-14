@@ -6,6 +6,16 @@ lm.compile_commands = "$builddir"
 
 lm.luadir = lm:path(lm.lua == "55" and "3rd/lua55" or "3rd/lua")
 
+local function macos_version()
+    local cxx = lm.cxx or "c++17"
+    local version = cxx:match "^c%+%+(.+)$"
+    if version == "17" then
+        return "macos10.15"
+    else
+        return "macos13.3"
+    end
+end
+
 lm:conf {
     c = "c11",
     cxx = "c++17",
@@ -21,7 +31,7 @@ lm:conf {
     },
     macos = {
         flags = "-Wunguarded-availability",
-        sys = "macos10.15",
+        sys = macos_version(),
     },
     linux = {
         crt = "static",
