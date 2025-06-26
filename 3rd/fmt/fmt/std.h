@@ -134,7 +134,7 @@ template <typename Variant, typename Char> class is_variant_formattable {
       check(std::index_sequence<Is...>);
 
  public:
-  static constexpr const bool value = decltype(check(
+  static constexpr bool value = decltype(check(
       std::make_index_sequence<std::variant_size<Variant>::value>()))::value;
 };
 
@@ -218,9 +218,9 @@ struct has_flip<T, void_t<decltype(std::declval<T>().flip())>>
     : std::true_type {};
 
 template <typename T> struct is_bit_reference_like {
-  static constexpr const bool value =
-      std::is_convertible<T, bool>::value &&
-      std::is_nothrow_assignable<T, bool>::value && has_flip<T>::value;
+  static constexpr bool value = std::is_convertible<T, bool>::value &&
+                                std::is_nothrow_assignable<T, bool>::value &&
+                                has_flip<T>::value;
 };
 
 // Workaround for libc++ incompatibility with C++ standard.
@@ -228,9 +228,22 @@ template <typename T> struct is_bit_reference_like {
 #ifdef _LIBCPP_VERSION
 template <typename C>
 struct is_bit_reference_like<std::__bit_const_reference<C>> {
-  static constexpr const bool value = true;
+  static constexpr bool value = true;
 };
 #endif
+
+template <typename T, typename Enable = void>
+struct has_format_as : std::false_type {};
+template <typename T>
+struct has_format_as<T, void_t<decltype(format_as(std::declval<const T&>()))>>
+    : std::true_type {};
+
+template <typename T, typename Enable = void>
+struct has_format_as_member : std::false_type {};
+template <typename T>
+struct has_format_as_member<
+    T, void_t<decltype(formatter<T>::format_as(std::declval<const T&>()))>>
+    : std::true_type {};
 
 }  // namespace detail
 
@@ -430,7 +443,7 @@ template <> struct formatter<std::source_location> {
 #if FMT_CPP_LIB_VARIANT
 
 template <typename T> struct is_variant_like {
-  static constexpr const bool value = detail::is_variant_like_<T>::value;
+  static constexpr bool value = detail::is_variant_like_<T>::value;
 };
 
 template <typename Char> struct formatter<std::monostate, Char> {
@@ -680,7 +693,11 @@ template <typename T, typename Char> struct formatter<std::complex<T>, Char> {
 
 template <typename T, typename Char>
 struct formatter<std::reference_wrapper<T>, Char,
-                 enable_if_t<is_formattable<remove_cvref_t<T>, Char>::value>>
+                 // Guard against format_as because reference_wrapper is
+                 // implicitly convertible to T&.
+                 enable_if_t<is_formattable<remove_cvref_t<T>, Char>::value &&
+                             !detail::has_format_as<T>::value &&
+                             !detail::has_format_as_member<T>::value>>
     : formatter<remove_cvref_t<T>, Char> {
   template <typename FormatContext>
   auto format(std::reference_wrapper<T> ref, FormatContext& ctx) const
