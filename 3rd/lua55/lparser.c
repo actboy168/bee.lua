@@ -50,11 +50,10 @@ typedef struct BlockCnt {
   struct BlockCnt *previous;  /* chain */
   int firstlabel;  /* index of first label in this block */
   int firstgoto;  /* index of first pending goto in this block */
-  lu_byte nactvar;  /* # active locals outside the block */
+  short nactvar;  /* number of active declarations at block entry */
   lu_byte upval;  /* true if some variable in the block is an upvalue */
   lu_byte isloop;  /* 1 if 'block' is a loop; 2 if it has pending breaks */
   lu_byte insidetbc;  /* true if inside the scope of a to-be-closed var. */
-  lu_byte globdec;  /* true if inside the scope of any global declaration */
 } BlockCnt;
 
 
@@ -197,8 +196,6 @@ static int new_varkind (LexState *ls, TString *name, lu_byte kind) {
   FuncState *fs = ls->fs;
   Dyndata *dyd = ls->dyd;
   Vardesc *var;
-  luaY_checklimit(fs, dyd->actvar.n + 1 - fs->firstlocal,
-                 MAXVARS, "local variables");
   luaM_growvector(L, dyd->actvar.arr, dyd->actvar.n + 1,
              dyd->actvar.size, Vardesc, SHRT_MAX, "variable declarationss");
   var = &dyd->actvar.arr[dyd->actvar.n++];
@@ -331,6 +328,7 @@ static void adjustlocalvars (LexState *ls, int nvars) {
     Vardesc *var = getlocalvardesc(fs, vidx);
     var->vd.ridx = cast_byte(reglevel++);
     var->vd.pidx = registerlocalvar(ls, fs, var->vd.name);
+    luaY_checklimit(fs, reglevel, MAXVARS, "local variables");
   }
 }
 
@@ -399,22 +397,35 @@ static int newupvalue (FuncState *fs, TString *name, expdesc *v) {
 /*
 ** Look for an active variable with the name 'n' in the
 ** function 'fs'. If found, initialize 'var' with it and return
-** its expression kind; otherwise return -1.
+** its expression kind; otherwise return -1. While searching,
+** var->u.info==-1 means that the preambular global declaration is
+** active (the default while there is no other global declaration);
+** var->u.info==-2 means there is no active collective declaration
+** (some previous global declaration but no collective declaration);
+** and var->u.info>=0 points to the inner-most (the first one found)
+** collective declaration, if there is one.
 */
 static int searchvar (FuncState *fs, TString *n, expdesc *var) {
   int i;
   for (i = cast_int(fs->nactvar) - 1; i >= 0; i--) {
     Vardesc *vd = getlocalvardesc(fs, i);
-    if (vd->vd.name == NULL) {  /* 'global *'? */
-      if (var->u.info == -1) {  /* no previous collective declaration? */
-        var->u.info = fs->firstlocal + i;  /* will use this one as default */
+    if (varglobal(vd)) {  /* global declaration? */
+      if (vd->vd.name == NULL) {  /* collective declaration? */
+        if (var->u.info < 0)  /* no previous collective declaration? */
+          var->u.info = fs->firstlocal + i;  /* this is the first one */
+      }
+      else {  /* global name */
+        if (eqstr(n, vd->vd.name)) {  /* found? */
+          init_exp(var, VGLOBAL, fs->firstlocal + i);
+          return VGLOBAL;
+        }
+        else if (var->u.info == -1)  /* active preambular declaration? */
+          var->u.info = -2;  /* invalidate preambular declaration */
       }
     }
     else if (eqstr(n, vd->vd.name)) {  /* found? */
       if (vd->vd.kind == RDKCTC)  /* compile-time constant? */
         init_exp(var, VCONST, fs->firstlocal + i);
-      else if (vd->vd.kind == GDKREG || vd->vd.kind == GDKCONST)
-        init_exp(var, VGLOBAL, fs->firstlocal + i);
       else  /* local variable */
         init_var(fs, var, i);
       return cast_int(var->k);
@@ -486,7 +497,7 @@ static void buildvar (LexState *ls, TString *varname, expdesc *var) {
     expdesc key;
     int info = var->u.info;
     /* global by default in the scope of a global declaration? */
-    if (info == -1 && fs->bl->globdec)
+    if (info == -2)
       luaK_semerror(ls, "variable '%s' not declared", getstr(varname));
     singlevaraux(fs, ls->envn, var, 1);  /* get environment variable */
     if (var->k == VGLOBAL)
@@ -542,13 +553,13 @@ static void adjust_assign (LexState *ls, int nvars, int nexps, expdesc *e) {
 
 /*
 ** Generates an error that a goto jumps into the scope of some
-** local variable.
+** variable declaration.
 */
 static l_noret jumpscopeerror (LexState *ls, Labeldesc *gt) {
   TString *tsname = getlocalvardesc(ls->fs, gt->nactvar)->vd.name;
-  const char *varname = getstr(tsname);
+  const char *varname = (tsname != NULL) ? getstr(tsname) : "*";
   luaK_semerror(ls,
-     "<goto %s> at line %d jumps into the scope of local '%s'",
+     "<goto %s> at line %d jumps into the scope of '%s'",
       getstr(gt->name), gt->line, varname);  /* raise the error */
 }
 
@@ -692,10 +703,6 @@ static void enterblock (FuncState *fs, BlockCnt *bl, lu_byte isloop) {
   bl->upval = 0;
   /* inherit 'insidetbc' from enclosing block */
   bl->insidetbc = (fs->bl != NULL && fs->bl->insidetbc);
-  /* inherit 'globdec' from enclosing block or enclosing function */
-  bl->globdec = fs->bl != NULL ? fs->bl->globdec
-              : fs->prev != NULL ? fs->prev->bl->globdec
-              : 0;  /* chunk's first block */
   bl->previous = fs->bl;  /* link block in function's block list */
   fs->bl = bl;
   lua_assert(fs->freereg == luaY_nvarstack(fs));
@@ -896,10 +903,8 @@ static void recfield (LexState *ls, ConsControl *cc) {
   FuncState *fs = ls->fs;
   lu_byte reg = ls->fs->freereg;
   expdesc tab, key, val;
-  if (ls->t.token == TK_NAME) {
-    luaY_checklimit(fs, cc->nh, INT_MAX / 2, "items in a constructor");
+  if (ls->t.token == TK_NAME)
     codename(ls, &key);
-  }
   else  /* ls->t.token == '[' */
     yindex(ls, &key);
   cc->nh++;
@@ -1733,7 +1738,7 @@ static void localfunc (LexState *ls) {
 }
 
 
-static lu_byte getvarattribute (LexState *ls) {
+static lu_byte getvarattribute (LexState *ls, lu_byte df) {
   /* attrib -> ['<' NAME '>'] */
   if (testnext(ls, '<')) {
     TString *ts = str_checkname(ls);
@@ -1746,7 +1751,7 @@ static lu_byte getvarattribute (LexState *ls) {
     else
       luaK_semerror(ls, "unknown attribute '%s'", attr);
   }
-  return VDKREG;  /* regular variable */
+  return df;  /* return default value */
 }
 
 
@@ -1767,10 +1772,12 @@ static void localstat (LexState *ls) {
   int nvars = 0;
   int nexps;
   expdesc e;
-  do {
-    TString *vname = str_checkname(ls);
-    lu_byte kind = getvarattribute(ls);
-    vidx = new_varkind(ls, vname, kind);
+  /* get prefixed attribute (if any); default is regular local variable */
+  lu_byte defkind = getvarattribute(ls, VDKREG);
+  do {  /* for each variable */
+    TString *vname = str_checkname(ls);  /* get its name */
+    lu_byte kind = getvarattribute(ls, defkind);  /* postfixed attribute */
+    vidx = new_varkind(ls, vname, kind);  /* predeclare it */
     if (kind == RDKTOCLOSE) {  /* to-be-closed? */
       if (toclose != -1)  /* one already present? */
         luaK_semerror(ls, "multiple to-be-closed variables in local list");
@@ -1778,13 +1785,13 @@ static void localstat (LexState *ls) {
     }
     nvars++;
   } while (testnext(ls, ','));
-  if (testnext(ls, '='))
+  if (testnext(ls, '='))  /* initialization? */
     nexps = explist(ls, &e);
   else {
     e.k = VVOID;
     nexps = 0;
   }
-  var = getlocalvardesc(fs, vidx);  /* get last variable */
+  var = getlocalvardesc(fs, vidx);  /* retrieve last variable */
   if (nvars == nexps &&  /* no adjustments? */
       var->vd.kind == RDKCONST &&  /* last variable is const? */
       luaK_exp2const(fs, &e, &var->k)) {  /* compile-time constant? */
@@ -1800,29 +1807,35 @@ static void localstat (LexState *ls) {
 }
 
 
-static lu_byte getglobalattribute (LexState *ls) {
-  lu_byte kind = getvarattribute(ls);
-  if (kind == RDKTOCLOSE)
-    luaK_semerror(ls, "global variables cannot be to-be-closed");
-  /* adjust kind for global variable */
-  return (kind == VDKREG) ? GDKREG : GDKCONST;
+static lu_byte getglobalattribute (LexState *ls, lu_byte df) {
+  lu_byte kind = getvarattribute(ls, df);
+  switch (kind) {
+    case RDKTOCLOSE:
+      luaK_semerror(ls, "global variables cannot be to-be-closed");
+      break;  /* to avoid warnings */
+    case RDKCONST:
+      return GDKCONST;  /* adjust kind for global variable */
+    default:
+      return kind;
+  }
 }
 
 
 static void globalstat (LexState *ls) {
-  /* globalstat -> (GLOBAL) '*' attrib
-     globalstat -> (GLOBAL) NAME attrib {',' NAME attrib} */
+  /* globalstat -> (GLOBAL) attrib '*'
+     globalstat -> (GLOBAL) attrib NAME attrib {',' NAME attrib} */
   FuncState *fs = ls->fs;
+  /* get prefixed attribute (if any); default is regular global variable */
+  lu_byte defkind = getglobalattribute(ls, GDKREG);
   if (testnext(ls, '*')) {
-    lu_byte kind = getglobalattribute(ls);
     /* use NULL as name to represent '*' entries */
-    new_varkind(ls, NULL, kind);
+    new_varkind(ls, NULL, defkind);
     fs->nactvar++;  /* activate declaration */
   }
   else {
-    do {
+    do {  /* list of names */
       TString *vname = str_checkname(ls);
-      lu_byte kind = getglobalattribute(ls);
+      lu_byte kind = getglobalattribute(ls, defkind);
       new_varkind(ls, vname, kind);
       fs->nactvar++;  /* activate declaration */
     } while (testnext(ls, ','));
@@ -1847,7 +1860,6 @@ static void globalfunc (LexState *ls, int line) {
 static void globalstatfunc (LexState *ls, int line) {
   /* stat -> GLOBAL globalfunc | GLOBAL globalstat */
   luaX_next(ls);  /* skip 'global' */
-  ls->fs->bl->globdec = 1;  /* in the scope of a global declaration */
   if (testnext(ls, TK_FUNCTION))
     globalfunc(ls, line);
   else
@@ -2001,10 +2013,11 @@ static void statement (LexState *ls) {
     case TK_NAME: {
       /* compatibility code to parse global keyword when "global"
          is not reserved */
-      if (strcmp(getstr(ls->t.seminfo.ts), "global") == 0) {
+      if (ls->t.seminfo.ts == ls->glbn) {  /* current = "global"? */
         int lk = luaX_lookahead(ls);
-        if (lk == TK_NAME || lk == '*' || lk == TK_FUNCTION) {
-          /* 'global <name>' or 'global *' or 'global function' */
+        if (lk == '<' || lk == TK_NAME || lk == '*' || lk == TK_FUNCTION) {
+          /* 'global <attrib>' or 'global name' or 'global *' or
+             'global function' */
           globalstatfunc(ls, line);
           break;
         }
