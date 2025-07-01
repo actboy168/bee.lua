@@ -232,7 +232,6 @@ lm:source_set "source_bee" {
     sources = {
         "binding/*.cpp",
         "3rd/lua-patch/bee_newstate.c",
-        lm.EXE == "lua" and lm.lua == "55" and "3rd/lua-patch/bee_utf8_crt.cpp",
     },
     msvc = lm.analyze and {
         flags = "/analyze",

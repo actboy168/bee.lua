@@ -48,19 +48,13 @@ if lm.os == "windows" then
     return
 end
 
-lm:shared_library "bee" {
-    deps = {
-        "source_bee",
-        lm.lua == "55" and "lua55" or "lua54",
-    },
-    windows = {
-        export_luaopen = "off"
-    },
-}
-
 lm:executable "lua" {
     deps = "source_lua",
-    sources = lm.luadir / "lua.c",
+    includes = lm.luadir,
+    sources = {
+        lm.luadir / "lua.c",
+        lm.luadir / "linit.c",
+    },
     macos = {
         defines = "LUA_USE_MACOSX",
         links = { "m", "dl" },
@@ -85,4 +79,14 @@ lm:executable "lua" {
         defines = "LUA_USE_LINUX",
         links = { "m", "dl" },
     }
+}
+
+lm:shared_library "bee" {
+    deps = {
+        "source_bee",
+        "lua",
+    },
+    windows = {
+        export_luaopen = "off"
+    },
 }
