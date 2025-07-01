@@ -30,24 +30,21 @@ if lm.os == "windows" then
             "3rd/lua-patch/bee_utf8_main.c",
         }
     }
-    if lm.lua ~= "55" then
-        ---@TODO lua55's luac is not working
-        lm:executable "luac" {
-            deps = "bee_utf8_crt",
-            includes = ".",
-            sources = {
-                lm.luadir / "onelua.c",
-                "3rd/lua-patch/bee_utf8_main.c",
-            },
-            defines = {
-                "MAKE_LUAC",
-            },
-            msvc = lm.fast_setjmp ~= "off" and {
-                defines = "BEE_FAST_SETJMP",
-                sources = ("3rd/lua-patch/fast_setjmp_%s.s"):format(lm.arch),
-            }
+    lm:executable "luac" {
+        deps = "bee_utf8_crt",
+        includes = ".",
+        sources = {
+            lm.luadir / "onelua.c",
+            "3rd/lua-patch/bee_utf8_main.c",
+        },
+        defines = {
+            "MAKE_LUAC",
+        },
+        msvc = lm.fast_setjmp ~= "off" and {
+            defines = "BEE_FAST_SETJMP",
+            sources = ("3rd/lua-patch/fast_setjmp_%s.s"):format(lm.arch),
         }
-    end
+    }
     return
 end
 
