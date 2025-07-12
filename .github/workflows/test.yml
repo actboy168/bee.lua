@@ -52,12 +52,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [13, 14]
+        os: [14, 15]
     runs-on: macos-${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
     - uses: actboy168/setup-luamake@master
-    - run: luamake -arch x86_64 -notest -sanitize
+    - run: luamake -notest -sanitize
     - run: luamake test -v
   linux:
     strategy:
