@@ -1,7 +1,7 @@
 local lm = require "luamake"
 
 if lm.os == "windows" then
-    lm:shared_library(lm.lua == "55" and "lua55" or "lua54") {
+    lm:shared_library("lua"..lm.lua) {
         deps = "bee_utf8_crt",
         sources = {
             lm.luadir / "onelua.c",
@@ -19,7 +19,7 @@ if lm.os == "windows" then
     lm:executable "lua" {
         deps = {
             "bee_utf8_crt",
-            lm.lua == "55" and "lua55" or "lua54",
+            "lua"..lm.lua,
         },
         includes = {
             ".",

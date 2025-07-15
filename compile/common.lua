@@ -4,7 +4,8 @@ lm:required_version "1.6"
 
 lm.compile_commands = "$builddir"
 
-lm.luadir = lm:path(lm.lua == "55" and "3rd/lua55" or "3rd/lua")
+lm.lua = "54"
+lm.luadir = lm:path("3rd/lua"..lm.lua)
 
 local function macos_version()
     local cxx = lm.cxx or "c++17"
