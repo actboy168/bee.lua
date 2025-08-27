@@ -174,6 +174,20 @@ TStatus luaD_rawrunprotected (lua_State *L, Pfunc f, void *ud) {
 #define STACKERRSPACE	200
 
 
+/*
+** LUAI_MAXSTACK limits the size of the Lua stack.
+** It must fit into INT_MAX/2.
+*/
+
+#if !defined(LUAI_MAXSTACK)
+#if 1000000 < (INT_MAX / 2)
+#define LUAI_MAXSTACK           1000000
+#else
+#define LUAI_MAXSTACK           (INT_MAX / 2u)
+#endif
+#endif
+
+
 /* maximum stack size that respects size_t */
 #define MAXSTACK_BYSIZET  ((MAX_SIZET / sizeof(StackValue)) - STACKERRSPACE)
 
@@ -189,7 +203,7 @@ TStatus luaD_rawrunprotected (lua_State *L, Pfunc f, void *ud) {
 #define ERRORSTACKSIZE	(MAXSTACK + STACKERRSPACE)
 
 
-/* raise an error while running the message handler */
+/* raise a stack error while running the message handler */
 l_noret luaD_errerr (lua_State *L) {
   TString *msg = luaS_newliteral(L, "error in error handling");
   setsvalue2s(L, L->top.p, msg);
@@ -325,7 +339,7 @@ int luaD_growstack (lua_State *L, int n, int raiseerror) {
        a stack error; cannot grow further than that. */
     lua_assert(stacksize(L) == ERRORSTACKSIZE);
     if (raiseerror)
-      luaD_errerr(L);  /* error inside message handler */
+      luaD_errerr(L);  /* stack error inside message handler */
     return 0;  /* if not 'raiseerror', just signal it */
   }
   else if (n < MAXSTACK) {  /* avoids arithmetic overflows */
