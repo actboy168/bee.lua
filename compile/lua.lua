@@ -45,6 +45,16 @@ if lm.os == "windows" then
             sources = ("3rd/lua-patch/fast_setjmp_%s.s"):format(lm.arch),
         }
     }
+    lm:shared_library "bee" {
+        deps = {
+            "source_bee",
+            "lua"..lm.lua,
+            "bee_utf8_crt",
+        },
+        windows = {
+            export_luaopen = "off"
+        },
+    }
     return
 end
 
