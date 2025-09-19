@@ -1,5 +1,6 @@
 local platform = require "bee.platform"
 local lt = require "ltest"
+local shell = require "shell"
 
 local SKIP <const> = lt.skip
 
@@ -23,4 +24,9 @@ end
 if platform.os == "netbsd" then
     SKIP "filewatch"
     SKIP "thread.test_sleep"
+end
+
+if shell.is_luamake then
+    SKIP "subprocess.test_args"
+    SKIP "subprocess.test_cwd"
 end

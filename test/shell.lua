@@ -34,13 +34,20 @@ function shell:pwd()
     return runshell(command):gsub("[\n\r]*$", "")
 end
 
+shell.is_luamake = false
+
 local luaexe <const> = (function ()
     local i = 0
     while arg[i] ~= nil do
         i = i - 1
     end
     local exe = arg[i + 1]
-    exe = fs.absolute(fs.path(exe)):string()
+    if exe:match "luamake lua$" or exe:match "luamake%.exe lua$" then
+        exe = fs.absolute(fs.path(exe:sub(1, -4))):string()
+        shell.is_luamake = true
+    else
+        exe = fs.absolute(fs.path(exe)):string()
+    end
     if isWindows and not exe:match "%.%w+$" then
         exe = exe..".exe"
     end
