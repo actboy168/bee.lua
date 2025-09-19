@@ -13,6 +13,7 @@
 
 #include <lua.hpp>
 #include <string_view>
+#include <bee/lua/module.h>
 
 #include "3rd/lua-patch/bee_lua55.h"
 #include "3rd/lua-patch/bee_newstate.h"
@@ -133,6 +134,17 @@ static int pushargs(lua_State *L) {
     return n;
 }
 
+static constexpr std::string_view bootstrap_init = R"BOOTSTRAP(
+    local sys = require "bee.sys"
+    local platform = require "bee.platform"
+    local progdir = sys.exe_path():parent_path()
+    if platform.os == "windows" then
+        package.cpath = (progdir / "?.dll"):string()
+    else
+        package.cpath = (progdir / "?.so"):string()
+    end
+)BOOTSTRAP";
+
 static constexpr std::string_view bootstrap = R"BOOTSTRAP(
     local function loadfile(filename)
         local file  = assert(io.open(filename))
@@ -153,6 +165,16 @@ static constexpr std::string_view bootstrap = R"BOOTSTRAP(
 )BOOTSTRAP";
 
 static int handle_script(lua_State *L) {
+    if (auto bee_main = bee::lua::get_sym("_bee_main")) {
+        int status = luaL_loadbuffer(L, bootstrap_init.data(), bootstrap_init.size(), "=(bootstrap_init.lua)");
+        if (status == LUA_OK) {
+            status = docall(L, 0, 0);
+            if (status == LUA_OK) {
+                status = bee_main(L);
+            }
+        }
+        return report(L, status);
+    }
     int status = luaL_loadbuffer(L, bootstrap.data(), bootstrap.size(), "=(bootstrap.lua)");
     if (status == LUA_OK) {
         int n  = pushargs(L);

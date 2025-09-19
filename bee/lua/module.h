@@ -51,8 +51,8 @@ namespace bee::lua {
             lua_setfield(L, -2, m.name);
         }
         lua_pop(L, 1);
-        if (auto preload = get_sym("_bee_preload_module")) {
-            preload(L);
+        if (auto bee_preload_module = get_sym("_bee_preload_module")) {
+            bee_preload_module(L);
         }
         return 0;
     }
