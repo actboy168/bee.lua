@@ -3,6 +3,12 @@
 #include <lua.hpp>
 #include <vector>
 
+#if defined(_WIN32)
+#    include <Windows.h>
+#else
+#    include <dlfcn.h>
+#endif
+
 namespace bee::lua {
     struct callfunc {
         template <typename F, typename... Args>
@@ -20,6 +26,24 @@ namespace bee::lua {
         usermodules().emplace_back(luaL_Reg { name, func });
     }
 
+#if defined(_WIN32)
+    inline lua_CFunction get_sym(const char* sym) {
+        HMODULE lib = GetModuleHandleW(NULL);
+        if (!lib) {
+            return NULL;
+        }
+        return (lua_CFunction)GetProcAddress(lib, sym);
+    }
+#else
+    inline lua_CFunction get_sym(const char* sym) {
+        void* lib = dlopen(NULL, RTLD_NOW | RTLD_LOCAL);
+        if (!lib) {
+            return NULL;
+        }
+        return (lua_CFunction)dlsym(lib, sym);
+    }
+#endif
+
     inline int preload_module(lua_State* L) {
         luaL_getsubtable(L, LUA_REGISTRYINDEX, "_PRELOAD");
         for (const auto& m : usermodules()) {
@@ -27,6 +51,9 @@ namespace bee::lua {
             lua_setfield(L, -2, m.name);
         }
         lua_pop(L, 1);
+        if (auto preload = get_sym("_bee_preload_module")) {
+            preload(L);
+        }
         return 0;
     }
 }
