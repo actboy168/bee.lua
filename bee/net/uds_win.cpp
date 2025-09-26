@@ -78,7 +78,7 @@ namespace bee::net::socket {
         if (unixpath.empty()) {
             return false;
         }
-        if (auto [p, ec] = std::from_chars(unixpath.data(), unixpath.data() + unixpath.size(), tcpport); ec != std::errc()) {
+        if (auto [p, ec] = bee::from_chars(unixpath.data(), unixpath.data() + unixpath.size(), tcpport); ec != std::errc()) {
             return false;
         }
         if (tcpport <= 0 || tcpport > (std::numeric_limits<uint16_t>::max)()) {
@@ -92,7 +92,7 @@ namespace bee::net::socket {
         if (socket::getsockname(s, ep)) {
             auto tcpport = ep.get_port();
             std::array<char, 10> portstr;
-            if (auto [p, ec] = std::to_chars(portstr.data(), portstr.data() + portstr.size() - 1, tcpport); ec != std::errc()) {
+            if (auto [p, ec] = bee::to_chars(portstr.data(), portstr.data() + portstr.size() - 1, tcpport); ec != std::errc()) {
                 return false;
             } else {
                 p[0] = '\0';

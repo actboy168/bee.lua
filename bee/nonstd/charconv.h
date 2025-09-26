@@ -18,13 +18,17 @@
 
 #if defined(__cpp_lib_to_chars)
 #    include <charconv>
+namespace bee {
+    using ::std::from_chars;
+    using ::std::to_chars;
+}
 #else
 #    include <cstring>
 #    include <limits>
 #    include <system_error>
 #    include <type_traits>
 
-namespace std {
+namespace bee {
 
     struct from_chars_result {
         const char* ptr;

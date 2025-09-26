@@ -57,7 +57,7 @@ namespace bee {
         uint32_t res = def;
         auto first   = str.data();
         auto last    = str.data() + str.size();
-        if (auto [p, ec] = std::from_chars(first, last, res); ec != std::errc()) {
+        if (auto [p, ec] = bee::from_chars(first, last, res); ec != std::errc()) {
             std::ignore = p;
             return def;
         }

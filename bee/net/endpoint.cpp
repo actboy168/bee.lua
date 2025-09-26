@@ -98,7 +98,7 @@ namespace bee::net {
     bool endpoint::ctor_hostname(endpoint& ep, std::string_view name, uint16_t port) noexcept {
         constexpr auto portn = std::numeric_limits<uint16_t>::digits10 + 1;
         char portstr[portn + 1];
-        if (auto [p, ec] = std::to_chars(portstr, portstr + portn, port); ec != std::errc()) {
+        if (auto [p, ec] = bee::to_chars(portstr, portstr + portn, port); ec != std::errc()) {
             return false;
         } else {
             p[0] = '\0';
