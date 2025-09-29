@@ -631,7 +631,7 @@ namespace bee::net::socket {
         return wtf8::w2u(buf);
 #else
         char buf[kMaxHostNameSize];
-        if (gethostname(buf, kMaxHostNameSize) != 0)
+        if (::gethostname(buf, kMaxHostNameSize) != 0)
             return std::nullopt;
         buf[sizeof(buf) - 1] = '\0';
         return std::string(buf);
