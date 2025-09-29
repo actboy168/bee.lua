@@ -418,3 +418,7 @@ function test_socket:test_udp_unreachable()
     lt.assertEquals(a_fd:recvfrom(), false)
     a_fd:close()
 end
+
+function test_socket:test_gethostname()
+    lt.assertIsString(socket.gethostname())
+end

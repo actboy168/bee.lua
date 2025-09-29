@@ -2,6 +2,9 @@
 
 #include <bee/net/fd.h>
 
+#include <optional>
+#include <string>
+
 namespace bee::net {
     struct endpoint;
 }
@@ -64,4 +67,5 @@ namespace bee::net::socket {
     bool getsockname(fd_t s, endpoint& ep) noexcept;
     bool errcode(fd_t s, int& err) noexcept;
     fd_t dup(fd_t s) noexcept;
+    std::optional<std::string> gethostname();
 }

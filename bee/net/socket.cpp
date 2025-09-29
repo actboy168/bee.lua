@@ -617,4 +617,24 @@ namespace bee::net::socket {
         return ::dup(s);
 #endif
     }
+
+#if defined(MAXHOSTNAMELEN)
+    static constexpr size_t kMaxHostNameSize = MAXHOSTNAMELEN + 1;
+#else
+    static constexpr size_t kMaxHostNameSize = 256;
+#endif
+    std::optional<std::string> gethostname() {
+#if defined(_WIN32)
+        wchar_t buf[kMaxHostNameSize];
+        if (GetHostNameW(buf, kMaxHostNameSize) != 0)
+            return std::nullopt;
+        return wtf8::w2u(buf);
+#else
+        char buf[kMaxHostNameSize];
+        if (gethostname(buf, kMaxHostNameSize) != 0)
+            return std::nullopt;
+        buf[sizeof(buf) - 1] = '\0';
+        return std::string(buf);
+#endif
+    }
 }

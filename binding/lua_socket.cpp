@@ -512,7 +512,14 @@ namespace bee::lua_socket {
         }
         return 1;
     }
-
+    static int l_gethostname(lua_State* L) {
+        auto hostname = net::socket::gethostname();
+        if (!hostname) {
+            return lua::return_net_error(L, "gethostname");
+        }
+        lua_pushlstring(L, hostname->data(), hostname->size());
+        return 1;
+    }
     static int luaopen(lua_State* L) {
         if (!net::socket::initialize()) {
             lua::push_sys_error(L, "initialize");
@@ -523,6 +530,7 @@ namespace bee::lua_socket {
             { "endpoint", l_endpoint },
             { "pair", l_pair },
             { "fd", l_fd },
+            { "gethostname", l_gethostname },
             { NULL, NULL }
         };
         luaL_newlibtable(L, lib);
