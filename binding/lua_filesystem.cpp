@@ -791,6 +791,23 @@ namespace bee::lua_filesystem {
         return 1;
     }
 
+    static lua::cxx::status space(lua_State* L) {
+        std::error_code ec;
+        path_ref path(L, 1);
+        auto si = fs::space(path, ec);
+        if (ec) {
+            return pusherror(L, "space", ec, path);
+        }
+        lua_createtable(L, 0, 3);
+        lua_pushinteger(L, static_cast<lua_Integer>(si.capacity));
+        lua_setfield(L, -2, "capacity");
+        lua_pushinteger(L, static_cast<lua_Integer>(si.free));
+        lua_setfield(L, -2, "free");
+        lua_pushinteger(L, static_cast<lua_Integer>(si.available));
+        lua_setfield(L, -2, "available");
+        return 1;
+    }
+
     template <typename T>
     struct pairs_directory {
         static lua::cxx::status next(lua_State* L) {
@@ -865,6 +882,7 @@ namespace bee::lua_filesystem {
             { "create_directory_symlink", lua::cxx::cfunc<create_directory_symlink> },
             { "create_hard_link", lua::cxx::cfunc<create_hard_link> },
             { "temp_directory_path", lua::cxx::cfunc<temp_directory_path> },
+            { "space", lua::cxx::cfunc<space> },
             { "pairs", lua::cxx::cfunc<pairs::ctor> },
             { "pairs_r", lua::cxx::cfunc<pairs_r::ctor> },
             { "copy_options", NULL },
