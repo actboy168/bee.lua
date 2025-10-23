@@ -27,6 +27,13 @@ namespace bee::lua_serialization {
         }
     }
 
+#if LUA_VERSION_NUM >= 505
+    static void* external_free(void* ud, void* ptr, size_t osize, size_t nsize) {
+        free(ptr);
+        return NULL;
+    }
+#endif
+
     static int pack(lua_State* L) {
         void* data = seri_pack(L, 0, NULL);
         lua_pushlightuserdata(L, data);
@@ -35,8 +42,12 @@ namespace bee::lua_serialization {
     static int packstring(lua_State* L) {
         int sz;
         void* data = seri_pack(L, 0, &sz);
+#if LUA_VERSION_NUM >= 505
+        lua_pushexternalstring(L, (const char*)data, sz, external_free, NULL);
+#else
         lua_pushlstring(L, (const char*)data, sz);
         free(data);
+#endif
         return 1;
     }
     static int lightuserdata(lua_State* L) {

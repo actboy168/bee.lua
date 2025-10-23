@@ -165,9 +165,15 @@ namespace bee::lua_socket {
         }
         static int recv(lua_State* L, net::fd_t fd) {
             auto len = lua::optinteger<int, LUAL_BUFFERSIZE>(L, 2);
+#if LUA_VERSION_NUM >= 505
+            void* ud;
+            lua_Alloc allocf = lua_getallocf(L, &ud);
+            char* buf        = (char*)allocf(ud, NULL, 0, (size_t)len + 1);
+#else
             luaL_Buffer b;
             luaL_buffinit(L, &b);
             char* buf = luaL_prepbuffsize(&b, (size_t)len);
+#endif
             int rc;
             switch (net::socket::recv(fd, rc, buf, len)) {
             case net::socket::recv_status::close:
@@ -177,7 +183,12 @@ namespace bee::lua_socket {
                 lua_pushboolean(L, 0);
                 return 1;
             case net::socket::recv_status::success:
+#if LUA_VERSION_NUM >= 505
+                buf[rc] = '\0';
+                lua_pushexternalstring(L, buf, rc, allocf, ud);
+#else
                 luaL_pushresultsize(&b, rc);
+#endif
                 return 1;
             case net::socket::recv_status::failed:
                 return lua::return_net_error(L, "recv");
@@ -204,13 +215,24 @@ namespace bee::lua_socket {
         static int recvfrom(lua_State* L, net::fd_t fd) {
             auto len = lua::optinteger<int, LUAL_BUFFERSIZE>(L, 2);
             auto& ep = lua::newudata<net::endpoint>(L);
+#if LUA_VERSION_NUM >= 505
+            void* ud;
+            lua_Alloc allocf = lua_getallocf(L, &ud);
+            char* buf        = (char*)allocf(ud, NULL, 0, (size_t)len + 1);
+#else
             luaL_Buffer b;
             luaL_buffinit(L, &b);
             char* buf = luaL_prepbuffsize(&b, (size_t)len);
+#endif
             int rc;
             switch (net::socket::recvfrom(fd, rc, ep, buf, len)) {
             case net::socket::status::success:
+#if LUA_VERSION_NUM >= 505
+                buf[rc] = '\0';
+                lua_pushexternalstring(L, buf, rc, allocf, ud);
+#else
                 luaL_pushresultsize(&b, rc);
+#endif
                 lua_insert(L, -2);
                 return 2;
             case net::socket::status::wait:

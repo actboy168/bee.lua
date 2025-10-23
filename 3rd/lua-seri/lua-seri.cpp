@@ -766,7 +766,8 @@ unpack_one(lua_State *L, struct read_block *rb) {
 
 static void *
 seri(struct block *b, int len) {
-	uint8_t * buffer = (uint8_t *)malloc(len + 4);
+	uint8_t * buffer = (uint8_t *)malloc(len + 5);
+    buffer[len + 4] = '\0';
 	memcpy(buffer, &len, 4);	// write length
 	uint8_t * ptr = buffer + 4;
 	while(len>0) {
