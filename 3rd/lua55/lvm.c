@@ -1888,7 +1888,7 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
       vmcase(OP_SETLIST) {
         StkId ra = RA(i);
         unsigned n = cast_uint(GETARG_vB(i));
-        unsigned int last = cast_uint(GETARG_vC(i));
+        unsigned last = cast_uint(GETARG_vC(i));
         Table *h = hvalue(s2v(ra));
         if (n == 0)
           n = cast_uint(L->top.p - ra) - 1;  /* get up to the top */
@@ -1926,8 +1926,14 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
         Protect(luaT_getvarargs(L, ci, ra, n));
         vmbreak;
       }
+      vmcase(OP_GETVARG) {
+        StkId ra = RA(i);
+        TValue *rc = vRC(i);
+        luaT_getvararg(ci, ra, rc);
+        vmbreak;
+      }
       vmcase(OP_VARARGPREP) {
-        ProtectNT(luaT_adjustvarargs(L, GETARG_A(i), ci, cl->p));
+        ProtectNT(luaT_adjustvarargs(L, ci, cl->p));
         if (l_unlikely(trap)) {  /* previous "Protect" updated trap */
           luaD_hookcall(L, ci);
           L->oldpc = 1;  /* next opcode will be seen as a "new" line */
