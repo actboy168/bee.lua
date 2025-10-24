@@ -9,16 +9,7 @@
 #    include <string.h>
 
 #    include "bee_lua55.h"
-
-static void *l_alloc(void *ud, void *ptr, size_t osize, size_t nsize) {
-    (void)ud;
-    (void)osize;
-    if (nsize == 0) {
-        free(ptr);
-        return NULL;
-    } else
-        return realloc(ptr, nsize);
-}
+#    include "lauxlib.h"
 
 static int panic(lua_State *L) {
     const char *msg = (lua_type(L, -1) == LUA_TSTRING)
@@ -67,7 +58,7 @@ static void warnfon(void *ud, const char *message, int tocont) {
 }
 
 struct lua_State *bee_lua_newstate() {
-    lua_State *L = lua_newstate(l_alloc, NULL, *(unsigned int *)"Lua\0Lua\0");
+    lua_State* L = lua_newstate(luaL_alloc, NULL, *(unsigned int*)"Lua\0Lua\0");
     if (L) {
         lua_atpanic(L, &panic);
         lua_setwarnf(L, warnfoff, L);
