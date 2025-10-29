@@ -62,6 +62,28 @@ namespace bee::lua_windows {
         return 1;
     }
 
+    static int is_ssd(lua_State* L) {
+        const char* DriveString          = luaL_checkstring(L, 1);
+        wchar_t DeviceFullpath[MAX_PATH] = L"\\\\.\\X:";
+        DeviceFullpath[4]                = (wchar_t)DriveString[0];
+        HANDLE Device                    = CreateFileW(DeviceFullpath, 0, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+        if (Device == INVALID_HANDLE_VALUE) {
+            return 0;
+        }
+        STORAGE_PROPERTY_QUERY Query {};
+        Query.PropertyId = StorageDeviceSeekPenaltyProperty;
+        Query.QueryType  = PropertyStandardQuery;
+        DWORD Count;
+        DEVICE_SEEK_PENALTY_DESCRIPTOR Result {};
+        if (!DeviceIoControl(Device, IOCTL_STORAGE_QUERY_PROPERTY, &Query, sizeof(Query), &Result, sizeof(Result), &Count, nullptr)) {
+            CloseHandle(Device);
+            return 0;
+        }
+        CloseHandle(Device);
+        lua_pushboolean(L, !Result.IncursSeekPenalty);
+        return 1;
+    }
+
     static int luaopen(lua_State* L) {
         luaL_Reg lib[] = {
             { "u2a", lu2a },
@@ -69,6 +91,7 @@ namespace bee::lua_windows {
             { "filemode", filemode },
             { "isatty", isatty },
             { "write_console", write_console },
+            { "is_ssd", is_ssd },
             { NULL, NULL }
         };
         luaL_newlibtable(L, lib);
