@@ -27,6 +27,7 @@ struct sockaddr_un {
 #include <bee/nonstd/charconv.h>
 
 #include <array>
+#include <cstring>
 #include <limits>
 
 namespace bee::net {
