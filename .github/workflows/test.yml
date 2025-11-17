@@ -52,7 +52,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [14, 15, 26]
+        os: [14, 15, 26, 15-intel]
     runs-on: macos-${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
