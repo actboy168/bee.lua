@@ -213,3 +213,57 @@ function test_channel:test_fd()
     channel.destroy "testRes"
     assertNotThreadError()
 end
+
+function test_channel:test_fd_2()
+    assertNotThreadError()
+    local req = channel.create "testReq"
+    local res = channel.create "testRes"
+    local thd = thread.create [[
+        local thread = require "bee.thread"
+        local channel = require "bee.channel"
+        local epoll = require "bee.epoll"
+        local req = channel.query "testReq"
+        local res = channel.query "testRes"
+        local function dispatch(ok, what, ...)
+            if not ok then
+                return 1
+            end
+            if what == "exit" then
+                return 0
+            end
+            res:push(what, ...)
+        end
+        while true do
+            local r = dispatch(req:pop())
+            thread.sleep(1)
+            if r == 0 then
+                return
+            elseif r == 1 then
+                thread.sleep(0)
+            end
+        end
+    ]]
+    local expected = {}
+    local epfd <close> = epoll.create(16)
+    epfd:event_add(res:fd(), epoll.EPOLLIN)
+    TestSuit(function (...)
+        req:push(...)
+        expected[#expected+1] = table.pack(true, ...)
+    end)
+    req:push "exit"
+    while #expected > 0 do
+        for _, event in epfd:wait() do
+            if event & (epoll.EPOLLERR | epoll.EPOLLHUP) ~= 0 then
+                lt.failure("unknown error")
+            end
+            if event & epoll.EPOLLIN ~= 0 then
+                local actual = table.pack(res:pop())
+                lt.assertEquals(actual, table.remove(expected, 1))
+            end
+        end
+    end
+    thread.wait(thd)
+    channel.destroy "testReq"
+    channel.destroy "testRes"
+    assertNotThreadError()
+end

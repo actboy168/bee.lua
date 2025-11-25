@@ -19,46 +19,37 @@ namespace bee::lua_channel {
         using box = std::shared_ptr<channel>;
 
         bool init() noexcept {
-            if (!ev.open()) {
-                return false;
-            }
-            return true;
+            return ev.open();
         }
         net::fd_t fd() const noexcept {
             return ev.fd();
         }
-        void push(lua_State* L, int from) noexcept {
-            void* data = seri_pack(L, from, NULL);
+        void push(void* data) noexcept {
             std::unique_lock<spinlock> lk(mutex);
             queue.push(data);
             ev.set();
         }
-        int pop(lua_State* L) noexcept {
-            void* data;
-            {
-                std::unique_lock<spinlock> lk(mutex);
-                if (queue.empty()) {
-                    ev.clear();
-                    lua_pushboolean(L, 0);
-                    return 1;
-                }
-                data = queue.front();
-                queue.pop();
+        void* pop() noexcept {
+            std::unique_lock<spinlock> lk(mutex);
+            if (queue.empty()) {
+                ev.clear();
+                return nullptr;
             }
-            lua_pushboolean(L, 1);
-            return 1 + seri_unpackptr(L, data);
+            void* data = queue.front();
+            queue.pop();
+            if (queue.empty()) {
+                ev.clear();
+            }
+            return data;
         }
         void clear() noexcept {
             std::unique_lock<spinlock> lk(mutex);
-            for (;;) {
-                if (queue.empty()) {
-                    ev.clear();
-                    return;
-                }
+            while (!queue.empty()) {
                 void* data = queue.front();
                 free(data);
                 queue.pop();
             }
+            ev.clear();
         }
 
     private:
@@ -110,14 +101,21 @@ namespace bee::lua_channel {
     static channelmgr g_channel;
 
     static int lchannel_push(lua_State* L) {
-        auto& bc = lua::checkudata<channel::box>(L, 1);
-        bc->push(L, 1);
+        auto& bc   = lua::checkudata<channel::box>(L, 1);
+        void* data = seri_pack(L, 1, NULL);
+        bc->push(data);
         return 0;
     }
 
     static int lchannel_pop(lua_State* L) {
-        auto& bc = lua::checkudata<channel::box>(L, 1);
-        return bc->pop(L);
+        auto& bc   = lua::checkudata<channel::box>(L, 1);
+        void* data = bc->pop();
+        if (!data) {
+            lua_pushboolean(L, 0);
+            return 1;
+        }
+        lua_pushboolean(L, 1);
+        return 1 + seri_unpackptr(L, data);
     }
 
     static int lchannel_fd(lua_State* L) {
