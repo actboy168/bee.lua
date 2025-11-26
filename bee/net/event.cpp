@@ -31,6 +31,8 @@ namespace bee::net {
     }
 
     void event::clear() noexcept {
+        if (!e.test(std::memory_order_seq_cst))
+            return;
         char tmp[128];
         int rc = 0;
         for (;;) {
