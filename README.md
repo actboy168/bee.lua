@@ -20,9 +20,9 @@ Lua runtime and toolset
 | Remove randomness when traversing the table       |   🟩  |   🟨  |
 | Fast setjmp on windows                            |   🟩  |   🟩  |
 | Enable lua_assert in debug mode                   |   🟩  |   🟩  |
-| Add error hook (for debugger)                     |   🟩  |   🟥  |
-| Add resume/yield hook (for debugger)              |   🟩  |   🟥  |
-| Disable tail calls in debug mode (for debugger)   |   🟩  |   🟥  |
+| Add error hook (for debugger)                     |   🟩  |   🟩  |
+| Add resume/yield hook (for debugger)              |   🟩  |   🟩  |
+| Disable tail calls in debug mode (for debugger)   |   🟩  |   🟩  |
 
 * 🟩 Already supported.
 * 🟥 Not implemented.

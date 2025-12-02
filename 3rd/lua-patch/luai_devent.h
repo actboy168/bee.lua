@@ -19,8 +19,14 @@
 #define LUA_S2V(s) (s)
 #endif
 
+#if LUA_VERSION_NUM >= 505
+#define LUA_MAINTHREAD(L) mainthread(G(L))
+#else
+#define LUA_MAINTHREAD(L) G(L)->mainthread
+#endif
+
 #define luai_threadevent(L, from, type)         \
-    if (L && (L->l_G->mainthread->hookmask & LUA_MASKTHREAD)) {  \
+    if (L && (LUA_MAINTHREAD(L)->hookmask & LUA_MASKTHREAD)) {  \
         setpvalue(LUA_S2V(L->top.p), from);       \
         L->top.p++;                               \
         LUA_CALLHOOK(L, LUA_HOOKTHREAD, type);  \
