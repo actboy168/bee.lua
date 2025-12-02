@@ -9,13 +9,13 @@ local thread = {}
 ---线程中可以访问 bee.* 模块，但不共享全局变量
 ---@param source string Lua代码字符串，作为线程的入口点
 ---@param ... any 传递给线程的参数，会被序列化
----@return lightuserdata handle 线程句柄
+---@return lightuserdata handle # 线程句柄
 function thread.create(source, ...)
 end
 
 ---获取线程错误日志
 ---如果有线程发生错误，返回错误消息
----@return string? 错误消息，如果没有错误则返回nil
+---@return string? # 错误消息，如果没有错误则返回nil
 function thread.errlog()
 end
 

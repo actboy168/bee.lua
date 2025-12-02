@@ -23,13 +23,13 @@ local epfd = {}
 
 ---等待事件
 ---@param timeout? integer 超时时间，单位为毫秒，-1表示无限等待
----@return fun(): any?, integer? iterator 返回迭代器函数，迭代产生 (关联对象, 事件标志)
+---@return fun(): any?, integer? iterator # 返回迭代器函数，迭代产生 (关联对象, 事件标志)
 function epfd:wait(timeout)
 end
 
 ---关闭Epoll实例
----@return boolean? 成功返回true，失败返回nil
----@return string? 错误消息
+---@return boolean? # 成功返回true，失败返回nil
+---@return string? # 错误消息
 function epfd:close()
 end
 
@@ -37,8 +37,8 @@ end
 ---@param fd bee.socket.fd|lightuserdata 要监听的文件描述符或套接字
 ---@param events integer 事件标志，可组合多个EPOLL*常量
 ---@param userdata? any 关联的用户数据，默认为fd本身
----@return boolean? 成功返回true，失败返回nil
----@return string? 错误消息
+---@return boolean? # 成功返回true，失败返回nil
+---@return string? # 错误消息
 function epfd:event_add(fd, events, userdata)
 end
 
@@ -46,22 +46,22 @@ end
 ---@param fd bee.socket.fd|lightuserdata 文件描述符或套接字
 ---@param events integer 新的事件标志
 ---@param userdata? any 新的关联用户数据
----@return boolean? 成功返回true，失败返回nil
----@return string? 错误消息
+---@return boolean? # 成功返回true，失败返回nil
+---@return string? # 错误消息
 function epfd:event_mod(fd, events, userdata)
 end
 
 ---删除事件监听
 ---@param fd bee.socket.fd|lightuserdata 文件描述符或套接字
----@return boolean? 成功返回true，失败返回nil
----@return string? 错误消息
+---@return boolean? # 成功返回true，失败返回nil
+---@return string? # 错误消息
 function epfd:event_del(fd)
 end
 
 ---创建Epoll实例
 ---@param max_events integer 最大事件数量（必须大于0）
----@return bee.epoll.fd? Epoll实例对象
----@return string? 错误消息
+---@return bee.epoll.fd? # Epoll实例对象
+---@return string? # 错误消息
 function epoll.create(max_events)
 end
 

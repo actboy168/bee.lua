@@ -135,12 +135,12 @@ function directory_entry:is_regular_file()
 end
 
 ---获取条目的最后修改时间
----@return integer 时间戳，单位为秒 (Unix时间戳)
+---@return integer # 时间戳，单位为秒 (Unix时间戳)
 function directory_entry:last_write_time()
 end
 
 ---获取条目的文件大小
----@return integer 文件大小，单位为字节
+---@return integer # 文件大小，单位为字节
 function directory_entry:file_size()
 end
 
@@ -182,19 +182,19 @@ end
 
 ---获取文件大小
 ---@param p bee.fspath|string 路径
----@return integer 文件大小，单位为字节
+---@return integer # 文件大小，单位为字节
 function fs.file_size(p)
 end
 
 ---创建单个目录
 ---@param p bee.fspath|string 路径
----@return boolean 是否创建成功(目录已存在时返回false)
+---@return boolean # 是否创建成功(目录已存在时返回false)
 function fs.create_directory(p)
 end
 
 ---递归创建目录
 ---@param p bee.fspath|string 路径
----@return boolean 是否创建成功(目录已存在时返回false)
+---@return boolean # 是否创建成功(目录已存在时返回false)
 function fs.create_directories(p)
 end
 
@@ -206,19 +206,19 @@ end
 
 ---删除文件或空目录
 ---@param p bee.fspath|string 路径
----@return boolean 是否删除成功(不存在时返回false)
+---@return boolean # 是否删除成功(不存在时返回false)
 function fs.remove(p)
 end
 
 ---递归删除文件或目录
 ---@param p bee.fspath|string 路径
----@return integer 删除的文件/目录数量
+---@return integer # 删除的文件/目录数量
 function fs.remove_all(p)
 end
 
 ---获取或设置当前工作目录
 ---@param p? bee.fspath|string 如果提供则设置为新的工作目录
----@return bee.fspath? 不带参数时返回当前工作目录
+---@return bee.fspath? # 不带参数时返回当前工作目录
 function fs.current_path(p)
 end
 
@@ -233,7 +233,7 @@ end
 ---@param from bee.fspath|string 源路径
 ---@param to bee.fspath|string 目标路径
 ---@param options? integer 复制选项，参见 fs.copy_options
----@return boolean 是否复制成功
+---@return boolean # 是否复制成功
 function fs.copy_file(from, to, options)
 end
 
@@ -259,7 +259,7 @@ end
 ---获取或设置文件的最后修改时间
 ---@param p bee.fspath|string 路径
 ---@param time? integer 时间戳，单位为秒 (Unix时间戳)
----@return integer? 不带time参数时返回最后修改时间(秒)
+---@return integer? # 不带time参数时返回最后修改时间(秒)
 function fs.last_write_time(p, time)
 end
 
@@ -267,7 +267,7 @@ end
 ---@param p bee.fspath|string 路径
 ---@param perms? integer 权限值
 ---@param options? integer 权限选项，参见 fs.perm_options
----@return integer? 不带perms参数时返回当前权限
+---@return integer? # 不带perms参数时返回当前权限
 function fs.permissions(p, perms, options)
 end
 
@@ -309,20 +309,20 @@ end
 ---遍历目录(非递归)
 ---@param dir bee.fspath|string 目录路径
 ---@param options? integer 遍历选项，参见 fs.directory_options
----@return fun(): bee.fspath?, bee.directory_entry? iterator 迭代器函数
+---@return fun(): bee.fspath?, bee.directory_entry? iterator # 迭代器函数
 ---@return nil
 ---@return nil
----@return any to_be_closed 可关闭对象
+---@return any to_be_closed # 可关闭对象
 function fs.pairs(dir, options)
 end
 
 ---递归遍历目录
 ---@param dir bee.fspath|string 目录路径
 ---@param options? integer 遍历选项，参见 fs.directory_options
----@return fun(): bee.fspath?, bee.directory_entry? iterator 迭代器函数
+---@return fun(): bee.fspath?, bee.directory_entry? iterator # 迭代器函数
 ---@return nil
 ---@return nil
----@return any to_be_closed 可关闭对象
+---@return any to_be_closed # 可关闭对象
 function fs.pairs_r(dir, options)
 end
 

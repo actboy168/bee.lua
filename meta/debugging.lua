@@ -10,7 +10,7 @@ function debugging.breakpoint()
 end
 
 ---检查是否有调试器附加
----@return boolean 是否有调试器附加
+---@return boolean # 是否有调试器附加
 function debugging.is_debugger_present()
 end
 
