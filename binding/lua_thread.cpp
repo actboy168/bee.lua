@@ -69,7 +69,11 @@ namespace bee::lua_thread {
     static int thread_luamain(lua_State* L) {
         lua_pushboolean(L, 1);
         lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
+#if LUA_VERSION_NUM >= 505
+        luaL_openselectedlibs(L, ~0, 0);
+#else
         luaL_openlibs(L);
+#endif
         thread_args* args = lua::tolightud<thread_args*>(L, 1);
         lua_pushinteger(L, args->id);
         lua_rawsetp(L, LUA_REGISTRYINDEX, &THREADID);
