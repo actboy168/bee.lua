@@ -188,9 +188,12 @@ lm:source_set "source_bee" {
         }
     },
     linux = {
-        sources = need {
-            "linux",
-            "posix",
+        sources = {
+            "!bee/crash/linux/**/",
+            need {
+                "linux",
+                "posix",
+            }
         }
     },
     android = {
@@ -268,8 +271,8 @@ lm:source_set "source_bee" {
         ldflags = "-pthread",
         links = {
             "stdc++fs",
-            "unwind",
-            "bfd",
+            --"unwind",
+            --"bfd",
         }
     },
     macos = {

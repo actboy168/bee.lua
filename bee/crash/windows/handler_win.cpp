@@ -1,7 +1,7 @@
-#include <bee/crash/handler_win.h>
 #include <bee/crash/nanoid.h>
 #include <bee/crash/stacktrace.h>
-#include <bee/crash/unwind_win.h>
+#include <bee/crash/windows/handler_win.h>
+#include <bee/crash/windows/unwind_win.h>
 #include <bee/win/wtf8.h>
 #include <io.h>
 
