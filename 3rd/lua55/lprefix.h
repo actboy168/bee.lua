@@ -63,7 +63,7 @@
 
 #define l_randomizePivot(L) (~0)
 
-#if defined(_MSC_VER) && !defined(__SANITIZE_ADDRESS__)
+#if defined(_MSC_VER) && defined(BEE_FAST_SETJMP) && !defined(__SANITIZE_ADDRESS__)
 
 #include "../lua-patch/fast_setjmp.h"
 
