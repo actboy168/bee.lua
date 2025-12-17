@@ -4,7 +4,7 @@ lm:required_version "1.6"
 
 lm.compile_commands = "$builddir"
 
-lm.lua = "54"
+lm.lua = lm.lua or "54"
 lm.luadir = lm:path("3rd/lua"..lm.lua)
 
 local function macos_version()
