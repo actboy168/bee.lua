@@ -61,7 +61,7 @@ struct lua_State *bee_lua_newstate() {
     lua_State* L = lua_newstate(luaL_alloc, NULL, *(unsigned int*)"Lua\0Lua\0");
     if (L) {
         lua_atpanic(L, &panic);
-        lua_setwarnf(L, warnfoff, L);
+        lua_setwarnf(L, warnfon, L);
     }
     return L;
 }
