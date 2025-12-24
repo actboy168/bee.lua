@@ -7,6 +7,30 @@
 #include <bee/nonstd/unreachable.h>
 
 namespace bee::lua_socket {
+#if LUA_VERSION_NUM >= 505
+    struct luabuf {
+        luabuf(lua_State* L, size_t len) {
+            allocf    = lua_getallocf(L, &ud);
+            buf       = (char*)allocf(ud, NULL, 0, (size_t)len + 1);
+            this->len = len;
+        }
+        ~luabuf() {
+            if (buf) {
+                allocf(ud, buf, (size_t)len + 1, 0);
+            }
+        }
+        void pushresultsize(lua_State* L, int rc) {
+            buf[rc] = '\0';
+            lua_pushexternalstring(L, buf, rc, allocf, ud);
+            buf = nullptr;
+        }
+        void* ud;
+        lua_Alloc allocf;
+        char* buf;
+        size_t len;
+    };
+#endif
+
     namespace endpoint {
         static int value(lua_State* L) {
             const auto& ep = lua::checkudata<net::endpoint>(L, 1);
@@ -166,9 +190,8 @@ namespace bee::lua_socket {
         static int recv(lua_State* L, net::fd_t fd) {
             auto len = lua::optinteger<int, LUAL_BUFFERSIZE>(L, 2);
 #if LUA_VERSION_NUM >= 505
-            void* ud;
-            lua_Alloc allocf = lua_getallocf(L, &ud);
-            char* buf        = (char*)allocf(ud, NULL, 0, (size_t)len + 1);
+            luabuf b(L, (size_t)len);
+            char* buf = b.buf;
 #else
             luaL_Buffer b;
             luaL_buffinit(L, &b);
@@ -184,8 +207,7 @@ namespace bee::lua_socket {
                 return 1;
             case net::socket::recv_status::success:
 #if LUA_VERSION_NUM >= 505
-                buf[rc] = '\0';
-                lua_pushexternalstring(L, buf, rc, allocf, ud);
+                b.pushresultsize(L, rc);
 #else
                 luaL_pushresultsize(&b, rc);
 #endif
@@ -216,9 +238,8 @@ namespace bee::lua_socket {
             auto len = lua::optinteger<int, LUAL_BUFFERSIZE>(L, 2);
             auto& ep = lua::newudata<net::endpoint>(L);
 #if LUA_VERSION_NUM >= 505
-            void* ud;
-            lua_Alloc allocf = lua_getallocf(L, &ud);
-            char* buf        = (char*)allocf(ud, NULL, 0, (size_t)len + 1);
+            luabuf b(L, (size_t)len);
+            char* buf = b.buf;
 #else
             luaL_Buffer b;
             luaL_buffinit(L, &b);
@@ -228,8 +249,7 @@ namespace bee::lua_socket {
             switch (net::socket::recvfrom(fd, rc, ep, buf, len)) {
             case net::socket::status::success:
 #if LUA_VERSION_NUM >= 505
-                buf[rc] = '\0';
-                lua_pushexternalstring(L, buf, rc, allocf, ud);
+                b.pushresultsize(L, rc);
 #else
                 luaL_pushresultsize(&b, rc);
 #endif
