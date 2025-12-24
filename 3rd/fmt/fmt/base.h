@@ -21,7 +21,7 @@
 #endif
 
 // The fmt library version in the form major * 10000 + minor * 100 + patch.
-#define FMT_VERSION 110201
+#define FMT_VERSION 120101
 
 // Detect compiler versions.
 #if defined(__clang__) && !defined(__ibmxl__)
@@ -114,7 +114,9 @@
 #endif
 
 // Detect consteval, C++20 constexpr extensions and std::is_constant_evaluated.
-#if !defined(__cpp_lib_is_constant_evaluated)
+#ifdef FMT_USE_CONSTEVAL
+// Use the provided definition.
+#elif !defined(__cpp_lib_is_constant_evaluated)
 #  define FMT_USE_CONSTEVAL 0
 #elif FMT_CPLUSPLUS < 201709L
 #  define FMT_USE_CONSTEVAL 0
@@ -231,9 +233,9 @@
 FMT_PRAGMA_GCC(push_options)
 #if !defined(__OPTIMIZE__) && !defined(__CUDACC__) && !defined(FMT_MODULE)
 FMT_PRAGMA_GCC(optimize("Og"))
-#  define FMT_GCC_OPTIMIZED
 #endif
 FMT_PRAGMA_CLANG(diagnostic push)
+FMT_PRAGMA_GCC(diagnostic push)
 
 #ifdef FMT_ALWAYS_INLINE
 // Use the provided definition.
@@ -243,7 +245,7 @@ FMT_PRAGMA_CLANG(diagnostic push)
 #  define FMT_ALWAYS_INLINE inline
 #endif
 // A version of FMT_ALWAYS_INLINE to prevent code bloat in debug mode.
-#if defined(NDEBUG) || defined(FMT_GCC_OPTIMIZED)
+#ifdef NDEBUG
 #  define FMT_INLINE FMT_ALWAYS_INLINE
 #else
 #  define FMT_INLINE inline
@@ -252,7 +254,7 @@ FMT_PRAGMA_CLANG(diagnostic push)
 #ifndef FMT_BEGIN_NAMESPACE
 #  define FMT_BEGIN_NAMESPACE \
     namespace fmt {           \
-    inline namespace v11 {
+    inline namespace v12 {
 #  define FMT_END_NAMESPACE \
     }                       \
     }
@@ -414,8 +416,12 @@ inline auto map(int128_opt) -> monostate { return {}; }
 inline auto map(uint128_opt) -> monostate { return {}; }
 #endif
 
-#ifndef FMT_USE_BITINT
-#  define FMT_USE_BITINT (FMT_CLANG_VERSION >= 1500)
+#ifdef FMT_USE_BITINT
+// Use the provided definition.
+#elif FMT_CLANG_VERSION >= 1500 && !defined(__CUDACC__)
+#  define FMT_USE_BITINT 1
+#else
+#  define FMT_USE_BITINT 0
 #endif
 
 #if FMT_USE_BITINT
@@ -458,8 +464,10 @@ enum { use_utf8 = !FMT_WIN32 || is_utf8_enabled };
 static_assert(!FMT_UNICODE || use_utf8,
               "Unicode support requires compiling with /utf-8");
 
-template <typename T> constexpr const char* narrow(const T*) { return nullptr; }
-constexpr FMT_ALWAYS_INLINE const char* narrow(const char* s) { return s; }
+template <typename T> constexpr auto narrow(T*) -> char* { return nullptr; }
+constexpr FMT_ALWAYS_INLINE auto narrow(const char* s) -> const char* {
+  return s;
+}
 
 template <typename Char>
 FMT_CONSTEXPR auto compare(const Char* s1, const Char* s2, size_t n) -> int {
@@ -762,7 +770,7 @@ class basic_specs {
             (static_cast<unsigned>(p) << precision_shift);
   }
 
-  constexpr bool dynamic() const {
+  constexpr auto dynamic() const -> bool {
     return (data_ & (width_mask | precision_mask)) != 0;
   }
 
@@ -916,9 +924,15 @@ class locale_ref {
   constexpr locale_ref() : locale_(nullptr) {}
 
   template <typename Locale, FMT_ENABLE_IF(sizeof(Locale::collate) != 0)>
-  locale_ref(const Locale& loc);
+  locale_ref(const Locale& loc) : locale_(&loc) {
+    // Check if std::isalpha is found via ADL to reduce the chance of misuse.
+    detail::ignore_unused(sizeof(isalpha('x', loc)));
+  }
 
   inline explicit operator bool() const noexcept { return locale_ != nullptr; }
+#else
+ public:
+  inline explicit operator bool() const noexcept { return false; }
 #endif  // FMT_USE_LOCALE
 
  public:
@@ -1071,11 +1085,11 @@ template <bool B1, bool B2, bool... Tail> constexpr auto count() -> int {
   return (B1 ? 1 : 0) + count<B2, Tail...>();
 }
 
-template <typename... Args> constexpr auto count_named_args() -> int {
-  return count<is_named_arg<Args>::value...>();
+template <typename... T> constexpr auto count_named_args() -> int {
+  return count<is_named_arg<T>::value...>();
 }
-template <typename... Args> constexpr auto count_static_named_args() -> int {
-  return count<is_static_named_arg<Args>::value...>();
+template <typename... T> constexpr auto count_static_named_args() -> int {
+  return count<is_static_named_arg<T>::value...>();
 }
 
 template <typename Char> struct named_arg_info {
@@ -1839,15 +1853,19 @@ template <typename T> class buffer {
 #if !FMT_MSC_VERSION || FMT_MSC_VERSION >= 1940
   FMT_CONSTEXPR20
 #endif
-      void
-      append(const U* begin, const U* end) {
+      void append(const U* begin, const U* end) {
     while (begin != end) {
+      auto size = size_;
+      auto free_cap = capacity_ - size;
       auto count = to_unsigned(end - begin);
-      try_reserve(size_ + count);
-      auto free_cap = capacity_ - size_;
-      if (free_cap < count) count = free_cap;
+      if (free_cap < count) {
+        grow_(*this, size + count);
+        size = size_;
+        free_cap = capacity_ - size;
+        count = count < free_cap ? count : free_cap;
+      }
       // A loop is faster than memcpy on small sizes.
-      T* out = ptr_ + size_;
+      T* out = ptr_ + size;
       for (size_t i = 0; i < count; ++i) out[i] = begin[i];
       size_ += count;
       begin += count;
@@ -2243,8 +2261,11 @@ template <typename Context> class value {
       : pointer(const_cast<const void*>(x)) {}
   FMT_INLINE value(nullptr_t) : pointer(nullptr) {}
 
-  template <typename T, FMT_ENABLE_IF(std::is_pointer<T>::value ||
-                                      std::is_member_pointer<T>::value)>
+  template <typename T,
+            FMT_ENABLE_IF(
+                (std::is_pointer<T>::value ||
+                 std::is_member_pointer<T>::value) &&
+                !std::is_void<typename std::remove_pointer<T>::type>::value)>
   value(const T&) {
     // Formatting of arbitrary pointers is disallowed. If you want to format a
     // pointer cast it to `void*` or `const void*`. In particular, this forbids
@@ -2289,7 +2310,7 @@ template <typename Context> class value {
   template <typename T, FMT_ENABLE_IF(!has_formatter<T, char_type>())>
   FMT_CONSTEXPR value(const T&, custom_tag) {
     // Cannot format an argument; to make type T formattable provide a
-    // formatter<T> specialization: https://fmt.dev/latest/api.html#udt.
+    // formatter<T> specialization: https://fmt.dev/latest/api#udt.
     type_is_unformattable_for<T, char_type> _;
   }
 
@@ -2328,10 +2349,10 @@ template <typename> constexpr auto encode_types() -> unsigned long long {
   return 0;
 }
 
-template <typename Context, typename Arg, typename... Args>
+template <typename Context, typename First, typename... T>
 constexpr auto encode_types() -> unsigned long long {
-  return static_cast<unsigned>(stored_type_constant<Arg, Context>::value) |
-         (encode_types<Context, Args...>() << packed_arg_bits);
+  return static_cast<unsigned>(stored_type_constant<First, Context>::value) |
+         (encode_types<Context, T...>() << packed_arg_bits);
 }
 
 template <typename Context, typename... T, size_t NUM_ARGS = sizeof...(T)>
@@ -2369,8 +2390,8 @@ struct named_arg_store {
   }
 
   named_arg_store(const named_arg_store& rhs) = delete;
-  named_arg_store& operator=(const named_arg_store& rhs) = delete;
-  named_arg_store& operator=(named_arg_store&& rhs) = delete;
+  auto operator=(const named_arg_store& rhs) -> named_arg_store& = delete;
+  auto operator=(named_arg_store&& rhs) -> named_arg_store& = delete;
   operator const arg_t<Context, NUM_ARGS>*() const { return args + 1; }
 };
 
@@ -2739,7 +2760,9 @@ template <typename... T> struct fstring {
     static_assert(count<(is_view<remove_cvref_t<T>>::value &&
                          std::is_reference<T>::value)...>() == 0,
                   "passing views as lvalues is disallowed");
-    if (FMT_USE_CONSTEVAL) parse_format_string<char>(s, checker(s, arg_pack()));
+#if FMT_USE_CONSTEVAL
+    parse_format_string<char>(s, checker(s, arg_pack()));
+#endif
 #ifdef FMT_ENFORCE_COMPILE_STRING
     static_assert(
         FMT_USE_CONSTEVAL && sizeof(s) != 0,
@@ -2824,6 +2847,10 @@ using vargs =
  * **Example**:
  *
  *     fmt::print("The answer is {answer}.", fmt::arg("answer", 42));
+ *
+ * Named arguments passed with `fmt::arg` are not supported
+ * in compile-time checks, but `"answer"_a=42` are compile-time checked in
+ * sufficiently new compilers. See `operator""_a()`.
  */
 template <typename Char, typename T>
 inline auto arg(const Char* name, const T& arg) -> detail::named_arg<Char, T> {
@@ -2981,6 +3008,7 @@ FMT_INLINE void println(format_string<T...> fmt, T&&... args) {
   return fmt::println(stdout, fmt, static_cast<T&&>(args)...);
 }
 
+FMT_PRAGMA_GCC(diagnostic pop)
 FMT_PRAGMA_CLANG(diagnostic pop)
 FMT_PRAGMA_GCC(pop_options)
 FMT_END_EXPORT

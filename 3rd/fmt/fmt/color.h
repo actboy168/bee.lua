@@ -155,7 +155,7 @@ enum class color : uint32_t {
   white_smoke = 0xF5F5F5,              // rgb(245,245,245)
   yellow = 0xFFFF00,                   // rgb(255,255,0)
   yellow_green = 0x9ACD32              // rgb(154,205,50)
-};                                     // enum class color
+};  // enum class color
 
 enum class terminal_color : uint8_t {
   black = 30,
@@ -409,13 +409,16 @@ template <typename Char> struct ansi_color_escape {
     if (has_emphasis(em, emphasis::conceal)) em_codes[6] = 8;
     if (has_emphasis(em, emphasis::strikethrough)) em_codes[7] = 9;
 
+    buffer[size++] = static_cast<Char>('\x1b');
+    buffer[size++] = static_cast<Char>('[');
+
     for (size_t i = 0; i < num_emphases; ++i) {
       if (!em_codes[i]) continue;
-      buffer[size++] = static_cast<Char>('\x1b');
-      buffer[size++] = static_cast<Char>('[');
       buffer[size++] = static_cast<Char>('0' + em_codes[i]);
-      buffer[size++] = static_cast<Char>('m');
+      buffer[size++] = static_cast<Char>(';');
     }
+
+    buffer[size - 1] = static_cast<Char>('m');
   }
   FMT_CONSTEXPR operator const Char*() const noexcept { return buffer; }
 
@@ -426,7 +429,7 @@ template <typename Char> struct ansi_color_escape {
 
  private:
   static constexpr size_t num_emphases = 8;
-  Char buffer[7u + 4u * num_emphases];
+  Char buffer[7u + 4u * num_emphases] = {};
   size_t size = 0;
 
   static FMT_CONSTEXPR void to_esc(uint8_t c, Char* out,
