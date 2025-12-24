@@ -186,7 +186,7 @@ function test_channel:test_fd()
             end
         end
     ]]
-    local epfd <close> = epoll.create(16)
+    local epfd <close> = assert(epoll.create(16))
     epfd:event_add(res:fd(), epoll.EPOLLIN)
     local function test_ok(...)
         req:push(...)
@@ -244,7 +244,7 @@ function test_channel:test_fd_2()
         end
     ]]
     local expected = {}
-    local epfd <close> = epoll.create(16)
+    local epfd <close> = assert(epoll.create(16))
     epfd:event_add(res:fd(), epoll.EPOLLIN)
     TestSuit(function (...)
         req:push(...)
