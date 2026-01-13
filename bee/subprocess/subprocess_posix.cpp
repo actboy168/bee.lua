@@ -113,7 +113,7 @@ namespace bee::subprocess {
     }
 
     file_handle create_nul_file(bool read) noexcept {
-        int fd = open("/dev/null", read ? O_RDONLY : O_WRONLY);
+        int fd = ::open("/dev/null", read ? O_RDONLY : O_WRONLY);
         if (fd < 0) {
             return file_handle();
         }
