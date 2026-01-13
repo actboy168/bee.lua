@@ -229,6 +229,17 @@ function test_subprocess:test_stdio_4()
     lt.assertEquals(process:detach(), true)
 end
 
+function test_subprocess:test_stdio_5()
+    local process = shell:runlua([[
+        io.stdout:write "[stdout]"; io.stdout:flush()
+        io.stderr:write "[stderr]"; io.stderr:flush()
+    ]], { stdout = "nul", stderr = "nul" })
+    lt.assertEquals(process:wait(), 0)
+    lt.assertIsNil(process.stdout)
+    lt.assertIsNil(process.stderr)
+    lt.assertEquals(process:detach(), true)
+end
+
 function test_subprocess:test_peek()
     local process = shell:runlua([[io.write "ok"]], { stdout = true })
     lt.assertEquals(process:wait(), 0)

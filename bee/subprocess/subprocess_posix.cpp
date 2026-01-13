@@ -111,6 +111,30 @@ namespace bee::subprocess {
 #endif
     }
 
+    file_handle create_nul_file(bool read) noexcept {
+        int fd = open("/dev/null", read ? O_RDONLY : O_WRONLY);
+        if (fd < 0) {
+            return file_handle();
+        }
+        return file_handle::from_native(fd);
+    }
+
+    void spawn::redirect(stdio type, file_handle h) noexcept {
+        switch (type) {
+        case stdio::eInput:
+            fds_[0] = h.value();
+            break;
+        case stdio::eOutput:
+            fds_[1] = h.value();
+            break;
+        case stdio::eError:
+            fds_[2] = h.value();
+            break;
+        default:
+            std::unreachable();
+        }
+    }
+
     void spawn::redirect(stdio type, file_handle h) noexcept {
         switch (type) {
         case stdio::eInput:

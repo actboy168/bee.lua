@@ -293,6 +293,18 @@ namespace bee::subprocess {
         detached_ = true;
     }
 
+    file_handle create_nul_file(bool read) {
+        SECURITY_ATTRIBUTES sa;
+        sa.nLength              = sizeof sa;
+        sa.lpSecurityDescriptor = NULL;
+        sa.bInheritHandle       = TRUE;
+        HANDLE handle           = CreateFileW(L"NUL", read ? FILE_GENERIC_READ : FILE_GENERIC_WRITE | FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, &sa, OPEN_EXISTING, 0, NULL);
+        if (handle == INVALID_HANDLE_VALUE) {
+            return file_handle();
+        }
+        return file_handle::from_native(handle);
+    }
+
     void spawn::redirect(stdio type, file_handle h) noexcept {
         inherit_handle_ = true;
         switch (type) {

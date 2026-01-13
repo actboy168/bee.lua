@@ -244,7 +244,9 @@ namespace bee::lua_subprocess {
             }
             case LUA_TBOOLEAN: {
                 if (!lua_toboolean(L, -1)) {
-                    break;
+                    lua_pop(L, 1);
+                    lua_pushnil(L);
+                    return subprocess::create_nul_file(strcmp(name, "stdin") != 0);
                 }
                 auto pipe = subprocess::pipe::open();
                 if (!pipe) {
@@ -273,6 +275,12 @@ namespace bee::lua_subprocess {
                     lua_pushvalue(L, -1);
                     return handle;
                 }
+                if (strcmp(lua_tostring(L, -1), "nul") == 0) {
+                    lua_pop(L, 1);
+                    lua_pushnil(L);
+                    return subprocess::create_nul_file(strcmp(name, "stdin") != 0);
+                }
+                break;
             }
             default:
                 break;

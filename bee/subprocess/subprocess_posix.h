@@ -63,6 +63,8 @@ namespace bee::subprocess {
         std::vector<char*> data_;
     };
 
+    file_handle create_nul_file(bool read) noexcept;
+
     class spawn {
         friend class process;
 

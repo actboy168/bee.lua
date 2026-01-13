@@ -95,6 +95,8 @@ namespace bee::subprocess {
         std::vector<std::wstring> data_;
     };
 
+    file_handle create_nul_file(bool read);
+
     class spawn {
         friend class process;
 
