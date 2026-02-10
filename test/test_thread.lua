@@ -105,5 +105,5 @@ function test_thread:test_sleep()
     local t1 = time.monotonic()
     thread.sleep(1)
     local t2 = time.monotonic()
-    lt.assertEquals(t2 - t1 <= 2, true)
+    lt.assertEquals(t2 - t1 >= 1, true)
 end
