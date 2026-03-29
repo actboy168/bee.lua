@@ -51,7 +51,7 @@ namespace bee::net {
             memcpy(m_data, &v, sizeof(v));
         }
 
-        static bool ctor_hostname(endpoint& ep, std::string_view name, uint16_t port) noexcept;
+        static bool ctor_hostname(endpoint& ep, std::string_view name, uint16_t port, family af_hint = family::unknown) noexcept;
         static bool ctor_unix(endpoint& ep, std::string_view path) noexcept;
         static bool ctor_inet(endpoint& ep, std::string_view ip, uint16_t port) noexcept;
         static bool ctor_inet6(endpoint& ep, std::string_view ip, uint16_t port) noexcept;

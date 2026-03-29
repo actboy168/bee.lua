@@ -36,9 +36,9 @@ namespace bee::net {
 
     namespace {
         struct AddrInfo {
-            AddrInfo(std::string_view name, const char* port) noexcept {
+            AddrInfo(std::string_view name, const char* port, int af_hint = AF_UNSPEC) noexcept {
                 addrinfo hint  = {};
-                hint.ai_family = AF_UNSPEC;
+                hint.ai_family = af_hint;
                 if (needsnolookup(name)) {
                     hint.ai_flags = AI_NUMERICHOST;
                 }
@@ -95,7 +95,18 @@ namespace bee::net {
         }
     }
 
-    bool endpoint::ctor_hostname(endpoint& ep, std::string_view name, uint16_t port) noexcept {
+    static int family_to_af(family f) noexcept {
+        switch (f) {
+        case family::inet:
+            return AF_INET;
+        case family::inet6:
+            return AF_INET6;
+        default:
+            return AF_UNSPEC;
+        }
+    }
+
+    bool endpoint::ctor_hostname(endpoint& ep, std::string_view name, uint16_t port, family af_hint) noexcept {
         constexpr auto portn = std::numeric_limits<uint16_t>::digits10 + 1;
         char portstr[portn + 1];
         if (auto [p, ec] = bee::to_chars(portstr, portstr + portn, port); ec != std::errc()) {
@@ -103,7 +114,7 @@ namespace bee::net {
         } else {
             p[0] = '\0';
         }
-        AddrInfo info(name, portstr);
+        AddrInfo info(name, portstr, family_to_af(af_hint));
         if (!info) {
             return false;
         }

@@ -51,19 +51,22 @@ namespace bee::lua_socket {
                 auto [ip, port] = ep.get_inet();
                 lua_pushlstring(L, ip.data(), ip.size());
                 lua_pushinteger(L, port);
-                return 2;
+                lua_pushliteral(L, "inet");
+                return 3;
             }
             case net::family::inet6: {
                 auto [ip, port] = ep.get_inet6();
                 lua_pushlstring(L, ip.data(), ip.size());
                 lua_pushinteger(L, port);
-                return 2;
+                lua_pushliteral(L, "inet6");
+                return 3;
             }
             case net::family::unix: {
                 auto [type, path] = ep.get_unix();
                 lua_pushlstring(L, path.data(), path.size());
                 lua_pushinteger(L, std::to_underlying(type));
-                return 2;
+                lua_pushliteral(L, "unix");
+                return 3;
             }
             case net::family::unknown:
                 return 0;
@@ -499,8 +502,14 @@ namespace bee::lua_socket {
         case endpoint_ctor::hostname: {
             auto name = lua::checkstrview(L, 2);
             auto port = lua::checkinteger<uint16_t>(L, 3);
+            auto af_hint = net::family::unknown;
+            if (!lua_isnoneornil(L, 4)) {
+                static const char* const af_opts[] = { "inet", "inet6", NULL };
+                static const net::family af_values[] = { net::family::inet, net::family::inet6 };
+                af_hint = af_values[luaL_checkoption(L, 4, NULL, af_opts)];
+            }
             auto& ep  = lua::newudata<net::endpoint>(L);
-            if (!net::endpoint::ctor_hostname(ep, name, port)) {
+            if (!net::endpoint::ctor_hostname(ep, name, port, af_hint)) {
                 return 0;
             }
             return 1;
