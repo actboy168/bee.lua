@@ -271,6 +271,7 @@ lm:source_set "source_bee" {
         ldflags = "-pthread",
         links = {
             "stdc++fs",
+            "uring",
             --"unwind",
             --"bfd",
         }

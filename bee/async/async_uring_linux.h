@@ -1,0 +1,39 @@
+#pragma once
+
+#include <bee/async/async.h>
+#include <bee/net/fd.h>
+#include <bee/sys/file_handle.h>
+#include <bee/utility/span.h>
+
+#include <cstddef>
+#include <cstdint>
+
+// liburing is only needed in the .cpp; forward-declare the ring type here.
+struct io_uring;
+
+namespace bee::net {
+    struct endpoint;
+}
+
+namespace bee::async {
+
+class async_uring : public async {
+public:
+    async_uring();
+    ~async_uring() override;
+
+    bool submit_read(net::fd_t fd, void* buffer, size_t len, uint64_t request_id) override;
+    bool submit_write(net::fd_t fd, const void* buffer, size_t len, uint64_t request_id) override;
+    bool submit_accept(net::fd_t listen_fd, uint64_t request_id) override;
+    bool submit_connect(net::fd_t fd, const net::endpoint& ep, uint64_t request_id) override;
+    bool submit_file_read(file_handle::value_type fd, void* buffer, size_t len, int64_t offset, uint64_t request_id) override;
+    bool submit_file_write(file_handle::value_type fd, const void* buffer, size_t len, int64_t offset, uint64_t request_id) override;
+    int  poll(const span<io_completion>& completions) override;
+    int  wait(const span<io_completion>& completions, int timeout) override;
+    void stop() override;
+
+private:
+    io_uring* m_ring;  // heap-allocated to avoid including liburing.h here
+};
+
+}  // namespace bee::async
