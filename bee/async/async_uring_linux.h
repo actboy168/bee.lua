@@ -8,7 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 
-// liburing is only needed in the .cpp; forward-declare the ring type here.
+// io_uring is defined internally in the .cpp; forward-declare the ring type here.
 struct io_uring;
 
 namespace bee::net {
@@ -32,8 +32,10 @@ public:
     int  wait(const span<io_completion>& completions, int timeout) override;
     void stop() override;
 
+    bool valid() const noexcept { return m_ring != nullptr; }
+
 private:
-    io_uring* m_ring;  // heap-allocated to avoid including liburing.h here
+    io_uring* m_ring;  // nullptr if ring initialisation failed
 };
 
 }  // namespace bee::async
