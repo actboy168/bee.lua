@@ -16,7 +16,7 @@
 #    if defined(BEE_ASYNC_BACKEND_KQUEUE)
 #        include <bee/async/async_bsd.h>
 #    else
-#        include <bee/async/async_macos.h>
+#        include <bee/async/async_osx.h>
 #    endif
 #elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
 #    include <bee/async/async_bsd.h>

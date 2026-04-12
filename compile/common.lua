@@ -177,7 +177,7 @@ lm:source_set "source_bee" {
                 "posix",
             },
             lm.async_backend == "kqueue" and {
-                "!bee/async/async_macos.cpp",
+                "!bee/async/async_osx.cpp",
                 "bee/async/async_bsd.cpp"
             },
         },
