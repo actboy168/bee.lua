@@ -1,5 +1,12 @@
 #pragma once
 
+#if defined(_WIN32)
+// clang-format off
+#    include <WinSock2.h>
+// clang-format on
+#    include <WS2tcpip.h>
+#endif
+
 #include <bee/async/async_types.h>
 #include <bee/net/fd.h>
 #include <bee/sys/file_handle.h>

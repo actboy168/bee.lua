@@ -1,14 +1,20 @@
+// clang-format off
+// WinSock2.h must be included before Windows.h to avoid winsock.h type redefinitions.
+#include <WinSock2.h>
+// clang-format on
+#include <Windows.h>
+#include <WS2tcpip.h>
+#include <MSWSock.h>
+
 #include <bee/async/async_win.h>
 #include <bee/async/async.h>
 #include <bee/net/endpoint.h>
 #include <bee/net/socket.h>
 
-#include <Windows.h>
-#include <WinSock2.h>
-#include <WS2tcpip.h>
-#include <MSWSock.h>
-
 #include <cstring>
+
+// RtlNtStatusToDosError is in ntdll but not declared in standard MinGW headers.
+extern "C" ULONG WINAPI RtlNtStatusToDosError(NTSTATUS Status);
 
 namespace bee::async {
 
