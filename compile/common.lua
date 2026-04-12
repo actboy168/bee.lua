@@ -175,8 +175,13 @@ lm:source_set "source_bee" {
             need {
                 "osx",
                 "posix",
-            }
-        }
+            },
+            lm.async_backend == "kqueue" and {
+                "!bee/async/async_macos.cpp",
+                "bee/async/async_bsd.cpp"
+            },
+        },
+        defines = lm.async_backend == "kqueue" and "BEE_ASYNC_BACKEND_KQUEUE",
     },
     ios = {
         sources = {

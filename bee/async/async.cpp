@@ -30,10 +30,8 @@ std::unique_ptr<async> create() {
         return std::make_unique<async_uring>();
     }
     return std::make_unique<async_epoll>();
-#elif defined(_WIN32) || defined(__APPLE__)
-    return std::make_unique<async>();
 #else
-#    error "Unsupported platform for bee::async"
+    return std::make_unique<async>();
 #endif
 }
 

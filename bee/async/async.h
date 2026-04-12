@@ -2,6 +2,7 @@
 
 #include <bee/async/async_types.h>
 #include <bee/net/endpoint.h>
+#include <bee/net/fd.h>
 #include <bee/sys/file_handle.h>
 #include <bee/utility/span.h>
 
@@ -9,16 +10,16 @@
 #include <cstdint>
 #include <memory>
 
-#if defined(__linux__)
-// Only include platform headers where they are strictly needed.
-// async_uring_linux.h and async_epoll_linux.h inherit from the abstract
-// base defined here; they are not needed by consumers of async.h.
-#elif defined(_WIN32)
+#if defined(_WIN32)
 #    include <bee/async/async_win.h>
 #elif defined(__APPLE__)
-#    include <bee/async/async_macos.h>
-#else
-#    error "Unsupported platform for bee::async"
+#    if defined(BEE_ASYNC_BACKEND_KQUEUE)
+#        include <bee/async/async_bsd.h>
+#    else
+#        include <bee/async/async_macos.h>
+#    endif
+#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+#    include <bee/async/async_bsd.h>
 #endif
 
 namespace bee::async {
