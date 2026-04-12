@@ -79,8 +79,8 @@ bool async_epoll::submit_accept(net::fd_t listen_fd, uint64_t request_id) {
 }
 
 bool async_epoll::submit_connect(net::fd_t fd, const net::endpoint& ep, uint64_t request_id) {
-    auto status = socket::connect(fd, ep);
-    if (status == socket::status::success) {
+    auto status = net::socket::connect(fd, ep);
+    if (status == net::socket::status::success) {
         // Immediate success: enqueue a synthetic completion.
         io_completion c;
         c.request_id        = request_id;
@@ -91,7 +91,7 @@ bool async_epoll::submit_connect(net::fd_t fd, const net::endpoint& ep, uint64_t
         m_sync_completions.push_back(c);
         return true;
     }
-    if (status == socket::status::wait) {
+    if (status == net::socket::status::wait) {
         auto* op       = new pending_op();
         op->request_id = request_id;
         op->fd         = fd;
@@ -155,20 +155,20 @@ static io_completion handle_event(struct epoll_event& ev) {
     case async_epoll::pending_op::read: {
         c.op = async_op::read;
         int rc = 0;
-        auto rs = socket::recv(fd, rc, static_cast<char*>(op->r.buffer), static_cast<int>(op->r.len));
+        auto rs = net::socket::recv(fd, rc, static_cast<char*>(op->r.buffer), static_cast<int>(op->r.len));
         switch (rs) {
-        case socket::recv_status::success:
+        case net::socket::recv_status::success:
             c.status            = async_status::success;
             c.bytes_transferred = static_cast<size_t>(rc);
             break;
-        case socket::recv_status::close:
+        case net::socket::recv_status::close:
             c.status = async_status::close;
             break;
-        case socket::recv_status::failed:
+        case net::socket::recv_status::failed:
             c.status     = async_status::error;
             c.error_code = errno;
             break;
-        case socket::recv_status::wait:
+        case net::socket::recv_status::wait:
             c.status     = async_status::error;
             c.error_code = EAGAIN;
             break;
@@ -178,17 +178,17 @@ static io_completion handle_event(struct epoll_event& ev) {
     case async_epoll::pending_op::write: {
         c.op = async_op::write;
         int rc = 0;
-        auto ss = socket::send(fd, rc, static_cast<const char*>(op->w.buffer), static_cast<int>(op->w.len));
+        auto ss = net::socket::send(fd, rc, static_cast<const char*>(op->w.buffer), static_cast<int>(op->w.len));
         switch (ss) {
-        case socket::status::success:
+        case net::socket::status::success:
             c.status            = async_status::success;
             c.bytes_transferred = static_cast<size_t>(rc);
             break;
-        case socket::status::wait:
+        case net::socket::status::wait:
             c.status     = async_status::error;
             c.error_code = EAGAIN;
             break;
-        case socket::status::failed:
+        case net::socket::status::failed:
             c.status     = async_status::error;
             c.error_code = errno;
             break;
@@ -197,18 +197,18 @@ static io_completion handle_event(struct epoll_event& ev) {
     }
     case async_epoll::pending_op::accept: {
         c.op = async_op::accept;
-        net::fd_t newfd = retired_fd;
-        auto as    = socket::accept(fd, newfd);
+        net::fd_t newfd = net::retired_fd;
+        auto as    = net::socket::accept(fd, newfd);
         switch (as) {
-        case socket::status::success:
+        case net::socket::status::success:
             c.status            = async_status::success;
             c.bytes_transferred = static_cast<size_t>(newfd);
             break;
-        case socket::status::wait:
+        case net::socket::status::wait:
             c.status     = async_status::error;
             c.error_code = EAGAIN;
             break;
-        case socket::status::failed:
+        case net::socket::status::failed:
             c.status     = async_status::error;
             c.error_code = errno;
             break;
@@ -218,7 +218,7 @@ static io_completion handle_event(struct epoll_event& ev) {
     case async_epoll::pending_op::connect: {
         c.op = async_op::connect;
         int err = 0;
-        if (socket::errcode(fd, err) && err == 0) {
+        if (net::socket::errcode(fd, err) && err == 0) {
             c.status = async_status::success;
         } else {
             c.status     = async_status::error;
@@ -233,8 +233,9 @@ static io_completion handle_event(struct epoll_event& ev) {
 }
 
 static int drain_epoll(int epfd, const span<io_completion>& completions, int timeout_ms) {
-    struct epoll_event events[async_epoll::kMaxEvents];
-    int nfds = epoll_wait(epfd, events, async_epoll::kMaxEvents, timeout_ms);
+    constexpr int kMaxEvents = 64;
+    struct epoll_event events[kMaxEvents];
+    int nfds = epoll_wait(epfd, events, kMaxEvents, timeout_ms);
     if (nfds <= 0) {
         return 0;
     }
