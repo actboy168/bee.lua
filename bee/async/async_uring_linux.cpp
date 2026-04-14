@@ -243,18 +243,15 @@ namespace bee::async {
         uv__io_uring_params params;
         memset(&params, 0, sizeof(params));
 
-        // On kernel 6.6+ we can skip the sq_array indirection.
-        // uv__kernel_version() is not available here; detect at runtime via the
-        // returned params after setup.  We request NO_SQARRAY unconditionally and
-        // check whether the kernel accepted it via the features bits — actually the
-        // kernel just ignores unknown flags, so simply don't request it and let
-        // sq_array initialisation handle both cases uniformly.
-
+        // On kernel 6.6+ the kernel can omit the sq_array indirection via
+        // IORING_SETUP_NO_SQARRAY.  We intentionally do not request that flag here:
+        // unknown setup flags may be rejected on older kernels, and the existing
+        // sq_array initialisation path already works for both layouts.
         int ringfd = sys_io_uring_setup(entries, &params);
         if (ringfd < 0) return false;
 
-        // Require SINGLE_MMAP (Linux 5.4+) and NODROP (Linux 5.5+).
-        // Both are implied by FEAT_RSRC_TAGS (Linux 5.13) which we also require.
+        // Require only the features that are actually used below:
+        // SINGLE_MMAP (Linux 5.4+) and NODROP (Linux 5.5+).
         if (!(params.features & UV__IORING_FEAT_SINGLE_MMAP)) {
             close(ringfd);
             return false;
