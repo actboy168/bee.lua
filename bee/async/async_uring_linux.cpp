@@ -591,7 +591,9 @@ namespace bee::async {
     }
 
     void async_uring::cancel(net::fd_t /*fd*/) {
-        // io_uring 不需要显式清理 fd 状态，内核会自动处理
+        // 这是一个空操作。对于 io_uring，这个调用不会取消挂起的操作。
+        // 当文件描述符关闭时，这些操作将被内核取消，并最终以 ECANCELED 错误完成。
+        // 要实现立即取消，需要使用 IORING_OP_ASYNC_CANCEL。
     }
 
 }  // namespace bee::async
