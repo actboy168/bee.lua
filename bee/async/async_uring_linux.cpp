@@ -166,7 +166,10 @@ static inline int sys_io_uring_setup(unsigned entries, uv__io_uring_params* p) n
 }
 
 static inline int sys_io_uring_enter(int fd, unsigned to_submit, unsigned min_complete, unsigned flags, const void* arg) noexcept {
-    return static_cast<int>(syscall(SYS_io_uring_enter, fd, to_submit, min_complete, flags, arg, sizeof(uv__io_uring_getevents_arg)));
+    const unsigned arg_size = (flags & UV__IORING_ENTER_EXT_ARG)
+        ? static_cast<unsigned>(sizeof(uv__io_uring_getevents_arg))
+        : 0u;
+    return static_cast<int>(syscall(SYS_io_uring_enter, fd, to_submit, min_complete, flags, arg, arg_size));
 }
 
 // ---- io_uring ring state (kept behind the forward-declared pointer in the header) ----
