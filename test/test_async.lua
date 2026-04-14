@@ -39,8 +39,8 @@ local function wait_completion(as, timeout)
     timeout = timeout or 1000
     local start = time.monotonic()
     while time.monotonic() - start < timeout do
-        for reqid, status, bytes, errcode in as:wait(100) do
-            return reqid, status, bytes, errcode
+        for token, status, bytes, errcode in as:wait(100) do
+            return token, status, bytes, errcode
         end
     end
     lt.failure("wait_completion timeout")
@@ -93,7 +93,7 @@ function m.test_wait_timeout()
     lt.assertEquals(elapsed >= 50, true)
 end
 
---- 测试 TCP write 和 read
+--- 测试 TCP write 和 read，token 为字符串
 function m.test_tcp_write_read()
     local as <close> = assert(async.create(64))
     local sfd <close> = SimpleServer(as, "tcp", "127.0.0.1", 0)
@@ -101,17 +101,20 @@ function m.test_tcp_write_read()
     local newfd = wait_accept(sfd)
     local wb = assert(async.writebuf(64 * 1024))
     wb:write("hello")
-    lt.assertEquals(as:submit_write(wb, cfd, 1), true)
-    local reqid, status, bytes = wait_completion(as)
-    lt.assertEquals(reqid, 1)
+    lt.assertEquals(as:submit_write(wb, cfd, "write_token"), true)
+    local op, token, status, bytes = wait_completion(as)
+    lt.assertEquals(op, async.OP_WRITEV)
+    lt.assertEquals(token, "write_token")
     lt.assertEquals(status, SUCCESS)
     lt.assertEquals(bytes, 0) -- writebuf completion always returns 0 bytes
 
-    -- 提交流式读操作
+    -- 提交流式读操作，token 为 table
+    local read_token = { id = 42 }
     local rb = assert(async.readbuf(64))
-    lt.assertEquals(as:submit_read(rb, newfd, 2), true)
-    reqid, status, bytes = wait_completion(as)
-    lt.assertEquals(reqid, 2)
+    lt.assertEquals(as:submit_read(rb, newfd, read_token), true)
+    op, token, status, bytes = wait_completion(as)
+    lt.assertEquals(op, async.OP_READ)
+    lt.assertEquals(token, read_token)
     lt.assertEquals(status, SUCCESS)
     lt.assertEquals(bytes, 5)
     -- 从 ring buffer 精确读取
@@ -120,19 +123,20 @@ function m.test_tcp_write_read()
     newfd:close()
 end
 
---- 测试 TCP accept
+--- 测试 TCP accept，token 为 table
 function m.test_tcp_accept()
     local as <close> = assert(async.create(64))
     local sfd <close> = SimpleServer(as, "tcp", "127.0.0.1", 0)
     local _, port = sfd:info "socket":value()
 
-    lt.assertEquals(as:submit_accept(sfd, 1), true)
+    local accept_token = { op = "accept" }
+    lt.assertEquals(as:submit_accept(sfd, accept_token), true)
 
     -- 连接到服务器以触发 accept
     local cfd <close> = SimpleClient(as, "tcp", "127.0.0.1", port)
 
-    local reqid, status, newfd = wait_completion(as)
-    lt.assertEquals(reqid, 1)
+    local _, token, status, newfd = wait_completion(as)
+    lt.assertEquals(token, accept_token)
     lt.assertEquals(status, SUCCESS)
     -- accept 完成后返回新的 socket userdata
     lt.assertIsUserdata(newfd)
@@ -141,7 +145,7 @@ function m.test_tcp_accept()
     newfd:close()
 end
 
---- 测试 TCP connect
+--- 测试 TCP connect，token 为数字
 function m.test_tcp_connect()
     local as <close> = assert(async.create(64))
     local sfd <close> = SimpleServer(as, "tcp", "127.0.0.1", 0)
@@ -149,10 +153,10 @@ function m.test_tcp_connect()
 
     local cfd <close> = assert(socket.create "tcp")
     assert(as:associate(cfd))
-    lt.assertEquals(as:submit_connect(cfd, "127.0.0.1", port, 1), true)
+    lt.assertEquals(as:submit_connect(cfd, "127.0.0.1", port, 99), true)
 
-    local reqid, status = wait_completion(as)
-    lt.assertEquals(reqid, 1)
+    local _, token, status = wait_completion(as)
+    lt.assertEquals(token, 99)
     lt.assertEquals(status, SUCCESS)
 end
 
@@ -173,10 +177,11 @@ function m.test_file_read_write()
     local rf = assert(io.open(filepath:string(), "rb"))
     assert(as:associate_file(rf))
 
-    -- 提交文件读操作
-    lt.assertEquals(as:submit_file_read(rf, 128, 0, 1), true)
-    local reqid, status, bytes = wait_completion(as)
-    lt.assertEquals(reqid, 1)
+    -- 提交文件读操作，token 为字符串
+    lt.assertEquals(as:submit_file_read(rf, 128, 0, "fread"), true)
+    local op, token, status, bytes = wait_completion(as)
+    lt.assertEquals(op, async.OP_FILE_READ)
+    lt.assertEquals(token, "fread")
     lt.assertEquals(status, SUCCESS)
     lt.assertEquals(bytes, "hello async file io")
 
@@ -185,9 +190,10 @@ function m.test_file_read_write()
     -- 打开文件用于写入，关联到异步实例
     local wf = assert(io.open(filepath:string(), "wb"))
     assert(as:associate_file(wf))
-    lt.assertEquals(as:submit_file_write(wf, "written by async", 0, 2), true)
-    reqid, status, bytes = wait_completion(as)
-    lt.assertEquals(reqid, 2)
+    lt.assertEquals(as:submit_file_write(wf, "written by async", 0, "fwrite"), true)
+    op, token, status, bytes = wait_completion(as)
+    lt.assertEquals(op, async.OP_FILE_WRITE)
+    lt.assertEquals(token, "fwrite")
     lt.assertEquals(status, SUCCESS)
     lt.assertEquals(bytes, 16) -- "written by async" 长度为 16
 
@@ -214,13 +220,13 @@ function m.test_file_read_write_offset()
         f:close()
     end
 
-    -- 从偏移量 10 读取
+    -- 从偏移量 10 读取，token 为数字
     local rf = assert(io.open(filepath:string(), "rb"))
     assert(as:associate_file(rf))
 
     lt.assertEquals(as:submit_file_read(rf, 6, 10, 1), true)
-    local reqid, status, bytes = wait_completion(as)
-    lt.assertEquals(reqid, 1)
+    local _, token, status, bytes = wait_completion(as)
+    lt.assertEquals(token, 1)
     lt.assertEquals(status, SUCCESS)
     lt.assertEquals(bytes, "ABCDEF")
 
@@ -240,15 +246,16 @@ function m.test_read_closed()
 
     -- 在服务端提交读操作应该收到 close 状态
     local rb = assert(async.readbuf(64))
-    lt.assertEquals(as:submit_read(rb, newfd, 1), true)
-    local reqid, status = wait_completion(as)
-    lt.assertEquals(reqid, 1)
+    local read_token = { op = "read_closed" }
+    lt.assertEquals(as:submit_read(rb, newfd, read_token), true)
+    local _, token, status = wait_completion(as)
+    lt.assertEquals(token, read_token)
     lt.assertEquals(status, CLOSE)
 
     newfd:close()
 end
 
---- 测试多个并发请求
+--- 测试多个并发请求，token 为循环变量（数字）
 function m.test_multiple_requests()
     local as <close> = assert(async.create(64))
     local sfd <close> = SimpleServer(as, "tcp", "127.0.0.1", 0)
@@ -262,7 +269,7 @@ function m.test_multiple_requests()
         servers[i] = wait_accept(sfd)
     end
 
-    -- 提交多个写操作
+    -- 提交多个写操作，token 为数字
     local wbs = {}
     for i = 1, 3 do
         wbs[i] = assert(async.writebuf(64 * 1024))
@@ -274,8 +281,8 @@ function m.test_multiple_requests()
     local results = {}
     local deadline = time.monotonic() + 1000
     while #results < 3 and time.monotonic() < deadline do
-        for reqid, status, bytes in as:wait(100) do
-            results[#results+1] = { reqid = reqid, status = status, bytes = bytes }
+        for op, token, status, bytes in as:wait(100) do
+            results[#results+1] = { op = op, token = token, status = status, bytes = bytes }
         end
     end
     lt.assertEquals(#results, 3)
@@ -317,13 +324,13 @@ function m.test_stream_read()
     -- 发送两段数据
     local wb = assert(async.writebuf(64 * 1024))
     wb:write("helloworld")
-    lt.assertEquals(as:submit_write(wb, cfd, 1), true)
+    lt.assertEquals(as:submit_write(wb, cfd, "w1"), true)
     wait_completion(as)  -- write done
 
-    -- 投递 stream read
-    lt.assertEquals(as:submit_read(rb, newfd, 2), true)
-    local reqid, status, bytes = wait_completion(as)
-    lt.assertEquals(reqid, 2)
+    -- 投递 stream read，token 为字符串
+    lt.assertEquals(as:submit_read(rb, newfd, "r1"), true)
+    local _, token, status, bytes = wait_completion(as)
+    lt.assertEquals(token, "r1")
     lt.assertEquals(status, SUCCESS)
     lt.assertEquals(bytes >= 1, true)
 
@@ -347,41 +354,41 @@ function m.test_readline()
     local rb = assert(async.readbuf(256))
 
     local function recv()
-        lt.assertEquals(as:submit_read(rb, newfd, 2), true)
-        local _, status = wait_completion(as)
+        lt.assertEquals(as:submit_read(rb, newfd, "recv"), true)
+        local _, _, status = wait_completion(as)
         lt.assertEquals(status, SUCCESS)
     end
 
-    local function send(data, reqid)
+    local function send(data, token)
         local w = assert(async.writebuf(64 * 1024))
         w:write(data)
-        lt.assertEquals(as:submit_write(w, cfd, reqid), true)
+        lt.assertEquals(as:submit_write(w, cfd, token), true)
         wait_completion(as)
     end
 
     -- 默认分隔符 \r\n
-    send("hello\r\nworld\r\n", 1)
+    send("hello\r\nworld\r\n", "s1")
     recv()
     lt.assertEquals(rb:readline(), "hello\r\n")
     lt.assertEquals(rb:readline(), "world\r\n")
     lt.assertEquals(rb:readline(), nil)
 
     -- 自定义分隔符 \n
-    send("foo\nbar\n", 3)
+    send("foo\nbar\n", "s2")
     recv()
     lt.assertEquals(rb:readline("\n"), "foo\n")
     lt.assertEquals(rb:readline("\n"), "bar\n")
     lt.assertEquals(rb:readline("\n"), nil)
 
     -- 多字节自定义分隔符
-    send("a|b|c|b|", 5)
+    send("a|b|c|b|", "s3")
     recv()
     lt.assertEquals(rb:readline("|b|"), "a|b|")
     lt.assertEquals(rb:readline("|b|"), "c|b|")
     lt.assertEquals(rb:readline("|b|"), nil)
 
     -- 不完整行返回 nil，read() 仍可取出
-    send("no-sep", 7)
+    send("no-sep", "s4")
     recv()
     lt.assertEquals(rb:readline(), nil)
     lt.assertEquals(rb:read(), "no-sep")
@@ -405,7 +412,7 @@ if platform.os == "windows" then
 
         local cfd <close> = assert(socket.create "tcp")
         lt.assertEquals(as:associate(cfd), true)
-        lt.assertEquals(as:submit_connect(cfd, "127.0.0.1", port, 1), true)
+        lt.assertEquals(as:submit_connect(cfd, "127.0.0.1", port, "connect_tok"), true)
 
         -- cancel 不应该崩溃
         as:cancel(cfd)
@@ -422,22 +429,23 @@ function m.test_writebuf()
     local cfd <close> = SimpleClient(as, "tcp", sfd:info "socket")
     local newfd = wait_accept(sfd)
 
-    -- 多段写入同一个 writebuf，单次 submit_write 发完
+    -- 多段写入同一个 writebuf，单次 submit_write 发完，token 为 table
     local wb = assert(async.writebuf(64 * 1024))
     local parts = { "hel", "lo,", " wo", "rld" }
     local expected = table.concat(parts)
     for _, s in ipairs(parts) do wb:write(s) end
-    lt.assertEquals(as:submit_write(wb, cfd, 1), true)
-    local reqid, status = wait_completion(as)
-    lt.assertEquals(reqid, 1)
+    local write_tok = { id = "wb_tok" }
+    lt.assertEquals(as:submit_write(wb, cfd, write_tok), true)
+    local _, token, status = wait_completion(as)
+    lt.assertEquals(token, write_tok)
     lt.assertEquals(status, SUCCESS)
 
     -- 验证数据完整性：可能分多次收到（如 BSD/kqueue 逐段发送）
     local rb = assert(async.readbuf(64))
     local received = 0
     while received < #expected do
-        lt.assertEquals(as:submit_read(rb, newfd, 2), true)
-        local _, rstatus, rbytes = wait_completion(as)
+        lt.assertEquals(as:submit_read(rb, newfd, "read_tok"), true)
+        local _, _, rstatus, rbytes = wait_completion(as)
         lt.assertEquals(rstatus, SUCCESS)
         received = received + rbytes
     end
@@ -457,7 +465,7 @@ function m.test_writebuf()
     newfd:close()
 end
 
---- 测试 submit_poll：只监听 fd 可读性，不消费数据
+--- 测试 submit_poll：只监听 fd 可读性，不消费数据，token 为字符串
 function m.test_submit_poll()
     local as <close> = assert(async.create(64))
     local sfd <close> = SimpleServer(as, "tcp", "127.0.0.1", 0)
@@ -466,28 +474,30 @@ function m.test_submit_poll()
 
     -- 对服务端 fd 提交 poll 请求
     assert(as:associate(newfd))
-    lt.assertEquals(as:submit_poll(newfd, 1), true)
+    local poll_tok = "poll"
+    lt.assertEquals(as:submit_poll(newfd, poll_tok), true)
 
     -- 客户端发送数据，触发服务端 fd 可读
     local wb = assert(async.writebuf(64 * 1024))
     wb:write("poll_test")
-    lt.assertEquals(as:submit_write(wb, cfd, 2), true)
+    local write_tok = "write"
+    lt.assertEquals(as:submit_write(wb, cfd, write_tok), true)
 
-    -- 收集 write(reqid=2) 和 poll(reqid=1) 两个 completions，顺序不确定
+    -- 收集 write 和 poll 两个 completions，顺序不确定
     local results = {}
     local timeout = 1000
     local start = time.monotonic()
     while #results < 2 and time.monotonic() - start < timeout do
-        for reqid, status, bytes, errcode in as:wait(100) do
-            results[#results+1] = { reqid = reqid, status = status, bytes = bytes, errcode = errcode }
+        for op, token, status, bytes, errcode in as:wait(100) do
+            results[#results+1] = { op = op, token = token, status = status, bytes = bytes, errcode = errcode }
         end
     end
     lt.assertEquals(#results, 2)
 
-    -- 按 reqid 找到 poll completion
+    -- 按 token 找到 poll completion
     local poll_result
     for _, r in ipairs(results) do
-        if r.reqid == 1 then
+        if r.token == poll_tok then
             poll_result = r
             break
         end
@@ -499,9 +509,10 @@ function m.test_submit_poll()
 
     -- 验证数据未被消费：仍然可以正常读取
     local rb = assert(async.readbuf(64))
-    lt.assertEquals(as:submit_read(rb, newfd, 3), true)
-    local reqid, status, bytes = wait_completion(as)
-    lt.assertEquals(reqid, 3)
+    local read_tok = "read"
+    lt.assertEquals(as:submit_read(rb, newfd, read_tok), true)
+    local _, token, status, bytes = wait_completion(as)
+    lt.assertEquals(token, read_tok)
     lt.assertEquals(status, SUCCESS)
     lt.assertEquals(bytes, 9) -- "poll_test" 长度为 9
     lt.assertEquals(rb:read(9), "poll_test")
@@ -518,18 +529,29 @@ function m.test_submit_poll_channel()
     local as <close> = assert(async.create(64))
     assert(as:associate(ch:fd()))
 
-    -- 提交 poll 请求
-    lt.assertEquals(as:submit_poll(ch:fd(), 1), true)
+    -- 提交 poll 请求，token 为 table
+    local poll_tok = { ch = "poll_test_ch" }
+    lt.assertEquals(as:submit_poll(ch:fd(), poll_tok), true)
 
     -- 向 channel push 数据，触发 fd 可读
     ch:push("hello", 42)
 
     -- 等待 poll completion
-    local reqid, status, bytes, errcode = wait_completion(as)
-    lt.assertEquals(reqid, 1)
-    lt.assertEquals(status, SUCCESS)
-    lt.assertEquals(bytes, 0)
-    lt.assertEquals(errcode, 0)
+    local got_op, got_tok, got_status, got_bytes, got_errcode
+    local deadline2 = time.monotonic() + 1000
+    while not got_op and time.monotonic() < deadline2 do
+        for op, token, status, bytes, errcode in as:wait(100) do
+            got_op      = op
+            got_tok     = token
+            got_status  = status
+            got_bytes   = bytes
+            got_errcode = errcode
+        end
+    end
+    lt.assertEquals(got_tok, poll_tok)
+    lt.assertEquals(got_status, SUCCESS)
+    lt.assertEquals(got_bytes, 0)
+    lt.assertEquals(got_errcode, 0)
 
     -- 验证数据未被消费：channel pop 仍然可以取到数据
     local ok, msg, num = ch:pop()

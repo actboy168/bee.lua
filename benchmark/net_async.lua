@@ -4,28 +4,17 @@ local async = require "bee.async"
 
 local asfd = async.create(512)
 
-local SUCCESS <const> = async.SUCCESS
+local SUCCESS   <const> = async.SUCCESS
+local OP_READ   <const> = async.OP_READ
+local OP_WRITEV <const> = async.OP_WRITEV
+local OP_ACCEPT <const> = async.OP_ACCEPT
+local OP_CONNECT<const> = async.OP_CONNECT
 
 local kReadBufSize  <const> = 64 * 1024  -- per-stream ring buffer size
 local kWriteHWM     <const> = 64 * 1024  -- write queue high-water-mark (bytes)
 
 local status = {}
 local handle = {}
-
-local next_reqid = 1
-local function alloc_reqid()
-    local id = next_reqid
-    next_reqid = id + 1
-    return id
-end
-
-local pending = {}
-
--- Pending type constants
-local PTYPE_READ    = 1
-local PTYPE_ACCEPT  = 2
-local PTYPE_CONNECT = 3
-local PTYPE_WRITE   = 4
 
 local function create_handle(fd)
     local h = handle[fd]
@@ -72,12 +61,10 @@ local function stream_submit_read(s)
         return
     end
     while s.read_in_flight < 1 do
-        local reqid = alloc_reqid()
-        if not asfd:submit_read(s.rb, s.fd, reqid) then
+        if not asfd:submit_read(s.rb, s.fd, s) then
             break
         end
         s.read_in_flight = s.read_in_flight + 1
-        pending[reqid] = { PTYPE_READ, s }
     end
 end
 
@@ -110,13 +97,11 @@ local function stream_submit_write(s)
     if s.wb:buffered() == 0 then
         return
     end
-    local reqid = alloc_reqid()
-    if not asfd:submit_write(s.wb, s.fd, reqid) then
+    if not asfd:submit_write(s.wb, s.fd, s) then
         close_stream(s)
         return
     end
     s.wb_in_flight = true
-    pending[reqid] = { PTYPE_WRITE, s }
 end
 
 -- Called when a submit_write completion arrives (queue fully drained).
@@ -196,16 +181,13 @@ function S.connect(protocol, host, port)
         return nil, err
     end
     asfd:associate(fd)
-    local reqid = alloc_reqid()
-    local token = {}
-    pending[reqid] = { PTYPE_CONNECT, token }
-    local ok, cerr = asfd:submit_connect(fd, host, port, reqid)
+    local wait_token = {}
+    local ok, cerr = asfd:submit_connect(fd, host, port, wait_token)
     if not ok then
-        pending[reqid] = nil
         fd:close()
         return nil, cerr
     end
-    local result = ltask.wait(token)
+    local result = ltask.wait(wait_token)
     if not result then
         fd:close()
         return nil, "connect failed"
@@ -217,11 +199,9 @@ function S.accept(h)
     local fd = assert(handle[h], "Invalid fd.")
     local s = status[fd]
     assert(s.is_listener, "Not a listener.")
-    local reqid = alloc_reqid()
-    local token = {}
-    pending[reqid] = { PTYPE_ACCEPT, token }
-    asfd:submit_accept(fd, reqid)
-    local newfd = ltask.wait(token)
+    local wait_token = {}
+    asfd:submit_accept(fd, wait_token)
+    local newfd = ltask.wait(wait_token)
     if not newfd then
         return nil, "accept failed"
     end
@@ -326,39 +306,22 @@ end
 
 local net = {}
 
-local function process_completions(iter)
-    for reqid, st, data, _ in iter do
-        local p = pending[reqid]
-        if not p then
-            goto continue
-        end
-        pending[reqid] = nil
-        local ptype = p[1]
-        if ptype == PTYPE_READ then
-            local s = p[2]
-            if st == SUCCESS then
-                stream_on_read(s, data)
-            else
-                stream_on_read(s, nil)
-            end
-        elseif ptype == PTYPE_WRITE then
-            local s = p[2]
-            if st == SUCCESS then
-                stream_on_write(s)
-            else
-                close_stream(s)
-            end
-        elseif ptype == PTYPE_ACCEPT then
-            ltask.wakeup(p[2], st == SUCCESS and data or nil)
-        elseif ptype == PTYPE_CONNECT then
-            ltask.wakeup(p[2], st == SUCCESS and true or nil)
-        end
-        ::continue::
-    end
-end
-
 function net.wait(timeout)
-    process_completions(asfd:wait(timeout))
+    for op, udata, st, data in asfd:wait(timeout) do
+        if op == OP_READ then
+            stream_on_read(udata, st == SUCCESS and data or nil)
+        elseif op == OP_WRITEV then
+            if st == SUCCESS then
+                stream_on_write(udata)
+            else
+                close_stream(udata)
+            end
+        elseif op == OP_ACCEPT then
+            ltask.wakeup(udata, st == SUCCESS and data or nil)
+        elseif op == OP_CONNECT then
+            ltask.wakeup(udata, st == SUCCESS and true or nil)
+        end
+    end
 end
 
 function net.listen(...)

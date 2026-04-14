@@ -7,6 +7,14 @@
 ---@field CLOSE integer 连接关闭
 ---@field ERROR integer 操作错误
 ---@field CANCEL integer 操作取消
+---@field OP_READ integer 流式读操作
+---@field OP_WRITE integer 单次写操作
+---@field OP_WRITEV integer writebuf 写操作
+---@field OP_ACCEPT integer accept 操作
+---@field OP_CONNECT integer connect 操作
+---@field OP_FILE_READ integer 文件读操作
+---@field OP_FILE_WRITE integer 文件写操作
+---@field OP_POLL integer poll 操作
 local async = {}
 
 ---异步I/O实例对象
@@ -17,9 +25,9 @@ local asfd = {}
 ---若 ring buffer 空闲不足（背压）则不投递，返回 false
 ---@param rb bee.async.readbuf 接收缓冲区对象
 ---@param fd bee.socket.fd socket 对象
----@param request_id integer 请求ID
+---@param udata any 用户自定义数据，completion 时原样返回
 ---@return boolean # 成功投递返回true，背压或失败返回false
-function asfd:submit_read(rb, fd, request_id)
+function asfd:submit_read(rb, fd, udata)
 end
 
 ---提交 writebuf 异步写操作
@@ -28,29 +36,29 @@ end
 ---若 wb 为空或已有 in-flight 请求，则直接返回 true 不投递。
 ---@param wb bee.async.writebuf 写缓冲区对象
 ---@param fd bee.socket.fd socket 对象
----@param request_id integer 请求ID（队列清空时作为 completion 的 reqid 返回）
+---@param udata any 用户自定义数据，队列清空时作为 completion 的 udata 返回
 ---@return boolean? # 成功返回true，失败返回nil
 ---@return string? # 错误消息
-function asfd:submit_write(wb, fd, request_id)
+function asfd:submit_write(wb, fd, udata)
 end
 
 ---提交异步accept操作
 ---@param listen_fd bee.socket.fd 监听 socket 对象
----@param request_id integer 请求ID
+---@param udata any 用户自定义数据，completion 时原样返回
 ---@return boolean? # 成功返回true，失败返回nil
 ---@return string? # 错误消息
-function asfd:submit_accept(listen_fd, request_id)
+function asfd:submit_accept(listen_fd, udata)
 end
 
 ---提交异步connect操作
 ---@param fd bee.socket.fd socket 对象
 ---@param host string 目标主机名或IP地址
 ---@param port integer 目标端口号
----@param request_id integer 请求ID
+---@param udata any 用户自定义数据，completion 时原样返回
 ---@return boolean? # 成功返回true，失败返回nil
 ---@return string? # 错误消息
----@overload fun(self: bee.async.fd, fd: bee.socket.fd, ep: bee.socket.endpoint, request_id: integer): boolean?, string?
-function asfd:submit_connect(fd, host, port, request_id)
+---@overload fun(self: bee.async.fd, fd: bee.socket.fd, ep: bee.socket.endpoint, udata: any): boolean?, string?
+function asfd:submit_connect(fd, host, port, udata)
 end
 
 ---将文件关联到当前异步I/O实例（仅 Windows/IOCP）
@@ -66,30 +74,30 @@ end
 ---@param fd file* 文件对象
 ---@param len integer 读取长度
 ---@param offset? integer 文件偏移量，默认为0
----@param request_id integer 请求ID
+---@param udata any 用户自定义数据，completion 时原样返回
 ---@return boolean? # 成功返回true，失败返回nil
 ---@return string? # 错误消息
-function asfd:submit_file_read(fd, len, offset, request_id)
+function asfd:submit_file_read(fd, len, offset, udata)
 end
 
 ---提交异步文件写操作
 ---@param fd file* 文件对象
 ---@param data string 要写入的数据
 ---@param offset? integer 文件偏移量，默认为0
----@param request_id integer 请求ID
+---@param udata any 用户自定义数据，completion 时原样返回
 ---@return boolean? # 成功返回true，失败返回nil
 ---@return string? # 错误消息
-function asfd:submit_file_write(fd, data, offset, request_id)
+function asfd:submit_file_write(fd, data, offset, udata)
 end
 
 ---提交异步 poll 操作
 ---仅监听 fd 的可读性，不消费任何数据。当 fd 变为可读时产生一次 completion。
 ---适用于监听 channel 的 ev fd，收到通知后由调用方自行调用 channel:pop() 消费数据。
 ---@param fd bee.socket.fd socket 对象（或 channel:fd() 返回的 fd）
----@param request_id integer 请求ID
+---@param udata any 用户自定义数据，completion 时原样返回
 ---@return boolean? # 成功返回true，失败返回nil
 ---@return string? # 错误消息
-function asfd:submit_poll(fd, request_id)
+function asfd:submit_poll(fd, udata)
 end
 
 ---将 socket 关联到当前异步I/O实例（仅 Windows/IOCP）
@@ -106,15 +114,15 @@ function asfd:cancel(fd)
 end
 
 ---轮询已完成的I/O事件（非阻塞）
----accept 操作完成时第三个返回值为新的 socket userdata，file_read 完成时为读取到的字符串数据，其他操作为 bytes_transferred
----@return fun(): integer, integer, integer|bee.socket.fd|string, integer # 迭代器，产生 (request_id, status, bytes_transferred|accepted_socket|read_data, error_code)
+---accept 操作完成时第四个返回值为新的 socket userdata，file_read 完成时为读取到的字符串数据，其他操作为 bytes_transferred
+---@return fun(): integer, any, integer, integer|bee.socket.fd|string, integer # 迭代器，产生 (op, udata, status, bytes_transferred|accepted_socket|read_data, error_code)
 function asfd:poll()
 end
 
 ---等待已完成的I/O事件（阻塞）
----accept 操作完成时第三个返回值为新的 socket userdata，file_read 完成时为读取到的字符串数据，其他操作为 bytes_transferred
+---accept 操作完成时第四个返回值为新的 socket userdata，file_read 完成时为读取到的字符串数据，其他操作为 bytes_transferred
 ---@param timeout? integer 超时时间，单位为毫秒，-1表示无限等待
----@return fun(): integer, integer, integer|bee.socket.fd|string, integer # 迭代器，产生 (request_id, status, bytes_transferred|accepted_socket|read_data, error_code)
+---@return fun(): integer, any, integer, integer|bee.socket.fd|string, integer # 迭代器，产生 (op, udata, status, bytes_transferred|accepted_socket|read_data, error_code)
 function asfd:wait(timeout)
 end
 
