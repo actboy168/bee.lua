@@ -325,19 +325,15 @@ namespace bee::async {
     }
 
     bool async::submit_poll(net::fd_t fd, uint64_t request_id) {
-        auto* op       = new pending_op();
-        op->request_id = request_id;
-
         dispatch_source_t source = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, fd, 0, m_queue);
         if (!source) {
-            delete op;
             return false;
         }
 
         dispatch_source_set_event_handler(source, ^{
           // fd_poll: 只通知 fd 可读，不消费任何数据
           io_completion c;
-          c.request_id        = op->request_id;
+          c.request_id        = request_id;
           c.op                = async_op::fd_poll;
           c.status            = async_status::success;
           c.bytes_transferred = 0;
@@ -347,7 +343,6 @@ namespace bee::async {
         });
 
         dispatch_source_set_cancel_handler(source, ^{
-          delete op;
           dispatch_release(source);
         });
 

@@ -65,11 +65,6 @@ namespace bee::async {
             } w;
         };
 
-        // Used only by submit_poll (one-shot dispatch source)
-        struct pending_op {
-            uint64_t request_id = 0;
-        };
-
         std::unordered_map<net::fd_t, fd_sources*> m_fd_map;
 
         fd_sources* get_or_create(net::fd_t fd);
