@@ -168,10 +168,17 @@ namespace bee::async {
         return true;
     }
 
-    static io_completion handle_event(struct kevent& ev, std::unordered_set<async::pending_op*>& pending_ops) {
+    // 重新注册 EV_ONESHOT 事件（用于 spurious wakeup 后保留 op 继续监听）。
+    static bool kqueue_rearm(int kqfd, net::fd_t fd, int filter, async::pending_op* op) {
+        struct kevent ev;
+        EV_SET(&ev, fd, filter, EV_ADD | EV_ONESHOT, 0, 0, op);
+        return kevent(kqfd, &ev, 1, nullptr, 0, nullptr) == 0;
+    }
+
+    // 处理单个 kevent 事件。返回 true 表示产出了有效的 completion，false 表示
+    // 遇到了 spurious wakeup（EAGAIN），op 已被重新注册到 kqueue，不产出 completion。
+    static bool handle_event(int kqfd, struct kevent& ev, std::unordered_set<async::pending_op*>& pending_ops, io_completion& c) {
         auto* op = static_cast<async::pending_op*>(ev.udata);
-        pending_ops.erase(op);
-        io_completion c;
         c.request_id        = op->request_id;
         c.status            = async_status::error;
         c.bytes_transferred = 0;
@@ -202,8 +209,9 @@ namespace bee::async {
                 c.op = async_op::fd_poll;
                 break;
             }
+            pending_ops.erase(op);
             delete op;
-            return c;
+            return true;
         }
 
         switch (op->type) {
@@ -229,6 +237,10 @@ namespace bee::async {
                 c.error_code = errno;
                 break;
             case net::socket::recv_status::wait:
+                // Spurious wakeup：kevent 触发但实际无数据，重新注册等待下次事件。
+                if (kqueue_rearm(kqfd, fd, EVFILT_READ, op)) {
+                    return false;
+                }
                 c.status     = async_status::error;
                 c.error_code = EAGAIN;
                 break;
@@ -245,6 +257,9 @@ namespace bee::async {
                 c.bytes_transferred = static_cast<size_t>(rc);
                 break;
             case net::socket::status::wait:
+                if (kqueue_rearm(kqfd, fd, EVFILT_WRITE, op)) {
+                    return false;
+                }
                 c.status     = async_status::error;
                 c.error_code = EAGAIN;
                 break;
@@ -265,6 +280,9 @@ namespace bee::async {
                 c.bytes_transferred = static_cast<size_t>(rc);
                 break;
             case net::socket::status::wait:
+                if (kqueue_rearm(kqfd, fd, EVFILT_WRITE, op)) {
+                    return false;
+                }
                 c.status     = async_status::error;
                 c.error_code = EAGAIN;
                 break;
@@ -285,6 +303,9 @@ namespace bee::async {
                 c.bytes_transferred = static_cast<size_t>(newfd);
                 break;
             case net::socket::status::wait:
+                if (kqueue_rearm(kqfd, fd, EVFILT_READ, op)) {
+                    return false;
+                }
                 c.status     = async_status::error;
                 c.error_code = EAGAIN;
                 break;
@@ -316,8 +337,9 @@ namespace bee::async {
         }
         }
 
+        pending_ops.erase(op);
         delete op;
-        return c;
+        return true;
     }
 
     static int drain_kqueue(int kqfd, const span<io_completion>& completions, int timeout_ms, std::unordered_set<async::pending_op*>& pending_ops) {
@@ -336,7 +358,10 @@ namespace bee::async {
         }
         int count = 0;
         for (int i = 0; i < nev && count < static_cast<int>(completions.size()); ++i) {
-            completions[count++] = handle_event(events[i], pending_ops);
+            io_completion c;
+            if (handle_event(kqfd, events[i], pending_ops, c)) {
+                completions[count++] = c;
+            }
         }
         return count;
     }
