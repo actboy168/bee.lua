@@ -106,15 +106,15 @@ function asfd:cancel(fd)
 end
 
 ---轮询已完成的I/O事件（非阻塞）
----accept 操作完成时第三个返回值为新的 socket userdata，其他操作为 bytes_transferred
----@return fun(): integer, integer, integer|bee.socket.fd, integer # 迭代器，产生 (request_id, status, bytes_transferred|accepted_socket, error_code)
+---accept 操作完成时第三个返回值为新的 socket userdata，file_read 完成时为读取到的字符串数据，其他操作为 bytes_transferred
+---@return fun(): integer, integer, integer|bee.socket.fd|string, integer # 迭代器，产生 (request_id, status, bytes_transferred|accepted_socket|read_data, error_code)
 function asfd:poll()
 end
 
 ---等待已完成的I/O事件（阻塞）
----accept 操作完成时第三个返回值为新的 socket userdata，其他操作为 bytes_transferred
+---accept 操作完成时第三个返回值为新的 socket userdata，file_read 完成时为读取到的字符串数据，其他操作为 bytes_transferred
 ---@param timeout? integer 超时时间，单位为毫秒，-1表示无限等待
----@return fun(): integer, integer, integer|bee.socket.fd, integer # 迭代器，产生 (request_id, status, bytes_transferred|accepted_socket, error_code)
+---@return fun(): integer, integer, integer|bee.socket.fd|string, integer # 迭代器，产生 (request_id, status, bytes_transferred|accepted_socket|read_data, error_code)
 function asfd:wait(timeout)
 end
 
