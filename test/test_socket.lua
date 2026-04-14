@@ -206,6 +206,24 @@ function test_socket:test_pair()
     server:close()
 end
 
+function test_socket:test_sendv()
+    local server, client = assert(socket.pair())
+    -- 多个分片拼合后等于预期数据
+    local parts = { "hello", ", ", "world", "!" }
+    local expected = table.concat(parts)
+    simple_select(server, "w")
+    local n = server:sendv(table.unpack(parts))
+    lt.assertIsNumber(n)
+    lt.assertEquals(syncRecv(client, #expected), expected)
+    -- 单个分片退化为普通 send
+    simple_select(server, "w")
+    local n2 = server:sendv("abc")
+    lt.assertIsNumber(n2)
+    lt.assertEquals(syncRecv(client, 3), "abc")
+    client:close()
+    server:close()
+end
+
 local function createEchoThread(name, ...)
     return thread.create(([[
     -- %s

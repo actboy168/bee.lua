@@ -63,6 +63,13 @@ end
 function fd:send(data)
 end
 
+---向量化发送多个数据块（一次系统调用）
+---@param ... string 要发送的数据块
+---@return integer|boolean|nil # 成功返回已发送总字节数，等待中返回false，失败返回nil
+---@return string? # 错误消息
+function fd:sendv(...)
+end
+
 ---从UDP套接字接收数据
 ---@param len? integer 最大接收长度，默认为缓冲区大小
 ---@return string|boolean|nil data # 成功返回数据，等待中返回false，失败返回nil

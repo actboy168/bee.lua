@@ -154,6 +154,6 @@ namespace bee::net::socket {
     }
 
     fd_t u_createSocket(int af, int type, int protocol, fd_flags fd_flags) noexcept {
-        return ::WSASocketW(af, type, protocol, af == PF_UNIX ? &UnixProtocol : NULL, 0, WSA_FLAG_NO_HANDLE_INHERIT);
+        return ::WSASocketW(af, type, protocol, af == PF_UNIX ? &UnixProtocol : NULL, 0, WSA_FLAG_OVERLAPPED | WSA_FLAG_NO_HANDLE_INHERIT);
     }
 }

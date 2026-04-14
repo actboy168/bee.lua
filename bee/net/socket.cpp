@@ -251,6 +251,8 @@ namespace bee::net::socket {
             return setoption(s, SOL_SOCKET, SO_SNDBUF, value);
         case option::rcvbuf:
             return setoption(s, SOL_SOCKET, SO_RCVBUF, value);
+        case option::nodelay:
+            return setoption(s, IPPROTO_TCP, TCP_NODELAY, value);
         default:
             std::unreachable();
         }
@@ -363,6 +365,50 @@ namespace bee::net::socket {
             return wait_finish() ? status::wait : status::failed;
         }
         return status::success;
+    }
+
+    status sendv(fd_t s, int& rc, span<const iobuf> bufs) noexcept {
+        if (bufs.empty()) {
+            rc = 0;
+            return status::success;
+        }
+        if (bufs.size() == 1) {
+            iobuf& b = const_cast<iobuf&>(bufs[0]);
+#if defined(_WIN32)
+            return send(s, rc, b.buf, (int)b.len);
+#else
+            return send(s, rc, (const char*)b.iov_base, (int)b.iov_len);
+#endif
+        }
+        const int n = (int)bufs.size();
+#if defined(_WIN32)
+        static_assert(sizeof(iobuf) == sizeof(WSABUF));
+        static_assert(offsetof(iobuf, len) == offsetof(WSABUF, len));
+        static_assert(offsetof(iobuf, buf) == offsetof(WSABUF, buf));
+        DWORD sent   = 0;
+        const int ok = ::WSASend((SOCKET)s, reinterpret_cast<WSABUF*>(const_cast<iobuf*>(bufs.data())), (DWORD)n, &sent, 0, NULL, NULL);
+        if (ok == SOCKET_ERROR) {
+            return wait_finish() ? status::wait : status::failed;
+        }
+        rc = (int)sent;
+        return status::success;
+#else
+        static_assert(sizeof(iobuf) == sizeof(struct iovec));
+        static_assert(offsetof(iobuf, iov_base) == offsetof(struct iovec, iov_base));
+        static_assert(offsetof(iobuf, iov_len) == offsetof(struct iovec, iov_len));
+        struct msghdr msg = {};
+        msg.msg_iov       = reinterpret_cast<struct iovec*>(const_cast<iobuf*>(bufs.data()));
+        msg.msg_iovlen    = n;
+        int flags         = 0;
+#    ifdef MSG_NOSIGNAL
+        flags |= MSG_NOSIGNAL;
+#    endif
+        rc = (int)::sendmsg(s, &msg, flags);
+        if (rc < 0) {
+            return wait_finish() ? status::wait : status::failed;
+        }
+        return status::success;
+#endif
     }
 
     status recvfrom(fd_t s, int& rc, endpoint& ep, char* buf, int len) noexcept {

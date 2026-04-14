@@ -5,6 +5,7 @@
 #include <bee/net/endpoint.h>
 #include <bee/net/socket.h>
 #include <bee/nonstd/unreachable.h>
+#include <bee/utility/hybrid_array.h>
 
 namespace bee::lua_socket {
 #if LUA_VERSION_NUM >= 505
@@ -239,6 +240,31 @@ namespace bee::lua_socket {
                 std::unreachable();
             }
         }
+        static int sendv(lua_State* L, net::fd_t fd) {
+            int n = lua_gettop(L) - 1;
+            if (n <= 0) {
+                lua_pushinteger(L, 0);
+                return 1;
+            }
+            hybrid_array<net::socket::iobuf, 16> bufs((size_t)n);
+            for (int i = 0; i < n; ++i) {
+                auto sv = lua::checkstrview(L, i + 2);
+                bufs[i].set(sv.data(), sv.size());
+            }
+            int rc;
+            switch (net::socket::sendv(fd, rc, span<const net::socket::iobuf>(bufs.data(), (size_t)n))) {
+            case net::socket::status::wait:
+                lua_pushboolean(L, 0);
+                return 1;
+            case net::socket::status::success:
+                lua_pushinteger(L, rc);
+                return 1;
+            case net::socket::status::failed:
+                return lua::return_net_error(L, "sendv");
+            default:
+                std::unreachable();
+            }
+        }
         static int recvfrom(lua_State* L, net::fd_t fd) {
             auto len = lua::optinteger<int, LUAL_BUFFERSIZE>(L, 2);
             auto& ep = lua::newudata<net::endpoint>(L);
@@ -327,7 +353,7 @@ namespace bee::lua_socket {
             return 0;
         }
         static int option(lua_State* L, net::fd_t fd) {
-            static const char* const opts[] = { "reuseaddr", "sndbuf", "rcvbuf", NULL };
+            static const char* const opts[] = { "reuseaddr", "sndbuf", "rcvbuf", "nodelay", NULL };
             auto opt                        = (net::socket::option)luaL_checkoption(L, 2, NULL, opts);
             auto value                      = lua::checkinteger<int>(L, 3);
             bool ok                         = net::socket::setoption(fd, opt, value);
@@ -413,6 +439,7 @@ namespace bee::lua_socket {
                 { "accept", call_socket<accept> },
                 { "recv", call_socket<recv> },
                 { "send", call_socket<send> },
+                { "sendv", call_socket<sendv> },
                 { "recvfrom", call_socket<recvfrom> },
                 { "sendto", call_socket<sendto> },
                 { "shutdown", call_socket<shutdown> },
@@ -443,6 +470,7 @@ namespace bee::lua_socket {
                 { "accept", call_socket<accept, fd_no_ownership> },
                 { "recv", call_socket<recv, fd_no_ownership> },
                 { "send", call_socket<send, fd_no_ownership> },
+                { "sendv", call_socket<sendv, fd_no_ownership> },
                 { "recvfrom", call_socket<recvfrom, fd_no_ownership> },
                 { "sendto", call_socket<sendto, fd_no_ownership> },
                 { "shutdown", call_socket<shutdown, fd_no_ownership> },
