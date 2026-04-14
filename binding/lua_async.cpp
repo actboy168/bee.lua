@@ -263,21 +263,9 @@ namespace bee::lua_async {
             break;
         case async::async_op::read: {
             async::ring_buf* rb = rb_from_pin(L, lua_upvalueindex(1), static_cast<lua_Integer>(c.request_id));
-            if (rb) {
-                buf_unpin(L, lua_upvalueindex(1), static_cast<lua_Integer>(c.request_id));
-                if (c.status == async::async_status::success) rb->commit(c.bytes_transferred);
-                lua_pushinteger(L, static_cast<lua_Integer>(c.bytes_transferred));
-            } else {
-                read_buf* plain_rb = static_cast<read_buf*>(
-                    buf_take(L, lua_upvalueindex(1), static_cast<lua_Integer>(c.request_id))
-                );
-                if (c.status == async::async_status::success && plain_rb) {
-                    plain_rb->push_string(L, c.bytes_transferred);
-                } else {
-                    if (plain_rb) plain_rb->destroy();
-                    lua_pushinteger(L, static_cast<lua_Integer>(c.bytes_transferred));
-                }
-            }
+            buf_unpin(L, lua_upvalueindex(1), static_cast<lua_Integer>(c.request_id));
+            if (rb && c.status == async::async_status::success) rb->commit(c.bytes_transferred);
+            lua_pushinteger(L, static_cast<lua_Integer>(c.bytes_transferred));
             break;
         }
         case async::async_op::file_read: {
