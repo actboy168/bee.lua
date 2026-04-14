@@ -69,6 +69,9 @@ namespace bee::async {
     }
 
     bool async_epoll::submit_read(net::fd_t fd, void* buffer, size_t len, uint64_t request_id) {
+        auto& state = m_fd_states[fd];
+        if (state.read_op) return false;  // 同一 fd 读方向最多一个 in-flight op
+
         auto* op       = new pending_op();
         op->request_id = request_id;
         op->fd         = fd;
@@ -76,7 +79,6 @@ namespace bee::async {
         op->r.buffer   = buffer;
         op->r.len      = len;
 
-        auto& state   = m_fd_states[fd];
         state.read_op = op;
         if (!fd_arm(fd, state)) {
             state.read_op = nullptr;
@@ -88,6 +90,9 @@ namespace bee::async {
     }
 
     bool async_epoll::submit_write(net::fd_t fd, const void* buffer, size_t len, uint64_t request_id) {
+        auto& state = m_fd_states[fd];
+        if (state.write_op) return false;  // 同一 fd 写方向最多一个 in-flight op
+
         auto* op       = new pending_op();
         op->request_id = request_id;
         op->fd         = fd;
@@ -95,7 +100,6 @@ namespace bee::async {
         op->w.buffer   = buffer;
         op->w.len      = len;
 
-        auto& state    = m_fd_states[fd];
         state.write_op = op;
         if (!fd_arm(fd, state)) {
             state.write_op = nullptr;
@@ -107,6 +111,9 @@ namespace bee::async {
     }
 
     bool async_epoll::submit_writev(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
+        auto& state = m_fd_states[fd];
+        if (state.write_op) return false;  // 同一 fd 写方向最多一个 in-flight op
+
         auto* op       = new pending_op();
         op->request_id = request_id;
         op->fd         = fd;
@@ -114,7 +121,6 @@ namespace bee::async {
         op->wv         = dynarray<net::socket::iobuf>(bufs.size());
         for (size_t i = 0; i < bufs.size(); ++i) op->wv[i] = bufs[i];
 
-        auto& state    = m_fd_states[fd];
         state.write_op = op;
         if (!fd_arm(fd, state)) {
             state.write_op = nullptr;
@@ -126,12 +132,14 @@ namespace bee::async {
     }
 
     bool async_epoll::submit_accept(net::fd_t listen_fd, uint64_t request_id) {
+        auto& state = m_fd_states[listen_fd];
+        if (state.read_op) return false;  // 同一 fd 读方向最多一个 in-flight op
+
         auto* op       = new pending_op();
         op->request_id = request_id;
         op->fd         = listen_fd;
         op->type       = pending_op::accept;
 
-        auto& state   = m_fd_states[listen_fd];
         state.read_op = op;
         if (!fd_arm(listen_fd, state)) {
             state.read_op = nullptr;
@@ -155,12 +163,14 @@ namespace bee::async {
             return true;
         }
         if (status == net::socket::status::wait) {
+            auto& state = m_fd_states[fd];
+            if (state.write_op) return false;  // 同一 fd 写方向最多一个 in-flight op
+
             auto* op       = new pending_op();
             op->request_id = request_id;
             op->fd         = fd;
             op->type       = pending_op::connect;
 
-            auto& state    = m_fd_states[fd];
             state.write_op = op;
             if (!fd_arm(fd, state)) {
                 state.write_op = nullptr;
@@ -210,12 +220,14 @@ namespace bee::async {
     }
 
     bool async_epoll::submit_poll(net::fd_t fd, uint64_t request_id) {
+        auto& state = m_fd_states[fd];
+        if (state.read_op) return false;  // 同一 fd 读方向最多一个 in-flight op
+
         auto* op       = new pending_op();
         op->request_id = request_id;
         op->fd         = fd;
         op->type       = pending_op::fd_poll;
 
-        auto& state   = m_fd_states[fd];
         state.read_op = op;
         if (!fd_arm(fd, state)) {
             state.read_op = nullptr;
