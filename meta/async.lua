@@ -54,10 +54,10 @@ function asfd:submit_connect(fd, host, port, request_id)
 end
 
 ---将文件关联到当前异步I/O实例（仅 Windows/IOCP）
----内部以 FILE_FLAG_OVERLAPPED 重新打开文件并绑定到 IOCP
----必须在首次提交文件 I/O 操作之前调用，返回的新文件对象用于后续提交
----@param fd file* 原始文件对象（通过 io.open 获取）
----@return file*? # 成功返回关联后的新文件对象，失败返回nil
+---Windows 下会就地替换传入文件对象的底层句柄为 overlapped/IOCP 关联句柄
+---必须在首次提交文件 I/O 操作之前调用；非 Windows 平台为 no-op 并直接返回 true
+---@param fd file* 原始文件对象（通过 io.open 获取；调用后原对象被就地更新）
+---@return boolean? # 成功返回true，失败返回nil
 ---@return string? # 错误消息
 function asfd:associate_file(fd)
 end
