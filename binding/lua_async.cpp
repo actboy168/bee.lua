@@ -281,6 +281,7 @@ namespace bee::lua_async {
             break;
         }
         default:
+            buf_unpin(L, lua_upvalueindex(1), static_cast<lua_Integer>(c.request_id));
             lua_pushinteger(L, static_cast<lua_Integer>(c.bytes_transferred));
             break;
         }
