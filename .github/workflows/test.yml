@@ -125,7 +125,7 @@ jobs:
           path: luamake
           repository: actboy168/luamake
           submodules : recursive
-      - uses: cross-platform-actions/action@v0.27.0
+      - uses: cross-platform-actions/action@v1.0.0
         with:
           operating_system: ${{ matrix.os }}
           version: ${{ matrix.version }}
