@@ -65,6 +65,7 @@ lm:executable "lua" {
         lm.luadir / "lua.c",
         lm.luadir / "linit.c",
     },
+    visibility = "default",
     macos = {
         defines = "LUA_USE_MACOSX",
         links = { "m", "dl" },
