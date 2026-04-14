@@ -100,7 +100,9 @@ namespace bee::async {
             sz |= sz >> 4;
             sz |= sz >> 8;
             sz |= sz >> 16;
-            sz |= sz >> 32;
+            if constexpr (sizeof(size_t) > 4) {
+                sz |= sz >> 32;
+            }
             return sz + 1;
         }
 
