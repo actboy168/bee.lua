@@ -332,8 +332,8 @@ namespace bee::async {
         uint32_t tail = *ring->sqtail;
         uint32_t mask = ring->sqmask;
 
-        // Ring is full when advancing tail by 1 would collide with head.
-        if ((head & mask) == ((tail + 1) & mask))
+        // Ring is full only when the number of in-flight SQEs reaches capacity.
+        if ((tail - head) >= (mask + 1))
             return nullptr;
 
         uint32_t slot         = tail & mask;
