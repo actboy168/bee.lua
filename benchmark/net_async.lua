@@ -4,14 +4,14 @@ local async = require "bee.async"
 
 local asfd = async.create(512)
 
-local SUCCESS   <const> = async.SUCCESS
-local OP_READ   <const> = async.OP_READ
+local SUCCESS <const> = async.SUCCESS
+local OP_READ <const> = async.OP_READ
 local OP_WRITEV <const> = async.OP_WRITEV
 local OP_ACCEPT <const> = async.OP_ACCEPT
-local OP_CONNECT<const> = async.OP_CONNECT
+local OP_CONNECT <const> = async.OP_CONNECT
 
-local kReadBufSize  <const> = 64 * 1024  -- per-stream ring buffer size
-local kWriteHWM     <const> = 64 * 1024  -- write queue high-water-mark (bytes)
+local kRbSize <const> = 64 * 1024 -- per-stream read ring buffer size
+local kWbSize <const> = 64 * 1024 -- write queue high-water-mark (bytes)
 
 local status = {}
 local handle = {}
@@ -57,19 +57,16 @@ local function close_stream(s)
 end
 
 local function stream_submit_read(s)
-    if s.closed then
+    if s.closed or s.rb_in_flight then
         return
     end
-    while s.read_in_flight < 1 do
-        if not asfd:submit_read(s.rb, s.fd, s) then
-            break
-        end
-        s.read_in_flight = s.read_in_flight + 1
+    if asfd:submit_read(s.rb, s.fd, s) then
+        s.rb_in_flight = true
     end
 end
 
 local function stream_on_read(s, bytes)
-    s.read_in_flight = s.read_in_flight - 1
+    s.rb_in_flight = false
     if not bytes or bytes == 0 then
         close_stream(s)
         return
@@ -121,14 +118,14 @@ end
 
 local function create_stream(newfd)
     local s = {
-        fd             = newfd,
-        rb             = async.readbuf(kReadBufSize),
-        wb             = async.writebuf(kWriteHWM),
-        wait_read      = {},
-        wait_write     = {},
-        wb_in_flight   = false,
-        closed         = false,
-        read_in_flight = 0,
+        fd           = newfd,
+        rb           = async.readbuf(kRbSize),
+        wb           = async.writebuf(kWbSize),
+        wait_read    = {},
+        wait_write   = {},
+        rb_in_flight = false,
+        wb_in_flight = false,
+        closed       = false,
     }
     status[newfd] = s
     newfd:option("nodelay", 1)
@@ -231,7 +228,7 @@ function S.send(h, data)
     -- Block if we pushed the buffer over hwm.
     if full then
         local token = {}
-        s.wait_write[#s.wait_write + 1] = token
+        s.wait_write[#s.wait_write+1] = token
         ltask.wait(token)
     end
     return true
@@ -253,7 +250,7 @@ function S.recv(h, n)
         return
     end
     local token = { n }
-    s.wait_read[#s.wait_read + 1] = token
+    s.wait_read[#s.wait_read+1] = token
     stream_submit_read(s)
     return ltask.wait(token)
 end
