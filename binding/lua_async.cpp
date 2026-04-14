@@ -4,6 +4,7 @@
 #include <bee/lua/binding.h>
 #include <bee/lua/error.h>
 #include <bee/lua/file.h>
+#include <bee/lua/luaref.h>
 #include <bee/lua/module.h>
 #include <bee/lua/udata.h>
 #include <bee/net/endpoint.h>
@@ -12,6 +13,7 @@
 #include <bee/sys/file_handle.h>
 #include <bee/utility/dynarray.h>
 #include <bee/utility/span.h>
+#include <unordered_map>
 
 namespace bee::lua_socket {
     net::fd_t& newfd(lua_State* L, net::fd_t fd);
@@ -24,12 +26,16 @@ namespace bee::lua_async {
 
     struct lua_async {
         std::unique_ptr<async::async> handle;
+        luaref refs = nullptr;
+        std::unordered_map<uint64_t, int> pin_map;
         int i = 0;
         int n = 0;
         dynarray<async::io_completion> completions;
         lua_async(size_t max_completions)
             : completions(max_completions) {}
-        ~lua_async() = default;
+        ~lua_async() {
+            if (refs) luaref_close(refs);
+        }
     };
 
     static file_handle::value_type tofilefd(lua_State* L, int idx) {
@@ -37,35 +43,36 @@ namespace bee::lua_async {
         return file_handle::from_file(p->f).value();
     }
 
-    // ---- buf table helpers (uservalue[1] of async userdata) ----
+    // ---- buf helpers (luaref-based) ----
 
-    static void buf_pin(lua_State* L, int async_idx, lua_Integer reqid, int val_idx) {
-        lua_getiuservalue(L, async_idx, 1);
-        lua_pushinteger(L, reqid);
+    static int buf_pin(lua_State* L, lua_async& as, uint64_t reqid, int val_idx) {
         lua_pushvalue(L, val_idx);
-        lua_settable(L, -3);
-        lua_pop(L, 1);
+        int r             = luaref_ref(as.refs, L);
+        as.pin_map[reqid] = r;
+        return r;
     }
 
-    static void buf_unpin(lua_State* L, int async_idx, lua_Integer reqid) {
-        lua_getiuservalue(L, async_idx, 1);
-        lua_pushinteger(L, reqid);
-        lua_pushnil(L);
-        lua_settable(L, -3);
-        lua_pop(L, 1);
+    static void buf_unpin(lua_async& as, int ref) {
+        luaref_unref(as.refs, ref);
     }
 
-    static void* buf_take(lua_State* L, int async_idx, lua_Integer reqid) {
-        lua_getiuservalue(L, async_idx, 1);
-        lua_pushinteger(L, reqid);
-        lua_gettable(L, -2);
-        void* p = lua_touserdata(L, -1);
-        lua_pop(L, 1);
-        lua_pushinteger(L, reqid);
-        lua_pushnil(L);
-        lua_settable(L, -3);
-        lua_pop(L, 1);
-        return p;
+    // Resolve all completions: pull refs out of pin_map into io_completion.lua_ref.
+    // accept has no pinned ref, so its lua_ref is left as 0.
+    static void buf_resolve(lua_async& as) {
+        for (int k = 0; k < as.n; ++k) {
+            auto& c = as.completions[k];
+            if (c.op == async::async_op::accept) {
+                c.lua_ref = 0;
+                continue;
+            }
+            auto it = as.pin_map.find(c.request_id);
+            if (it != as.pin_map.end()) {
+                c.lua_ref = it->second;
+                as.pin_map.erase(it);
+            } else {
+                c.lua_ref = 0;
+            }
+        }
     }
 
     // ---- read_buf ----
@@ -105,54 +112,42 @@ namespace bee::lua_async {
         }
     };
 
-    static char* alloc_read_buf(lua_State* L, int async_idx, lua_Integer len, lua_Integer reqid) {
+    static char* alloc_read_buf(lua_State* L, lua_async& as, uint64_t reqid, lua_Integer len, int& out_ref) {
         read_buf* rb = read_buf::create(L, static_cast<size_t>(len));
         lua_pushlightuserdata(L, rb);
-        buf_pin(L, async_idx, reqid, lua_gettop(L));
+        out_ref = buf_pin(L, as, reqid, lua_gettop(L));
         lua_pop(L, 1);
         return rb->buf;
     }
 
-    static void free_read_buf(lua_State* L, int async_idx, lua_Integer reqid) {
-        read_buf* rb = static_cast<read_buf*>(buf_take(L, async_idx, reqid));
-        if (rb) rb->destroy();
-    }
-
     // ---- ring_buf helpers ----
 
-    static async::ring_buf* rb_from_pin(lua_State* L, int async_idx, lua_Integer reqid) {
-        lua_getiuservalue(L, async_idx, 1);
-        lua_pushinteger(L, reqid);
-        lua_gettable(L, -2);
+    static async::ring_buf* rb_from_ref(lua_State* L, lua_async& as, int ref) {
+        luaref_get(as.refs, L, ref);
         async::ring_buf* rb = nullptr;
         if (lua_type(L, -1) == LUA_TUSERDATA) {
             void* p = luaL_testudata(L, -1, reflection::name_v<async::ring_buf>.data());
             if (p) rb = lua::udata_align<async::ring_buf>(p);
         }
-        lua_pop(L, 2);
+        lua_pop(L, 1);
         return rb;
     }
 
     // ---- write_buf drain helpers ----
 
-    // Retrieve the write_buf pinned under lua_reqid in the async uservalue table.
-    // Returns nullptr if no write_buf is pinned there.
-    static async::write_buf* wb_from_pin(lua_State* L, int async_idx, lua_Integer reqid) {
-        lua_getiuservalue(L, async_idx, 1);
-        lua_pushinteger(L, reqid);
-        lua_gettable(L, -2);
+    static async::write_buf* wb_from_ref(lua_State* L, lua_async& as, int ref) {
+        luaref_get(as.refs, L, ref);
         async::write_buf* wb = nullptr;
         if (lua_type(L, -1) == LUA_TUSERDATA) {
             void* p = luaL_testudata(L, -1, reflection::name_v<async::write_buf>.data());
             if (p) wb = lua::udata_align<async::write_buf>(p);
         }
-        lua_pop(L, 2);
+        lua_pop(L, 1);
         return wb;
     }
 
     // Submit the front queue entry.  wb.fd and wb.lua_reqid must already be set.
-    // Uses lua_reqid as the writev request_id so no separate map is needed.
-    static bool wb_submit_next(lua_State* L, lua_async& as, async::write_buf& wb) {
+    static bool wb_submit_next(lua_async& as, async::write_buf& wb) {
         if (wb.q.empty()) return true;
         async::write_buf::entry& entry = wb.q.front();
         net::socket::iobuf buf;
@@ -164,23 +159,22 @@ namespace bee::lua_async {
         return true;
     }
 
-    // Handle writev completion for a write_buf-managed reqid.
-    // Returns true  → emit the Lua-visible completion for lua_reqid.
+    // Handle writev completion for a write_buf-managed ref.
+    // Returns true  → emit the Lua-visible completion.
     // Returns false → still draining, no Lua completion yet.
-    static bool wb_on_completion(lua_State* L, lua_async& as, int async_upvalue_idx, async::write_buf& wb, async::async_status status, size_t bytes) {
+    static bool wb_on_completion(lua_State* L, lua_async& as, int ref, async::write_buf& wb, async::async_status status, size_t bytes) {
         wb.in_flight = false;
 
         if (status != async::async_status::success) {
-            // Release all queued strings.
             for (auto& e : wb.q) luaL_unref(L, LUA_REGISTRYINDEX, e.str_ref);
             wb.q.clear();
             wb.buffered = 0;
-            buf_unpin(L, async_upvalue_idx, static_cast<lua_Integer>(wb.lua_reqid));
-            return true;  // emit error completion
+            buf_unpin(as, ref);
+            return true;
         }
 
         if (wb.q.empty()) {
-            buf_unpin(L, async_upvalue_idx, static_cast<lua_Integer>(wb.lua_reqid));
+            buf_unpin(as, ref);
             return true;
         }
 
@@ -188,30 +182,30 @@ namespace bee::lua_async {
         entry.offset += bytes;
 
         if (entry.offset < entry.len) {
-            // Partial write: resubmit same entry.
-            if (!wb_submit_next(L, as, wb)) {
-                buf_unpin(L, async_upvalue_idx, static_cast<lua_Integer>(wb.lua_reqid));
-                return true;  // submit failed, emit error completion
+            if (!wb_submit_next(as, wb)) {
+                buf_unpin(as, ref);
+                return true;
             }
+            // Still draining: re-register ref in pin_map so buf_resolve can find it next poll.
+            as.pin_map[wb.lua_reqid] = ref;
             return false;
         }
 
-        // Entry fully sent.
         luaL_unref(L, LUA_REGISTRYINDEX, entry.str_ref);
         wb.buffered -= entry.len;
         wb.q.pop_front();
 
         if (!wb.q.empty()) {
-            // More entries: drain next silently.
-            if (!wb_submit_next(L, as, wb)) {
-                buf_unpin(L, async_upvalue_idx, static_cast<lua_Integer>(wb.lua_reqid));
+            if (!wb_submit_next(as, wb)) {
+                buf_unpin(as, ref);
                 return true;
             }
+            // Still draining: re-register ref in pin_map so buf_resolve can find it next poll.
+            as.pin_map[wb.lua_reqid] = ref;
             return false;
         }
 
-        // Queue empty: unpin and emit the single Lua-visible completion.
-        buf_unpin(L, async_upvalue_idx, static_cast<lua_Integer>(wb.lua_reqid));
+        buf_unpin(as, ref);
         return true;
     }
 
@@ -225,22 +219,17 @@ namespace bee::lua_async {
         const auto& c = as.completions[as.i];
         as.i++;
 
-        // Check if this is a write_buf-managed writev.
         if (c.op == async::async_op::writev) {
-            async::write_buf* wb = wb_from_pin(L, lua_upvalueindex(1), static_cast<lua_Integer>(c.request_id));
+            async::write_buf* wb = wb_from_ref(L, as, c.lua_ref);
             if (wb) {
                 uint64_t lua_reqid     = wb->lua_reqid;
                 async::async_status st = c.status;
                 size_t bytes           = c.bytes_transferred;
-                bool done              = wb_on_completion(L, as, lua_upvalueindex(1), *wb, st, bytes);
-                if (!done) {
-                    // Still draining: advance and fetch next completion.
-                    goto again;
-                }
-                // Queue drained (or error): emit Lua-visible completion.
+                bool done              = wb_on_completion(L, as, c.lua_ref, *wb, st, bytes);
+                if (!done) goto again;
                 lua_pushinteger(L, static_cast<lua_Integer>(lua_reqid));
                 lua_pushinteger(L, static_cast<lua_Integer>(std::to_underlying(st)));
-                lua_pushinteger(L, 0);  // bytes = 0 (writebuf queue empty)
+                lua_pushinteger(L, 0);
                 lua_pushinteger(L, static_cast<lua_Integer>(c.error_code));
                 return 4;
             }
@@ -258,20 +247,21 @@ namespace bee::lua_async {
             }
             break;
         case async::async_op::connect:
-            buf_unpin(L, lua_upvalueindex(1), static_cast<lua_Integer>(c.request_id));
+            buf_unpin(as, c.lua_ref);
             lua_pushinteger(L, static_cast<lua_Integer>(c.bytes_transferred));
             break;
         case async::async_op::read: {
-            async::ring_buf* rb = rb_from_pin(L, lua_upvalueindex(1), static_cast<lua_Integer>(c.request_id));
-            buf_unpin(L, lua_upvalueindex(1), static_cast<lua_Integer>(c.request_id));
+            async::ring_buf* rb = rb_from_ref(L, as, c.lua_ref);
+            buf_unpin(as, c.lua_ref);
             if (rb && c.status == async::async_status::success) rb->commit(c.bytes_transferred);
             lua_pushinteger(L, static_cast<lua_Integer>(c.bytes_transferred));
             break;
         }
         case async::async_op::file_read: {
-            read_buf* rb = static_cast<read_buf*>(
-                buf_take(L, lua_upvalueindex(1), static_cast<lua_Integer>(c.request_id))
-            );
+            luaref_get(as.refs, L, c.lua_ref);
+            read_buf* rb = static_cast<read_buf*>(lua_touserdata(L, -1));
+            lua_pop(L, 1);
+            buf_unpin(as, c.lua_ref);
             if (c.status == async::async_status::success && rb) {
                 rb->push_string(L, c.bytes_transferred);
             } else {
@@ -281,7 +271,7 @@ namespace bee::lua_async {
             break;
         }
         default:
-            buf_unpin(L, lua_upvalueindex(1), static_cast<lua_Integer>(c.request_id));
+            buf_unpin(as, c.lua_ref);
             lua_pushinteger(L, static_cast<lua_Integer>(c.bytes_transferred));
             break;
         }
@@ -313,9 +303,9 @@ namespace bee::lua_async {
             return 1;
         }
         void* ptr = rb.write_ptr();
-        buf_pin(L, 1, reqid, 2);
+        int ref   = buf_pin(L, as, static_cast<uint64_t>(reqid), 2);
         if (!as.handle->submit_read(fd, ptr, len, static_cast<uint64_t>(reqid))) {
-            buf_unpin(L, 1, reqid);
+            buf_unpin(as, ref);
             return lua::return_net_error(L, "submit_read");
         }
         lua_pushboolean(L, 1);
@@ -335,14 +325,12 @@ namespace bee::lua_async {
             return 1;
         }
 
-        // Pin the write_buf userdata under reqid so wb_from_pin can find it.
-        buf_pin(L, 1, reqid, 2);
-
+        int ref      = buf_pin(L, as, static_cast<uint64_t>(reqid), 2);
         wb.fd        = fd;
         wb.lua_reqid = static_cast<uint64_t>(reqid);
 
-        if (!wb_submit_next(L, as, wb)) {
-            buf_unpin(L, 1, reqid);
+        if (!wb_submit_next(as, wb)) {
+            buf_unpin(as, ref);
             return lua::return_net_error(L, "submit_write");
         }
         lua_pushboolean(L, 1);
@@ -378,10 +366,10 @@ namespace bee::lua_async {
                 return lua::return_error(L, "invalid endpoint");
             ep_ptr = &ep;
         }
-        buf_pin(L, 1, reqid, lua_gettop(L));
+        int ref = buf_pin(L, as, static_cast<uint64_t>(reqid), lua_gettop(L));
         lua_pop(L, 1);
         if (!as.handle->submit_connect(fd, *ep_ptr, static_cast<uint64_t>(reqid))) {
-            buf_unpin(L, 1, reqid);
+            buf_unpin(as, ref);
             return lua::return_net_error(L, "submit_connect");
         }
         lua_pushboolean(L, 1);
@@ -395,9 +383,14 @@ namespace bee::lua_async {
         lua_Integer offset         = luaL_optinteger(L, 4, 0);
         lua_Integer reqid          = luaL_checkinteger(L, 5);
         if (len <= 0) return luaL_error(L, "buffer size must be positive");
-        void* buffer = alloc_read_buf(L, 1, len, reqid);
+        int ref      = 0;
+        void* buffer = alloc_read_buf(L, as, static_cast<uint64_t>(reqid), len, ref);
         if (!as.handle->submit_file_read(fd, buffer, static_cast<size_t>(len), static_cast<int64_t>(offset), static_cast<uint64_t>(reqid))) {
-            free_read_buf(L, 1, reqid);
+            luaref_get(as.refs, L, ref);
+            read_buf* rb = static_cast<read_buf*>(lua_touserdata(L, -1));
+            lua_pop(L, 1);
+            buf_unpin(as, ref);
+            if (rb) rb->destroy();
             return lua::return_net_error(L, "submit_file_read");
         }
         lua_pushboolean(L, 1);
@@ -411,9 +404,9 @@ namespace bee::lua_async {
         const char* data           = luaL_checklstring(L, 3, &len);
         lua_Integer offset         = luaL_optinteger(L, 4, 0);
         lua_Integer reqid          = luaL_checkinteger(L, 5);
-        buf_pin(L, 1, reqid, 3);
+        int ref                    = buf_pin(L, as, static_cast<uint64_t>(reqid), 3);
         if (!as.handle->submit_file_write(fd, data, len, static_cast<int64_t>(offset), static_cast<uint64_t>(reqid))) {
-            buf_unpin(L, 1, reqid);
+            buf_unpin(as, ref);
             return lua::return_net_error(L, "submit_file_write");
         }
         lua_pushboolean(L, 1);
@@ -435,7 +428,8 @@ namespace bee::lua_async {
         auto& as = lua::checkudata<lua_async>(L, 1);
         as.i     = 0;
         as.n     = as.handle->poll(span<async::io_completion>(as.completions.data(), as.completions.size()));
-        lua_getiuservalue(L, 1, 2);
+        buf_resolve(as);
+        lua_getiuservalue(L, 1, 1);
         return 1;
     }
 
@@ -444,7 +438,8 @@ namespace bee::lua_async {
         int timeout = lua::optinteger<int, -1>(L, 2);
         as.i        = 0;
         as.n        = as.handle->wait(span<async::io_completion>(as.completions.data(), as.completions.size()), timeout);
-        lua_getiuservalue(L, 1, 2);
+        buf_resolve(as);
+        lua_getiuservalue(L, 1, 1);
         return 1;
     }
 
@@ -642,11 +637,10 @@ namespace bee::lua_async {
         lua::newudata<lua_async>(L, static_cast<size_t>(max_completions));
         auto& as  = lua::checkudata<lua_async>(L, -1);
         as.handle = std::move(handle);
-        lua_newtable(L);
-        lua_setiuservalue(L, -2, 1);
+        as.refs   = luaref_init(L);
         lua_pushvalue(L, -1);
         lua_pushcclosure(L, async_completions, 1);
-        lua_setiuservalue(L, -2, 2);
+        lua_setiuservalue(L, -2, 1);
         return 1;
     }
 
@@ -677,7 +671,7 @@ DEFINE_LUAOPEN(async)
 namespace bee::lua {
     template <>
     struct udata<lua_async::lua_async> {
-        static inline int nupvalue   = 2;
+        static inline int nupvalue   = 1;
         static inline auto metatable = bee::lua_async::metatable;
     };
     template <>

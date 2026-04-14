@@ -29,6 +29,7 @@ namespace bee::async {
         async_op op;
         size_t bytes_transferred;
         int error_code;
+        int lua_ref;
     };
 
 }  // namespace bee::async
