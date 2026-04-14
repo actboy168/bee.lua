@@ -382,9 +382,28 @@ namespace bee::async {
         m_pending_ops.clear();
     }
 
+    static int op_filter(async::pending_op::type_t type) {
+        switch (type) {
+        case async::pending_op::read:
+        case async::pending_op::accept:
+        case async::pending_op::fd_poll:
+            return EVFILT_READ;
+        case async::pending_op::write:
+        case async::pending_op::writev:
+        case async::pending_op::connect:
+            return EVFILT_WRITE;
+        }
+        return EVFILT_READ;
+    }
+
     void async::cancel(net::fd_t fd) {
         for (auto it = m_pending_ops.begin(); it != m_pending_ops.end(); ) {
             if ((*it)->fd == fd) {
+                // 在释放 pending_op 之前，先从 kqueue 中取消注册事件，
+                // 避免后续 kevent 返回已释放的 udata 指针导致 use-after-free。
+                struct kevent ev;
+                EV_SET(&ev, fd, op_filter((*it)->type), EV_DELETE, 0, 0, nullptr);
+                kevent(m_kqfd, &ev, 1, nullptr, 0, nullptr);
                 delete *it;
                 it = m_pending_ops.erase(it);
             } else {
