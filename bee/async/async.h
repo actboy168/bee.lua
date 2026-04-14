@@ -31,6 +31,7 @@ namespace bee::async {
     public:
         virtual ~async()                                                                                                                = default;
         virtual bool submit_read(net::fd_t fd, void* buffer, size_t len, uint64_t request_id)                                           = 0;
+        virtual bool submit_readv(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id)                              = 0;
         virtual bool submit_write(net::fd_t fd, const void* buffer, size_t len, uint64_t request_id)                                    = 0;
         virtual bool submit_writev(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id)                              = 0;
         virtual bool submit_accept(net::fd_t listen_fd, uint64_t request_id)                                                            = 0;

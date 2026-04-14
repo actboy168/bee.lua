@@ -8,6 +8,7 @@
 ---@field ERROR integer 操作错误
 ---@field CANCEL integer 操作取消
 ---@field OP_READ integer 流式读操作
+---@field OP_READV integer 流式读操作（ring buffer 回绕时双段）
 ---@field OP_WRITE integer 单次写操作
 ---@field OP_WRITEV integer writebuf 写操作
 ---@field OP_ACCEPT integer accept 操作
@@ -21,8 +22,11 @@ local async = {}
 ---@class bee.async.fd
 local asfd = {}
 
----提交流式异步读操作（使用 ring buffer）
----若 ring buffer 空闲不足（背压）则不投递，返回 false
+---提交流式异步读操作（使用 ring buffer，自动处理回绕）
+---若 ring buffer 空闲不足（背压）则不投递，返回 false。
+---当空闲区域跨越缓冲区末尾时（回绕场景），自动拆分为两段一次提交，
+---减少系统调用次数；无回绕时等同于单段读取。
+---回绕时 completion 的 op 为 OP_READV，无回绕时为 OP_READ。
 ---@param rb bee.async.readbuf 接收缓冲区对象
 ---@param fd bee.socket.fd socket 对象
 ---@param udata any 用户自定义数据，completion 时原样返回

@@ -14,6 +14,7 @@ namespace bee::async {
 
     enum class async_op : uint8_t {
         read,
+        readv,
         write,
         writev,
         accept,

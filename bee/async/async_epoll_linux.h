@@ -24,6 +24,7 @@ namespace bee::async {
         ~async_epoll() override;
 
         bool submit_read(net::fd_t fd, void* buffer, size_t len, uint64_t request_id) override;
+        bool submit_readv(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) override;
         bool submit_write(net::fd_t fd, const void* buffer, size_t len, uint64_t request_id) override;
         bool submit_writev(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) override;
         bool submit_accept(net::fd_t listen_fd, uint64_t request_id) override;
@@ -41,6 +42,7 @@ namespace bee::async {
             net::fd_t fd        = net::retired_fd;
             enum type_t : uint8_t {
                 read,
+                readv,
                 write,
                 writev,
                 accept,
@@ -57,7 +59,7 @@ namespace bee::async {
                     size_t len;
                 } w;
             };
-            dynarray<net::socket::iobuf> wv;  // used when type == writev
+            dynarray<net::socket::iobuf> wv;  // used when type == writev or readv
         };
 
         // Per-fd state: tracks up to one read-direction and one write-direction pending op,

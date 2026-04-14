@@ -19,6 +19,7 @@ namespace bee::async {
         ~async_uring() override;
 
         bool submit_read(net::fd_t fd, void* buffer, size_t len, uint64_t request_id) override;
+        bool submit_readv(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) override;
         bool submit_write(net::fd_t fd, const void* buffer, size_t len, uint64_t request_id) override;
         bool submit_writev(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) override;
         bool submit_accept(net::fd_t listen_fd, uint64_t request_id) override;

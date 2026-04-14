@@ -59,6 +59,7 @@ enum {
     UV__IORING_OP_SEND    = 26,
     UV__IORING_OP_RECV    = 27,
     UV__IORING_OP_SENDMSG  = 9,
+    UV__IORING_OP_RECVMSG  = 10,
     UV__IORING_OP_POLL_ADD = 6,
 };
 
@@ -187,6 +188,17 @@ struct writev_ctx {
     }
 };
 
+struct readv_ctx {
+    struct msghdr msg = {};
+    bee::dynarray<bee::net::socket::iobuf> bufs;
+    explicit readv_ctx(bee::span<const bee::net::socket::iobuf> src)
+        : bufs(src.size()) {
+        for (size_t i = 0; i < src.size(); ++i) bufs[i] = src[i];
+        msg.msg_iov    = reinterpret_cast<struct iovec*>(bufs.data());
+        msg.msg_iovlen = static_cast<int>(src.size());
+    }
+};
+
 struct io_uring {
     int ringfd            = -1;
     char* sq              = nullptr;  // base of the shared SQ+CQ mmap
@@ -208,6 +220,8 @@ struct io_uring {
 
     // Pending writev contexts keyed by request_id, freed when CQE arrives.
     std::unordered_map<uint64_t, std::unique_ptr<writev_ctx>> writev_pending;
+    // Pending readv contexts keyed by request_id, freed when CQE arrives.
+    std::unordered_map<uint64_t, std::unique_ptr<readv_ctx>> readv_pending;
 };
 
 namespace bee::async {
@@ -371,6 +385,10 @@ namespace bee::async {
             if (c.op == async_op::writev) {
                 ring->writev_pending.erase(c.request_id);
             }
+            // Free the readv context once the CQE arrives.
+            if (c.op == async_op::readv) {
+                ring->readv_pending.erase(c.request_id);
+            }
             // For connect/file_write/accept/fd_poll, res==0 means success (not EOF).
             // For read/write (recv/send), res==0 means the peer closed the connection.
             bool zero_is_success = (c.op == async_op::connect || c.op == async_op::writev || c.op == async_op::file_write || c.op == async_op::accept || c.op == async_op::fd_poll);
@@ -440,8 +458,23 @@ namespace bee::async {
         return true;  // SQE queued; will be submitted on next poll/wait
     }
 
-    bool async_uring::submit_write(net::fd_t fd, const void* buffer, size_t len, uint64_t request_id) {
+    bool async_uring::submit_readv(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
         if (!m_ring) return false;
+        uv__io_uring_sqe* sqe = uring_get_sqe(m_ring);
+        if (!sqe) return false;
+        auto ctx       = std::make_unique<readv_ctx>(bufs);
+        sqe->opcode    = UV__IORING_OP_RECVMSG;
+        sqe->fd        = fd;
+        sqe->addr      = reinterpret_cast<uintptr_t>(&ctx->msg);
+        sqe->len       = 1;
+        sqe->msg_flags = 0;
+        sqe->user_data = pack_user_data(async_op::readv, request_id);
+        m_ring->readv_pending.emplace(request_id, std::move(ctx));
+        uring_submit(m_ring);
+        return true;
+    }
+
+    bool async_uring::submit_write(net::fd_t fd, const void* buffer, size_t len, uint64_t request_id) {        if (!m_ring) return false;
         uv__io_uring_sqe* sqe = uring_get_sqe(m_ring);
         if (!sqe) return false;
         sqe->opcode    = UV__IORING_OP_SEND;

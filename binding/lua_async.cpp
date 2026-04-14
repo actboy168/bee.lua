@@ -110,13 +110,17 @@ namespace bee::lua_async {
 
     // ---- write_buf drain helpers ----
 
-    // Submit the front queue entry.  wb.fd and wb.lua_reqid must already be set.
-    static bool wb_submit_next(lua_async& as, async::write_buf& wb) {
+    // Submit all queued entries as a single writev.  wb.fd and wb.lua_reqid must already be set.
+    // Builds wb.iov_cache from the current queue (honouring per-entry offsets) and submits once.
+    static bool wb_submit_all(lua_async& as, async::write_buf& wb) {
         if (wb.q.empty()) return true;
-        async::write_buf::entry& entry = wb.q.front();
-        net::socket::iobuf buf;
-        buf.set(entry.data + entry.offset, entry.len - entry.offset);
-        if (!as.handle->submit_writev(wb.fd, span<const net::socket::iobuf>(&buf, 1), wb.lua_reqid)) {
+        size_t n      = wb.q.size();
+        wb.iov_cache  = dynarray<net::socket::iobuf>(n);
+        size_t i      = 0;
+        for (auto& e : wb.q) {
+            wb.iov_cache[i++].set(e.data + e.offset, e.len - e.offset);
+        }
+        if (!as.handle->submit_writev(wb.fd, span<const net::socket::iobuf>(wb.iov_cache.data(), n), wb.lua_reqid)) {
             return false;
         }
         wb.in_flight = true;
@@ -129,7 +133,6 @@ namespace bee::lua_async {
     static bool wb_on_completion(lua_State* L, lua_async& as, uint64_t packed_id, async::write_buf& wb, async::async_status status, size_t bytes) {
         wb.in_flight   = false;
         int buf_r      = get_buf_ref(packed_id);
-        int udata_r    = get_udata_ref(packed_id);
 
         if (status != async::async_status::success) {
             for (auto& e : wb.q) luaL_unref(L, LUA_REGISTRYINDEX, e.str_ref);
@@ -144,28 +147,29 @@ namespace bee::lua_async {
             return true;
         }
 
-        async::write_buf::entry& front = wb.q.front();
-        front.offset += bytes;
-
-        if (front.offset < front.len) {
-            if (!wb_submit_next(as, wb)) {
-                unref_buf(as, buf_r);
-                return true;
+        // Consume bytes_transferred from the front of the queue, honouring
+        // partial writes across multiple entries.
+        size_t remaining = bytes;
+        while (!wb.q.empty() && remaining > 0) {
+            async::write_buf::entry& front = wb.q.front();
+            size_t avail                   = front.len - front.offset;
+            if (remaining >= avail) {
+                remaining -= avail;
+                luaL_unref(L, LUA_REGISTRYINDEX, front.str_ref);
+                wb.buffered -= front.len;
+                wb.q.pop_front();
+            } else {
+                front.offset += remaining;
+                remaining = 0;
             }
-            // Still draining: wb.lua_reqid already holds the packed id.
-            return false;
         }
 
-        luaL_unref(L, LUA_REGISTRYINDEX, front.str_ref);
-        wb.buffered -= front.len;
-        wb.q.pop_front();
-
         if (!wb.q.empty()) {
-            if (!wb_submit_next(as, wb)) {
+            // Still data to send (partial write): resubmit all remaining entries.
+            if (!wb_submit_all(as, wb)) {
                 unref_buf(as, buf_r);
                 return true;
             }
-            // Still draining: wb.lua_reqid already holds the packed id.
             return false;
         }
 
@@ -217,6 +221,27 @@ namespace bee::lua_async {
                 lua_pushinteger(L, static_cast<lua_Integer>(c.error_code));
                 return 5;
             }
+        }
+
+        if (c.op == async::async_op::readv) {
+            // readv completion: commit bytes to the ring_buf and report as OP_READV.
+            async::ring_buf* rb = nullptr;
+            if (buf_r) {
+                luaref_get(as.refs, L, buf_r);
+                if (lua_type(L, -1) == LUA_TUSERDATA) {
+                    void* p = luaL_testudata(L, -1, reflection::name_v<async::ring_buf>.data());
+                    if (p) rb = lua::udata_align<async::ring_buf>(p);
+                }
+                lua_pop(L, 1);
+                luaref_unref(as.refs, buf_r);
+            }
+            if (rb && c.status == async::async_status::success) rb->commit(c.bytes_transferred);
+            lua_pushinteger(L, static_cast<lua_Integer>(std::to_underlying(c.op)));
+            push_udata(L, as, udata_r);
+            lua_pushinteger(L, static_cast<lua_Integer>(std::to_underlying(c.status)));
+            lua_pushinteger(L, static_cast<lua_Integer>(c.bytes_transferred));
+            lua_pushinteger(L, static_cast<lua_Integer>(c.error_code));
+            return 5;
         }
 
         lua_pushinteger(L, static_cast<lua_Integer>(std::to_underlying(c.op)));
@@ -307,29 +332,8 @@ namespace bee::lua_async {
         unref_buf(as, get_udata_ref(id));
     }
 
-    // submit_read(asfd, rb, fd, udata)
-    static int async_submit_read(lua_State* L) {
-        auto& as     = lua::checkudata<lua_async>(L, 1);
-        auto& rb     = lua::checkudata<async::ring_buf>(L, 2);
-        net::fd_t fd = lua_socket::checkfd(L, 3);
-        luaL_checkany(L, 4);
-        size_t len = rb.write_len();
-        if (len == 0) {
-            lua_pushboolean(L, 0);
-            return 1;
-        }
-        void* ptr    = rb.write_ptr();
-        uint64_t id  = pin(L, as, 2, 4);
-        if (!as.handle->submit_read(fd, ptr, len, id)) {
-            pin_release(as, id);
-            return lua::return_net_error(L, "submit_read");
-        }
-        lua_pushboolean(L, 1);
-        return 1;
-    }
-
     // submit_write(asfd, wb, fd, udata)
-    // Drains wb's queue. C layer auto-drains until empty, then emits one Lua completion.
+    // Drains wb's queue. C layer submits all entries at once via writev, then emits one Lua completion.
     static int async_submit_write(lua_State* L) {
         auto& as     = lua::checkudata<lua_async>(L, 1);
         auto& wb     = lua::checkudata<async::write_buf>(L, 2);
@@ -345,9 +349,53 @@ namespace bee::lua_async {
         wb.fd        = fd;
         wb.lua_reqid = id;
 
-        if (!wb_submit_next(as, wb)) {
+        if (!wb_submit_all(as, wb)) {
             pin_release(as, id);
             return lua::return_net_error(L, "submit_write");
+        }
+        lua_pushboolean(L, 1);
+        return 1;
+    }
+
+    // submit_read(asfd, rb, fd, udata)
+    // Handles ring_buf wrap-around automatically: when the free region wraps around
+    // the end of the buffer, submits two iovecs covering both segments at once.
+    // Falls back to a single-buffer read when there is no wrap-around.
+    static int async_submit_read(lua_State* L) {
+        auto& as     = lua::checkudata<lua_async>(L, 1);
+        auto& rb     = lua::checkudata<async::ring_buf>(L, 2);
+        net::fd_t fd = lua_socket::checkfd(L, 3);
+        luaL_checkany(L, 4);
+
+        size_t len1 = rb.write_len();
+        if (len1 == 0) {
+            lua_pushboolean(L, 0);
+            return 1;
+        }
+
+        size_t free_space = rb.free_cap();
+        size_t len2       = (len1 < free_space) ? (free_space - len1) : 0;
+
+        if (len2 == 0) {
+            // No wrap-around: fall back to a single-buffer submit_read.
+            uint64_t id = pin(L, as, 2, 4);
+            if (!as.handle->submit_read(fd, rb.write_ptr(), len1, id)) {
+                pin_release(as, id);
+                return lua::return_net_error(L, "submit_read");
+            }
+            lua_pushboolean(L, 1);
+            return 1;
+        }
+
+        // Two segments: first runs to the buffer end, second wraps to the beginning.
+        net::socket::iobuf bufs[2];
+        bufs[0].set(rb.write_ptr(), len1);
+        bufs[1].set(rb.data, len2);
+
+        uint64_t id = pin(L, as, 2, 4);
+        if (!as.handle->submit_readv(fd, span<const net::socket::iobuf>(bufs, 2), id)) {
+            pin_release(as, id);
+            return lua::return_net_error(L, "submit_read");
         }
         lua_pushboolean(L, 1);
         return 1;
@@ -627,11 +675,11 @@ namespace bee::lua_async {
     static void metatable(lua_State* L) {
         static luaL_Reg lib[] = {
             { "submit_write", async_submit_write },
+            { "submit_read", async_submit_read },
             { "submit_accept", async_submit_accept },
             { "submit_connect", async_submit_connect },
             { "submit_file_read", async_submit_file_read },
             { "submit_file_write", async_submit_file_write },
-            { "submit_read", async_submit_read },
             { "submit_poll", async_submit_poll },
             { "associate", async_associate },
             { "associate_file", async_associate_file },
@@ -687,6 +735,7 @@ namespace bee::lua_async {
         SETENUM(CANCEL, async::async_status::cancel);
 
         SETENUM(OP_READ, async::async_op::read);
+        SETENUM(OP_READV, async::async_op::readv);
         SETENUM(OP_WRITE, async::async_op::write);
         SETENUM(OP_WRITEV, async::async_op::writev);
         SETENUM(OP_ACCEPT, async::async_op::accept);

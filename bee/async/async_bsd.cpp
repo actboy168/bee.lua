@@ -44,6 +44,22 @@ namespace bee::async {
         return true;
     }
 
+    bool async::submit_readv(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
+        auto* op       = new pending_op();
+        op->request_id = request_id;
+        op->fd         = fd;
+        op->type       = pending_op::readv;
+        op->wv         = dynarray<net::socket::iobuf>(bufs.size());
+        for (size_t i = 0; i < bufs.size(); ++i) op->wv[i] = bufs[i];
+        m_pending_ops.insert(op);
+        if (!kqueue_register(fd, EVFILT_READ, op)) {
+            m_pending_ops.erase(op);
+            delete op;
+            return false;
+        }
+        return true;
+    }
+
     bool async::submit_write(net::fd_t fd, const void* buffer, size_t len, uint64_t request_id) {
         auto* op       = new pending_op();
         op->request_id = request_id;
@@ -193,6 +209,9 @@ namespace bee::async {
             case async::pending_op::read:
                 c.op = async_op::read;
                 break;
+            case async::pending_op::readv:
+                c.op = async_op::readv;
+                break;
             case async::pending_op::write:
                 c.op = async_op::write;
                 break;
@@ -238,6 +257,36 @@ namespace bee::async {
                 break;
             case net::socket::recv_status::wait:
                 // Spurious wakeup：kevent 触发但实际无数据，重新注册等待下次事件。
+                if (kqueue_rearm(kqfd, fd, EVFILT_READ, op)) {
+                    return false;
+                }
+                c.status     = async_status::error;
+                c.error_code = EAGAIN;
+                break;
+            }
+            break;
+        }
+        case async::pending_op::readv: {
+            c.op = async_op::readv;
+            if ((ev.flags & EV_EOF) && ev.data == 0) {
+                c.status = async_status::close;
+                break;
+            }
+            int rc  = 0;
+            auto rs = net::socket::recvv(fd, rc, span<net::socket::iobuf>(op->wv.data(), op->wv.size()));
+            switch (rs) {
+            case net::socket::recv_status::success:
+                c.status            = async_status::success;
+                c.bytes_transferred = static_cast<size_t>(rc);
+                break;
+            case net::socket::recv_status::close:
+                c.status = async_status::close;
+                break;
+            case net::socket::recv_status::failed:
+                c.status     = async_status::error;
+                c.error_code = errno;
+                break;
+            case net::socket::recv_status::wait:
                 if (kqueue_rearm(kqfd, fd, EVFILT_READ, op)) {
                     return false;
                 }
@@ -410,6 +459,7 @@ namespace bee::async {
     static int op_filter(async::pending_op::type_t type) {
         switch (type) {
         case async::pending_op::read:
+        case async::pending_op::readv:
         case async::pending_op::accept:
         case async::pending_op::fd_poll:
             return EVFILT_READ;
