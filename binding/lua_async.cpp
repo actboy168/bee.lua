@@ -411,8 +411,11 @@ namespace bee::lua_async {
         const char* data           = luaL_checklstring(L, 3, &len);
         lua_Integer offset         = luaL_optinteger(L, 4, 0);
         lua_Integer reqid          = luaL_checkinteger(L, 5);
-        if (!as.handle->submit_file_write(fd, data, len, static_cast<int64_t>(offset), static_cast<uint64_t>(reqid)))
+        buf_pin(L, 1, reqid, 3);
+        if (!as.handle->submit_file_write(fd, data, len, static_cast<int64_t>(offset), static_cast<uint64_t>(reqid))) {
+            buf_unpin(L, 1, reqid);
             return lua::return_net_error(L, "submit_file_write");
+        }
         lua_pushboolean(L, 1);
         return 1;
     }
