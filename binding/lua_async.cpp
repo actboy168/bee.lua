@@ -167,6 +167,10 @@ namespace bee::lua_async {
         if (!wb.q.empty()) {
             // Still data to send (partial write): resubmit all remaining entries.
             if (!wb_submit_all(as, wb)) {
+                // resubmit 失败：释放队列中所有字符串引用，清空队列，避免资源泄漏
+                for (auto& e : wb.q) luaL_unref(L, LUA_REGISTRYINDEX, e.str_ref);
+                wb.q.clear();
+                wb.buffered = 0;
                 unref_buf(as, buf_r);
                 return true;
             }
