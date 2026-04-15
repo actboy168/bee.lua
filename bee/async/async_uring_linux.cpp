@@ -424,7 +424,7 @@ namespace bee::async {
             int rc;
             do {
                 rc = sys_io_uring_enter(ring->ringfd, 0, 0, BEE__IORING_ENTER_GETEVENTS, nullptr);
-            } while (rc == -EINTR);
+            } while (rc == -1 && errno == EINTR);
         }
 
         return static_cast<int>(count);
@@ -588,7 +588,7 @@ namespace bee::async {
                 int ret;
                 do {
                     ret = sys_io_uring_enter(m_ring->ringfd, pending, 0, 0, nullptr);
-                } while (ret == -EINTR);
+                } while (ret == -1 && errno == EINTR);
             }
             return harvest_cqes(completions);
         } else if (timeout > 0) {
@@ -602,14 +602,14 @@ namespace bee::async {
             int ret;
             do {
                 ret = sys_io_uring_enter(m_ring->ringfd, pending, 1, BEE__IORING_ENTER_GETEVENTS | BEE__IORING_ENTER_EXT_ARG, &arg);
-            } while (ret == -EINTR);
-            // -ETIME = timeout expired with 0 completions; harvest anyway.
+            } while (ret == -1 && errno == EINTR);
+            // errno == ETIME: timeout expired with 0 completions; harvest anyway.
         } else {
             // Block until at least one CQE is available, submitting pending SQEs atomically.
             int ret;
             do {
                 ret = sys_io_uring_enter(m_ring->ringfd, pending, 1, BEE__IORING_ENTER_GETEVENTS, nullptr);
-            } while (ret == -EINTR);
+            } while (ret == -1 && errno == EINTR);
         }
 
         return harvest_cqes(completions);
