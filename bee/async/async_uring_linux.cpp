@@ -21,49 +21,49 @@
 // (linux/io_uring.h) and verified against the kernel source.  Static assertions
 // below guard the struct layouts so a mismatch is caught at compile time.
 
-#ifndef SYS_io_uring_setup
-#    define SYS_io_uring_setup 425
+#ifndef __NR_io_uring_setup
+#    define __NR_io_uring_setup 425
 #endif
-#ifndef SYS_io_uring_enter
-#    define SYS_io_uring_enter 426
+#ifndef __NR_io_uring_enter
+#    define __NR_io_uring_enter 426
 #endif
 
 // io_uring_setup flags
 enum {
-    UV__IORING_SETUP_NO_SQARRAY = 0x10000u,  // kernel 6.6+: sq_array is implicit
+    BEE__IORING_SETUP_NO_SQARRAY = 0x10000u,  // kernel 6.6+: sq_array is implicit
 };
 
 // io_uring feature flags (returned in io_uring_params.features)
 enum {
-    UV__IORING_FEAT_SINGLE_MMAP = 1u,  // SQ+CQ share a single mmap region
-    UV__IORING_FEAT_NODROP      = 2u,  // CQ overflow is never silently dropped
+    BEE__IORING_FEAT_SINGLE_MMAP = 1u,  // SQ+CQ share a single mmap region
+    BEE__IORING_FEAT_NODROP      = 2u,  // CQ overflow is never silently dropped
 };
 
 // io_uring_enter flags
 enum {
-    UV__IORING_ENTER_GETEVENTS = 1u,
-    UV__IORING_ENTER_EXT_ARG   = 8u,  // arg is io_uring_getevents_arg (kernel 5.11+)
+    BEE__IORING_ENTER_GETEVENTS = 1u,
+    BEE__IORING_ENTER_EXT_ARG   = 8u,  // arg is io_uring_getevents_arg (kernel 5.11+)
 };
 
 // sq_ring flags (iou->sqflags)
 enum {
-    UV__IORING_SQ_CQ_OVERFLOW = 2u,
+    BEE__IORING_SQ_CQ_OVERFLOW = 2u,
 };
 
 // Opcodes we use
 enum {
-    UV__IORING_OP_ACCEPT  = 13,
-    UV__IORING_OP_CONNECT = 16,
-    UV__IORING_OP_READ    = 22,
-    UV__IORING_OP_WRITE   = 23,
-    UV__IORING_OP_SEND    = 26,
-    UV__IORING_OP_RECV    = 27,
-    UV__IORING_OP_SENDMSG  = 9,
-    UV__IORING_OP_RECVMSG  = 10,
-    UV__IORING_OP_POLL_ADD = 6,
+    BEE__IORING_OP_ACCEPT  = 13,
+    BEE__IORING_OP_CONNECT = 16,
+    BEE__IORING_OP_READ    = 22,
+    BEE__IORING_OP_WRITE   = 23,
+    BEE__IORING_OP_SEND    = 26,
+    BEE__IORING_OP_RECV    = 27,
+    BEE__IORING_OP_SENDMSG  = 9,
+    BEE__IORING_OP_RECVMSG  = 10,
+    BEE__IORING_OP_POLL_ADD = 6,
 };
 
-struct uv__io_sqring_offsets {
+struct bee__io_sqring_offsets {
     uint32_t head;
     uint32_t tail;
     uint32_t ring_mask;
@@ -74,9 +74,9 @@ struct uv__io_sqring_offsets {
     uint32_t reserved0;
     uint64_t reserved1;
 };
-static_assert(40 == sizeof(uv__io_sqring_offsets), "sqring_offsets size");
+static_assert(40 == sizeof(bee__io_sqring_offsets), "sqring_offsets size");
 
-struct uv__io_cqring_offsets {
+struct bee__io_cqring_offsets {
     uint32_t head;
     uint32_t tail;
     uint32_t ring_mask;
@@ -86,9 +86,9 @@ struct uv__io_cqring_offsets {
     uint64_t reserved0;
     uint64_t reserved1;
 };
-static_assert(40 == sizeof(uv__io_cqring_offsets), "cqring_offsets size");
+static_assert(40 == sizeof(bee__io_cqring_offsets), "cqring_offsets size");
 
-struct uv__io_uring_sqe {
+struct bee__io_uring_sqe {
     uint8_t opcode;
     uint8_t flags;
     uint16_t ioprio;
@@ -115,24 +115,24 @@ struct uv__io_uring_sqe {
         uint64_t pad[3];
     };
 };
-static_assert(64 == sizeof(uv__io_uring_sqe), "sqe size");
-static_assert(0 == __builtin_offsetof(uv__io_uring_sqe, opcode), "sqe.opcode");
-static_assert(4 == __builtin_offsetof(uv__io_uring_sqe, fd), "sqe.fd");
-static_assert(8 == __builtin_offsetof(uv__io_uring_sqe, off), "sqe.off");
-static_assert(16 == __builtin_offsetof(uv__io_uring_sqe, addr), "sqe.addr");
-static_assert(24 == __builtin_offsetof(uv__io_uring_sqe, len), "sqe.len");
-static_assert(28 == __builtin_offsetof(uv__io_uring_sqe, rw_flags), "sqe.rw_flags");
-static_assert(32 == __builtin_offsetof(uv__io_uring_sqe, user_data), "sqe.user_data");
-static_assert(40 == __builtin_offsetof(uv__io_uring_sqe, buf_index), "sqe.buf_index");
+static_assert(64 == sizeof(bee__io_uring_sqe), "sqe size");
+static_assert(0 == __builtin_offsetof(bee__io_uring_sqe, opcode), "sqe.opcode");
+static_assert(4 == __builtin_offsetof(bee__io_uring_sqe, fd), "sqe.fd");
+static_assert(8 == __builtin_offsetof(bee__io_uring_sqe, off), "sqe.off");
+static_assert(16 == __builtin_offsetof(bee__io_uring_sqe, addr), "sqe.addr");
+static_assert(24 == __builtin_offsetof(bee__io_uring_sqe, len), "sqe.len");
+static_assert(28 == __builtin_offsetof(bee__io_uring_sqe, rw_flags), "sqe.rw_flags");
+static_assert(32 == __builtin_offsetof(bee__io_uring_sqe, user_data), "sqe.user_data");
+static_assert(40 == __builtin_offsetof(bee__io_uring_sqe, buf_index), "sqe.buf_index");
 
-struct uv__io_uring_cqe {
+struct bee__io_uring_cqe {
     uint64_t user_data;
     int32_t res;
     uint32_t flags;
 };
-static_assert(16 == sizeof(uv__io_uring_cqe), "cqe size");
+static_assert(16 == sizeof(bee__io_uring_cqe), "cqe size");
 
-struct uv__io_uring_params {
+struct bee__io_uring_params {
     uint32_t sq_entries;
     uint32_t cq_entries;
     uint32_t flags;
@@ -140,37 +140,37 @@ struct uv__io_uring_params {
     uint32_t sq_thread_idle;
     uint32_t features;
     uint32_t reserved[4];
-    uv__io_sqring_offsets sq_off;  // 40 bytes
-    uv__io_cqring_offsets cq_off;  // 40 bytes
+    bee__io_sqring_offsets sq_off;  // 40 bytes
+    bee__io_cqring_offsets cq_off;  // 40 bytes
 };
-static_assert(40 + 40 + 40 == sizeof(uv__io_uring_params), "params size");
-static_assert(40 == __builtin_offsetof(uv__io_uring_params, sq_off), "params.sq_off");
-static_assert(80 == __builtin_offsetof(uv__io_uring_params, cq_off), "params.cq_off");
+static_assert(40 + 40 + 40 == sizeof(bee__io_uring_params), "params size");
+static_assert(40 == __builtin_offsetof(bee__io_uring_params, sq_off), "params.sq_off");
+static_assert(80 == __builtin_offsetof(bee__io_uring_params, cq_off), "params.cq_off");
 
 // Used with IORING_ENTER_EXT_ARG to pass a timeout directly to io_uring_enter.
-struct uv__io_uring_getevents_arg {
+struct bee__io_uring_getevents_arg {
     uint64_t sigmask;
     uint32_t sigmask_sz;
     uint32_t pad;
     uint64_t ts;  // pointer to __kernel_timespec
 };
 
-struct __uv__kernel_timespec {
+struct bee__kernel_timespec {
     int64_t tv_sec;
     int64_t tv_nsec;
 };
 
 // ---- raw syscall wrappers ----
 
-static inline int sys_io_uring_setup(unsigned entries, uv__io_uring_params* p) noexcept {
-    return static_cast<int>(syscall(SYS_io_uring_setup, entries, p));
+static inline int sys_io_uring_setup(unsigned entries, bee__io_uring_params* p) noexcept {
+    return static_cast<int>(syscall(__NR_io_uring_setup, entries, p));
 }
 
 static inline int sys_io_uring_enter(int fd, unsigned to_submit, unsigned min_complete, unsigned flags, const void* arg) noexcept {
-    const unsigned arg_size = (flags & UV__IORING_ENTER_EXT_ARG)
-        ? static_cast<unsigned>(sizeof(uv__io_uring_getevents_arg))
+    const unsigned arg_size = (flags & BEE__IORING_ENTER_EXT_ARG)
+        ? static_cast<unsigned>(sizeof(bee__io_uring_getevents_arg))
         : 0u;
-    return static_cast<int>(syscall(SYS_io_uring_enter, fd, to_submit, min_complete, flags, arg, arg_size));
+    return static_cast<int>(syscall(__NR_io_uring_enter, fd, to_submit, min_complete, flags, arg, arg_size));
 }
 
 // ---- io_uring ring state (kept behind the forward-declared pointer in the header) ----
@@ -203,7 +203,7 @@ struct io_uring {
     int ringfd            = -1;
     char* sq              = nullptr;  // base of the shared SQ+CQ mmap
     size_t maxlen         = 0;
-    uv__io_uring_sqe* sqe = nullptr;
+    bee__io_uring_sqe* sqe = nullptr;
     size_t sqelen         = 0;
 
     // SQ ring pointers into sq mmap
@@ -216,7 +216,7 @@ struct io_uring {
     uint32_t* cqhead       = nullptr;  // we advance (consumer)
     uint32_t* cqtail       = nullptr;  // kernel publishes here
     uint32_t cqmask        = 0;
-    uv__io_uring_cqe* cqes = nullptr;
+    bee__io_uring_cqe* cqes = nullptr;
 
     // Pending writev contexts keyed by request_id, freed when CQE arrives.
     std::unordered_map<uint64_t, std::unique_ptr<writev_ctx>> writev_pending;
@@ -257,7 +257,7 @@ namespace bee::async {
     // ---- ring init / exit ----
 
     static bool uring_init(uint32_t entries, io_uring* ring) noexcept {
-        uv__io_uring_params params;
+        bee__io_uring_params params;
         memset(&params, 0, sizeof(params));
 
         // On kernel 6.6+ the kernel can omit the sq_array indirection via
@@ -269,20 +269,20 @@ namespace bee::async {
 
         // Require only the features that are actually used below:
         // SINGLE_MMAP (Linux 5.4+) and NODROP (Linux 5.5+).
-        if (!(params.features & UV__IORING_FEAT_SINGLE_MMAP)) {
+        if (!(params.features & BEE__IORING_FEAT_SINGLE_MMAP)) {
             close(ringfd);
             return false;
         }
-        if (!(params.features & UV__IORING_FEAT_NODROP)) {
+        if (!(params.features & BEE__IORING_FEAT_NODROP)) {
             close(ringfd);
             return false;
         }
 
         // SQ+CQ share one mmap (SINGLE_MMAP): use the larger of the two regions.
         size_t sqlen  = params.sq_off.array + params.sq_entries * sizeof(uint32_t);
-        size_t cqlen  = params.cq_off.cqes + params.cq_entries * sizeof(uv__io_uring_cqe);
+        size_t cqlen  = params.cq_off.cqes + params.cq_entries * sizeof(bee__io_uring_cqe);
         size_t maxlen = sqlen < cqlen ? cqlen : sqlen;
-        size_t sqelen = params.sq_entries * sizeof(uv__io_uring_sqe);
+        size_t sqelen = params.sq_entries * sizeof(bee__io_uring_sqe);
 
         char* sq = static_cast<char*>(
             mmap(nullptr, maxlen, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_POPULATE, ringfd, 0 /* IORING_OFF_SQ_RING */)
@@ -292,7 +292,7 @@ namespace bee::async {
             return false;
         }
 
-        uv__io_uring_sqe* sqe_ptr = static_cast<uv__io_uring_sqe*>(
+        bee__io_uring_sqe* sqe_ptr = static_cast<bee__io_uring_sqe*>(
             mmap(nullptr, sqelen, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_POPULATE, ringfd, 0x10000000ull /* IORING_OFF_SQES */)
         );
         if (sqe_ptr == MAP_FAILED) {
@@ -315,12 +315,12 @@ namespace bee::async {
         ring->cqhead = reinterpret_cast<uint32_t*>(sq + params.cq_off.head);
         ring->cqtail = reinterpret_cast<uint32_t*>(sq + params.cq_off.tail);
         ring->cqmask = *reinterpret_cast<uint32_t*>(sq + params.cq_off.ring_mask);
-        ring->cqes   = reinterpret_cast<uv__io_uring_cqe*>(sq + params.cq_off.cqes);
+        ring->cqes   = reinterpret_cast<bee__io_uring_cqe*>(sq + params.cq_off.cqes);
 
         // Pre-fill sq_array with the identity mapping (slot i -> SQE i).
         // On kernels that set NO_SQARRAY the kernel ignores this array, but
         // populating it is harmless and keeps a single code path.
-        if (!(params.flags & UV__IORING_SETUP_NO_SQARRAY)) {
+        if (!(params.flags & BEE__IORING_SETUP_NO_SQARRAY)) {
             uint32_t* sqarray = reinterpret_cast<uint32_t*>(sq + params.sq_off.array);
             for (uint32_t i = 0; i <= ring->sqmask; i++)
                 sqarray[i] = i;
@@ -341,7 +341,7 @@ namespace bee::async {
 
     // Returns the next free SQE slot, or nullptr if the SQ is full.
     // The caller fills the SQE and then calls uring_submit().
-    static inline uv__io_uring_sqe* uring_get_sqe(io_uring* ring) noexcept {
+    static inline bee__io_uring_sqe* uring_get_sqe(io_uring* ring) noexcept {
         uint32_t head = load_acquire(ring->sqhead);
         uint32_t tail = *ring->sqtail;
         uint32_t mask = ring->sqmask;
@@ -351,7 +351,7 @@ namespace bee::async {
             return nullptr;
 
         uint32_t slot         = tail & mask;
-        uv__io_uring_sqe* sqe = &ring->sqe[slot];
+        bee__io_uring_sqe* sqe = &ring->sqe[slot];
         memset(sqe, 0, sizeof(*sqe));
         return sqe;
     }
@@ -377,7 +377,7 @@ namespace bee::async {
         uint32_t count = 0;
 
         while (head != tail && count < static_cast<uint32_t>(completions.size())) {
-            const uv__io_uring_cqe& cqe = ring->cqes[head & mask];
+            const bee__io_uring_cqe& cqe = ring->cqes[head & mask];
             io_completion& c            = completions[count++];
             c.op                        = unpack_op(cqe.user_data);
             c.request_id                = unpack_id(cqe.user_data);
@@ -420,10 +420,10 @@ namespace bee::async {
 
         // If the CQ overflowed, poke the kernel to flush the overflow list.
         // We don't grab the new entries here — they'll appear in the next poll/wait.
-        if (load_acquire(ring->sqflags) & UV__IORING_SQ_CQ_OVERFLOW) {
+        if (load_acquire(ring->sqflags) & BEE__IORING_SQ_CQ_OVERFLOW) {
             int rc;
             do {
-                rc = sys_io_uring_enter(ring->ringfd, 0, 0, UV__IORING_ENTER_GETEVENTS, nullptr);
+                rc = sys_io_uring_enter(ring->ringfd, 0, 0, BEE__IORING_ENTER_GETEVENTS, nullptr);
             } while (rc == -EINTR);
         }
 
@@ -446,9 +446,9 @@ namespace bee::async {
 
     bool async_uring::submit_read(net::fd_t fd, void* buffer, size_t len, uint64_t request_id) {
         if (!m_ring) return false;
-        uv__io_uring_sqe* sqe = uring_get_sqe(m_ring);
+        bee__io_uring_sqe* sqe = uring_get_sqe(m_ring);
         if (!sqe) return false;
-        sqe->opcode    = UV__IORING_OP_RECV;
+        sqe->opcode    = BEE__IORING_OP_RECV;
         sqe->fd        = fd;
         sqe->addr      = reinterpret_cast<uintptr_t>(buffer);
         sqe->len       = static_cast<uint32_t>(len);
@@ -460,10 +460,10 @@ namespace bee::async {
 
     bool async_uring::submit_readv(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
         if (!m_ring) return false;
-        uv__io_uring_sqe* sqe = uring_get_sqe(m_ring);
+        bee__io_uring_sqe* sqe = uring_get_sqe(m_ring);
         if (!sqe) return false;
         auto ctx       = std::make_unique<readv_ctx>(bufs);
-        sqe->opcode    = UV__IORING_OP_RECVMSG;
+        sqe->opcode    = BEE__IORING_OP_RECVMSG;
         sqe->fd        = fd;
         sqe->addr      = reinterpret_cast<uintptr_t>(&ctx->msg);
         sqe->len       = 1;
@@ -475,9 +475,9 @@ namespace bee::async {
     }
 
     bool async_uring::submit_write(net::fd_t fd, const void* buffer, size_t len, uint64_t request_id) {        if (!m_ring) return false;
-        uv__io_uring_sqe* sqe = uring_get_sqe(m_ring);
+        bee__io_uring_sqe* sqe = uring_get_sqe(m_ring);
         if (!sqe) return false;
-        sqe->opcode    = UV__IORING_OP_SEND;
+        sqe->opcode    = BEE__IORING_OP_SEND;
         sqe->fd        = fd;
         sqe->addr      = reinterpret_cast<uintptr_t>(buffer);
         sqe->len       = static_cast<uint32_t>(len);
@@ -489,10 +489,10 @@ namespace bee::async {
 
     bool async_uring::submit_writev(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
         if (!m_ring) return false;
-        uv__io_uring_sqe* sqe = uring_get_sqe(m_ring);
+        bee__io_uring_sqe* sqe = uring_get_sqe(m_ring);
         if (!sqe) return false;
         auto ctx       = std::make_unique<writev_ctx>(bufs);
-        sqe->opcode    = UV__IORING_OP_SENDMSG;
+        sqe->opcode    = BEE__IORING_OP_SENDMSG;
         sqe->fd        = fd;
         sqe->addr      = reinterpret_cast<uintptr_t>(&ctx->msg);
         sqe->len       = 1;
@@ -505,9 +505,9 @@ namespace bee::async {
 
     bool async_uring::submit_accept(net::fd_t listen_fd, uint64_t request_id) {
         if (!m_ring) return false;
-        uv__io_uring_sqe* sqe = uring_get_sqe(m_ring);
+        bee__io_uring_sqe* sqe = uring_get_sqe(m_ring);
         if (!sqe) return false;
-        sqe->opcode       = UV__IORING_OP_ACCEPT;
+        sqe->opcode       = BEE__IORING_OP_ACCEPT;
         sqe->fd           = listen_fd;
         sqe->addr         = 0;  // don't capture peer address
         sqe->addr2        = 0;  // no socklen_t output
@@ -519,11 +519,11 @@ namespace bee::async {
 
     bool async_uring::submit_connect(net::fd_t fd, const net::endpoint& ep, uint64_t request_id) {
         if (!m_ring) return false;
-        uv__io_uring_sqe* sqe = uring_get_sqe(m_ring);
+        bee__io_uring_sqe* sqe = uring_get_sqe(m_ring);
         if (!sqe) return false;
         // The caller (Lua binding) pins the endpoint in the buf table, guaranteeing
         // ep.addr() remains valid until the CQE is harvested.
-        sqe->opcode    = UV__IORING_OP_CONNECT;
+        sqe->opcode    = BEE__IORING_OP_CONNECT;
         sqe->fd        = fd;
         sqe->addr      = reinterpret_cast<uintptr_t>(ep.addr());
         sqe->off       = ep.addrlen();  // CONNECT stores addrlen in the off field
@@ -534,9 +534,9 @@ namespace bee::async {
 
     bool async_uring::submit_file_read(file_handle::value_type fd, void* buffer, size_t len, int64_t offset, uint64_t request_id) {
         if (!m_ring) return false;
-        uv__io_uring_sqe* sqe = uring_get_sqe(m_ring);
+        bee__io_uring_sqe* sqe = uring_get_sqe(m_ring);
         if (!sqe) return false;
-        sqe->opcode    = UV__IORING_OP_READ;
+        sqe->opcode    = BEE__IORING_OP_READ;
         sqe->fd        = fd;
         sqe->addr      = reinterpret_cast<uintptr_t>(buffer);
         sqe->len       = static_cast<uint32_t>(len);
@@ -548,9 +548,9 @@ namespace bee::async {
 
     bool async_uring::submit_file_write(file_handle::value_type fd, const void* buffer, size_t len, int64_t offset, uint64_t request_id) {
         if (!m_ring) return false;
-        uv__io_uring_sqe* sqe = uring_get_sqe(m_ring);
+        bee__io_uring_sqe* sqe = uring_get_sqe(m_ring);
         if (!sqe) return false;
-        sqe->opcode    = UV__IORING_OP_WRITE;
+        sqe->opcode    = BEE__IORING_OP_WRITE;
         sqe->fd        = fd;
         sqe->addr      = reinterpret_cast<uintptr_t>(buffer);
         sqe->len       = static_cast<uint32_t>(len);
@@ -562,9 +562,9 @@ namespace bee::async {
 
     bool async_uring::submit_poll(net::fd_t fd, uint64_t request_id) {
         if (!m_ring) return false;
-        uv__io_uring_sqe* sqe = uring_get_sqe(m_ring);
+        bee__io_uring_sqe* sqe = uring_get_sqe(m_ring);
         if (!sqe) return false;
-        sqe->opcode    = UV__IORING_OP_POLL_ADD;
+        sqe->opcode    = BEE__IORING_OP_POLL_ADD;
         sqe->fd        = fd;
         sqe->rw_flags  = POLLIN;  // 监听可读事件
         sqe->user_data = pack_user_data(async_op::fd_poll, request_id);
@@ -593,22 +593,22 @@ namespace bee::async {
             return harvest_cqes(completions);
         } else if (timeout > 0) {
             // Use IORING_ENTER_EXT_ARG (kernel 5.11+) to pass the timeout inline.
-            __uv__kernel_timespec ts;
+            bee__kernel_timespec ts;
             ts.tv_sec  = timeout / 1000;
             ts.tv_nsec = static_cast<int64_t>(timeout % 1000) * 1000000L;
-            uv__io_uring_getevents_arg arg;
+            bee__io_uring_getevents_arg arg;
             memset(&arg, 0, sizeof(arg));
             arg.ts = reinterpret_cast<uintptr_t>(&ts);
             int ret;
             do {
-                ret = sys_io_uring_enter(m_ring->ringfd, pending, 1, UV__IORING_ENTER_GETEVENTS | UV__IORING_ENTER_EXT_ARG, &arg);
+                ret = sys_io_uring_enter(m_ring->ringfd, pending, 1, BEE__IORING_ENTER_GETEVENTS | BEE__IORING_ENTER_EXT_ARG, &arg);
             } while (ret == -EINTR);
             // -ETIME = timeout expired with 0 completions; harvest anyway.
         } else {
             // Block until at least one CQE is available, submitting pending SQEs atomically.
             int ret;
             do {
-                ret = sys_io_uring_enter(m_ring->ringfd, pending, 1, UV__IORING_ENTER_GETEVENTS, nullptr);
+                ret = sys_io_uring_enter(m_ring->ringfd, pending, 1, BEE__IORING_ENTER_GETEVENTS, nullptr);
             } while (ret == -EINTR);
         }
 
