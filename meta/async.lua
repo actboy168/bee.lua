@@ -27,10 +27,12 @@ local asfd = {}
 ---当空闲区域跨越缓冲区末尾时（回绕场景），自动拆分为两段一次提交，
 ---减少系统调用次数；无回绕时等同于单段读取。
 ---回绕时 completion 的 op 为 OP_READV，无回绕时为 OP_READ。
+---底层 submit 系统调用失败时返回 nil, err。
 ---@param rb bee.async.readbuf 接收缓冲区对象
 ---@param fd bee.socket.fd socket 对象
 ---@param udata any 用户自定义数据，completion 时原样返回
----@return boolean # 成功投递返回true，背压或失败返回false
+---@return boolean? # 成功投递返回true，背压返回false，系统调用失败返回nil
+---@return string? # 系统调用失败时的错误消息
 function asfd:submit_read(rb, fd, udata)
 end
 
