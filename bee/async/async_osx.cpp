@@ -45,29 +45,51 @@ namespace bee::async {
         if (!s->read_src) { delete s; m_fd_map.erase(fd); return nullptr; }
         dispatch_source_set_event_handler(s->read_src, ^{
             if (!s->r.pending) return;
-            int rc  = 0;
-            auto rs = net::socket::recv(fd, rc, static_cast<char*>(s->r.buffer), static_cast<int>(s->r.len));
             io_completion c;
             c.request_id = s->r.request_id;
-            c.op         = async_op::read;
-            switch (rs) {
-            case net::socket::recv_status::success:
-                c.status            = async_status::success;
-                c.bytes_transferred = static_cast<size_t>(rc);
-                c.error_code        = 0;
-                break;
-            case net::socket::recv_status::close:
-                c.status            = async_status::close;
-                c.bytes_transferred = 0;
-                c.error_code        = 0;
-                break;
-            case net::socket::recv_status::wait:
-                return;  // spurious wakeup, stay resumed
-            case net::socket::recv_status::failed:
-                c.status            = async_status::error;
-                c.bytes_transferred = 0;
-                c.error_code        = errno;
-                break;
+            c.error_code = 0;
+            if (s->r.is_readv) {
+                c.op    = async_op::readv;
+                int rc  = 0;
+                auto rs = net::socket::recvv(fd, rc, span<net::socket::iobuf>(s->r.iov.data(), s->r.iov.size()));
+                switch (rs) {
+                case net::socket::recv_status::success:
+                    c.status            = async_status::success;
+                    c.bytes_transferred = static_cast<size_t>(rc);
+                    break;
+                case net::socket::recv_status::close:
+                    c.status            = async_status::close;
+                    c.bytes_transferred = 0;
+                    break;
+                case net::socket::recv_status::wait:
+                    return;  // spurious wakeup, stay resumed
+                case net::socket::recv_status::failed:
+                    c.status            = async_status::error;
+                    c.bytes_transferred = 0;
+                    c.error_code        = errno;
+                    break;
+                }
+            } else {
+                c.op    = async_op::read;
+                int rc  = 0;
+                auto rs = net::socket::recv(fd, rc, static_cast<char*>(s->r.buffer), static_cast<int>(s->r.len));
+                switch (rs) {
+                case net::socket::recv_status::success:
+                    c.status            = async_status::success;
+                    c.bytes_transferred = static_cast<size_t>(rc);
+                    break;
+                case net::socket::recv_status::close:
+                    c.status            = async_status::close;
+                    c.bytes_transferred = 0;
+                    break;
+                case net::socket::recv_status::wait:
+                    return;  // spurious wakeup, stay resumed
+                case net::socket::recv_status::failed:
+                    c.status            = async_status::error;
+                    c.bytes_transferred = 0;
+                    c.error_code        = errno;
+                    break;
+                }
             }
             s->r.pending = false;
             dispatch_suspend(s->read_src);
@@ -167,6 +189,19 @@ namespace bee::async {
         s->r.len        = len;
         s->r.request_id = request_id;
         s->r.pending    = true;
+        s->r.is_readv   = false;
+        dispatch_resume(s->read_src);
+        return true;
+    }
+
+    bool async::submit_readv(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
+        fd_sources* s = get_or_create(fd);
+        if (!s || s->r.pending) return false;
+        s->r.iov        = dynarray<net::socket::iobuf>(bufs.size());
+        for (size_t i = 0; i < bufs.size(); ++i) s->r.iov[i] = bufs[i];
+        s->r.request_id = request_id;
+        s->r.pending    = true;
+        s->r.is_readv   = true;
         dispatch_resume(s->read_src);
         return true;
     }

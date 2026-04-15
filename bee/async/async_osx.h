@@ -25,6 +25,7 @@ namespace bee::async {
         ~async();
 
         bool submit_read(net::fd_t fd, void* buffer, size_t len, uint64_t request_id);
+        bool submit_readv(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id);
         bool submit_write(net::fd_t fd, const void* buffer, size_t len, uint64_t request_id);
         bool submit_writev(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id);
         bool submit_accept(net::fd_t listen_fd, uint64_t request_id);
@@ -54,6 +55,8 @@ namespace bee::async {
                 size_t   len        = 0;
                 uint64_t request_id = 0;
                 bool     pending    = false;
+                bool     is_readv   = false;
+                dynarray<net::socket::iobuf> iov;
             } r;
             struct write_op {
                 const void* buffer     = nullptr;
