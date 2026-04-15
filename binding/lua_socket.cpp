@@ -528,15 +528,15 @@ namespace bee::lua_socket {
             return 1;
         }
         case endpoint_ctor::hostname: {
-            auto name = lua::checkstrview(L, 2);
-            auto port = lua::checkinteger<uint16_t>(L, 3);
+            auto name    = lua::checkstrview(L, 2);
+            auto port    = lua::checkinteger<uint16_t>(L, 3);
             auto af_hint = net::family::unknown;
             if (!lua_isnoneornil(L, 4)) {
-                static const char* const af_opts[] = { "inet", "inet6", NULL };
+                static const char* const af_opts[]   = { "inet", "inet6", NULL };
                 static const net::family af_values[] = { net::family::inet, net::family::inet6 };
-                af_hint = af_values[luaL_checkoption(L, 4, NULL, af_opts)];
+                af_hint                              = af_values[luaL_checkoption(L, 4, NULL, af_opts)];
             }
-            auto& ep  = lua::newudata<net::endpoint>(L);
+            auto& ep = lua::newudata<net::endpoint>(L);
             if (!net::endpoint::ctor_hostname(ep, name, port, af_hint)) {
                 return 0;
             }
@@ -607,6 +607,22 @@ namespace bee::lua_socket {
         luaL_newlibtable(L, lib);
         luaL_setfuncs(L, lib, 0);
         return 1;
+    }
+
+    net::fd_t& newfd(lua_State* L, net::fd_t fd) {
+        return lua::newudata<net::fd_t>(L, fd);
+    }
+
+    net::fd_t& checkfd(lua_State* L, int idx) {
+        return lua::checkudata<net::fd_t>(L, idx);
+    }
+
+    net::endpoint& new_endpoint(lua_State* L) {
+        return lua::newudata<net::endpoint>(L);
+    }
+
+    net::endpoint& to_endpoint(lua_State* L, int idx, net::endpoint& ep) {
+        return fd::to_endpoint(L, idx, ep);
     }
 }
 

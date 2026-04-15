@@ -355,6 +355,46 @@ namespace bee::net::socket {
         return recv_status::success;
     }
 
+    recv_status recvv(fd_t s, int& rc, span<iobuf> bufs) noexcept {
+        if (bufs.empty()) {
+            rc = 0;
+            return recv_status::success;
+        }
+        if (bufs.size() == 1) {
+#if defined(_WIN32)
+            return recv(s, rc, bufs[0].buf, (int)bufs[0].len);
+#else
+            return recv(s, rc, (char*)bufs[0].iov_base, (int)bufs[0].iov_len);
+#endif
+        }
+#if defined(_WIN32)
+        static_assert(sizeof(iobuf) == sizeof(WSABUF));
+        DWORD received = 0;
+        DWORD flags    = 0;
+        const int ok   = ::WSARecv((SOCKET)s, reinterpret_cast<WSABUF*>(bufs.data()), (DWORD)bufs.size(), &received, &flags, NULL, NULL);
+        if (ok == SOCKET_ERROR) {
+            const int err = ::WSAGetLastError();
+            if (err == WSAEINPROGRESS || err == WSAEWOULDBLOCK) return recv_status::wait;
+            return recv_status::failed;
+        }
+        rc = (int)received;
+        return rc == 0 ? recv_status::close : recv_status::success;
+#else
+        static_assert(sizeof(iobuf) == sizeof(struct iovec));
+        struct msghdr msg = {};
+        msg.msg_iov       = reinterpret_cast<struct iovec*>(bufs.data());
+        msg.msg_iovlen    = (int)bufs.size();
+        rc                = (int)::recvmsg(s, &msg, 0);
+        if (rc == 0) {
+            return recv_status::close;
+        }
+        if (rc < 0) {
+            return wait_finish() ? recv_status::wait : recv_status::failed;
+        }
+        return recv_status::success;
+#endif
+    }
+
     status send(fd_t s, int& rc, const char* buf, int len) noexcept {
         int flags = 0;
 #ifdef MSG_NOSIGNAL

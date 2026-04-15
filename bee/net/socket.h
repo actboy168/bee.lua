@@ -84,6 +84,7 @@ namespace bee::net::socket {
     status connect(fd_t s, const endpoint& ep) noexcept;
     status accept(fd_t s, fd_t& newfd, fd_flags flags = fd_flags::nonblock) noexcept;
     recv_status recv(fd_t s, int& rc, char* buf, int len) noexcept;
+    recv_status recvv(fd_t s, int& rc, span<iobuf> bufs) noexcept;
     status send(fd_t s, int& rc, const char* buf, int len) noexcept;
     status sendv(fd_t s, int& rc, span<const iobuf> bufs) noexcept;
     status recvfrom(fd_t s, int& rc, endpoint& ep, char* buf, int len) noexcept;

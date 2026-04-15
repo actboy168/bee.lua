@@ -175,8 +175,13 @@ lm:source_set "source_bee" {
             need {
                 "osx",
                 "posix",
-            }
-        }
+            },
+            lm.async_backend == "kqueue" and {
+                "!bee/async/async_osx.cpp",
+                "bee/async/async_bsd.cpp"
+            },
+        },
+        defines = lm.async_backend == "kqueue" and "BEE_ASYNC_BACKEND_KQUEUE",
     },
     ios = {
         sources = {
@@ -193,8 +198,12 @@ lm:source_set "source_bee" {
             need {
                 "linux",
                 "posix",
-            }
-        }
+            },
+            lm.async_backend == "epoll" and {
+                "!bee/async/async_uring_linux.cpp",
+            },
+        },
+        defines = lm.async_backend == "epoll" and "BEE_ASYNC_BACKEND_EPOLL",
     },
     android = {
         sources = need {
