@@ -40,7 +40,7 @@ local function wait_completion(as, timeout)
     local start = time.monotonic()
     while time.monotonic() - start < timeout do
         for op, token, st, data, errcode in as:wait(100) do
-            return token, st, data, errcode
+            return op, token, st, data, errcode
         end
     end
     lt.failure("wait_completion timeout")
