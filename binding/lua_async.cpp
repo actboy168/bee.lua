@@ -535,8 +535,10 @@ namespace bee::lua_async {
             return lua::return_net_error(L, "associate_file");
         auto fm  = writable ? file_handle::mode::write : file_handle::mode::read;
         FILE* fp = ov_fh.to_file(fm);
-        if (!fp)
+        if (!fp) {
+            ov_fh.close();
             return lua::return_net_error(L, "associate_file");
+        }
         luaL_Stream* stream = lua::tofile(L, 2);
         fclose(stream->f);
         stream->f = fp;
