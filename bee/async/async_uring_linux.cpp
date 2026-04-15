@@ -52,15 +52,16 @@ enum {
 
 // Opcodes we use
 enum {
-    BEE__IORING_OP_ACCEPT  = 13,
-    BEE__IORING_OP_CONNECT = 16,
-    BEE__IORING_OP_READ    = 22,
-    BEE__IORING_OP_WRITE   = 23,
-    BEE__IORING_OP_SEND    = 26,
-    BEE__IORING_OP_RECV    = 27,
+    BEE__IORING_OP_ACCEPT   = 13,
+    BEE__IORING_OP_CONNECT  = 16,
+    BEE__IORING_OP_READ     = 22,
+    BEE__IORING_OP_WRITE    = 23,
+    BEE__IORING_OP_SEND     = 26,
+    BEE__IORING_OP_RECV     = 27,
     BEE__IORING_OP_SENDMSG  = 9,
     BEE__IORING_OP_RECVMSG  = 10,
     BEE__IORING_OP_POLL_ADD = 6,
+    BEE__IORING_OP_TIMEOUT  = 11,  // kernel 5.4+
 };
 
 struct bee__io_sqring_offsets {
@@ -217,6 +218,10 @@ struct io_uring {
     uint32_t* cqtail       = nullptr;  // kernel publishes here
     uint32_t cqmask        = 0;
     bee__io_uring_cqe* cqes = nullptr;
+
+    // Runtime capability flag: IORING_ENTER_EXT_ARG is supported (kernel 5.11+).
+    // Probed on first use; false means we fall back to IORING_OP_TIMEOUT SQE.
+    bool ext_arg_supported = true;
 
     // Pending writev contexts keyed by request_id, freed when CQE arrives.
     std::unordered_map<uint64_t, std::unique_ptr<writev_ctx>> writev_pending;
@@ -378,6 +383,11 @@ namespace bee::async {
 
         while (head != tail && count < static_cast<uint32_t>(completions.size())) {
             const bee__io_uring_cqe& cqe = ring->cqes[head & mask];
+            // Skip internal timeout CQEs — they are never surfaced to the caller.
+            if (unpack_op(cqe.user_data) == async_op::timeout) {
+                head++;
+                continue;
+            }
             io_completion& c            = completions[count++];
             c.op                        = unpack_op(cqe.user_data);
             c.request_id                = unpack_id(cqe.user_data);
@@ -592,18 +602,47 @@ namespace bee::async {
             }
             return harvest_cqes(completions);
         } else if (timeout > 0) {
-            // Use IORING_ENTER_EXT_ARG (kernel 5.11+) to pass the timeout inline.
-            bee__kernel_timespec ts;
-            ts.tv_sec  = timeout / 1000;
-            ts.tv_nsec = static_cast<int64_t>(timeout % 1000) * 1000000L;
-            bee__io_uring_getevents_arg arg;
-            memset(&arg, 0, sizeof(arg));
-            arg.ts = reinterpret_cast<uintptr_t>(&ts);
-            int ret;
-            do {
-                ret = sys_io_uring_enter(m_ring->ringfd, pending, 1, BEE__IORING_ENTER_GETEVENTS | BEE__IORING_ENTER_EXT_ARG, &arg);
-            } while (ret == -1 && errno == EINTR);
-            // errno == ETIME: timeout expired with 0 completions; harvest anyway.
+            if (m_ring->ext_arg_supported) {
+                // Fast path (kernel 5.11+): pass timeout directly to io_uring_enter.
+                bee__kernel_timespec ts;
+                ts.tv_sec  = timeout / 1000;
+                ts.tv_nsec = static_cast<int64_t>(timeout % 1000) * 1000000L;
+                bee__io_uring_getevents_arg arg;
+                memset(&arg, 0, sizeof(arg));
+                arg.ts = reinterpret_cast<uintptr_t>(&ts);
+                int ret;
+                do {
+                    ret = sys_io_uring_enter(m_ring->ringfd, pending, 1, BEE__IORING_ENTER_GETEVENTS | BEE__IORING_ENTER_EXT_ARG, &arg);
+                } while (ret == -1 && errno == EINTR);
+                if (ret == -1 && errno == EINVAL) {
+                    // Kernel does not support EXT_ARG; disable and fall through to TIMEOUT SQE path.
+                    m_ring->ext_arg_supported = false;
+                } else {
+                    // errno == ETIME: timeout expired with 0 completions; harvest anyway.
+                    return harvest_cqes(completions);
+                }
+            }
+            if (!m_ring->ext_arg_supported) {
+                // Fallback for kernel 5.4-5.10: submit a TIMEOUT SQE alongside any
+                // pending SQEs, then block until either an IO CQE or the timeout fires.
+                bee__io_uring_sqe* sqe = uring_get_sqe(m_ring);
+                if (sqe) {
+                    bee__kernel_timespec ts;
+                    ts.tv_sec  = timeout / 1000;
+                    ts.tv_nsec = static_cast<int64_t>(timeout % 1000) * 1000000L;
+                    memset(sqe, 0, sizeof(*sqe));
+                    sqe->opcode    = BEE__IORING_OP_TIMEOUT;
+                    sqe->addr      = reinterpret_cast<uintptr_t>(&ts);
+                    sqe->len       = 1;  // min_complete: fire after 1 other CQE or on expiry
+                    sqe->user_data = pack_user_data(async_op::timeout, 0);
+                    uring_submit(m_ring);
+                    pending = uring_pending(m_ring);
+                }
+                int ret;
+                do {
+                    ret = sys_io_uring_enter(m_ring->ringfd, pending, 1, BEE__IORING_ENTER_GETEVENTS, nullptr);
+                } while (ret == -1 && errno == EINTR);
+            }
         } else {
             // Block until at least one CQE is available, submitting pending SQEs atomically.
             int ret;

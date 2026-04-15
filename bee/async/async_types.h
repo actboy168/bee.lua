@@ -22,6 +22,7 @@ namespace bee::async {
         file_read,
         file_write,
         fd_poll,
+        timeout,  // internal: IORING_OP_TIMEOUT fallback, never surfaced to caller
     };
 
     struct io_completion {
