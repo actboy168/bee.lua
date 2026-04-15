@@ -28,11 +28,13 @@ local function SimpleClient(as, protocol, ...)
     return fd
 end
 
-local function wait_accept(sfd)
+local function wait_accept(as, sfd)
     local s <close> = select.create()
     s:event_add(sfd, select.SELECT_READ)
     s:wait()
-    return assert(sfd:accept())
+    local newfd = assert(sfd:accept())
+    assert(as:associate(newfd))
+    return newfd
 end
 
 local function wait_completion(as, timeout)
@@ -98,7 +100,7 @@ function m.test_tcp_write_read()
     local as <close> = assert(async.create(64))
     local sfd <close> = SimpleServer(as, "tcp", "127.0.0.1", 0)
     local cfd <close> = SimpleClient(as, "tcp", sfd:info "socket")
-    local newfd = wait_accept(sfd)
+    local newfd = wait_accept(as, sfd)
     local wb = assert(async.writebuf(64 * 1024))
     wb:write("hello")
     lt.assertEquals(as:submit_write(wb, cfd, "write_token"), true)
@@ -239,7 +241,7 @@ function m.test_read_closed()
     local as <close> = assert(async.create(64))
     local sfd <close> = SimpleServer(as, "tcp", "127.0.0.1", 0)
     local cfd <close> = SimpleClient(as, "tcp", sfd:info "socket")
-    local newfd = wait_accept(sfd)
+    local newfd = wait_accept(as, sfd)
 
     -- 关闭客户端
     cfd:close()
@@ -266,7 +268,7 @@ function m.test_multiple_requests()
     local servers = {}
     for i = 1, 3 do
         clients[i] = SimpleClient(as, "tcp", "127.0.0.1", port)
-        servers[i] = wait_accept(sfd)
+        servers[i] = wait_accept(as, sfd)
     end
 
     -- 提交多个写操作，token 为数字
@@ -318,7 +320,7 @@ function m.test_stream_read()
     local as <close> = assert(async.create(64))
     local sfd <close> = SimpleServer(as, "tcp", "127.0.0.1", 0)
     local cfd <close> = SimpleClient(as, "tcp", sfd:info "socket")
-    local newfd = wait_accept(sfd)
+    local newfd = wait_accept(as, sfd)
     local rb = assert(async.readbuf(256))
 
     -- 发送两段数据
@@ -350,7 +352,7 @@ function m.test_readline()
     local as <close> = assert(async.create(64))
     local sfd <close> = SimpleServer(as, "tcp", "127.0.0.1", 0)
     local cfd <close> = SimpleClient(as, "tcp", sfd:info "socket")
-    local newfd = wait_accept(sfd)
+    local newfd = wait_accept(as, sfd)
     local rb = assert(async.readbuf(256))
 
     local function recv()
@@ -427,7 +429,7 @@ function m.test_writebuf()
     local as <close> = assert(async.create(64))
     local sfd <close> = SimpleServer(as, "tcp", "127.0.0.1", 0)
     local cfd <close> = SimpleClient(as, "tcp", sfd:info "socket")
-    local newfd = wait_accept(sfd)
+    local newfd = wait_accept(as, sfd)
 
     -- 多段写入同一个 writebuf，单次 submit_write 发完，token 为 table
     local wb = assert(async.writebuf(64 * 1024))
@@ -470,10 +472,9 @@ function m.test_submit_poll()
     local as <close> = assert(async.create(64))
     local sfd <close> = SimpleServer(as, "tcp", "127.0.0.1", 0)
     local cfd <close> = SimpleClient(as, "tcp", sfd:info "socket")
-    local newfd = wait_accept(sfd)
+    local newfd = wait_accept(as, sfd)
 
     -- 对服务端 fd 提交 poll 请求
-    assert(as:associate(newfd))
     local poll_tok = "poll"
     lt.assertEquals(as:submit_poll(newfd, poll_tok), true)
 
@@ -586,8 +587,7 @@ function m.test_readv_wraparound()
     local as <close> = assert(async.create(64))
     local sfd <close> = SimpleServer(as, "tcp", "127.0.0.1", 0)
     local cfd <close> = SimpleClient(as, "tcp", sfd:info "socket")
-    local newfd = wait_accept(sfd)
-    assert(as:associate(newfd))
+    local newfd = wait_accept(as, sfd)
 
     -- cap=16，先收 14 字节（cap-2）使 tail=14
     -- 先提交读再发送，确保不与后续 send 合并到同一个 TCP segment。
@@ -639,8 +639,7 @@ function m.test_writev_batch()
     local as <close> = assert(async.create(64))
     local sfd <close> = SimpleServer(as, "tcp", "127.0.0.1", 0)
     local cfd <close> = SimpleClient(as, "tcp", sfd:info "socket")
-    local newfd = wait_accept(sfd)
-    assert(as:associate(newfd))
+    local newfd = wait_accept(as, sfd)
 
     -- 多个小 entry 写入同一个 writebuf，一次提交应合并为单次 OP_WRITEV completion
     local wb = assert(async.writebuf(64 * 1024))
