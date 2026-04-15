@@ -252,6 +252,7 @@ namespace bee::async {
         ext->request_id  = request_id;
         ext->type        = overlapped_ext::op_accept;
         ext->accept_sock = static_cast<uintptr_t>(accept_sock);
+        ext->listen_sock = static_cast<uintptr_t>(static_cast<SOCKET>(listen_fd));
 
         if (!m_acceptex) {
             closesocket(accept_sock);
@@ -275,7 +276,7 @@ namespace bee::async {
         memset(ext->overlapped, 0, sizeof(ext->overlapped));
         ext->request_id  = request_id;
         ext->type        = overlapped_ext::op_connect;
-        ext->accept_sock = 0;
+        ext->accept_sock = static_cast<uintptr_t>(static_cast<SOCKET>(fd));  // reuse accept_sock to store connect fd
 
         // ConnectEx requires a pre-bound socket.
         // Bind to the appropriate wildcard address matching the endpoint family.
@@ -405,6 +406,23 @@ namespace bee::async {
 
         if (ext->type == async::overlapped_ext::op_accept) {
             if (err == 0) {
+                SOCKET as = static_cast<SOCKET>(ext->accept_sock);
+                SOCKET ls = static_cast<SOCKET>(ext->listen_sock);
+                // Inherit listen socket properties so getsockname/getpeername/shutdown work.
+                if (setsockopt(as, SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT, reinterpret_cast<const char*>(&ls), sizeof(ls)) != 0) {
+                    closesocket(as);
+                    c.status     = async_status::error;
+                    c.error_code = static_cast<int>(WSAGetLastError());
+                    return c;
+                }
+                // Set non-blocking to match bee.socket.accept behaviour.
+                unsigned long nonblock = 1;
+                if (ioctlsocket(as, FIONBIO, &nonblock) != 0) {
+                    closesocket(as);
+                    c.status     = async_status::error;
+                    c.error_code = static_cast<int>(WSAGetLastError());
+                    return c;
+                }
                 c.status            = async_status::success;
                 c.bytes_transferred = ext->accept_sock;  // new fd
             } else {
@@ -412,11 +430,23 @@ namespace bee::async {
                 c.status     = async_status::error;
                 c.error_code = static_cast<int>(err);
             }
+        } else if (ext->type == async::overlapped_ext::op_connect) {
+            if (err == 0) {
+                // Update the socket context so getsockname/shutdown/etc. work correctly.
+                if (setsockopt(static_cast<SOCKET>(ext->accept_sock), SOL_SOCKET, SO_UPDATE_CONNECT_CONTEXT, nullptr, 0) != 0) {
+                    c.status     = async_status::error;
+                    c.error_code = static_cast<int>(WSAGetLastError());
+                    return c;
+                }
+                c.status = async_status::success;
+            } else {
+                c.status     = async_status::error;
+                c.error_code = static_cast<int>(err);
+            }
         } else if (err != 0) {
             c.status     = async_status::error;
             c.error_code = static_cast<int>(err);
         } else if (entry.dwNumberOfBytesTransferred == 0 &&
-                   ext->type != async::overlapped_ext::op_connect &&
                    ext->type != async::overlapped_ext::op_file_read &&
                    ext->type != async::overlapped_ext::op_file_write &&
                    ext->type != async::overlapped_ext::op_poll) {

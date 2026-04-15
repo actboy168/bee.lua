@@ -50,6 +50,7 @@ namespace bee::async {
             unsigned char overlapped[32];  // sizeof(OVERLAPPED) == 32 on x64 (static_assert below)
             uint64_t request_id;
             uintptr_t accept_sock;  // used only for op_accept
+            uintptr_t listen_sock;  // used only for op_accept (for SO_UPDATE_ACCEPT_CONTEXT)
             enum op_type : uint8_t {
                 op_read,
                 op_readv,
