@@ -484,7 +484,8 @@ namespace bee::async {
         return true;
     }
 
-    bool async_uring::submit_write(net::fd_t fd, const void* buffer, size_t len, uint64_t request_id) {        if (!m_ring) return false;
+    bool async_uring::submit_write(net::fd_t fd, const void* buffer, size_t len, uint64_t request_id) {
+        if (!m_ring) return false;
         bee__io_uring_sqe* sqe = uring_get_sqe(m_ring);
         if (!sqe) return false;
         sqe->opcode    = BEE__IORING_OP_SEND;
