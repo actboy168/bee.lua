@@ -3,6 +3,7 @@
 #include <WinSock2.h>
 // clang-format on
 #include <WS2tcpip.h>
+#include <MSWSock.h>
 #include <Windows.h>
 #include <bee/async/async.h>
 #include <bee/async/async_win.h>
@@ -25,15 +26,6 @@ typedef BOOL(PASCAL* LPFN_CONNECTEX)(SOCKET, const sockaddr*, int, PVOID, DWORD,
 static const GUID k_WSAID_ACCEPTEX  = { 0xb5367df1, 0xcbac, 0x11cf, { 0x95, 0xca, 0x00, 0x80, 0x5f, 0x48, 0xa1, 0x92 } };
 static const GUID k_WSAID_CONNECTEX = { 0x25a207b9, 0xddf3, 0x4660, { 0x8e, 0xe9, 0x76, 0xe5, 0x8c, 0x74, 0x06, 0x3e } };
 
-// SO_UPDATE_ACCEPT_CONTEXT and SO_UPDATE_CONNECT_CONTEXT are normally defined
-// in <mstcpip.h>, but we avoid including it (and its transitive dependency on
-// <mswsock.h>) to keep compilation lean.
-#ifndef SO_UPDATE_ACCEPT_CONTEXT
-#    define SO_UPDATE_ACCEPT_CONTEXT 0x700A
-#endif
-#ifndef SO_UPDATE_CONNECT_CONTEXT
-#    define SO_UPDATE_CONNECT_CONTEXT 0x7010
-#endif
 
 namespace bee::async {
 
@@ -54,9 +46,9 @@ namespace bee::async {
         SOCKET tmp = WSASocketW(AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_OVERLAPPED);
         if (tmp != INVALID_SOCKET) {
             DWORD bytes         = 0;
-            GUID guid_connectex = k_WSAID_CONNECTEX;
+GUID guid_connectex = WSAID_CONNECTEX;
             WSAIoctl(tmp, SIO_GET_EXTENSION_FUNCTION_POINTER, &guid_connectex, sizeof(guid_connectex), &m_connectex, sizeof(m_connectex), &bytes, nullptr, nullptr);
-            GUID guid_acceptex = k_WSAID_ACCEPTEX;
+GUID guid_acceptex = WSAID_ACCEPTEX;
             WSAIoctl(tmp, SIO_GET_EXTENSION_FUNCTION_POINTER, &guid_acceptex, sizeof(guid_acceptex), &m_acceptex, sizeof(m_acceptex), &bytes, nullptr, nullptr);
             closesocket(tmp);
         }
