@@ -25,6 +25,16 @@ typedef BOOL(PASCAL* LPFN_CONNECTEX)(SOCKET, const sockaddr*, int, PVOID, DWORD,
 static const GUID k_WSAID_ACCEPTEX  = { 0xb5367df1, 0xcbac, 0x11cf, { 0x95, 0xca, 0x00, 0x80, 0x5f, 0x48, 0xa1, 0x92 } };
 static const GUID k_WSAID_CONNECTEX = { 0x25a207b9, 0xddf3, 0x4660, { 0x8e, 0xe9, 0x76, 0xe5, 0x8c, 0x74, 0x06, 0x3e } };
 
+// SO_UPDATE_ACCEPT_CONTEXT and SO_UPDATE_CONNECT_CONTEXT are normally defined
+// in <mstcpip.h>, but we avoid including it (and its transitive dependency on
+// <mswsock.h>) to keep compilation lean.
+#ifndef SO_UPDATE_ACCEPT_CONTEXT
+#    define SO_UPDATE_ACCEPT_CONTEXT 0x700A
+#endif
+#ifndef SO_UPDATE_CONNECT_CONTEXT
+#    define SO_UPDATE_CONNECT_CONTEXT 0x7010
+#endif
+
 namespace bee::async {
 
     // sizeof(OVERLAPPED) is 32 on both x86 and x64.
