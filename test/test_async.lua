@@ -583,7 +583,7 @@ end
 -- 此时 write_ptr 指向末尾偏移 (cap-2)，write_len=2，free_cap=cap；
 -- submit_read 会构造两段 iobuf：第一段 2 字节到缓冲区末尾，
 -- 第二段 (cap-2) 字节回绕到缓冲区头部，覆盖全部空闲空间。
-function m.test_readv_wraparound()
+function m.test_read_wraparound()
     local as <close> = assert(async.create(64))
     local sfd <close> = SimpleServer(as, "tcp", "127.0.0.1", 0)
     local cfd <close> = SimpleClient(as, "tcp", sfd:info "socket")
