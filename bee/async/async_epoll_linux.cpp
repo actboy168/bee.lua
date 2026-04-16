@@ -76,8 +76,7 @@ namespace bee::async {
         op->request_id = request_id;
         op->fd         = fd;
         op->type       = pending_op::read;
-        op->wv         = dynarray<net::socket::iobuf>(bufs.size());
-        for (size_t i = 0; i < bufs.size(); ++i) op->wv[i] = bufs[i];
+        op->wv         = dynarray<net::socket::iobuf>(bufs.data(), bufs.size());
 
         state.read_op = op;
         if (!fd_arm(fd, state)) {
@@ -97,8 +96,7 @@ namespace bee::async {
         op->request_id = request_id;
         op->fd         = fd;
         op->type       = pending_op::write;
-        op->wv         = dynarray<net::socket::iobuf>(bufs.size());
-        for (size_t i = 0; i < bufs.size(); ++i) op->wv[i] = bufs[i];
+        op->wv         = dynarray<net::socket::iobuf>(bufs.data(), bufs.size());
 
         state.write_op = op;
         if (!fd_arm(fd, state)) {

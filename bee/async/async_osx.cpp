@@ -143,8 +143,7 @@ namespace bee::async {
     bool async::submit_read(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
         fd_sources* s = get_or_create(fd);
         if (!s || s->r.pending) return false;
-        s->r.iov        = dynarray<net::socket::iobuf>(bufs.size());
-        for (size_t i = 0; i < bufs.size(); ++i) s->r.iov[i] = bufs[i];
+        s->r.iov        = dynarray<net::socket::iobuf>(bufs.data(), bufs.size());
         s->r.request_id = request_id;
         s->r.pending    = true;
         dispatch_resume(s->read_src);
@@ -154,8 +153,7 @@ namespace bee::async {
     bool async::submit_write(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
         fd_sources* s = get_or_create(fd);
         if (!s || s->w.pending) return false;
-        s->w.iov        = dynarray<net::socket::iobuf>(bufs.size());
-        for (size_t i = 0; i < bufs.size(); ++i) s->w.iov[i] = bufs[i];
+        s->w.iov        = dynarray<net::socket::iobuf>(bufs.data(), bufs.size());
         s->w.request_id = request_id;
         s->w.pending    = true;
         dispatch_resume(s->write_src);

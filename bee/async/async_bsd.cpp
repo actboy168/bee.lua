@@ -33,8 +33,7 @@ namespace bee::async {
         op->request_id = request_id;
         op->fd         = fd;
         op->type       = pending_op::read;
-        op->wv         = dynarray<net::socket::iobuf>(bufs.size());
-        for (size_t i = 0; i < bufs.size(); ++i) op->wv[i] = bufs[i];
+        op->wv         = dynarray<net::socket::iobuf>(bufs.data(), bufs.size());
         m_pending_ops.insert(op);
         if (!kqueue_register(fd, EVFILT_READ, op)) {
             m_pending_ops.erase(op);
@@ -49,8 +48,7 @@ namespace bee::async {
         op->request_id = request_id;
         op->fd         = fd;
         op->type       = pending_op::write;
-        op->wv         = dynarray<net::socket::iobuf>(bufs.size());
-        for (size_t i = 0; i < bufs.size(); ++i) op->wv[i] = bufs[i];
+        op->wv         = dynarray<net::socket::iobuf>(bufs.data(), bufs.size());
         m_pending_ops.insert(op);
         if (!kqueue_register(fd, EVFILT_WRITE, op)) {
             m_pending_ops.erase(op);
