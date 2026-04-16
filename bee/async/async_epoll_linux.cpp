@@ -68,35 +68,14 @@ namespace bee::async {
         }
     }
 
-    bool async_epoll::submit_read(net::fd_t fd, void* buffer, size_t len, uint64_t request_id) {
-        auto& state = m_fd_states[fd];
-        if (state.read_op) return false;  // 同一 fd 读方向最多一个 in-flight op
-
-        auto* op       = new pending_op();
-        op->request_id = request_id;
-        op->fd         = fd;
-        op->type       = pending_op::read;
-        op->r.buffer   = buffer;
-        op->r.len      = len;
-
-        state.read_op = op;
-        if (!fd_arm(fd, state)) {
-            state.read_op = nullptr;
-            if (!state.write_op) m_fd_states.erase(fd);
-            delete op;
-            return false;
-        }
-        return true;
-    }
-
-    bool async_epoll::submit_readv(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
+    bool async_epoll::submit_read(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
         auto& state = m_fd_states[fd];
         if (state.read_op) return false;
 
         auto* op       = new pending_op();
         op->request_id = request_id;
         op->fd         = fd;
-        op->type       = pending_op::readv;
+        op->type       = pending_op::read;
         op->wv         = dynarray<net::socket::iobuf>(bufs.size());
         for (size_t i = 0; i < bufs.size(); ++i) op->wv[i] = bufs[i];
 
@@ -110,7 +89,7 @@ namespace bee::async {
         return true;
     }
 
-    bool async_epoll::submit_write(net::fd_t fd, const void* buffer, size_t len, uint64_t request_id) {
+    bool async_epoll::submit_write(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
         auto& state = m_fd_states[fd];
         if (state.write_op) return false;  // 同一 fd 写方向最多一个 in-flight op
 
@@ -118,27 +97,6 @@ namespace bee::async {
         op->request_id = request_id;
         op->fd         = fd;
         op->type       = pending_op::write;
-        op->w.buffer   = buffer;
-        op->w.len      = len;
-
-        state.write_op = op;
-        if (!fd_arm(fd, state)) {
-            state.write_op = nullptr;
-            if (!state.read_op) m_fd_states.erase(fd);
-            delete op;
-            return false;
-        }
-        return true;
-    }
-
-    bool async_epoll::submit_writev(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
-        auto& state = m_fd_states[fd];
-        if (state.write_op) return false;  // 同一 fd 写方向最多一个 in-flight op
-
-        auto* op       = new pending_op();
-        op->request_id = request_id;
-        op->fd         = fd;
-        op->type       = pending_op::writev;
         op->wv         = dynarray<net::socket::iobuf>(bufs.size());
         for (size_t i = 0; i < bufs.size(); ++i) op->wv[i] = bufs[i];
 
@@ -279,29 +237,6 @@ namespace bee::async {
         case async_epoll::pending_op::read: {
             out.op  = async_op::read;
             int rc  = 0;
-            auto rs = net::socket::recv(fd, rc, static_cast<char*>(op->r.buffer), static_cast<int>(op->r.len));
-            switch (rs) {
-            case net::socket::recv_status::success:
-                out.status            = async_status::success;
-                out.bytes_transferred = static_cast<size_t>(rc);
-                break;
-            case net::socket::recv_status::close:
-                out.status = async_status::close;
-                break;
-            case net::socket::recv_status::failed:
-                out.status     = async_status::error;
-                out.error_code = errno;
-                break;
-            case net::socket::recv_status::wait:
-                // Spurious EPOLLIN: no data yet, keep op, do not emit completion.
-                produced = false;
-                break;
-            }
-            break;
-        }
-        case async_epoll::pending_op::readv: {
-            out.op  = async_op::readv;
-            int rc  = 0;
             auto rs = net::socket::recvv(fd, rc, span<net::socket::iobuf>(op->wv.data(), op->wv.size()));
             switch (rs) {
             case net::socket::recv_status::success:
@@ -392,25 +327,6 @@ namespace bee::async {
         switch (op->type) {
         case async_epoll::pending_op::write: {
             out.op  = async_op::write;
-            int rc  = 0;
-            auto ss = net::socket::send(fd, rc, static_cast<const char*>(op->w.buffer), static_cast<int>(op->w.len));
-            switch (ss) {
-            case net::socket::status::success:
-                out.status            = async_status::success;
-                out.bytes_transferred = static_cast<size_t>(rc);
-                break;
-            case net::socket::status::wait:
-                produced = false;
-                break;
-            case net::socket::status::failed:
-                out.status     = async_status::error;
-                out.error_code = errno;
-                break;
-            }
-            break;
-        }
-        case async_epoll::pending_op::writev: {
-            out.op  = async_op::writev;
             int rc  = 0;
             auto ss = net::socket::sendv(fd, rc, span<const net::socket::iobuf>(op->wv.data(), op->wv.size()));
             switch (ss) {

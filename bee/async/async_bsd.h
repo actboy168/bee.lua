@@ -23,10 +23,8 @@ namespace bee::async {
         async();
         ~async();
 
-        bool submit_read(net::fd_t fd, void* buffer, size_t len, uint64_t request_id);
-        bool submit_readv(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id);
-        bool submit_write(net::fd_t fd, const void* buffer, size_t len, uint64_t request_id);
-        bool submit_writev(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id);
+        bool submit_read(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id);
+        bool submit_write(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id);
         bool submit_accept(net::fd_t listen_fd, uint64_t request_id);
         bool submit_connect(net::fd_t fd, const net::endpoint& ep, uint64_t request_id);
         bool submit_file_read(file_handle::value_type fd, void* buffer, size_t len, int64_t offset, uint64_t request_id);
@@ -42,24 +40,12 @@ namespace bee::async {
             net::fd_t fd        = net::retired_fd;
             enum type_t : uint8_t {
                 read,
-                readv,
                 write,
-                writev,
                 accept,
                 connect,
                 fd_poll,
             } type = read;
-            union {
-                struct {
-                    void* buffer;
-                    size_t len;
-                } r;
-                struct {
-                    const void* buffer;
-                    size_t len;
-                } w;
-            };
-            dynarray<net::socket::iobuf> wv;  // used when type == writev or readv
+            dynarray<net::socket::iobuf> wv;  // used when type == write or read
         };
 
         static constexpr int kMaxEvents = 64;

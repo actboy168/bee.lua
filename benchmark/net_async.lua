@@ -6,8 +6,7 @@ local asfd = async.create(512)
 
 local SUCCESS <const> = async.SUCCESS
 local OP_READ <const> = async.OP_READ
-local OP_READV <const> = async.OP_READV
-local OP_WRITEV <const> = async.OP_WRITEV
+local OP_WRITE <const> = async.OP_WRITE
 local OP_ACCEPT <const> = async.OP_ACCEPT
 local OP_CONNECT <const> = async.OP_CONNECT
 
@@ -306,9 +305,9 @@ local net = {}
 
 function net.wait(timeout)
     for op, udata, st, data in asfd:wait(timeout) do
-        if op == OP_READ or op == OP_READV then
+    if op == OP_READ then
             stream_on_read(udata, st == SUCCESS and data or nil)
-        elseif op == OP_WRITEV then
+    elseif op == OP_WRITE then
             if st == SUCCESS then
                 stream_on_write(udata)
             else
