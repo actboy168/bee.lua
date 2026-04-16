@@ -635,7 +635,7 @@ function m.test_readv_wraparound()
 end
 
 --- 测试 write 批量提交：多个 entry 一次 submit_write，只产生一次 completion
-function m.test_writev_batch()
+function m.test_write_batch()
     local as <close> = assert(async.create(64))
     local sfd <close> = SimpleServer(as, "tcp", "127.0.0.1", 0)
     local cfd <close> = SimpleClient(as, "tcp", sfd:info "socket")
