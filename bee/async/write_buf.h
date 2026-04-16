@@ -35,8 +35,8 @@ namespace bee::async {
 
         bool empty() const noexcept { return q_.empty(); }
 
-        // Returns true when no write is outstanding and the queue is empty
-        // (i.e. nothing to do).
+        // Returns true when no new write should be submitted right now:
+        // either a write is already outstanding, or the queue is empty.
         bool idle() const noexcept { return in_flight_ || q_.empty(); }
 
         size_t get_buffered() const noexcept { return buffered_; }
