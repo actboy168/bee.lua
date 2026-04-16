@@ -111,9 +111,7 @@ GUID guid_acceptex = WSAID_ACCEPTEX;
         c.error_code                       = 0;
         static constexpr async_op op_map[] = {
             async_op::read,
-            async_op::readv,
             async_op::write,
-            async_op::writev,
             async_op::accept,
             async_op::connect,
             async_op::file_read,
@@ -133,38 +131,11 @@ GUID guid_acceptex = WSAID_ACCEPTEX;
         return c;
     }
 
-    bool async::submit_read(net::fd_t fd, void* buffer, size_t len, uint64_t request_id) {
+    bool async::submit_read(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
         auto ext = std::make_unique<overlapped_ext>();
         memset(ext->overlapped, 0, sizeof(ext->overlapped));
         ext->request_id  = request_id;
         ext->type        = overlapped_ext::op_read;
-        ext->accept_sock = 0;
-
-        WSABUF buf;
-        buf.buf = static_cast<char*>(buffer);
-        buf.len = static_cast<ULONG>(len);
-
-        DWORD flags = 0;
-        DWORD bytes = 0;
-        int rc      = WSARecv(static_cast<SOCKET>(fd), &buf, 1, &bytes, &flags, reinterpret_cast<LPWSAOVERLAPPED>(as_ov(ext.get())), nullptr);
-        if (rc == 0) {
-            // Synchronous completion — not posted to IOCP due to
-            // FILE_SKIP_COMPLETION_PORT_ON_SUCCESS.
-            m_sync_completions.push_back(make_sync_completion(std::move(ext), bytes));
-            return true;
-        }
-        if (WSAGetLastError() != WSA_IO_PENDING) {
-            return false;
-        }
-        ext.release();  // ownership transferred to IOCP
-        return true;
-    }
-
-    bool async::submit_readv(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
-        auto ext = std::make_unique<overlapped_ext>();
-        memset(ext->overlapped, 0, sizeof(ext->overlapped));
-        ext->request_id  = request_id;
-        ext->type        = overlapped_ext::op_readv;
         ext->accept_sock = 0;
 
         static_assert(sizeof(net::socket::iobuf) == sizeof(WSABUF));
@@ -182,37 +153,11 @@ GUID guid_acceptex = WSAID_ACCEPTEX;
         return true;
     }
 
-    bool async::submit_write(net::fd_t fd, const void* buffer, size_t len, uint64_t request_id) {
+    bool async::submit_write(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
         auto ext = std::make_unique<overlapped_ext>();
         memset(ext->overlapped, 0, sizeof(ext->overlapped));
         ext->request_id  = request_id;
         ext->type        = overlapped_ext::op_write;
-        ext->accept_sock = 0;
-
-        WSABUF buf;
-        buf.buf = const_cast<char*>(static_cast<const char*>(buffer));
-        buf.len = static_cast<ULONG>(len);
-
-        DWORD bytes = 0;
-        int rc      = WSASend(static_cast<SOCKET>(fd), &buf, 1, &bytes, 0, reinterpret_cast<LPWSAOVERLAPPED>(as_ov(ext.get())), nullptr);
-        if (rc == 0) {
-            // Synchronous completion — not posted to IOCP due to
-            // FILE_SKIP_COMPLETION_PORT_ON_SUCCESS.
-            m_sync_completions.push_back(make_sync_completion(std::move(ext), bytes));
-            return true;
-        }
-        if (WSAGetLastError() != WSA_IO_PENDING) {
-            return false;
-        }
-        ext.release();  // ownership transferred to IOCP
-        return true;
-    }
-
-    bool async::submit_writev(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
-        auto ext = std::make_unique<overlapped_ext>();
-        memset(ext->overlapped, 0, sizeof(ext->overlapped));
-        ext->request_id  = request_id;
-        ext->type        = overlapped_ext::op_writev;
         ext->accept_sock = 0;
 
         static_assert(sizeof(net::socket::iobuf) == sizeof(WSABUF));
@@ -381,9 +326,7 @@ GUID guid_acceptex = WSAID_ACCEPTEX;
         c.error_code                       = 0;
         static constexpr async_op op_map[] = {
             async_op::read,
-            async_op::readv,
             async_op::write,
-            async_op::writev,
             async_op::accept,
             async_op::connect,
             async_op::file_read,

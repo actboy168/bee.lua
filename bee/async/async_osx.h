@@ -24,10 +24,8 @@ namespace bee::async {
         async();
         ~async();
 
-        bool submit_read(net::fd_t fd, void* buffer, size_t len, uint64_t request_id);
-        bool submit_readv(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id);
-        bool submit_write(net::fd_t fd, const void* buffer, size_t len, uint64_t request_id);
-        bool submit_writev(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id);
+        bool submit_read(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id);
+        bool submit_write(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id);
         bool submit_accept(net::fd_t listen_fd, uint64_t request_id);
         bool submit_connect(net::fd_t fd, const net::endpoint& ep, uint64_t request_id);
         bool submit_file_read(file_handle::value_type fd, void* buffer, size_t len, int64_t offset, uint64_t request_id);
@@ -51,19 +49,13 @@ namespace bee::async {
             dispatch_source_t write_src = nullptr;
             // Current pending op for each direction (updated before resume)
             struct read_op {
-                void*    buffer     = nullptr;
-                size_t   len        = 0;
                 uint64_t request_id = 0;
                 bool     pending    = false;
-                bool     is_readv   = false;
                 dynarray<net::socket::iobuf> iov;
             } r;
             struct write_op {
-                const void* buffer     = nullptr;
-                size_t      len        = 0;
                 uint64_t    request_id = 0;
                 bool        pending    = false;
-                bool        is_writev  = false;
                 dynarray<net::socket::iobuf> iov;
             } w;
         };

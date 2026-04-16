@@ -29,10 +29,8 @@ namespace bee::async {
         async();
         ~async();
 
-        bool submit_read(net::fd_t fd, void* buffer, size_t len, uint64_t request_id);
-        bool submit_readv(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id);
-        bool submit_write(net::fd_t fd, const void* buffer, size_t len, uint64_t request_id);
-        bool submit_writev(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id);
+        bool submit_read(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id);
+        bool submit_write(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id);
         bool submit_accept(net::fd_t listen_fd, uint64_t request_id);
         bool submit_connect(net::fd_t fd, const net::endpoint& ep, uint64_t request_id);
         bool submit_file_read(file_handle::value_type fd, void* buffer, size_t len, int64_t offset, uint64_t request_id);
@@ -53,9 +51,7 @@ namespace bee::async {
             uintptr_t listen_sock;  // used only for op_accept (for SO_UPDATE_ACCEPT_CONTEXT)
             enum op_type : uint8_t {
                 op_read,
-                op_readv,
                 op_write,
-                op_writev,
                 op_accept,
                 op_connect,
                 op_file_read,

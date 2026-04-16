@@ -48,48 +48,25 @@ namespace bee::async {
             io_completion c;
             c.request_id = s->r.request_id;
             c.error_code = 0;
-            if (s->r.is_readv) {
-                c.op    = async_op::readv;
-                int rc  = 0;
-                auto rs = net::socket::recvv(fd, rc, span<net::socket::iobuf>(s->r.iov.data(), s->r.iov.size()));
-                switch (rs) {
-                case net::socket::recv_status::success:
-                    c.status            = async_status::success;
-                    c.bytes_transferred = static_cast<size_t>(rc);
-                    break;
-                case net::socket::recv_status::close:
-                    c.status            = async_status::close;
-                    c.bytes_transferred = 0;
-                    break;
-                case net::socket::recv_status::wait:
-                    return;  // spurious wakeup, stay resumed
-                case net::socket::recv_status::failed:
-                    c.status            = async_status::error;
-                    c.bytes_transferred = 0;
-                    c.error_code        = errno;
-                    break;
-                }
-            } else {
-                c.op    = async_op::read;
-                int rc  = 0;
-                auto rs = net::socket::recv(fd, rc, static_cast<char*>(s->r.buffer), static_cast<int>(s->r.len));
-                switch (rs) {
-                case net::socket::recv_status::success:
-                    c.status            = async_status::success;
-                    c.bytes_transferred = static_cast<size_t>(rc);
-                    break;
-                case net::socket::recv_status::close:
-                    c.status            = async_status::close;
-                    c.bytes_transferred = 0;
-                    break;
-                case net::socket::recv_status::wait:
-                    return;  // spurious wakeup, stay resumed
-                case net::socket::recv_status::failed:
-                    c.status            = async_status::error;
-                    c.bytes_transferred = 0;
-                    c.error_code        = errno;
-                    break;
-                }
+            c.op    = async_op::read;
+            int rc  = 0;
+            auto rs = net::socket::recvv(fd, rc, span<net::socket::iobuf>(s->r.iov.data(), s->r.iov.size()));
+            switch (rs) {
+            case net::socket::recv_status::success:
+                c.status            = async_status::success;
+                c.bytes_transferred = static_cast<size_t>(rc);
+                break;
+            case net::socket::recv_status::close:
+                c.status            = async_status::close;
+                c.bytes_transferred = 0;
+                break;
+            case net::socket::recv_status::wait:
+                return;  // spurious wakeup, stay resumed
+            case net::socket::recv_status::failed:
+                c.status            = async_status::error;
+                c.bytes_transferred = 0;
+                c.error_code        = errno;
+                break;
             }
             s->r.pending = false;
             dispatch_suspend(s->read_src);
@@ -111,40 +88,21 @@ namespace bee::async {
             io_completion c;
             c.request_id = s->w.request_id;
             c.error_code = 0;
-            if (s->w.is_writev) {
-                c.op    = async_op::writev;
-                int rc  = 0;
-                auto ss = net::socket::sendv(fd, rc, span<const net::socket::iobuf>(s->w.iov.data(), s->w.iov.size()));
-                switch (ss) {
-                case net::socket::status::success:
-                    c.status            = async_status::success;
-                    c.bytes_transferred = static_cast<size_t>(rc);
-                    break;
-                case net::socket::status::wait:
-                    return;
-                case net::socket::status::failed:
-                    c.status            = async_status::error;
-                    c.bytes_transferred = 0;
-                    c.error_code        = errno;
-                    break;
-                }
-            } else {
-                c.op    = async_op::write;
-                int rc  = 0;
-                auto ss = net::socket::send(fd, rc, static_cast<const char*>(s->w.buffer), static_cast<int>(s->w.len));
-                switch (ss) {
-                case net::socket::status::success:
-                    c.status            = async_status::success;
-                    c.bytes_transferred = static_cast<size_t>(rc);
-                    break;
-                case net::socket::status::wait:
-                    return;
-                case net::socket::status::failed:
-                    c.status            = async_status::error;
-                    c.bytes_transferred = 0;
-                    c.error_code        = errno;
-                    break;
-                }
+            c.op    = async_op::write;
+            int rc  = 0;
+            auto ss = net::socket::sendv(fd, rc, span<const net::socket::iobuf>(s->w.iov.data(), s->w.iov.size()));
+            switch (ss) {
+            case net::socket::status::success:
+                c.status            = async_status::success;
+                c.bytes_transferred = static_cast<size_t>(rc);
+                break;
+            case net::socket::status::wait:
+                return;
+            case net::socket::status::failed:
+                c.status            = async_status::error;
+                c.bytes_transferred = 0;
+                c.error_code        = errno;
+                break;
             }
             s->w.pending = false;
             dispatch_suspend(s->write_src);
@@ -182,50 +140,22 @@ namespace bee::async {
         return get_or_create(fd) != nullptr;
     }
 
-    bool async::submit_read(net::fd_t fd, void* buffer, size_t len, uint64_t request_id) {
+    bool async::submit_read(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
         fd_sources* s = get_or_create(fd);
         if (!s || s->r.pending) return false;
-        s->r.buffer     = buffer;
-        s->r.len        = len;
+        s->r.iov        = dynarray<net::socket::iobuf>(bufs.data(), bufs.size());
         s->r.request_id = request_id;
         s->r.pending    = true;
-        s->r.is_readv   = false;
         dispatch_resume(s->read_src);
         return true;
     }
 
-    bool async::submit_readv(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
-        fd_sources* s = get_or_create(fd);
-        if (!s || s->r.pending) return false;
-        s->r.iov        = dynarray<net::socket::iobuf>(bufs.size());
-        for (size_t i = 0; i < bufs.size(); ++i) s->r.iov[i] = bufs[i];
-        s->r.request_id = request_id;
-        s->r.pending    = true;
-        s->r.is_readv   = true;
-        dispatch_resume(s->read_src);
-        return true;
-    }
-
-    bool async::submit_write(net::fd_t fd, const void* buffer, size_t len, uint64_t request_id) {
+    bool async::submit_write(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
         fd_sources* s = get_or_create(fd);
         if (!s || s->w.pending) return false;
-        s->w.buffer     = buffer;
-        s->w.len        = len;
+        s->w.iov        = dynarray<net::socket::iobuf>(bufs.data(), bufs.size());
         s->w.request_id = request_id;
         s->w.pending    = true;
-        s->w.is_writev  = false;
-        dispatch_resume(s->write_src);
-        return true;
-    }
-
-    bool async::submit_writev(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
-        fd_sources* s = get_or_create(fd);
-        if (!s || s->w.pending) return false;
-        s->w.iov        = dynarray<net::socket::iobuf>(bufs.size());
-        for (size_t i = 0; i < bufs.size(); ++i) s->w.iov[i] = bufs[i];
-        s->w.request_id = request_id;
-        s->w.pending    = true;
-        s->w.is_writev  = true;
         dispatch_resume(s->write_src);
         return true;
     }
@@ -233,15 +163,7 @@ namespace bee::async {
     bool async::submit_accept(net::fd_t listen_fd, uint64_t request_id) {
         fd_sources* s = get_or_create(listen_fd);
         if (!s || s->r.pending) return false;
-        s->r.buffer     = nullptr;
-        s->r.len        = 0;
-        s->r.request_id = request_id;
-        s->r.pending    = true;
-        // Reuse read source; override event handler for accept.
-        // Use a separate accept source to avoid conflating read/accept.
-        // For simplicity, create a one-shot accept source (accept is rare).
-        // (accept happens once per connection, so one-shot overhead is negligible)
-        s->r.pending = false;  // revert, use one-shot path below
+        // accept uses a one-shot source (rare operation)
 
         dispatch_source_t src = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, listen_fd, 0, m_queue);
         if (!src) return false;

@@ -28,13 +28,12 @@ namespace bee::async {
         return kevent(m_kqfd, &ev, 1, nullptr, 0, nullptr) == 0;
     }
 
-    bool async::submit_read(net::fd_t fd, void* buffer, size_t len, uint64_t request_id) {
+    bool async::submit_read(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
         auto* op       = new pending_op();
         op->request_id = request_id;
         op->fd         = fd;
         op->type       = pending_op::read;
-        op->r.buffer   = buffer;
-        op->r.len      = len;
+        op->wv         = dynarray<net::socket::iobuf>(bufs.data(), bufs.size());
         m_pending_ops.insert(op);
         if (!kqueue_register(fd, EVFILT_READ, op)) {
             m_pending_ops.erase(op);
@@ -44,45 +43,12 @@ namespace bee::async {
         return true;
     }
 
-    bool async::submit_readv(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
-        auto* op       = new pending_op();
-        op->request_id = request_id;
-        op->fd         = fd;
-        op->type       = pending_op::readv;
-        op->wv         = dynarray<net::socket::iobuf>(bufs.size());
-        for (size_t i = 0; i < bufs.size(); ++i) op->wv[i] = bufs[i];
-        m_pending_ops.insert(op);
-        if (!kqueue_register(fd, EVFILT_READ, op)) {
-            m_pending_ops.erase(op);
-            delete op;
-            return false;
-        }
-        return true;
-    }
-
-    bool async::submit_write(net::fd_t fd, const void* buffer, size_t len, uint64_t request_id) {
+    bool async::submit_write(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
         auto* op       = new pending_op();
         op->request_id = request_id;
         op->fd         = fd;
         op->type       = pending_op::write;
-        op->w.buffer   = buffer;
-        op->w.len      = len;
-        m_pending_ops.insert(op);
-        if (!kqueue_register(fd, EVFILT_WRITE, op)) {
-            m_pending_ops.erase(op);
-            delete op;
-            return false;
-        }
-        return true;
-    }
-
-    bool async::submit_writev(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) {
-        auto* op       = new pending_op();
-        op->request_id = request_id;
-        op->fd         = fd;
-        op->type       = pending_op::writev;
-        op->wv         = dynarray<net::socket::iobuf>(bufs.size());
-        for (size_t i = 0; i < bufs.size(); ++i) op->wv[i] = bufs[i];
+        op->wv         = dynarray<net::socket::iobuf>(bufs.data(), bufs.size());
         m_pending_ops.insert(op);
         if (!kqueue_register(fd, EVFILT_WRITE, op)) {
             m_pending_ops.erase(op);
@@ -209,14 +175,8 @@ namespace bee::async {
             case async::pending_op::read:
                 c.op = async_op::read;
                 break;
-            case async::pending_op::readv:
-                c.op = async_op::readv;
-                break;
             case async::pending_op::write:
                 c.op = async_op::write;
-                break;
-            case async::pending_op::writev:
-                c.op = async_op::writev;
                 break;
             case async::pending_op::accept:
                 c.op = async_op::accept;
@@ -236,38 +196,6 @@ namespace bee::async {
         switch (op->type) {
         case async::pending_op::read: {
             c.op = async_op::read;
-            // EOF on EVFILT_READ: data == 0 and EV_EOF set.
-            if ((ev.flags & EV_EOF) && ev.data == 0) {
-                c.status = async_status::close;
-                break;
-            }
-            int rc  = 0;
-            auto rs = net::socket::recv(fd, rc, static_cast<char*>(op->r.buffer), static_cast<int>(op->r.len));
-            switch (rs) {
-            case net::socket::recv_status::success:
-                c.status            = async_status::success;
-                c.bytes_transferred = static_cast<size_t>(rc);
-                break;
-            case net::socket::recv_status::close:
-                c.status = async_status::close;
-                break;
-            case net::socket::recv_status::failed:
-                c.status     = async_status::error;
-                c.error_code = errno;
-                break;
-            case net::socket::recv_status::wait:
-                // Spurious wakeup：kevent 触发但实际无数据，重新注册等待下次事件。
-                if (kqueue_rearm(kqfd, fd, EVFILT_READ, op)) {
-                    return false;
-                }
-                c.status     = async_status::error;
-                c.error_code = EAGAIN;
-                break;
-            }
-            break;
-        }
-        case async::pending_op::readv: {
-            c.op = async_op::readv;
             if ((ev.flags & EV_EOF) && ev.data == 0) {
                 c.status = async_status::close;
                 break;
@@ -298,29 +226,6 @@ namespace bee::async {
         }
         case async::pending_op::write: {
             c.op    = async_op::write;
-            int rc  = 0;
-            auto ss = net::socket::send(fd, rc, static_cast<const char*>(op->w.buffer), static_cast<int>(op->w.len));
-            switch (ss) {
-            case net::socket::status::success:
-                c.status            = async_status::success;
-                c.bytes_transferred = static_cast<size_t>(rc);
-                break;
-            case net::socket::status::wait:
-                if (kqueue_rearm(kqfd, fd, EVFILT_WRITE, op)) {
-                    return false;
-                }
-                c.status     = async_status::error;
-                c.error_code = EAGAIN;
-                break;
-            case net::socket::status::failed:
-                c.status     = async_status::error;
-                c.error_code = errno;
-                break;
-            }
-            break;
-        }
-        case async::pending_op::writev: {
-            c.op    = async_op::writev;
             int rc  = 0;
             auto ss = net::socket::sendv(fd, rc, span<const net::socket::iobuf>(op->wv.data(), op->wv.size()));
             switch (ss) {
@@ -459,12 +364,10 @@ namespace bee::async {
     static int op_filter(async::pending_op::type_t type) {
         switch (type) {
         case async::pending_op::read:
-        case async::pending_op::readv:
         case async::pending_op::accept:
         case async::pending_op::fd_poll:
             return EVFILT_READ;
         case async::pending_op::write:
-        case async::pending_op::writev:
         case async::pending_op::connect:
             return EVFILT_WRITE;
         }

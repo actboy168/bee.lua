@@ -23,10 +23,8 @@ namespace bee::async {
         async_epoll();
         ~async_epoll() override;
 
-        bool submit_read(net::fd_t fd, void* buffer, size_t len, uint64_t request_id) override;
-        bool submit_readv(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) override;
-        bool submit_write(net::fd_t fd, const void* buffer, size_t len, uint64_t request_id) override;
-        bool submit_writev(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) override;
+        bool submit_read(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) override;
+        bool submit_write(net::fd_t fd, span<const net::socket::iobuf> bufs, uint64_t request_id) override;
         bool submit_accept(net::fd_t listen_fd, uint64_t request_id) override;
         bool submit_connect(net::fd_t fd, const net::endpoint& ep, uint64_t request_id) override;
         bool submit_file_read(file_handle::value_type fd, void* buffer, size_t len, int64_t offset, uint64_t request_id) override;
@@ -42,31 +40,19 @@ namespace bee::async {
             net::fd_t fd        = net::retired_fd;
             enum type_t : uint8_t {
                 read,
-                readv,
                 write,
-                writev,
                 accept,
                 connect,
                 fd_poll,
             } type = read;
-            union {
-                struct {
-                    void* buffer;
-                    size_t len;
-                } r;
-                struct {
-                    const void* buffer;
-                    size_t len;
-                } w;
-            };
-            dynarray<net::socket::iobuf> wv;  // used when type == writev or readv
+            dynarray<net::socket::iobuf> wv;  // used when type == write or read
         };
 
         // Per-fd state: tracks up to one read-direction and one write-direction pending op,
         // plus the currently registered epoll events mask.
         struct fd_state {
             pending_op* read_op  = nullptr;  // EPOLLIN direction (read/accept/connect)
-            pending_op* write_op = nullptr;  // EPOLLOUT direction (write/writev)
+            pending_op* write_op = nullptr;  // EPOLLOUT direction (write)
             uint32_t events      = 0;        // currently registered events mask
         };
 

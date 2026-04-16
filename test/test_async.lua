@@ -105,7 +105,7 @@ function m.test_tcp_write_read()
     wb:write("hello")
     lt.assertEquals(as:submit_write(wb, cfd, "write_token"), true)
     local op, token, status, bytes = wait_completion(as)
-    lt.assertEquals(op, async.OP_WRITEV)
+    lt.assertEquals(op, async.OP_WRITE)
     lt.assertEquals(token, "write_token")
     lt.assertEquals(status, SUCCESS)
     lt.assertEquals(bytes, 0) -- writebuf completion always returns 0 bytes
@@ -578,12 +578,12 @@ function m.test_close()
     -- 没有崩溃即通过
 end
 
---- 测试 submit_readv：ring_buf 回绕时一次提交两段
--- 场景：先收满 (cap-2) 字节使 tail 接近末尾，消费后再用 submit_readv
+--- 测试 submit_read：read_buf 回绕时一次提交两段
+-- 场景：先收满 (cap-2) 字节使 tail 接近末尾，消费后再用 submit_read
 -- 此时 write_ptr 指向末尾偏移 (cap-2)，write_len=2，free_cap=cap；
 -- submit_read 会构造两段 iobuf：第一段 2 字节到缓冲区末尾，
 -- 第二段 (cap-2) 字节回绕到缓冲区头部，覆盖全部空闲空间。
-function m.test_readv_wraparound()
+function m.test_read_wraparound()
     local as <close> = assert(async.create(64))
     local sfd <close> = SimpleServer(as, "tcp", "127.0.0.1", 0)
     local cfd <close> = SimpleClient(as, "tcp", sfd:info "socket")
@@ -610,14 +610,14 @@ function m.test_readv_wraparound()
 
     -- 现在 tail=14, head=14，write_ptr 在偏移 14（=14 & 15），write_len=2，free_cap=16
     -- submit_read 会用两段：[offset14..15] + [offset0..13]
-    -- 先提交读再发送，确保 submit_read 时 ring_buf 处于回绕状态
+    -- 先提交读再发送，确保 submit_read 时 read_buf 处于回绕状态
     local payload = string.rep("A", 2) .. string.rep("B", 14)  -- 16 字节，填满两段
     lt.assertEquals(as:submit_read(rb, newfd, "readv_tok"), true)
     cfd:send(payload)
     local op, tok, rs, rb2 = wait_completion(as)
     lt.assertEquals(tok, "readv_tok")
     lt.assertEquals(rs, SUCCESS)
-    lt.assertEquals(op, async.OP_READV)
+    lt.assertEquals(op, async.OP_READ)
     -- 收到的字节数应等于发送量（16 字节 ≤ free_cap=16）
     lt.assertEquals(rb2 > 0, true)
 
@@ -634,14 +634,14 @@ function m.test_readv_wraparound()
     newfd:close()
 end
 
---- 测试 writev 批量提交：多个 entry 一次 submit_write，只产生一次 completion
-function m.test_writev_batch()
+--- 测试 write 批量提交：多个 entry 一次 submit_write，只产生一次 completion
+function m.test_write_batch()
     local as <close> = assert(async.create(64))
     local sfd <close> = SimpleServer(as, "tcp", "127.0.0.1", 0)
     local cfd <close> = SimpleClient(as, "tcp", sfd:info "socket")
     local newfd = wait_accept(as, sfd)
 
-    -- 多个小 entry 写入同一个 writebuf，一次提交应合并为单次 OP_WRITEV completion
+    -- 多个小 entry 写入同一个 writebuf，一次提交应合并为单次 OP_WRITE completion
     local wb = assert(async.writebuf(64 * 1024))
     local parts = { "aaa", "bbb", "ccc", "ddd", "eee" }
     local expected = table.concat(parts)
@@ -652,7 +652,7 @@ function m.test_writev_batch()
     local op, token, wstatus = wait_completion(as)
     lt.assertEquals(token, write_tok)
     lt.assertEquals(wstatus, SUCCESS)
-    lt.assertEquals(op, async.OP_WRITEV)
+    lt.assertEquals(op, async.OP_WRITE)
 
     -- 验证数据完整性：循环读取直到收满 #expected 字节
     local rb = assert(async.readbuf(64))
