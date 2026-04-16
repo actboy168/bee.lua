@@ -163,15 +163,7 @@ namespace bee::async {
     bool async::submit_accept(net::fd_t listen_fd, uint64_t request_id) {
         fd_sources* s = get_or_create(listen_fd);
         if (!s || s->r.pending) return false;
-        s->r.buffer     = nullptr;
-        s->r.len        = 0;
-        s->r.request_id = request_id;
-        s->r.pending    = true;
-        // Reuse read source; override event handler for accept.
-        // Use a separate accept source to avoid conflating read/accept.
-        // For simplicity, create a one-shot accept source (accept is rare).
-        // (accept happens once per connection, so one-shot overhead is negligible)
-        s->r.pending = false;  // revert, use one-shot path below
+        // accept uses a one-shot source (rare operation)
 
         dispatch_source_t src = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, listen_fd, 0, m_queue);
         if (!src) return false;
