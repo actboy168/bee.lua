@@ -4,7 +4,7 @@ local subprocess = require "bee.subprocess"
 local lt = require "ltest"
 
 local isWindows <const> = platform.os == "windows"
-local isWindowsShell <const> = isWindows and (os.getenv "MSYSTEM" == nil)
+local isWindowsShell <const> = lt.isWindowsShell
 
 local function runshell(command)
     local p <close> = assert(io.popen(command))

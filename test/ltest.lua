@@ -1305,16 +1305,40 @@ function m.format(className, methodName)
     return className.."."..methodName
 end
 
-local function touch(file)
-    local isWindowsShell; do
-        if options.shell then
-            isWindowsShell = options.shell ~= "sh"
-        else
-            local isWindows = package.config:sub(1, 1) == "\\"
-            local isMingw = os.getenv "MSYSTEM" ~= nil
-            isWindowsShell = (isWindows) and (not isMingw)
+local isWindowsShell; do
+    local function checkWindowsShell()
+        if package.config:sub(1, 1) ~= "\\" then
+            return false
         end
+        local script = ([[%s]]):format(table.concat({
+            [[$curPid=(Get-WmiObject Win32_Process -Filter "ProcessId=$PID").ParentProcessId;]],
+            "$seen=@{};",
+            "while ($curPid -and -not $seen[$curPid]) {",
+            "  $seen[$curPid]=$true;",
+            [[  $p=Get-WmiObject Win32_Process -Filter "ProcessId=$curPid";]],
+            "  if (-not $p) { break };",
+            "  $n=$p.Name.ToLower();",
+            "  if ($n -eq 'cmd.exe' -or $n -eq 'powershell.exe' -or $n -eq 'pwsh.exe') { 'true'; exit };",
+            "  $curPid=$p.ParentProcessId",
+            "};",
+            "'false'",
+        }, " "))
+        local p = io.popen(('powershell -NoProfile -Command "%s"'):format(script))
+        if not p then
+            return false
+        end
+        local output = p:read "a"
+        p:close()
+        return output:match "true" ~= nil
     end
+    if options.shell then
+        isWindowsShell = options.shell ~= "sh"
+    else
+        isWindowsShell = checkWindowsShell()
+    end
+end
+
+local function touch(file)
     if isWindowsShell then
         os.execute("type nul > "..file)
     else
@@ -1384,6 +1408,7 @@ end
 
 m.options = options
 m.stringify = stringify
+m.isWindowsShell = isWindowsShell
 
 if options.coverage then
     local major, minor = _VERSION:match "Lua (%d)%.(%d)"
