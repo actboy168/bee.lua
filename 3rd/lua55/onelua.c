@@ -118,8 +118,9 @@
 #include "ltablib.c"
 #include "lutf8lib.c"
 // #include "linit.c"
-#include "../lua-patch/bee_assert.c"
 #endif
+
+#include "../lua-patch/bee_assert.c"
 
 /* test library -- used only for internal development */
 #if defined(LUA_DEBUG)

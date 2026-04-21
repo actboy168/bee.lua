@@ -27,6 +27,7 @@ if lm.os == "windows" then
         },
         sources = {
             "3rd/lua-patch/bee_lua.c",
+            "3rd/lua-patch/bee_assert.c",
             "3rd/lua-patch/bee_utf8_main.c",
         }
     }

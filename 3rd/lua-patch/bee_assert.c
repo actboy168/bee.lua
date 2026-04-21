@@ -1,6 +1,7 @@
 #include "bee_assert.h"
 
 #include "lauxlib.h"
+#include <stdlib.h>
 
 void _bee_lua_assert(const char* message, const char* file, unsigned line) {
     fprintf(stderr, "(%s:%d) %s\n", file, line, message);
