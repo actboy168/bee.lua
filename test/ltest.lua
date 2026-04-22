@@ -1017,6 +1017,124 @@ local function failure(...)
     error(string.format(...), 3)
 end
 
+local function splitLines(str)
+    local lines = {}
+    local pos = 1
+    while pos <= #str do
+        local startPos, endPos = str:find("\r?\n", pos)
+        if startPos then
+            lines[#lines + 1] = str:sub(pos, startPos - 1)
+            pos = endPos + 1
+        else
+            lines[#lines + 1] = str:sub(pos)
+            break
+        end
+    end
+    if str:sub(-1) == "\n" then
+        lines[#lines + 1] = ""
+    end
+    return lines
+end
+
+local function computeLCS(a, b)
+    local m, n = #a, #b
+    local c = {}
+    for i = 0, m do
+        c[i] = {}
+        c[i][0] = 0
+    end
+    for j = 0, n do
+        c[0][j] = 0
+    end
+    for i = 1, m do
+        for j = 1, n do
+            if a[i] == b[j] then
+                c[i][j] = c[i - 1][j - 1] + 1
+            elseif c[i - 1][j] >= c[i][j - 1] then
+                c[i][j] = c[i - 1][j]
+            else
+                c[i][j] = c[i][j - 1]
+            end
+        end
+    end
+    return c
+end
+
+local function backtrackLCS(c, a, b, i, j, result)
+    if i == 0 or j == 0 then
+        return
+    end
+    if a[i] == b[j] then
+        backtrackLCS(c, a, b, i - 1, j - 1, result)
+        result[#result + 1] = i
+    elseif c[i - 1][j] >= c[i][j - 1] then
+        backtrackLCS(c, a, b, i - 1, j, result)
+    else
+        backtrackLCS(c, a, b, i, j - 1, result)
+    end
+end
+
+local function getLCSIndices(a, b)
+    local c = computeLCS(a, b)
+    local result = {}
+    backtrackLCS(c, a, b, #a, #b, result)
+    return result
+end
+
+local function formatDiff(actualLines, expectedLines)
+    local lcsIndices = getLCSIndices(actualLines, expectedLines)
+    local result = {}
+    local i, j = 1, 1
+    local lcsPos = 1
+
+    while i <= #actualLines or j <= #expectedLines do
+        local lcsLine = lcsIndices[lcsPos]
+
+        if lcsLine then
+            while i < lcsLine do
+                result[#result + 1] = "- " .. actualLines[i]
+                i = i + 1
+            end
+            while j <= #expectedLines and expectedLines[j] ~= actualLines[lcsLine] do
+                result[#result + 1] = "+ " .. expectedLines[j]
+                j = j + 1
+            end
+            result[#result + 1] = "  " .. actualLines[i]
+            i = i + 1
+            j = j + 1
+            lcsPos = lcsPos + 1
+        else
+            while i <= #actualLines do
+                result[#result + 1] = "- " .. actualLines[i]
+                i = i + 1
+            end
+            while j <= #expectedLines do
+                result[#result + 1] = "+ " .. expectedLines[j]
+                j = j + 1
+            end
+        end
+    end
+
+    return table.concat(result, "\n")
+end
+
+local function stringDiff(actual, expected)
+    if type(actual) ~= "string" or type(expected) ~= "string" then
+        return nil
+    end
+    if actual == expected then
+        return nil
+    end
+    if not actual:find("\n") and not expected:find("\n") then
+        return nil
+    end
+
+    local actualLines = splitLines(actual)
+    local expectedLines = splitLines(expected)
+
+    return formatDiff(actualLines, expectedLines)
+end
+
 function m.equals(actual, expected)
     return equals(actual, expected)
 end
@@ -1027,7 +1145,12 @@ end
 
 function m.assertEquals(actual, expected, errmsg)
     if not equals(actual, expected) then
-        failure("expected: %s, actual: %s.%s", stringify(expected), stringify(actual), errmsg or "")
+        local diff = stringDiff(actual, expected)
+        if diff then
+            failure("strings differ:\n%s", diff)
+        else
+            failure("expected: %s, actual: %s.%s", stringify(expected), stringify(actual), errmsg or "")
+        end
     end
 end
 
@@ -1058,6 +1181,36 @@ function m.assertErrorMsgEquals(expectedMsg, func, ...)
         failure("No error generated when calling function but expected error: %s", stringify(expectedMsg))
     end
     m.assertEquals(actualMsg, expectedMsg)
+end
+
+function m.assert(value, errmsg)
+    if not value then
+        failure("assertion failed: %s.%s", stringify(value), errmsg or "")
+    end
+end
+
+function m.assertTrue(value, errmsg)
+    if value ~= true then
+        failure("expected: true, actual: %s.%s", stringify(value), errmsg or "")
+    end
+end
+
+function m.assertFalse(value, errmsg)
+    if value ~= false then
+        failure("expected: false, actual: %s.%s", stringify(value), errmsg or "")
+    end
+end
+
+function m.assertNil(value, errmsg)
+    if value ~= nil then
+        failure("expected: nil, actual: %s.%s", stringify(value), errmsg or "")
+    end
+end
+
+function m.assertNotNil(value, errmsg)
+    if value == nil then
+        failure("expected: not nil, actual: nil.%s", errmsg or "")
+    end
 end
 
 for _, name in ipairs { "Nil", "Number", "String", "Table", "Boolean", "Function", "Userdata", "Thread" } do
@@ -1186,6 +1339,52 @@ local function errorHandler(e)
     return { msg = e, trace = string.sub(debug.traceback("", 3), 2) }
 end
 
+-- Execute setup/teardown with consistent error handling.
+-- Returns ok, err on failure; returns true on success.
+local function runHook(classInstance, hookName, testName)
+    local hook = classInstance[hookName]
+    if not hook then
+        return true
+    end
+    local ok, err = xpcall(function () hook(classInstance) end, errorHandler)
+    if not ok then
+        local prefix = hookName .. " failed: "
+        if type(err) == "string" then
+            err = { msg = prefix .. err, name = testName .. "." .. hookName, trace = "" }
+        else
+            err.msg = prefix .. (type(err.msg) == "string" and err.msg or stringify(err.msg))
+            err.name = testName .. "." .. hookName
+            err.trace = pretty_trace(testName, err.trace)
+        end
+        return false, err
+    end
+    return true
+end
+
+-- Combine test failure with teardown failure for reporting.
+local function combineErrors(testErr, teardownErr, testName)
+    local prefix = "teardown failed: "
+    local teardownMsg
+    if type(teardownErr) == "string" then
+        teardownMsg = prefix .. teardownErr
+    else
+        teardownMsg = prefix .. (type(teardownErr.msg) == "string" and teardownErr.msg or stringify(teardownErr.msg))
+    end
+    if not testErr then
+        -- Test passed but teardown failed
+        return {
+            msg = teardownMsg,
+            name = testName .. ".teardown",
+            trace = type(teardownErr) ~= "string" and pretty_trace(testName, teardownErr.trace) or ""
+        }
+    end
+    -- Both failed: append to test error
+    if type(testErr) ~= "string" then
+        testErr.msg = testErr.msg .. "\n" .. teardownMsg
+    end
+    return testErr
+end
+
 local function execFunction(failures, name, classInstance, methodInstance, mark)
     if mark == _IGNORE_ then
         return
@@ -1195,24 +1394,38 @@ local function execFunction(failures, name, classInstance, methodInstance, mark)
         printTestSkipped()
         return
     end
-    local ok, err = xpcall(function () methodInstance(classInstance) end, errorHandler)
-    if ok then
-        printTestSuccess()
-        return true
-    else
-        if type(err) == "string" then
-            err = { msg = err, name = name, trace = "" }
-        else
-            ---@cast err -nil
-            err.name = name
-            err.trace = pretty_trace(name, err.trace)
-            if type(err.msg) ~= "string" then
-                err.msg = stringify(err.msg)
-            end
-        end
+    -- Setup
+    local ok, err = runHook(classInstance, "setup", name)
+    if not ok then
         failures[#failures+1] = err
         printTestFailed(err.msg)
+        return
     end
+    -- Run test
+    local testOk, testErr = xpcall(function () methodInstance(classInstance) end, errorHandler)
+    -- Teardown (always runs even if test failed)
+    local teardownOk, teardownErr = runHook(classInstance, "teardown", name)
+    if not teardownOk then
+        testErr = combineErrors(testOk and nil or testErr, teardownErr, name)
+        testOk = false
+    end
+    -- Report result
+    if testOk then
+        printTestSuccess()
+        return true
+    end
+    -- Format error for reporting
+    if type(testErr) == "string" then
+        testErr = { msg = testErr, name = name, trace = "" }
+    else
+        testErr.name = name
+        testErr.trace = pretty_trace(name, testErr.trace)
+        if type(testErr.msg) ~= "string" then
+            testErr.msg = stringify(testErr.msg)
+        end
+    end
+    failures[#failures+1] = testErr
+    printTestFailed(testErr.msg)
 end
 
 local function matchPattern(expr, patterns)
@@ -1310,26 +1523,19 @@ local isWindowsShell; do
         if package.config:sub(1, 1) ~= "\\" then
             return false
         end
-        local script = ([[%s]]):format(table.concat({
-            [[$curPid=(Get-WmiObject Win32_Process -Filter "ProcessId=$PID").ParentProcessId;]],
-            "$seen=@{};",
-            "while ($curPid -and -not $seen[$curPid]) {",
-            "  $seen[$curPid]=$true;",
-            [[  $p=Get-WmiObject Win32_Process -Filter "ProcessId=$curPid";]],
-            "  if (-not $p) { break };",
-            "  $n=$p.Name.ToLower();",
-            "  if ($n -eq 'cmd.exe' -or $n -eq 'powershell.exe' -or $n -eq 'pwsh.exe') { 'true'; exit };",
-            "  $curPid=$p.ParentProcessId",
-            "};",
-            "'false'",
-        }, " "))
-        local p = io.popen(('powershell -NoProfile -Command "%s"'):format(script))
-        if not p then
+        -- Use env vars to detect Unix-like shells (Git Bash/MSYS/MSYS2/Cygwin).
+        -- These are set by default in those environments, zero cost to check.
+        if os.getenv "MSYSTEM" then
             return false
         end
-        local output = p:read "a"
-        p:close()
-        return output:match "true" ~= nil
+        local shell = os.getenv "SHELL"
+        if shell and shell:match "/" then
+            return false
+        end
+        if os.getenv "TERM" then
+            return false
+        end
+        return true
     end
     if options.shell then
         isWindowsShell = options.shell ~= "sh"
