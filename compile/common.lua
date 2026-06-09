@@ -261,6 +261,7 @@ lm:source_set "source_bee" {
             "binding/port/lua_windows.cpp",
         },
         links = {
+            "advapi32",
             "ntdll",
             "ws2_32",
             "ole32",

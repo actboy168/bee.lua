@@ -43,4 +43,11 @@ end
 function windows.is_ssd(drive)
 end
 
+---查找哪些进程正在占用指定文件
+---通过 NT API 枚举系统句柄表，找出持有目标文件句柄的进程 PID
+---@param filepath string 文件路径
+---@return integer[] # 持有该文件的进程 PID 列表
+function windows.find_file_holders(filepath)
+end
+
 return windows

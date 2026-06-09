@@ -3,6 +3,7 @@
 #include <bee/lua/error.h>
 #include <bee/lua/file.h>
 #include <bee/lua/module.h>
+#include <bee/win/file_holders.h>
 #include <bee/win/unicode.h>
 #include <bee/win/wtf8.h>
 #include <fcntl.h>
@@ -84,6 +85,18 @@ namespace bee::lua_windows {
         return 1;
     }
 
+    static int find_file_holders(lua_State* L) {
+        auto filepath = wtf8::u2w(lua::checkstrview(L, 1));
+        auto holders  = bee::win::find_file_holders(filepath);
+        lua_createtable(L, (int)holders.size(), 0);
+        int index = 1;
+        for (auto pid : holders) {
+            lua_pushinteger(L, pid);
+            lua_rawseti(L, -2, index++);
+        }
+        return 1;
+    }
+
     static int luaopen(lua_State* L) {
         luaL_Reg lib[] = {
             { "u2a", lu2a },
@@ -92,6 +105,7 @@ namespace bee::lua_windows {
             { "isatty", isatty },
             { "write_console", write_console },
             { "is_ssd", is_ssd },
+            { "find_file_holders", find_file_holders },
             { NULL, NULL }
         };
         luaL_newlibtable(L, lib);
