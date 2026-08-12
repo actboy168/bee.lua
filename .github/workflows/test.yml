@@ -61,6 +61,13 @@ jobs:
           }
           Write-Host "$($asmObject.FullName): COFF machine 0xAA64"
         }
+    - uses: actions/upload-artifact@v4
+      with:
+        name: bee-windows-arm64
+        path: |
+          build/bin
+          build/obj/source_lua/fast_setjmp_arm64.obj
+        if-no-files-found: error
   windows-clang:
     name: windows (clang)
     runs-on: windows-latest
