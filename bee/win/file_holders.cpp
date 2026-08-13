@@ -3,6 +3,7 @@
 #include <bee/win/file_holders.h>
 
 #include <set>
+#include <string>
 #include <vector>
 
 namespace bee::win {
