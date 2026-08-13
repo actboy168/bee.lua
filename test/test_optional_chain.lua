@@ -1,0 +1,107 @@
+-- Optional chaining (?.) is a custom syntax enabled at build time via the
+-- BEE_OPTCHAIN macro (see 3rd/lua-patch/optchain/). The '?.' syntax errors
+-- shown by LuaLS below are expected: the language server does not know this
+-- extension. These tests only run when the interpreter was built with
+-- BEE_OPTCHAIN (see the loader in test/test.lua).
+local lt = require "ltest"
+
+local test_optchain = lt.test "optional_chain"
+
+function test_optchain:test_field()
+    local obj = { a = { b = 42 } }
+    lt.assertEquals(obj?.a?.b, 42)
+    local nothing
+    lt.assertNil(nothing?.a?.b)
+    lt.assertNil(obj?.x?.y)
+    lt.assertEquals((nil)?.a, nil)
+end
+
+function test_optchain:test_field_chain()
+    local obj = { a = { b = { c = 1 } } }
+    lt.assertEquals(obj?.a.b.c, 1)
+    local nothing
+    lt.assertNil(nothing?.a.b.c)
+    lt.assertEquals(obj?.a?.b.c, 1)
+    lt.assertNil(obj?.x?.y?.z)
+    lt.assertEquals(obj?.a?.b?.c, 1)
+end
+
+function test_optchain:test_index()
+    local t = { [1] = { [2] = "hi" } }
+    lt.assertEquals(t?[1]?[2], "hi")
+    local nothing
+    lt.assertNil(nothing?[1])
+    lt.assertNil(t?[2]?[1])
+    lt.assertEquals(t?[1][2], "hi")
+end
+
+function test_optchain:test_method()
+    local obj = { x = 1, get = function(self) return self.x end }
+    lt.assertEquals(obj?:get(), 1)
+    local nothing
+    lt.assertNil(nothing?:get())
+end
+
+function test_optchain:test_call()
+    local f = function() return "ok" end
+    lt.assertEquals(f?(), "ok")
+    local nothing
+    lt.assertNil(nothing?())
+end
+
+function test_optchain:test_short_circuit_key()
+    local calls = 0
+    local function key() calls = calls + 1; return 1 end
+    local nothing
+    local t = { [1] = "v" }
+    lt.assertEquals(nothing?[key()], nil)
+    lt.assertEquals(calls, 0)
+    lt.assertEquals(t?[key()], "v")
+    lt.assertEquals(calls, 1)
+end
+
+function test_optchain:test_short_circuit_args()
+    local calls = 0
+    local function arg() calls = calls + 1; return 1 end
+    local obj = { f = function(self, x) return x end }
+    local nothing
+    lt.assertEquals(nothing?:f(arg()), nil)
+    lt.assertEquals(calls, 0)
+    lt.assertEquals(obj?:f(arg()), 1)
+    lt.assertEquals(calls, 1)
+end
+
+function test_optchain:test_eval_once()
+    local calls = 0
+    local function recv() calls = calls + 1; return { a = { b = 1 } } end
+    lt.assertEquals(recv()?.a?.b, 1)
+    lt.assertEquals(calls, 1)
+    lt.assertNil(recv()?.x?.y)
+    lt.assertEquals(calls, 2)
+end
+
+function test_optchain:test_false_not_short_circuit()
+    local f = false
+    lt.assertError(function () return f?.a end)
+    lt.assertError(function () return f?[1] end)
+end
+
+function test_optchain:test_not_assignable()
+    local ok
+    ok, _ = load("obj?.a = 1")
+    lt.assertTrue(not ok)
+    ok, _ = load("obj?[1] = 2")
+    lt.assertTrue(not ok)
+    ok, _ = load("obj?:f = 3")
+    lt.assertTrue(not ok)
+end
+
+function test_optchain:test_bad_syntax()
+    local ok
+    ok, _ = load("local a; return a?")
+    lt.assertTrue(not ok)
+    ok, _ = load("local a; return a ?? 1")
+    lt.assertTrue(not ok)
+    ok, _ = load("local a; return a?b")
+    lt.assertTrue(not ok)
+end

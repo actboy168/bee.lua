@@ -33,6 +33,14 @@ local _ = crash.create_handler "-"
 
 require "test_skip"
 require "test_lua"
+
+do  -- optional chain is enabled via BEE_OPTCHAIN at build time
+    local loadable = load "local x; return x?.y"
+    if loadable then
+        require "test_optional_chain"
+    end
+end
+
 require "test_serialization"
 require "test_filesystem"
 require "test_thread"
