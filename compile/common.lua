@@ -82,7 +82,7 @@ end
 lm:source_set "source_lua" {
     includes = lm.luadir,
     sources = {
-        lm.optchain and ("3rd/lua-patch/optchain/" .. lm.lua .. "/onelua.c") or (lm.luadir / "onelua.c"),
+        lm.optchain and ("3rd/lua-patch/optchain/lua" .. lm.lua .. "/onelua.c") or (lm.luadir / "onelua.c"),
     },
     defines = lm.optchain and { "MAKE_LIB", "BEE_OPTCHAIN" } or "MAKE_LIB",
     visibility = "default",

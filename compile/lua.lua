@@ -4,7 +4,7 @@ if lm.os == "windows" then
     lm:shared_library("lua"..lm.lua) {
         deps = "bee_utf8_crt",
         sources = {
-            lm.optchain and ("3rd/lua-patch/optchain/" .. lm.lua .. "/onelua.c") or (lm.luadir / "onelua.c"),
+            lm.optchain and ("3rd/lua-patch/optchain/lua" .. lm.lua .. "/onelua.c") or (lm.luadir / "onelua.c"),
             lm.luadir / "linit.c",
         },
         defines = lm.optchain and {
@@ -39,7 +39,7 @@ if lm.os == "windows" then
         deps = "bee_utf8_crt",
         includes = ".",
         sources = {
-            lm.optchain and ("3rd/lua-patch/optchain/" .. lm.lua .. "/onelua.c") or (lm.luadir / "onelua.c"),
+            lm.optchain and ("3rd/lua-patch/optchain/lua" .. lm.lua .. "/onelua.c") or (lm.luadir / "onelua.c"),
             "3rd/lua-patch/bee_utf8_main.c",
         },
         defines = lm.optchain and {
