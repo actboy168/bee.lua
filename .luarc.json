@@ -20,7 +20,12 @@
             "code-after-break": "Warning",
             "empty-block": "Warning",
             "trailing-space": "Warning"
-        }
+        },
+        "ignoredFiles": "Disable"
     },
-    "workspace.checkThirdParty": false
+    "workspace.checkThirdParty": false,
+    "workspace.ignoreDir": [
+        ".vscode",
+        "test_optional_chain.lua"
+    ]
 }
