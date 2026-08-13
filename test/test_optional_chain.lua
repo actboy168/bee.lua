@@ -105,3 +105,70 @@ function test_optchain:test_bad_syntax()
     ok, _ = load("local a; return a?b")
     lt.assertTrue(not ok)
 end
+
+-- Multiple results: a chain ending in a call can yield several values
+-- (the short-circuit path fills the whole result range with nils).
+
+function test_optchain:test_multi_value_assign()
+    local obj = { getSize = function() return 100, 200 end }
+    local w, h = obj?:getSize()
+    lt.assertEquals(w, 100)
+    lt.assertEquals(h, 200)
+    local nothing
+    local a, b, c = nothing?:getSize()
+    lt.assertNil(a)
+    lt.assertNil(b)
+    lt.assertNil(c)
+end
+
+function test_optchain:test_multi_value_method()
+    local o = { pair = function(self) return 1, 2, 3 end }
+    local x, y, z = o?:pair()
+    lt.assertEquals(x, 1)
+    lt.assertEquals(y, 2)
+    lt.assertEquals(z, 3)
+end
+
+function test_optchain:test_multi_value_return()
+    local obj = { getSize = function() return 7, 8 end }
+    local function f()
+        return obj?:getSize()
+    end
+    local r1, r2 = f()
+    lt.assertEquals(r1, 7)
+    lt.assertEquals(r2, 8)
+    local function g()
+        local n
+        return n?:getSize()
+    end
+    local s1, s2 = g()
+    lt.assertNil(s1)
+    lt.assertNil(s2)
+end
+
+function test_optchain:test_multi_value_table()
+    local obj = { getSize = function() return 5, 6 end }
+    local t = { obj?:getSize() }
+    lt.assertEquals(t[1], 5)
+    lt.assertEquals(t[2], 6)
+    local nothing
+    local tn = { nothing?:getSize() }
+    lt.assertEquals(#tn, 0)  -- short-circuit: a single nil element
+end
+
+function test_optchain:test_multi_value_single()
+    -- Single-value contexts still collapse to one value.
+    local obj = { getSize = function() return 100, 200 end }
+    local s = obj?:getSize()
+    lt.assertEquals(s, 100)
+end
+
+function test_optchain:test_multi_value_args()
+    -- A chain ending in a call, used as call arguments, yields exactly
+    -- the produced values (short-circuit: exactly one nil argument).
+    local function count(...) return select("#", ...) end
+    local obj = { getSize = function() return 100, 200 end }
+    lt.assertEquals(count(obj?:getSize()), 2)
+    local nothing
+    lt.assertEquals(count(nothing?:getSize()), 1)
+end
