@@ -26,6 +26,6 @@
     "workspace.checkThirdParty": false,
     "workspace.ignoreDir": [
         ".vscode",
-        "test_optional_chain.lua"
+        "test/test_optional_chain.lua"
     ]
 }
