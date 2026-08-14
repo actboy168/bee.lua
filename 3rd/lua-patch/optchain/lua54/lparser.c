@@ -1155,7 +1155,10 @@ static void suffixedexp (LexState *ls, expdesc *v) {
         reg = luaK_exp2anyreg(fs, v);  /* evaluate receiver only once */
         nilreg = fs->freereg;
         luaK_nil(fs, nilreg, 1);  /* ensure it is nil at runtime */
-        fs->freereg++;
+        /* Reserve the temp through luaK_reserveregs (which also grows
+           'maxstacksize') instead of a raw freereg++ that would bypass
+           luaK_checkstack and leave 'maxstacksize' stale. */
+        luaK_reserveregs(fs, 1);
         luaK_codeABCk(fs, OP_EQ, reg, nilreg, 0, 1);  /* jump when nil */
         luaK_concat(fs, &niljumps, luaK_jump(fs));
         fs->freereg--;  /* release the nil slot; only used by OP_EQ */
