@@ -49,6 +49,36 @@ function test_optchain:test_call()
     lt.assertNil(nothing?())
 end
 
+function test_optchain:test_call_args()
+    local f = function(a, b, c) return a + b + c end
+    lt.assertEquals(f?(1, 2, 3), 6)
+    local nothing
+    lt.assertNil(nothing?(1, 2, 3))
+end
+
+function test_optchain:test_call_args_short_circuit()
+    -- short-circuit must not evaluate the arguments (no side effects)
+    local calls = 0
+    local function arg(v) calls = calls + 1; return v end
+    local f = function(a, b, c) return a + b + c end
+    lt.assertEquals(f?(arg(1), arg(2), arg(3)), 6)
+    lt.assertEquals(calls, 3)
+    local nothing
+    lt.assertNil(nothing?(arg(1), arg(2), arg(3)))
+    lt.assertEquals(calls, 3)  -- args not evaluated on short-circuit
+end
+
+function test_optchain:test_call_args_multi()
+    local g = function(a, b) return a, b end
+    local x, y = g?(10, 20)
+    lt.assertEquals(x, 10)
+    lt.assertEquals(y, 20)
+    local nothing
+    local n1, n2 = nothing?(10, 20)
+    lt.assertNil(n1)
+    lt.assertNil(n2)
+end
+
 function test_optchain:test_short_circuit_key()
     local calls = 0
     local function key() calls = calls + 1; return 1 end
