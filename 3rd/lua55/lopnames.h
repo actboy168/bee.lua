@@ -98,6 +98,9 @@ static const char *const opnames[] = {
   "ERRNNIL",
   "VARARGPREP",
   "EXTRAARG",
+#if defined(BEE_OPTCHAIN)
+  "SETTOP",
+#endif
   NULL
 };
 

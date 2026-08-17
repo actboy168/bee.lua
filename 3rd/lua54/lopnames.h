@@ -96,6 +96,9 @@ static const char *const opnames[] = {
   "VARARG",
   "VARARGPREP",
   "EXTRAARG",
+#if defined(BEE_OPTCHAIN)
+  "SETTOP",
+#endif
   NULL
 };
 
