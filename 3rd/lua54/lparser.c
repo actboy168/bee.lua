@@ -37,29 +37,6 @@
 
 #define hasmultret(k)		((k) == VCALL || (k) == VVARARG)
 
-#if defined(BEE_OPTCHAIN)
-/*
-** Patch the short-circuit path of an optional-chain call so that it
-** produces 'nresults' nil values instead of a single one. This allows
-** chains ending in a call to yield multiple results (e.g.
-** 'local a, b = f?()'). The short-circuit path is a fixed layout right
-** after the call (see suffixedexp): CALL (with 'k' flag set) / JMP /
-** OP_SETTOP. The OP_SETTOP (which also fixes the stack top; see lvm.c)
-** holds the number of nil slots minus one in its B field.
-*/
-static void luaK_setreturns_optchain (FuncState *fs, expdesc *e, int nresults) {
-  if (e->k == VCALL) {  /* open function call? */
-    int pc = e->u.info;  /* position of the call */
-    if (TESTARG_k(fs->f->code[pc])) {  /* optional-chain call (fixed layout)? */
-      /* A fixed 'nresults' needs exactly that many nils, while
-         LUA_MULTRET needs exactly one (B stays 0). */
-      if (nresults != LUA_MULTRET)  /* fixed number of results? */
-        SETARG_B(fs->f->code[pc + 2], nresults - 1);  /* widen OP_SETTOP */
-    }
-  }
-}
-#endif
-
 
 /* because all strings are unified by the scanner, the parser
    can use pointer equality for string equality */
@@ -509,9 +486,6 @@ static void adjust_assign (LexState *ls, int nvars, int nexps, expdesc *e) {
     int extra = needed + 1;  /* discount last expression itself */
     if (extra < 0)
       extra = 0;
-#if defined(BEE_OPTCHAIN)
-    luaK_setreturns_optchain(fs, e, extra);
-#endif
     luaK_setreturns(fs, e, extra);  /* last exp. provides the difference */
   }
   else {
@@ -905,9 +879,6 @@ static void closelistfield (FuncState *fs, ConsControl *cc) {
 static void lastlistfield (FuncState *fs, ConsControl *cc) {
   if (cc->tostore == 0) return;
   if (hasmultret(cc->v.k)) {
-#if defined(BEE_OPTCHAIN)
-    luaK_setreturns_optchain(fs, &cc->v, LUA_MULTRET);
-#endif
     luaK_setmultret(fs, &cc->v);
     luaK_setlist(fs, cc->t->u.info, cc->na, LUA_MULTRET);
     cc->na--;  /* do not count last expression (unknown number of elements) */
@@ -1064,12 +1035,8 @@ static void funcargs (LexState *ls, expdesc *f) {
         args.k = VVOID;
       else {
         explist(ls, &args);
-        if (hasmultret(args.k)) {
-#if defined(BEE_OPTCHAIN)
-          luaK_setreturns_optchain(fs, &args, LUA_MULTRET);
-#endif
+        if (hasmultret(args.k))
           luaK_setmultret(fs, &args);
-        }
       }
       check_match(ls, ')', '(', line);
       break;
@@ -1138,33 +1105,9 @@ static void suffixedexp (LexState *ls, expdesc *v) {
   /* suffixedexp ->
        primaryexp { '.' NAME | '[' exp ']' | ':' NAME funcargs | funcargs } */
   FuncState *fs = ls->fs;
-#if defined(BEE_OPTCHAIN)
-  int niljumps = NO_JUMP;  /* patch list of optional-chain exits (nil) */
-  int chain_base = fs->freereg;  /* result register of the chain */
-#endif
   primaryexp(ls, v);
   for (;;) {
     switch (ls->t.token) {
-#if defined(BEE_OPTCHAIN)
-      case '?': {  /* optional chain: '?.' '?:' '?[' '?(' */
-        int reg, nilreg;
-        luaX_next(ls);  /* consume '?' */
-        if (ls->t.token != '.' && ls->t.token != ':' &&
-            ls->t.token != '[' && ls->t.token != '(')
-          luaX_syntaxerror(ls, "unexpected symbol near '?'");
-        reg = luaK_exp2anyreg(fs, v);  /* evaluate receiver only once */
-        nilreg = fs->freereg;
-        luaK_nil(fs, nilreg, 1);  /* ensure it is nil at runtime */
-        /* Reserve the temp through luaK_reserveregs (which also grows
-           'maxstacksize') instead of a raw freereg++ that would bypass
-           luaK_checkstack and leave 'maxstacksize' stale. */
-        luaK_reserveregs(fs, 1);
-        luaK_codeABCk(fs, OP_EQ, reg, nilreg, 0, 1);  /* jump when nil */
-        luaK_concat(fs, &niljumps, luaK_jump(fs));
-        fs->freereg--;  /* release the nil slot; only used by OP_EQ */
-        break;  /* next iteration handles '.' ':' '[' '(' */
-      }
-#endif
       case '.': {  /* fieldsel */
         fieldsel(ls, v);
         break;
@@ -1189,50 +1132,7 @@ static void suffixedexp (LexState *ls, expdesc *v) {
         funcargs(ls, v);
         break;
       }
-      default:
-#if defined(BEE_OPTCHAIN)
-        if (niljumps != NO_JUMP) {
-          int skip, nilpc;
-          if (v->k == VCALL) {
-            /* A chain ending in a call can yield multiple results: keep
-               the call open instead of collapsing it to a single value.
-               We emit a fixed layout so that later consumers can patch
-               the short-circuit path without storing extra info in 'e':
-                 CALL base ...   (with the 'k' flag set, marking the chain)
-                 JMP  skip
-                 OP_SETTOP base 0   (fills 1 nil and fixes the stack top)
-                 skip:
-               The OP_SETTOP is always at call+2; luaK_setreturns_optchain
-               widens its B field when more nils are needed. 'e' keeps the
-               plain VCALL semantics (t/f stay NO_JUMP), so single-value
-               consumers work unchanged. */
-            int base = GETARG_A(fs->f->code[v->u.info]);  /* call base */
-            SETARG_k(fs->f->code[v->u.info], 1);  /* mark optional chain */
-            skip = luaK_jump(fs);  /* non-nil path skips the nil fill */
-            nilpc = luaK_codeABC(fs, OP_SETTOP, base, 0, 0);
-            luaK_patchtohere(fs, skip);
-            fs->freereg = base + 1;
-            luaK_patchlist(fs, niljumps, nilpc);  /* nil exits jump here */
-          }
-          else {
-            int r;
-            if (vkisindexed(v->k))
-              luaK_exp2anyreg(fs, v);  /* make it a value, not a var */
-            r = v->u.info;  /* now a VNONRELOC register */
-            if (r != chain_base) {  /* move result to the chain base register */
-              luaK_codeABC(fs, OP_MOVE, chain_base, r, 0);
-              v->u.info = chain_base;
-              v->k = VNONRELOC;
-            }
-            skip = luaK_jump(fs);  /* non-nil path skips the nil fill */
-            nilpc = luaK_codeABC(fs, OP_LOADNIL, chain_base, 0, 0);
-            luaK_patchtohere(fs, skip);
-            fs->freereg = chain_base + 1;  /* free chain temporaries */
-            luaK_patchlist(fs, niljumps, nilpc);  /* nil exits jump to LOADNIL */
-          }
-        }
-#endif
-        return;
+      default: return;
     }
   }
 }
@@ -1922,16 +1822,9 @@ static void retstat (LexState *ls) {
   else {
     nret = explist(ls, &e);  /* optional return values */
     if (hasmultret(e.k)) {
-#if defined(BEE_OPTCHAIN)
-      luaK_setreturns_optchain(fs, &e, LUA_MULTRET);
-#endif
       luaK_setmultret(fs, &e);
 #if defined(NDEBUG)
-      if (e.k == VCALL && nret == 1 && !fs->bl->insidetbc
-#if defined(BEE_OPTCHAIN)
-          && !TESTARG_k(fs->f->code[e.u.info])  /* no tail call for optional-chain calls */
-#endif
-         ) {  /* tail call? */
+      if (e.k == VCALL && nret == 1 && !fs->bl->insidetbc) {  /* tail call? */
         SET_OPCODE(getinstruction(fs,&e), OP_TAILCALL);
         lua_assert(GETARG_A(getinstruction(fs,&e)) == luaY_nvarstack(fs));
       }
@@ -2074,3 +1967,4 @@ LClosure *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff,
   L->top.p--;  /* remove scanner's table */
   return cl;  /* closure is on the stack, too */
 }
+

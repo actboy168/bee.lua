@@ -7,6 +7,39 @@ lm.compile_commands = "$builddir"
 lm.lua = lm.lua or "55"
 lm.luadir = lm:path("3rd/lua"..lm.lua)
 
+-- 可选链补丁：将官方源码复制到构建目录并应用补丁（git apply）
+if lm.optchain then
+    lm:runlua "apply_optchain_patch" {
+        script = "3rd/lua-patch/apply_patch.lua",
+        args = {
+            "3rd/lua" .. lm.lua,
+            "3rd/lua-patch/optchain/lua" .. lm.lua .. ".patch",
+            "$builddir/patched/lua" .. lm.lua,
+        },
+        inputs = {
+            "3rd/lua"..lm.lua.."/onelua.c",
+            "3rd/lua"..lm.lua.."/linit.c",
+            "3rd/lua"..lm.lua.."/lparser.c",
+            "3rd/lua"..lm.lua.."/lvm.c",
+            "3rd/lua"..lm.lua.."/lopcodes.c",
+            "3rd/lua"..lm.lua.."/lopcodes.h",
+            "3rd/lua"..lm.lua.."/lopnames.h",
+            "3rd/lua-patch/apply_patch.lua",
+            "3rd/lua-patch/optchain/lua" .. lm.lua .. ".patch",
+        },
+        outputs = {
+            "$builddir/patched/lua"..lm.lua.."/onelua.c",
+            "$builddir/patched/lua"..lm.lua.."/linit.c",
+            "$builddir/patched/lua"..lm.lua.."/lparser.c",
+            "$builddir/patched/lua"..lm.lua.."/lvm.c",
+            "$builddir/patched/lua"..lm.lua.."/lopcodes.c",
+            "$builddir/patched/lua"..lm.lua.."/lopcodes.h",
+            "$builddir/patched/lua"..lm.lua.."/lopnames.h",
+        },
+    }
+    lm.luadir = lm:path("$builddir/patched/lua" .. lm.lua)
+end
+
 local function macos_version()
     local cxx = lm.cxx or "c++17"
     local version = cxx:match "^c%+%+(.+)$"
@@ -80,7 +113,7 @@ if lm.sanitize then
 end
 
 lm:source_set "source_lua" {
-    includes = lm.luadir,
+    includes = lm.optchain and { lm.luadir, lm:path("3rd/lua"..lm.lua) } or lm.luadir,
     sources = {
         lm.luadir / "onelua.c",
     },
