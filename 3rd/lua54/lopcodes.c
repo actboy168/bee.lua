@@ -100,8 +100,5 @@ LUAI_DDEF const lu_byte luaP_opmodes[NUM_OPCODES] = {
  ,opmode(0, 1, 0, 0, 1, iABC)		/* OP_VARARG */
  ,opmode(0, 0, 1, 0, 1, iABC)		/* OP_VARARGPREP */
  ,opmode(0, 0, 0, 0, 0, iAx)		/* OP_EXTRAARG */
-#if defined(BEE_OPTCHAIN)
- ,opmode(0, 0, 0, 0, 1, iABC)		/* OP_SETTOP */
-#endif
 };
 

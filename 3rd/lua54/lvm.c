@@ -1236,21 +1236,6 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
         } while (b--);
         vmbreak;
       }
-#if defined(BEE_OPTCHAIN)
-      vmcase(OP_SETTOP) {
-        /* Optional-chain short circuit: fill R[A..A+B] with nils and
-           also fix the stack top so that open instructions (OP_RETURN,
-           OP_CALL, OP_SETLIST) read exactly the nils produced here.
-           (Only the optional-chain compiler emits this instruction.) */
-        StkId ra = RA(i);
-        int b = GETARG_B(i);
-        do {
-          setnilvalue(s2v(ra++));
-        } while (b--);
-        L->top.p = RA(i) + GETARG_B(i) + 1;
-        vmbreak;
-      }
-#endif
       vmcase(OP_GETUPVAL) {
         StkId ra = RA(i);
         int b = GETARG_B(i);
