@@ -8,33 +8,35 @@ lm.lua = lm.lua or "55"
 lm.luadir = lm:path("3rd/lua"..lm.lua)
 
 -- 可选链补丁：将官方源码复制到构建目录并应用补丁（git apply）
+-- 注意：args 必须用 lm:path 对象（而非裸字符串），lm:path 会自动加
+-- 当前项目前缀，保证 bee.lua 独立构建与作为 submodule 被引用时路径都正确。
 if lm.optchain then
     lm:runlua "apply_optchain_patch" {
         script = "3rd/lua-patch/apply_patch.lua",
         args = {
-            "3rd/lua" .. lm.lua,
-            "3rd/lua-patch/optchain/lua" .. lm.lua .. ".patch",
-            "$builddir/patched/lua" .. lm.lua,
+            lm:path("3rd/lua" .. lm.lua),
+            lm:path("3rd/lua-patch/optchain/lua" .. lm.lua .. ".patch"),
+            lm:path("$builddir/patched/lua" .. lm.lua),
         },
         inputs = {
-            "3rd/lua"..lm.lua.."/onelua.c",
-            "3rd/lua"..lm.lua.."/linit.c",
-            "3rd/lua"..lm.lua.."/lparser.c",
-            "3rd/lua"..lm.lua.."/lvm.c",
-            "3rd/lua"..lm.lua.."/lopcodes.c",
-            "3rd/lua"..lm.lua.."/lopcodes.h",
-            "3rd/lua"..lm.lua.."/lopnames.h",
-            "3rd/lua-patch/apply_patch.lua",
-            "3rd/lua-patch/optchain/lua" .. lm.lua .. ".patch",
+            lm:path("3rd/lua"..lm.lua) / "onelua.c",
+            lm:path("3rd/lua"..lm.lua) / "linit.c",
+            lm:path("3rd/lua"..lm.lua) / "lparser.c",
+            lm:path("3rd/lua"..lm.lua) / "lvm.c",
+            lm:path("3rd/lua"..lm.lua) / "lopcodes.c",
+            lm:path("3rd/lua"..lm.lua) / "lopcodes.h",
+            lm:path("3rd/lua"..lm.lua) / "lopnames.h",
+            lm:path("3rd/lua-patch/apply_patch.lua"),
+            lm:path("3rd/lua-patch/optchain/lua"..lm.lua..".patch"),
         },
         outputs = {
-            "$builddir/patched/lua"..lm.lua.."/onelua.c",
-            "$builddir/patched/lua"..lm.lua.."/linit.c",
-            "$builddir/patched/lua"..lm.lua.."/lparser.c",
-            "$builddir/patched/lua"..lm.lua.."/lvm.c",
-            "$builddir/patched/lua"..lm.lua.."/lopcodes.c",
-            "$builddir/patched/lua"..lm.lua.."/lopcodes.h",
-            "$builddir/patched/lua"..lm.lua.."/lopnames.h",
+            lm:path("$builddir/patched/lua"..lm.lua) / "onelua.c",
+            lm:path("$builddir/patched/lua"..lm.lua) / "linit.c",
+            lm:path("$builddir/patched/lua"..lm.lua) / "lparser.c",
+            lm:path("$builddir/patched/lua"..lm.lua) / "lvm.c",
+            lm:path("$builddir/patched/lua"..lm.lua) / "lopcodes.c",
+            lm:path("$builddir/patched/lua"..lm.lua) / "lopcodes.h",
+            lm:path("$builddir/patched/lua"..lm.lua) / "lopnames.h",
         },
     }
     lm.luadir = lm:path("$builddir/patched/lua" .. lm.lua)
@@ -113,6 +115,7 @@ if lm.sanitize then
 end
 
 lm:source_set "source_lua" {
+    objdeps = lm.optchain and "apply_optchain_patch",
     includes = lm.optchain and { lm.luadir, lm:path("3rd/lua"..lm.lua) } or lm.luadir,
     sources = {
         lm.luadir / "onelua.c",
@@ -147,6 +150,7 @@ lm:source_set "source_lua" {
 }
 
 lm:source_set "source_bee" {
+    objdeps = lm.optchain and "apply_optchain_patch",
     includes = lm.luadir,
     sources = "3rd/lua-seri/lua-seri.cpp",
     msvc = {
@@ -186,6 +190,7 @@ local function need(lst)
 end
 
 lm:source_set "source_bee" {
+    objdeps = lm.optchain and "apply_optchain_patch",
     includes = {
         ".",
         lm.luadir,
@@ -268,6 +273,7 @@ lm:source_set "source_bee" {
 }
 
 lm:source_set "source_bee" {
+    objdeps = lm.optchain and "apply_optchain_patch",
     includes = {
         ".",
         lm.luadir,
