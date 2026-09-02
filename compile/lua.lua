@@ -2,20 +2,20 @@ local lm = require "luamake"
 
 if lm.os == "windows" then
     lm:shared_library("lua"..lm.lua) {
-        deps = lm.optchain and { "bee_utf8_crt", "apply_optchain_patch" } or "bee_utf8_crt",
+        deps = "bee_utf8_crt",
         objdeps = lm.optchain and "apply_optchain_patch",
-        includes = lm.optchain and { lm.luadir, lm:path("3rd/lua"..lm.lua) } or lm.luadir,
+        includes = {
+            lm.luadir,
+            lm.optchain and tostring(lm:path("3rd/lua"..lm.lua)),
+        },
         sources = {
             lm.luadir / "onelua.c",
             lm.luadir / "linit.c",
         },
-        defines = lm.optchain and {
+        defines = {
             "MAKE_LIB",
             "LUA_BUILD_AS_DLL",
-            "BEE_OPTCHAIN",
-        } or {
-            "MAKE_LIB",
-            "LUA_BUILD_AS_DLL",
+            lm.optchain and "BEE_OPTCHAIN",
         },
         msvc = lm.fast_setjmp ~= "off" and {
             defines = "BEE_FAST_SETJMP",
@@ -23,20 +23,12 @@ if lm.os == "windows" then
         }
     }
     lm:executable "lua" {
-        deps = lm.optchain and {
-            "bee_utf8_crt",
-            "lua"..lm.lua,
-            "apply_optchain_patch",
-        } or {
+        deps = {
             "bee_utf8_crt",
             "lua"..lm.lua,
         },
         objdeps = lm.optchain and "apply_optchain_patch",
-        includes = lm.optchain and {
-            ".",
-            lm.luadir,
-            lm:path("3rd/lua"..lm.lua),
-        } or {
+        includes = {
             ".",
             lm.luadir,
         },
@@ -47,18 +39,20 @@ if lm.os == "windows" then
         }
     }
     lm:executable "luac" {
-        deps = lm.optchain and { "bee_utf8_crt", "apply_optchain_patch" } or "bee_utf8_crt",
+        deps = "bee_utf8_crt",
         objdeps = lm.optchain and "apply_optchain_patch",
-        includes = lm.optchain and { ".", lm.luadir, lm:path("3rd/lua"..lm.lua) } or ".",
+        includes = {
+            ".",
+            lm.luadir,
+            lm.optchain and tostring(lm:path("3rd/lua"..lm.lua)),
+        },
         sources = {
             lm.luadir / "onelua.c",
             "3rd/lua-patch/bee_utf8_main.c",
         },
-        defines = lm.optchain and {
+        defines = {
             "MAKE_LUAC",
-            "BEE_OPTCHAIN",
-        } or {
-            "MAKE_LUAC",
+            lm.optchain and "BEE_OPTCHAIN",
         },
         msvc = lm.fast_setjmp ~= "off" and {
             defines = "BEE_FAST_SETJMP",
@@ -81,7 +75,10 @@ end
 lm:executable "lua" {
     deps = "source_lua",
     objdeps = lm.optchain and "apply_optchain_patch",
-    includes = lm.optchain and { lm.luadir, lm:path("3rd/lua"..lm.lua) } or lm.luadir,
+    includes = {
+        lm.luadir,
+        lm.optchain and tostring(lm:path("3rd/lua"..lm.lua)),
+    },
     sources = {
         lm.luadir / "lua.c",
         lm.luadir / "linit.c",

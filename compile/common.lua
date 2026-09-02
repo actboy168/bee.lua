@@ -184,11 +184,19 @@ end
 
 lm:source_set "source_lua" {
     objdeps = lm.optchain and "apply_optchain_patch",
-    includes = lm.optchain and { lm.luadir, lm:path("3rd/lua"..lm.lua) } or lm.luadir,
+    -- optchain 时 lua 源码在补丁目录，但 lprefix.h 相对引用
+    -- ../lua-patch/ 下的头文件，需要源码目录作为 -I 解析前缀
+    includes = {
+        lm.luadir,
+        lm.optchain and tostring(lm:path("3rd/lua"..lm.lua)),
+    },
     sources = {
         lm.luadir / "onelua.c",
     },
-    defines = lm.optchain and { "MAKE_LIB", "BEE_OPTCHAIN" } or "MAKE_LIB",
+    defines = {
+        "MAKE_LIB",
+        lm.optchain and "BEE_OPTCHAIN",
+    },
     visibility = "default",
     windows = {
         defines = "LUA_BUILD_AS_DLL",
