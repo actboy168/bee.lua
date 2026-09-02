@@ -10,10 +10,6 @@ local fs = require "bee.filesystem"
 local src, dst, patch = ...
 assert(src and dst and patch, "usage: apply_patch.lua <src_dir> <dst_dir> <patch_file> [file...]")
 
-local function normalize(p)
-    return (p:gsub("\\", "/"))
-end
-
 local function read_file(path)
     local f <close> = io.open(path, "rb")
     if not f then
@@ -22,11 +18,9 @@ local function read_file(path)
     return f:read "a"
 end
 
-src, dst, patch = normalize(src), normalize(dst), normalize(patch)
-
 fs.create_directories(dst)
 for i = 4, select("#", ...) do
-    local file = normalize(select(i, ...))
+    local file = select(i, ...)
     local new = assert(read_file(src .. "/" .. file), "file not found: " .. file)
     if read_file(dst .. "/" .. file) ~= new then
         local parent = file:match "^(.*)/[^/]+$"

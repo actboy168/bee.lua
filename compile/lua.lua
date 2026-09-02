@@ -6,7 +6,7 @@ if lm.os == "windows" then
         objdeps = lm.optchain and "apply_optchain_patch",
         includes = {
             lm.luadir,
-            lm.optchain and tostring(lm:path("3rd/lua"..lm.lua)),
+            lm.optchain and lm.luasrcdir,
         },
         sources = {
             lm.luadir / "onelua.c",
@@ -44,7 +44,7 @@ if lm.os == "windows" then
         includes = {
             ".",
             lm.luadir,
-            lm.optchain and tostring(lm:path("3rd/lua"..lm.lua)),
+            lm.optchain and lm.luasrcdir,
         },
         sources = {
             lm.luadir / "onelua.c",
@@ -77,7 +77,7 @@ lm:executable "lua" {
     objdeps = lm.optchain and "apply_optchain_patch",
     includes = {
         lm.luadir,
-        lm.optchain and tostring(lm:path("3rd/lua"..lm.lua)),
+        lm.optchain and lm.luasrcdir,
     },
     sources = {
         lm.luadir / "lua.c",

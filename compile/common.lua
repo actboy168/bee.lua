@@ -6,29 +6,34 @@ lm.compile_commands = "$builddir"
 
 lm.lua = lm.lua or "55"
 lm.luadir = lm:path("3rd/lua"..lm.lua)
+lm.luasrcdir = lm.luadir
 
 -- 可选链补丁：将官方源码复制到构建目录并应用补丁（git apply）。
--- 复制到补丁目录的文件包括：
---   * 补丁涉及的文件（生成期从 git diff 补丁头解析，无需手工维护）
---   * 编译入口 onelua.c / linit.c / lua.c（onelua.c 是 amalgamation，
---     会 #include 补丁涉及的源文件，必须与补丁版本同目录）
---   * 全部头文件，保证补丁目录自包含（bootstrap/binding 直接 -I 该目录）
--- 依赖规则：源码目录整体（glob）声明为 inputs，任一源码变化都会重新打
--- 补丁；apply_patch.lua 只在内容变化时重写文件，配合规则的 restat = 1，
--- 补丁产物没变时不会触发下游重编（增量编译）。
--- 路径用 tostring(lm:path(...)) 取得：带当前项目前缀，bee.lua 独立构建
--- 或作为 submodule 被引用时都正确。
+-- 复制清单（无需手工维护）：
+--   * 补丁涉及的文件——生成期从 git diff 补丁头解析
+--   * 编译入口 onelua.c / linit.c / lua.c——onelua.c 是 amalgamation，
+--     会 #include 补丁涉及的源文件，必须与补丁版本同目录
+--   * 全部头文件——bootstrap/binding 等只 -I 补丁目录；但 lprefix.h
+--     相对引用 ../lua-patch/ 下的头文件，编译 lua 源码的目标还需把
+--     官方源码目录（lm.luasrcdir）加进 includes
+-- inputs 即复制清单对应的源文件 + 补丁 + 脚本：任一变化都会重新打补丁；
+-- apply_patch.lua 内容不变不重写文件，配合规则的 restat = 1，产物没变
+-- 时不会触发下游重编（增量编译）。
+-- 补丁直接重写的文件不能作为 outputs：git apply 每次都会重写它们（即使
+-- 内容不变），restat 会误判为产物变化；其消费者（onelua.c 的 #include）
+-- 由编译器 depfile 跟踪，内容变化时依然会触发重编。
 if lm.optchain then
     local fs = require "bee.filesystem"
 
     local script = tostring(lm:path("3rd/lua-patch/apply_patch.lua"))
-    local srcdir = tostring(lm:path("3rd/lua" .. lm.lua))
+    local srcdir = tostring(lm.luasrcdir)
     local patchfile = tostring(lm:path("3rd/lua-patch/optchain/lua" .. lm.lua .. ".patch"))
     lm.luadir = lm:path("$builddir/patched/lua" .. lm.lua)
     local dstdir = tostring(lm.luadir)
 
     local files = {}
     local mark = {}
+    local patchedmark = {}
     local function add(file)
         if not mark[file] then
             mark[file] = true
@@ -37,11 +42,10 @@ if lm.optchain then
     end
 
     -- 从 git diff 补丁头解析补丁涉及的文件
-    local patched = {}
     for line in io.lines(patchfile) do
         local file = line:match "^diff %-%-git a/(%S+) %S+$"
         if file then
-            patched[#patched+1] = file
+            patchedmark[file] = true
             add(file)
         end
     end
@@ -64,6 +68,7 @@ if lm.optchain then
         end
     end
 
+    -- prebuilt 模式下 $luamake 是 bootstrap（直接运行脚本），没有 lua 子命令
     local command = { "$luamake" }
     if not lm.prebuilt then
         command[#command+1] = "lua"
@@ -85,16 +90,9 @@ if lm.optchain then
     local inputs = {
         script,
         patchfile,
-        srcdir .. "/*.c",
-        srcdir .. "/*.h",
     }
-    -- outputs 不能包含补丁直接重写的文件：git apply 每次都会重写它们
-    -- （即使内容不变），restat 会误判为产物变化，导致下游全量重编。
-    -- 这些文件的实际消费者（onelua.c 的 #include）由编译器 depfile 正确
-    -- 跟踪，内容变化时依然会触发重编。
-    local patchedmark = {}
-    for _, file in ipairs(patched) do
-        patchedmark[file] = true
+    for _, file in ipairs(files) do
+        inputs[#inputs+1] = srcdir .. "/" .. file
     end
     local outputs = {}
     for _, file in ipairs(files) do
@@ -105,6 +103,7 @@ if lm.optchain then
 
     lm:build "apply_optchain_patch" {
         rule = "apply_optchain_patch",
+        deps = lm.prebuilt and "bootstrap",
         inputs = inputs,
         outputs = outputs,
     }
@@ -188,7 +187,7 @@ lm:source_set "source_lua" {
     -- ../lua-patch/ 下的头文件，需要源码目录作为 -I 解析前缀
     includes = {
         lm.luadir,
-        lm.optchain and tostring(lm:path("3rd/lua"..lm.lua)),
+        lm.optchain and lm.luasrcdir,
     },
     sources = {
         lm.luadir / "onelua.c",
