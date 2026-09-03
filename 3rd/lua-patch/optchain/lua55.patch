@@ -40,7 +40,7 @@ index 0554a2e..e90d52f 100644
  };
  
 diff --git a/lparser.c b/lparser.c
-index 090e150..2494448 100644
+index 090e150..d18c146 100644
 --- a/lparser.c
 +++ b/lparser.c
 @@ -37,6 +37,30 @@
@@ -82,27 +82,7 @@ index 090e150..2494448 100644
      luaK_setreturns(fs, e, extra);  /* last exp. provides the difference */
    }
    else {
-@@ -967,6 +992,7 @@ static void closelistfield (FuncState *fs, ConsControl *cc) {
- static void lastlistfield (FuncState *fs, ConsControl *cc) {
-   if (cc->tostore == 0) return;
-   if (hasmultret(cc->v.k)) {
-+    luaK_setreturns_optchain(fs, &cc->v, LUA_MULTRET);
-     luaK_setmultret(fs, &cc->v);
-     luaK_setlist(fs, cc->t->u.info, cc->na, LUA_MULTRET);
-     cc->na--;  /* do not count last expression (unknown number of elements) */
-@@ -1147,8 +1173,10 @@ static void funcargs (LexState *ls, expdesc *f) {
-         args.k = VVOID;
-       else {
-         explist(ls, &args);
--        if (hasmultret(args.k))
-+        if (hasmultret(args.k)) {
-+          luaK_setreturns_optchain(fs, &args, LUA_MULTRET);
-           luaK_setmultret(fs, &args);
-+        }
-       }
-       check_match(ls, ')', '(', line);
-       break;
-@@ -1218,9 +1246,29 @@ static void suffixedexp (LexState *ls, expdesc *v) {
+@@ -1218,9 +1243,29 @@ static void suffixedexp (LexState *ls, expdesc *v) {
    /* suffixedexp ->
         primaryexp { '.' NAME | '[' exp ']' | ':' NAME funcargs | funcargs } */
    FuncState *fs = ls->fs;
@@ -132,7 +112,7 @@ index 090e150..2494448 100644
        case '.': {  /* fieldsel */
          fieldsel(ls, v);
          break;
-@@ -1245,7 +1293,48 @@ static void suffixedexp (LexState *ls, expdesc *v) {
+@@ -1245,7 +1290,48 @@ static void suffixedexp (LexState *ls, expdesc *v) {
          funcargs(ls, v);
          break;
        }
@@ -182,11 +162,8 @@ index 090e150..2494448 100644
      }
    }
  }
-@@ -2034,9 +2123,12 @@ static void retstat (LexState *ls) {
-   else {
-     nret = explist(ls, &e);  /* optional return values */
+@@ -2036,7 +2122,9 @@ static void retstat (LexState *ls) {
      if (hasmultret(e.k)) {
-+      luaK_setreturns_optchain(fs, &e, LUA_MULTRET);
        luaK_setmultret(fs, &e);
  #if defined(NDEBUG)
 -      if (e.k == VCALL && nret == 1 && !fs->bl->insidetbc) {  /* tail call? */
@@ -196,7 +173,7 @@ index 090e150..2494448 100644
          SET_OPCODE(getinstruction(fs,&e), OP_TAILCALL);
          lua_assert(GETARG_A(getinstruction(fs,&e)) == luaY_nvarstack(fs));
        }
-@@ -2201,4 +2293,3 @@ LClosure *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff,
+@@ -2201,4 +2289,3 @@ LClosure *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff,
    L->top.p--;  /* remove scanner's table */
    return cl;  /* closure is on the stack, too */
  }

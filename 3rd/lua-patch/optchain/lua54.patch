@@ -39,7 +39,7 @@ index 965cec9..63b372a 100644
  };
  
 diff --git a/lparser.c b/lparser.c
-index eed008c..9795874 100644
+index eed008c..f1a0f64 100644
 --- a/lparser.c
 +++ b/lparser.c
 @@ -37,6 +37,27 @@
@@ -60,7 +60,7 @@ index eed008c..9795874 100644
 +    int pc = e->u.info;  /* position of the call */
 +    if (TESTARG_k(fs->f->code[pc])) {  /* optional-chain call (fixed layout)? */
 +      /* A positive 'nresults' needs exactly that many nils; otherwise
-+         (LUA_MULTRET or 0, value discarded) B stays 0 (a single nil). */
++         (0, value discarded) B stays 0 (a single nil). */
 +      if (nresults > 0)  /* fixed positive number of results? */
 +        SETARG_B(fs->f->code[pc + 2], nresults - 1);  /* widen OP_SETTOP */
 +    }
@@ -78,27 +78,7 @@ index eed008c..9795874 100644
      luaK_setreturns(fs, e, extra);  /* last exp. provides the difference */
    }
    else {
-@@ -879,6 +901,7 @@ static void closelistfield (FuncState *fs, ConsControl *cc) {
- static void lastlistfield (FuncState *fs, ConsControl *cc) {
-   if (cc->tostore == 0) return;
-   if (hasmultret(cc->v.k)) {
-+    luaK_setreturns_optchain(fs, &cc->v, LUA_MULTRET);
-     luaK_setmultret(fs, &cc->v);
-     luaK_setlist(fs, cc->t->u.info, cc->na, LUA_MULTRET);
-     cc->na--;  /* do not count last expression (unknown number of elements) */
-@@ -1035,8 +1058,10 @@ static void funcargs (LexState *ls, expdesc *f) {
-         args.k = VVOID;
-       else {
-         explist(ls, &args);
--        if (hasmultret(args.k))
-+        if (hasmultret(args.k)) {
-+          luaK_setreturns_optchain(fs, &args, LUA_MULTRET);
-           luaK_setmultret(fs, &args);
-+        }
-       }
-       check_match(ls, ')', '(', line);
-       break;
-@@ -1105,9 +1130,29 @@ static void suffixedexp (LexState *ls, expdesc *v) {
+@@ -1105,9 +1127,29 @@ static void suffixedexp (LexState *ls, expdesc *v) {
    /* suffixedexp ->
         primaryexp { '.' NAME | '[' exp ']' | ':' NAME funcargs | funcargs } */
    FuncState *fs = ls->fs;
@@ -128,7 +108,7 @@ index eed008c..9795874 100644
        case '.': {  /* fieldsel */
          fieldsel(ls, v);
          break;
-@@ -1132,7 +1177,48 @@ static void suffixedexp (LexState *ls, expdesc *v) {
+@@ -1132,7 +1174,48 @@ static void suffixedexp (LexState *ls, expdesc *v) {
          funcargs(ls, v);
          break;
        }
@@ -178,11 +158,8 @@ index eed008c..9795874 100644
      }
    }
  }
-@@ -1822,9 +1908,12 @@ static void retstat (LexState *ls) {
-   else {
-     nret = explist(ls, &e);  /* optional return values */
+@@ -1824,7 +1907,9 @@ static void retstat (LexState *ls) {
      if (hasmultret(e.k)) {
-+      luaK_setreturns_optchain(fs, &e, LUA_MULTRET);
        luaK_setmultret(fs, &e);
  #if defined(NDEBUG)
 -      if (e.k == VCALL && nret == 1 && !fs->bl->insidetbc) {  /* tail call? */
@@ -192,7 +169,7 @@ index eed008c..9795874 100644
          SET_OPCODE(getinstruction(fs,&e), OP_TAILCALL);
          lua_assert(GETARG_A(getinstruction(fs,&e)) == luaY_nvarstack(fs));
        }
-@@ -1967,4 +2056,3 @@ LClosure *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff,
+@@ -1967,4 +2052,3 @@ LClosure *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff,
    L->top.p--;  /* remove scanner's table */
    return cl;  /* closure is on the stack, too */
  }
