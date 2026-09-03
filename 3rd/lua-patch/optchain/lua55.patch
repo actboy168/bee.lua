@@ -1,3 +1,17 @@
+diff --git a/ldebug.c b/ldebug.c
+index f54c9c5..3e30097 100644
+--- a/ldebug.c
++++ b/ldebug.c
+@@ -452,7 +452,8 @@ static int findsetreg (const Proto *p, int lastpc, int reg) {
+     int a = GETARG_A(i);
+     int change;  /* true if current instruction changed 'reg' */
+     switch (op) {
+-      case OP_LOADNIL: {  /* set registers from 'a' to 'a+b' */
++      case OP_LOADNIL:
++      case OP_SETTOP: {  /* set registers from 'a' to 'a+b' */
+         int b = GETARG_B(i);
+         change = (a <= reg && reg <= a + b);
+         break;
 diff --git a/lopcodes.c b/lopcodes.c
 index 7e18231..5346592 100644
 --- a/lopcodes.c
