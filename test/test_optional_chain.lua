@@ -202,3 +202,23 @@ function test_optchain:test_multi_value_args()
     local nothing
     lt.assertEquals(count(nothing?:getSize()), 1)
 end
+
+function test_optchain:test_extra_values_discarded()
+    -- More expressions than variables: the last multi-return optional-chain
+    -- call is discarded. This path passes 'nresults == 0' to
+    -- luaK_setreturns_optchain, which must leave OP_SETTOP's B field at 0
+    -- (a single nil). Regression: it used to store nresults-1 == -1 (255),
+    -- overflowing the stack on short-circuit.
+    local f
+    local a = 1, f?()   -- f is nil → short-circuit, result discarded
+    lt.assertEquals(a, 1)
+
+    local g = function() return 10, 20 end
+    local b = 1, g?()   -- non-short-circuit path (control)
+    lt.assertEquals(b, 1)
+
+    local h
+    local c = 1
+    c = 1, h?()         -- assignment-statement form (same adjust_assign)
+    lt.assertEquals(c, 1)
+end
