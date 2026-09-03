@@ -15,7 +15,6 @@ if lm.os == "windows" then
         defines = {
             "MAKE_LIB",
             "LUA_BUILD_AS_DLL",
-            lm.optchain and "BEE_OPTCHAIN",
         },
         msvc = lm.fast_setjmp ~= "off" and {
             defines = "BEE_FAST_SETJMP",
@@ -52,7 +51,6 @@ if lm.os == "windows" then
         },
         defines = {
             "MAKE_LUAC",
-            lm.optchain and "BEE_OPTCHAIN",
         },
         msvc = lm.fast_setjmp ~= "off" and {
             defines = "BEE_FAST_SETJMP",

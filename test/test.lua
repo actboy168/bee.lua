@@ -34,7 +34,7 @@ local _ = crash.create_handler "-"
 require "test_skip"
 require "test_lua"
 
-do  -- optional chain is enabled via BEE_OPTCHAIN at build time
+do  -- optional chain is enabled at build time via the git patch
     local loadable = load "local x; return x?.y"
     if loadable then
         require "test_optional_chain"

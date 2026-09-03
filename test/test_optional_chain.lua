@@ -1,8 +1,8 @@
--- Optional chaining (?.) is a custom syntax enabled at build time via the
--- BEE_OPTCHAIN macro (see 3rd/lua-patch/optchain/). The '?.' syntax errors
--- shown by LuaLS below are expected: the language server does not know this
--- extension. These tests only run when the interpreter was built with
--- BEE_OPTCHAIN (see the loader in test/test.lua).
+-- Optional chaining (?.) is a custom syntax enabled at build time by applying
+-- the git patch in 3rd/lua-patch/optchain/ (luamake -optchain). The '?.' syntax
+-- errors shown by LuaLS below are expected: the language server does not know
+-- this extension. These tests only run when the interpreter was built with
+-- the patch (see the loader in test/test.lua).
 local lt = require "ltest"
 
 local test_optchain = lt.test "optional_chain"

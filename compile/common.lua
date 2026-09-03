@@ -194,7 +194,6 @@ lm:source_set "source_lua" {
     },
     defines = {
         "MAKE_LIB",
-        lm.optchain and "BEE_OPTCHAIN",
     },
     visibility = "default",
     windows = {
