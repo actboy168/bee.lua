@@ -11,10 +11,13 @@ namespace bee::win {
 
     constexpr NTSTATUS NTSTATUS_SUCCESS             = 0x00000000L;
     constexpr NTSTATUS NTSTATUS_INFO_LENGTH_MISMATCH = 0xC0000004L;
+    constexpr NTSTATUS STATUS_ACCESS_DENIED        = 0xC0000022L;
 
     constexpr ULONG SystemExtendedHandleInformation = 64;
     constexpr ULONG ObjectNameInformation           = 1;
     constexpr ULONG ObjectTypeInformation           = 2;
+    constexpr ULONG FilePipeLocalInformation        = 24;
+
     struct UNICODE_STRING {
         USHORT Length;
         USHORT MaximumLength;
@@ -46,9 +49,31 @@ namespace bee::win {
         UNICODE_STRING TypeName;
     };
 
+    struct IO_STATUS_BLOCK {
+        union {
+            NTSTATUS Status;
+            PVOID    Pointer;
+        };
+        ULONG_PTR Information;
+    };
+
+    struct FILE_PIPE_LOCAL_INFORMATION {
+        ULONG NamedPipeType;
+        ULONG NamedPipeConfiguration;
+        ULONG MaximumInstances;
+        ULONG CurrentInstances;
+        ULONG InboundQuota;
+        ULONG ReadDataAvailable;
+        ULONG OutboundQuota;
+        ULONG WriteQuotaAvailable;
+        ULONG NamedPipeState;
+        ULONG NamedPipeEnd;
+    };
+
     extern "C" {
     NTSTATUS NTAPI NtQuerySystemInformation(ULONG SystemInformationClass, PVOID SystemInformation, ULONG SystemInformationLength, PULONG ReturnLength);
     NTSTATUS NTAPI NtQueryObject(HANDLE Handle, ULONG ObjectInformationClass, PVOID ObjectInformation, ULONG ObjectInformationLength, PULONG ReturnLength);
+    NTSTATUS NTAPI NtQueryInformationFile(HANDLE FileHandle, IO_STATUS_BLOCK* IoStatusBlock, PVOID FileInformation, ULONG Length, ULONG FileInformationClass);
     }
 
     static bool enable_debug_privilege() noexcept {
@@ -85,7 +110,9 @@ namespace bee::win {
         return GetLastError() == ERROR_BAD_EXE_FORMAT;
     }
 
-    static bool get_handle_type(HANDLE dup_handle, bool& is_file) noexcept {
+    enum class handle_kind { other, file, section };
+
+    static handle_kind get_handle_kind(HANDLE dup_handle) noexcept {
         std::vector<uint8_t> buffer(256);
         ULONG return_length = 0;
         NTSTATUS status;
@@ -96,23 +123,24 @@ namespace bee::win {
                 buffer.resize(buffer.size() * 2);
                 continue;
             }
-            return false;
+            return handle_kind::other;
         }
-        if (status != NTSTATUS_SUCCESS) return false;
+        if (status != NTSTATUS_SUCCESS) return handle_kind::other;
 
         auto& info = *reinterpret_cast<OBJ_TYPE_INFO*>(buffer.data());
-        if (info.TypeName.Length == 0 || !info.TypeName.Buffer) return false;
+        if (info.TypeName.Length == 0 || !info.TypeName.Buffer) return handle_kind::other;
         std::wstring_view type(info.TypeName.Buffer, info.TypeName.Length / sizeof(WCHAR));
-        is_file = (type == L"File");
-        return true;
+        if (type == L"File") return handle_kind::file;
+        if (type == L"Section") return handle_kind::section;
+        return handle_kind::other;
     }
 
     static std::wstring nt_to_dos_path(std::wstring_view nt_path) {
-        // Build device-to-drive-letter mapping
         WCHAR drives[256];
         if (!GetLogicalDriveStringsW(255, drives)) return {};
 
         std::wstring best_match;
+        size_t best_len = 0;
         for (const WCHAR* drive = drives; *drive; drive += wcslen(drive) + 1) {
             WCHAR drive_letter[3] = { drive[0], L':', L'\0' };
             WCHAR device_name[MAX_PATH];
@@ -125,13 +153,14 @@ namespace bee::win {
                 std::wstring dos_path(1, drive[0]);
                 dos_path += L':';
                 dos_path.append(nt_path.data() + device_len);
-                if (best_match.empty() || device_len > best_match.size()) {
+                if (best_match.empty() || device_len > best_len) {
                     best_match = std::move(dos_path);
+                    best_len   = device_len;
                 }
             }
         }
 
-        // If no drive letter match, try stripping \??\ prefix
+        // If no drive letter match, try stripping the \??\ prefix.
         if (best_match.empty() && nt_path.size() > 4 && _wcsnicmp(nt_path.data(), L"\\??\\", 4) == 0) {
             best_match = nt_path.substr(4);
         }
@@ -198,10 +227,31 @@ namespace bee::win {
                 continue;
             }
 
-            bool is_file = false;
-            if (!get_handle_type(dup_handle, is_file) || !is_file) {
+            handle_kind kind = get_handle_kind(dup_handle);
+            if (kind == handle_kind::other) {
                 CloseHandle(dup_handle);
                 continue;
+            }
+
+            // Only regular files can be named pipes, so only they need the pipe
+            // filter below. A Section is a memory-mapped file and never blocks.
+            if (kind == handle_kind::file) {
+                // Querying a named pipe's name (ObjectNameInformation) blocks
+                // indefinitely when the pipe server holds the pipe lock, so we
+                // skip pipes up front. FilePipeLocalInformation is non-blocking:
+                //   STATUS_SUCCESS       -> named pipe (skip)
+                //   STATUS_ACCESS_DENIED -> ambiguous: pipe we can't read, or a
+                //                           file with restricted access; skip it
+                //                           to dodge the blocking pipes.
+                // TODO: ACCESS_DENIED also skips ~14% of File handles that are
+                //       real files with restricted access; revisit if needed.
+                IO_STATUS_BLOCK iosb = {};
+                FILE_PIPE_LOCAL_INFORMATION pipe_info = {};
+                NTSTATUS pipe_status = NtQueryInformationFile(dup_handle, &iosb, &pipe_info, sizeof(pipe_info), FilePipeLocalInformation);
+                if (pipe_status == NTSTATUS_SUCCESS || pipe_status == STATUS_ACCESS_DENIED) {
+                    CloseHandle(dup_handle);
+                    continue;
+                }
             }
 
             std::vector<uint8_t> name_buffer(512);

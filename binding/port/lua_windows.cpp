@@ -97,6 +97,27 @@ namespace bee::lua_windows {
         return 1;
     }
 
+    static int process_name(lua_State* L) {
+        auto pid        = (uint32_t)luaL_checkinteger(L, 1);
+        HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+        if (!hProcess) {
+            return 0;
+        }
+        WCHAR path[MAX_PATH];
+        DWORD size = MAX_PATH;
+        if (!QueryFullProcessImageNameW(hProcess, 0, path, &size)) {
+            CloseHandle(hProcess);
+            return 0;
+        }
+        CloseHandle(hProcess);
+        std::wstring_view full(path, size);
+        auto pos = full.rfind(L'\\');
+        std::wstring name(pos != std::wstring_view::npos ? full.substr(pos + 1) : full);
+        auto u8   = wtf8::w2u(name);
+        lua_pushlstring(L, u8.data(), u8.size());
+        return 1;
+    }
+
     static int luaopen(lua_State* L) {
         luaL_Reg lib[] = {
             { "u2a", lu2a },
@@ -106,6 +127,7 @@ namespace bee::lua_windows {
             { "write_console", write_console },
             { "is_ssd", is_ssd },
             { "find_file_holders", find_file_holders },
+            { "process_name", process_name },
             { NULL, NULL }
         };
         luaL_newlibtable(L, lib);
