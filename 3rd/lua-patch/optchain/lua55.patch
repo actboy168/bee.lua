@@ -40,7 +40,7 @@ index 0554a2e..e90d52f 100644
  };
  
 diff --git a/lparser.c b/lparser.c
-index 090e150..646161c 100644
+index 090e150..2494448 100644
 --- a/lparser.c
 +++ b/lparser.c
 @@ -37,6 +37,30 @@
@@ -63,9 +63,9 @@ index 090e150..646161c 100644
 +      /* The short-circuit path is a fixed layout right after the call:
 +         CALL (with 'k' flag set) / JMP / OP_SETTOP. The OP_SETTOP (which
 +         also fixes the stack top; see lvm.c) holds the number of nil
-+         slots minus one in its B field: a fixed 'nresults' needs exactly
-+         that many nils, while LUA_MULTRET needs exactly one (B stays 0). */
-+      if (nresults != LUA_MULTRET)  /* fixed number of results? */
++         slots minus one in its B field: a positive 'nresults' needs
++         exactly that many nils; otherwise B stays 0 (a single nil). */
++      if (nresults > 0)  /* fixed positive number of results? */
 +        SETARG_B(fs->f->code[pc + 2], nresults - 1);  /* widen OP_SETTOP */
 +    }
 +  }
@@ -74,7 +74,7 @@ index 090e150..646161c 100644
  
  /* because all strings are unified by the scanner, the parser
     can use pointer equality for string equality */
-@@ -552,6 +575,7 @@ static void adjust_assign (LexState *ls, int nvars, int nexps, expdesc *e) {
+@@ -552,6 +576,7 @@ static void adjust_assign (LexState *ls, int nvars, int nexps, expdesc *e) {
      int extra = needed + 1;  /* discount last expression itself */
      if (extra < 0)
        extra = 0;
@@ -82,7 +82,7 @@ index 090e150..646161c 100644
      luaK_setreturns(fs, e, extra);  /* last exp. provides the difference */
    }
    else {
-@@ -967,6 +991,7 @@ static void closelistfield (FuncState *fs, ConsControl *cc) {
+@@ -967,6 +992,7 @@ static void closelistfield (FuncState *fs, ConsControl *cc) {
  static void lastlistfield (FuncState *fs, ConsControl *cc) {
    if (cc->tostore == 0) return;
    if (hasmultret(cc->v.k)) {
@@ -90,7 +90,7 @@ index 090e150..646161c 100644
      luaK_setmultret(fs, &cc->v);
      luaK_setlist(fs, cc->t->u.info, cc->na, LUA_MULTRET);
      cc->na--;  /* do not count last expression (unknown number of elements) */
-@@ -1147,8 +1172,10 @@ static void funcargs (LexState *ls, expdesc *f) {
+@@ -1147,8 +1173,10 @@ static void funcargs (LexState *ls, expdesc *f) {
          args.k = VVOID;
        else {
          explist(ls, &args);
@@ -102,7 +102,7 @@ index 090e150..646161c 100644
        }
        check_match(ls, ')', '(', line);
        break;
-@@ -1218,9 +1245,29 @@ static void suffixedexp (LexState *ls, expdesc *v) {
+@@ -1218,9 +1246,29 @@ static void suffixedexp (LexState *ls, expdesc *v) {
    /* suffixedexp ->
         primaryexp { '.' NAME | '[' exp ']' | ':' NAME funcargs | funcargs } */
    FuncState *fs = ls->fs;
@@ -132,7 +132,7 @@ index 090e150..646161c 100644
        case '.': {  /* fieldsel */
          fieldsel(ls, v);
          break;
-@@ -1245,7 +1292,48 @@ static void suffixedexp (LexState *ls, expdesc *v) {
+@@ -1245,7 +1293,48 @@ static void suffixedexp (LexState *ls, expdesc *v) {
          funcargs(ls, v);
          break;
        }
@@ -182,7 +182,7 @@ index 090e150..646161c 100644
      }
    }
  }
-@@ -2034,9 +2122,12 @@ static void retstat (LexState *ls) {
+@@ -2034,9 +2123,12 @@ static void retstat (LexState *ls) {
    else {
      nret = explist(ls, &e);  /* optional return values */
      if (hasmultret(e.k)) {
@@ -196,11 +196,25 @@ index 090e150..646161c 100644
          SET_OPCODE(getinstruction(fs,&e), OP_TAILCALL);
          lua_assert(GETARG_A(getinstruction(fs,&e)) == luaY_nvarstack(fs));
        }
-@@ -2201,4 +2292,3 @@ LClosure *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff,
+@@ -2201,4 +2293,3 @@ LClosure *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff,
    L->top.p--;  /* remove scanner's table */
    return cl;  /* closure is on the stack, too */
  }
 -
+diff --git a/luac.c b/luac.c
+index 4a2016a..1e73bd4 100644
+--- a/luac.c
++++ b/luac.c
+@@ -661,6 +661,9 @@ static void PrintCode(const Proto* f)
+    case OP_EXTRAARG:
+ 	printf("%d",ax);
+ 	break;
++   case OP_SETTOP:
++	printf("%d %d",a,b);
++	break;
+ #if 0
+    default:
+ 	printf("%d %d %d",a,b,c);
 diff --git a/lvm.c b/lvm.c
 index c70e2b8..f8f852f 100644
 --- a/lvm.c

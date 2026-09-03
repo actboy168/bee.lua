@@ -11,8 +11,11 @@ lm.luasrcdir = lm.luadir
 -- 可选链补丁：将官方源码复制到构建目录并应用补丁（git apply）。
 -- 复制清单（无需手工维护）：
 --   * 补丁涉及的文件——生成期从 git diff 补丁头解析
---   * 编译入口 onelua.c / linit.c / lua.c——onelua.c 是 amalgamation，
---     会 #include 补丁涉及的源文件，必须与补丁版本同目录
+--   * 编译入口 onelua.c / linit.c / lua.c / luac.c / lcode.c——onelua.c
+--     是 amalgamation，会 #include 补丁涉及的源文件，必须与补丁版本同
+--     目录；luac.c 与 lcode.c（onelua.c 均会 include）虽未被补丁修改，
+--     但若不复制，其引号 include 会解析到源码目录里未打补丁的头
+--     （lopnames.h 缺 SETTOP，且 include guard 会屏蔽补丁版）
 --   * 全部头文件——bootstrap/binding 等只 -I 补丁目录；但 lprefix.h
 --     相对引用 ../lua-patch/ 下的头文件，编译 lua 源码的目标还需把
 --     官方源码目录（lm.luasrcdir）加进 includes
@@ -55,6 +58,8 @@ if lm.optchain then
         "onelua.c",
         "linit.c",
         "lua.c",
+        "luac.c",
+        "lcode.c",
     } do
         add(file)
     end

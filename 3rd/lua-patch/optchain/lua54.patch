@@ -39,7 +39,7 @@ index 965cec9..63b372a 100644
  };
  
 diff --git a/lparser.c b/lparser.c
-index eed008c..25c235e 100644
+index eed008c..9795874 100644
 --- a/lparser.c
 +++ b/lparser.c
 @@ -37,6 +37,27 @@
@@ -59,9 +59,9 @@ index eed008c..25c235e 100644
 +  if (e->k == VCALL) {  /* open function call? */
 +    int pc = e->u.info;  /* position of the call */
 +    if (TESTARG_k(fs->f->code[pc])) {  /* optional-chain call (fixed layout)? */
-+      /* A fixed 'nresults' needs exactly that many nils, while
-+         LUA_MULTRET needs exactly one (B stays 0). */
-+      if (nresults != LUA_MULTRET)  /* fixed number of results? */
++      /* A positive 'nresults' needs exactly that many nils; otherwise
++         (LUA_MULTRET or 0, value discarded) B stays 0 (a single nil). */
++      if (nresults > 0)  /* fixed positive number of results? */
 +        SETARG_B(fs->f->code[pc + 2], nresults - 1);  /* widen OP_SETTOP */
 +    }
 +  }
@@ -197,6 +197,20 @@ index eed008c..25c235e 100644
    return cl;  /* closure is on the stack, too */
  }
 -
+diff --git a/luac.c b/luac.c
+index 5f4a141..944ebaa 100644
+--- a/luac.c
++++ b/luac.c
+@@ -650,6 +650,9 @@ static void PrintCode(const Proto* f)
+    case OP_EXTRAARG:
+ 	printf("%d",ax);
+ 	break;
++   case OP_SETTOP:
++	printf("%d %d",a,b);
++	break;
+ #if 0
+    default:
+ 	printf("%d %d %d",a,b,c);
 diff --git a/lvm.c b/lvm.c
 index 7023a04..65ffabf 100644
 --- a/lvm.c
