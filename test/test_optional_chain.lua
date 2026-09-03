@@ -183,7 +183,7 @@ function test_optchain:test_multi_value_table()
     lt.assertEquals(t[2], 6)
     local nothing
     local tn = { nothing?:getSize() }
-    lt.assertEquals(#tn, 0)  -- short-circuit: a single nil element
+    lt.assertEquals(#tn, 0)  -- one nil element; trailing nils don't count for #
 end
 
 function test_optchain:test_multi_value_single()
