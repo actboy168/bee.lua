@@ -1,3 +1,24 @@
+diff --git a/lcode.c b/lcode.c
+index 3f78370..f1d29b6 100644
+--- a/lcode.c
++++ b/lcode.c
+@@ -1849,7 +1849,15 @@ void luaK_finish (FuncState *fs) {
+   Proto *p = fs->f;
+   for (i = 0; i < fs->pc; i++) {
+     Instruction *pc = &p->code[i];
+-    lua_assert(i == 0 || isOT(*(pc - 1)) == isIT(*pc));
++    /* An optional-chain call keeps an open CALL followed by a JMP that
++       skips the short-circuit fill (OP_SETTOP), and OP_SETTOP itself
++       sets the top only when reached: the actual producer of the top is
++       known only at runtime, so these two fixed-layout pairs are exempt. */
++    lua_assert(i == 0
++               || GET_OPCODE(*(pc - 1)) == OP_SETTOP
++               || (GET_OPCODE(*(pc - 1)) == OP_CALL && TESTARG_k(*(pc - 1))
++                   && GET_OPCODE(*pc) == OP_JMP)
++               || isOT(*(pc - 1)) == isIT(*pc));
+     switch (GET_OPCODE(*pc)) {
+       case OP_RETURN0: case OP_RETURN1: {
+         if (!(fs->needclose || p->is_vararg))
 diff --git a/ldebug.c b/ldebug.c
 index 0ac7fed..b30f2a2 100644
 --- a/ldebug.c
@@ -214,10 +235,24 @@ index 5f4a141..944ebaa 100644
     default:
  	printf("%d %d %d",a,b,c);
 diff --git a/lvm.c b/lvm.c
-index 7023a04..65ffabf 100644
+index 7023a04..b6b40da 100644
 --- a/lvm.c
 +++ b/lvm.c
-@@ -1236,6 +1236,19 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
+@@ -1179,8 +1179,11 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
+     #endif
+     lua_assert(base == ci->func.p + 1);
+     lua_assert(base <= L->top.p && L->top.p <= L->stack_last.p);
+-    /* invalidate top for instructions not expecting it */
+-    lua_assert(isIT(i) || (cast_void(L->top.p = base), 1));
++    /* invalidate top for instructions not expecting it;
++       a jump is top-transparent (an optional-chain open call may keep
++       the top it set across the jump that skips the short-circuit path) */
++    lua_assert(isIT(i) || GET_OPCODE(i) == OP_JMP
++               || (cast_void(L->top.p = base), 1));
+     vmdispatch (GET_OPCODE(i)) {
+       vmcase(OP_MOVE) {
+         StkId ra = RA(i);
+@@ -1236,6 +1239,19 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
          } while (b--);
          vmbreak;
        }
