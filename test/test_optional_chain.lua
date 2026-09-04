@@ -222,3 +222,55 @@ function test_optchain:test_extra_values_discarded()
     c = 1, h?()         -- assignment-statement form (same adjust_assign)
     lt.assertEquals(c, 1)
 end
+
+-- ============================================================================
+-- Tests added from the code review: one regression test for a real bug, plus
+-- two tests pinning previously untested contracts.
+-- ============================================================================
+
+-- Regression test for the luaG_traceexec top-reset bug: with a count hook
+-- active, luaG_traceexec resets L->top at the skip JMP that follows an
+-- optional-chain open call (the JMP is not an "in-top" instruction), so the
+-- open consumer (OP_RETURN / OP_SETLIST / OP_CALL with B==0) reads a wrong
+-- result count. This FAILS until luaG_traceexec is fixed to exempt OP_JMP,
+-- mirroring the exemption already added to the lvm.c debug assertion.
+function test_optchain:test_hook_does_not_corrupt_multret()
+    local f1 = function() return 42 end
+    local f3 = function() return 10, 20, 30 end
+    local function ret1() return f1?() end
+    local function ret3() return f3?() end
+    debug.sethook(function() end, "", 1)  -- count hook: fires every instruction
+    local n1 = select("#", ret1())
+    local n3 = select("#", ret3())
+    debug.sethook()  -- clear before asserting, so a failure cannot leak the hook
+    lt.assertEquals(n1, 1)
+    lt.assertEquals(n3, 3)
+end
+
+-- Pin the exact result count on the short-circuit path of a chain ending in a
+-- call used as a return value: 'return n?:f()' must yield exactly one nil.
+function test_optchain:test_multi_value_return_count()
+    local obj = { getSize = function() return 7, 8 end }
+    local function full()
+        return obj?:getSize()
+    end
+    local function short()
+        local n
+        return n?:getSize()
+    end
+    lt.assertEquals(select("#", full()), 2)
+    lt.assertEquals(select("#", short()), 1)
+end
+
+-- A multi-'?' chain ending in a call, and a call result followed by further
+-- optional access: these exercise the VCALL branch with several nil jumps.
+function test_optchain:test_multi_questionmark_chain_call()
+    local obj = { a = { b = { c = function() return "deep" end } } }
+    lt.assertEquals(obj?.a?.b?.c?(), "deep")
+    local obj2 = { a = {} }  -- obj2.a.b is nil: short-circuits at the 2nd link
+    lt.assertNil(obj2?.a?.b?.c?())
+    local obj3 = { get = function() return { x = 7 } end }
+    lt.assertEquals(obj3?:get()?.x, 7)
+    local obj4 = { get = function() return nil end }
+    lt.assertNil(obj4?:get()?.x)
+end
