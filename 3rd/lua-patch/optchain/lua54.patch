@@ -12,6 +12,19 @@ index 0ac7fed..b30f2a2 100644
          int b = GETARG_B(i);
          change = (a <= reg && reg <= a + b);
          break;
+diff --git a/ljumptab.h b/ljumptab.h
+index 8306f25..3f59c76 100644
+--- a/ljumptab.h
++++ b/ljumptab.h
+@@ -107,6 +107,7 @@ static const void *const disptab[NUM_OPCODES] = {
+ &&L_OP_CLOSURE,
+ &&L_OP_VARARG,
+ &&L_OP_VARARGPREP,
+-&&L_OP_EXTRAARG
++&&L_OP_EXTRAARG,
++&&L_OP_SETTOP
+ 
+ };
 diff --git a/lopcodes.c b/lopcodes.c
 index c67aa22..97f715b 100644
 --- a/lopcodes.c

@@ -1,3 +1,24 @@
+diff --git a/lcode.c b/lcode.c
+index 4caa804..8fff883 100644
+--- a/lcode.c
++++ b/lcode.c
+@@ -1935,7 +1935,15 @@ void luaK_finish (FuncState *fs) {
+     Instruction *pc = &p->code[i];
+     /* avoid "not used" warnings when assert is off (for 'onelua.c') */
+     (void)luaP_isOT; (void)luaP_isIT;
+-    lua_assert(i == 0 || luaP_isOT(*(pc - 1)) == luaP_isIT(*pc));
++    /* An optional-chain call keeps an open CALL followed by a JMP that
++       skips the short-circuit fill (OP_SETTOP), and OP_SETTOP itself
++       sets the top only when reached: the actual producer of the top is
++       known only at runtime, so these two fixed-layout pairs are exempt. */
++    lua_assert(i == 0
++               || GET_OPCODE(*(pc - 1)) == OP_SETTOP
++               || (GET_OPCODE(*(pc - 1)) == OP_CALL && TESTARG_k(*(pc - 1))
++                   && GET_OPCODE(*pc) == OP_JMP)
++               || luaP_isOT(*(pc - 1)) == luaP_isIT(*pc));
+     switch (GET_OPCODE(*pc)) {
+       case OP_RETURN0: case OP_RETURN1: {
+         if (!(fs->needclose || (p->flag & PF_VAHID)))
 diff --git a/ldebug.c b/ldebug.c
 index f54c9c5..3e30097 100644
 --- a/ldebug.c
@@ -12,6 +33,19 @@ index f54c9c5..3e30097 100644
          int b = GETARG_B(i);
          change = (a <= reg && reg <= a + b);
          break;
+diff --git a/ljumptab.h b/ljumptab.h
+index 52fa6d7..3122b74 100644
+--- a/ljumptab.h
++++ b/ljumptab.h
+@@ -109,6 +109,7 @@ static const void *const disptab[NUM_OPCODES] = {
+ &&L_OP_GETVARG,
+ &&L_OP_ERRNNIL,
+ &&L_OP_VARARGPREP,
+-&&L_OP_EXTRAARG
++&&L_OP_EXTRAARG,
++&&L_OP_SETTOP
+ 
+ };
 diff --git a/lopcodes.c b/lopcodes.c
 index 7e18231..5346592 100644
 --- a/lopcodes.c
@@ -205,10 +239,24 @@ index 4a2016a..1e73bd4 100644
     default:
  	printf("%d %d %d",a,b,c);
 diff --git a/lvm.c b/lvm.c
-index c70e2b8..f8f852f 100644
+index c70e2b8..fce695c 100644
 --- a/lvm.c
 +++ b/lvm.c
-@@ -1284,6 +1284,19 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
+@@ -1227,8 +1227,11 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
+     #endif
+     lua_assert(base == ci->func.p + 1);
+     lua_assert(base <= L->top.p && L->top.p <= L->stack_last.p);
+-    /* for tests, invalidate top for instructions not expecting it */
+-    lua_assert(luaP_isIT(i) || (cast_void(L->top.p = base), 1));
++    /* for tests, invalidate top for instructions not expecting it;
++       a jump is top-transparent (an optional-chain open call may keep
++       the top it set across the jump that skips the short-circuit path) */
++    lua_assert(luaP_isIT(i) || GET_OPCODE(i) == OP_JMP
++               || (cast_void(L->top.p = base), 1));
+     vmdispatch (GET_OPCODE(i)) {
+       vmcase(OP_MOVE) {
+         StkId ra = RA(i);
+@@ -1284,6 +1287,19 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
          } while (b--);
          vmbreak;
        }
