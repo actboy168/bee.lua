@@ -30,6 +30,7 @@ if lm.os == "windows" then
         includes = {
             ".",
             lm.luadir,
+            "3rd/lua-patch",
         },
         sources = {
             "3rd/lua-patch/bee_lua.c",

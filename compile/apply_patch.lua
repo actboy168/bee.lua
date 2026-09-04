@@ -25,10 +25,7 @@ local function read_file(path)
 end
 
 local function write_file(path, content)
-    local parent = path:match "^(.*)/[^/]+$"
-    if parent then
-        fs.create_directories(parent)
-    end
+    fs.create_directories(fs.path(path):parent_path())
     local f <close> = assert(io.open(path, "wb"))
     f:write(content)
 end

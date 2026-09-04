@@ -17,6 +17,8 @@ jobs:
     - uses: actboy168/setup-luamake@master
     - run: luamake -arch x86_64 -notest -sanitize
     - run: luamake test -v
+    - run: luamake -arch x86_64 -notest -sanitize -optchain
+    - run: luamake test -v
   windows-clang:
     name: windows (clang)
     runs-on: windows-latest
@@ -59,6 +61,8 @@ jobs:
     - uses: actboy168/setup-luamake@master
     - run: luamake -notest -sanitize
     - run: luamake test -v
+    - run: luamake -notest -sanitize -optchain
+    - run: luamake test -v
   linux:
     strategy:
       fail-fast: false
@@ -70,6 +74,8 @@ jobs:
     - uses: actboy168/setup-luamake@master
     - run: luamake -notest -sanitize
     - run: luamake lua test/glibc-version.lua
+    - run: luamake test -v
+    - run: luamake -notest -sanitize -optchain
     - run: luamake test -v
   linux-qemu:
     strategy:

@@ -27,7 +27,7 @@ local inputs = {}
 for _, p in ipairs(lua_patches) do
     if not p.flag or lm[p.flag] then
         local patchfile = ("3rd/lua-patch/%s/lua%s.patch"):format(p.dir, lm.lua)
-        assert(fs.exists(patchfile), "patch not found: " .. patchfile)
+        assert(fs.exists(fs.path(lm.workdir) / patchfile), "patch not found: " .. patchfile)
         args[#args+1] = patchfile
         inputs[#inputs+1] = patchfile
     end
