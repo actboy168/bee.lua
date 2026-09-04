@@ -5,114 +5,51 @@ lm:required_version "1.6"
 lm.compile_commands = "$builddir"
 
 lm.lua = lm.lua or "55"
-lm.luadir = lm:path("3rd/lua"..lm.lua)
-lm.luasrcdir = lm.luadir
+lm.luadir = lm:path("$builddir/patched/lua"..lm.lua)
 
--- 可选链补丁：将官方源码复制到构建目录并应用补丁（git apply）。
--- 复制清单（无需手工维护）：
---   * 补丁涉及的文件——生成期从 git diff 补丁头解析
---   * 编译入口 onelua.c / linit.c / lua.c / luac.c / lcode.c——onelua.c
---     是 amalgamation，会 #include 补丁涉及的源文件，必须与补丁版本同
---     目录；luac.c 与 lcode.c（onelua.c 均会 include）虽未被补丁修改，
---     但若不复制，其引号 include 会解析到源码目录里未打补丁的头
---     （lopnames.h 缺 SETTOP，且 include guard 会屏蔽补丁版）
---   * 全部头文件——bootstrap/binding 等只 -I 补丁目录；但 lprefix.h
---     相对引用 ../lua-patch/ 下的头文件，编译 lua 源码的目标还需把
---     官方源码目录（lm.luasrcdir）加进 includes
--- inputs 即复制清单对应的源文件 + 补丁 + 脚本：任一变化都会重新打补丁；
--- apply_patch.lua 内容不变不重写文件，配合规则的 restat = 1，产物没变
--- 时不会触发下游重编（增量编译）。
--- 补丁直接重写的文件不能作为 outputs：git apply 每次都会重写它们（即使
--- 内容不变），restat 会误判为产物变化；其消费者（onelua.c 的 #include）
--- 由编译器 depfile 跟踪，内容变化时依然会触发重编。
-if lm.optchain then
-    local fs = require "bee.filesystem"
+-- 通用 Lua 补丁基础设施：构建期把官方源码整树复制到
+-- $builddir/patched/lua<ver>/，再按注册表顺序应用启用的补丁（git apply）。
+-- 无启用补丁时退化为纯复制；整树复制使 include 始终解析到补丁目录内的
+-- 文件，新增补丁无需改动构建代码。
+local fs = require "bee.filesystem"
 
-    local script = tostring(lm:path("3rd/lua-patch/apply_patch.lua"))
-    local srcdir = tostring(lm.luasrcdir)
-    local patchfile = tostring(lm:path("3rd/lua-patch/optchain/lua" .. lm.lua .. ".patch"))
-    lm.luadir = lm:path("$builddir/patched/lua" .. lm.lua)
-    local dstdir = tostring(lm.luadir)
+-- 补丁注册表：补丁文件约定为 3rd/lua-patch/<dir>/lua<ver>.patch；
+-- flag 是可选的命令行开关（luamake -<flag>），省略则始终启用。
+local lua_patches <const> = {
+    { flag = "optchain", dir = "optchain" },
+}
 
-    local files = {}
-    local mark = {}
-    local patchedmark = {}
-    local function add(file)
-        if not mark[file] then
-            mark[file] = true
-            files[#files+1] = file
-        end
+local srcdir = "3rd/lua"..lm.lua
+local dstdir = tostring(lm.luadir)
+
+local args = { srcdir, dstdir }
+local inputs = {}
+for _, p in ipairs(lua_patches) do
+    if not p.flag or lm[p.flag] then
+        local patchfile = ("3rd/lua-patch/%s/lua%s.patch"):format(p.dir, lm.lua)
+        assert(fs.exists(patchfile), "patch not found: " .. patchfile)
+        args[#args+1] = patchfile
+        inputs[#inputs+1] = patchfile
     end
-
-    -- 从 git diff 补丁头解析补丁涉及的文件
-    for line in io.lines(patchfile) do
-        local file = line:match "^diff %-%-git a/(%S+) %S+$"
-        if file then
-            patchedmark[file] = true
-            add(file)
-        end
-    end
-
-    -- 编译入口
-    for _, file in ipairs {
-        "onelua.c",
-        "linit.c",
-        "lua.c",
-        "luac.c",
-        "lcode.c",
-    } do
-        add(file)
-    end
-
-    -- 全部头文件
-    local srcpath = fs.path(lm.workdir) / srcdir
-    for file in fs.pairs_r(srcpath) do
-        local ext = file:extension()
-        if ext == ".h" or ext == ".hpp" then
-            add(fs.relative(file, srcpath):string())
-        end
-    end
-
-    -- prebuilt 模式下 $luamake 是 bootstrap（直接运行脚本），没有 lua 子命令
-    local command = { "$luamake" }
-    if not lm.prebuilt then
-        command[#command+1] = "lua"
-    end
-    command[#command+1] = script
-    command[#command+1] = srcdir
-    command[#command+1] = dstdir
-    command[#command+1] = patchfile
-    for _, file in ipairs(files) do
-        command[#command+1] = file
-    end
-
-    lm:rule "apply_optchain_patch" {
-        args = command,
-        description = "Apply optchain patch.",
-        restat = 1,
-    }
-
-    local inputs = {
-        script,
-        patchfile,
-    }
-    for _, file in ipairs(files) do
-        inputs[#inputs+1] = srcdir .. "/" .. file
-    end
-    local outputs = {}
-    for _, file in ipairs(files) do
-        if not patchedmark[file] then
-            outputs[#outputs+1] = dstdir .. "/" .. file
-        end
-    end
-
-    lm:build "apply_optchain_patch" {
-        rule = "apply_optchain_patch",
-        deps = lm.prebuilt and "bootstrap",
-        inputs = inputs,
-        outputs = outputs,
-    }
 end
+
+local outputs = {}
+local srcpath = fs.path(lm.workdir) / srcdir
+for file in fs.pairs_r(srcpath) do
+    if fs.is_regular_file(file) then
+        local rel = fs.relative(file, srcpath):string()
+        inputs[#inputs+1] = srcdir .. "/" .. rel
+        outputs[#outputs+1] = dstdir .. "/" .. rel
+    end
+end
+
+lm:runlua "apply_lua_patch" {
+    script = "compile/apply_patch.lua",
+    args = args,
+    inputs = inputs,
+    outputs = outputs,
+    restat = true,
+}
 
 local function macos_version()
     local cxx = lm.cxx or "c++17"
@@ -187,12 +124,12 @@ if lm.sanitize then
 end
 
 lm:source_set "source_lua" {
-    objdeps = lm.optchain and "apply_optchain_patch",
-    -- optchain 时 lua 源码在补丁目录，但 lprefix.h 相对引用
-    -- ../lua-patch/ 下的头文件，需要源码目录作为 -I 解析前缀
+    objdeps = "apply_lua_patch",
+    -- lprefix.h/onelua.c 用 ../lua-patch/ 引用内联补丁；-I 3rd/lua-patch 后
+    -- D/../lua-patch 恰好解析回补丁目录本身
     includes = {
         lm.luadir,
-        lm.optchain and lm.luasrcdir,
+        "3rd/lua-patch",
     },
     sources = {
         lm.luadir / "onelua.c",
@@ -229,7 +166,7 @@ lm:source_set "source_lua" {
 }
 
 lm:source_set "source_bee" {
-    objdeps = lm.optchain and "apply_optchain_patch",
+    objdeps = "apply_lua_patch",
     includes = lm.luadir,
     sources = "3rd/lua-seri/lua-seri.cpp",
     msvc = {
@@ -269,7 +206,7 @@ local function need(lst)
 end
 
 lm:source_set "source_bee" {
-    objdeps = lm.optchain and "apply_optchain_patch",
+    objdeps = "apply_lua_patch",
     includes = {
         ".",
         lm.luadir,
@@ -352,7 +289,7 @@ lm:source_set "source_bee" {
 }
 
 lm:source_set "source_bee" {
-    objdeps = lm.optchain and "apply_optchain_patch",
+    objdeps = "apply_lua_patch",
     includes = {
         ".",
         lm.luadir,
