@@ -15,11 +15,12 @@
 
 以 git diff 补丁形式存放在本目录（`lua54.patch` / `lua55.patch`），通过通用补丁基础设施（见 `AGENT.md` 的「自定义 Lua 补丁」）在构建期应用：`luamake -optchain` 时把官方源码整树复制到 `$builddir/patched/lua<ver>/` 并 `git apply` 本补丁。
 
-补丁直接修改 `lparser.c` / `lvm.c` / `lopcodes.*` / `lopnames.h` / `ldebug.c` / `luac.c`，**无 `#ifdef` 门控**——门控完全在构建层：是否打补丁由注册表里的 `optchain` 开关决定，默认构建不打补丁、直接编译官方源码，行为零影响。
+补丁直接修改 `lparser.c` / `lvm.c` / `lopcodes.*` / `lopnames.h` / `ljumptab.h` / `ldebug.c` / `luac.c` / `lcode.c`，**无 `#ifdef` 门控**——门控完全在构建层：是否打补丁由注册表里的 `optchain` 开关决定，默认构建不打补丁、直接编译官方源码，行为零影响。
 
 - **解析器（`lparser.c`）**：`?.` 在编译期展开为标准指令组合（LOADNIL / EQ / JMP + 字段/索引/调用）；
 - **新增指令 `OP_SETTOP`**：链末调用（`f?()`、`obj?:m()`）的短路路径使用 `CALL(k) / JMP / OP_SETTOP` 固定布局，`OP_SETTOP` 把结果寄存器填 nil 并精确设置栈顶 `L->top`，使开放指令（`OP_RETURN` / `OP_CALL` / `OP_SETLIST`）读到恰好数量的 nil；
-- `OP_SETTOP` 追加在 `OP_EXTRAARG` 之后，普通代码的指令编号完全不变，补丁版编译的普通代码与标准版字节码一致。
+- `OP_SETTOP` 追加在 `OP_EXTRAARG` 之后，普通代码的指令编号完全不变，补丁版编译的普通代码与标准版字节码一致；
+- 新指令的配套同步：`ljumptab.h`（GCC computed-goto 跳转表，缺项会在运行时跳转 NULL）、`ldebug.c`（`findsetreg` 寄存器归属分析）、`luac.c`（`-l` 反汇编打印）、`lcode.c` / `lvm.c`（debug 构建的 top 断言对「短路生产者运行期才确定」的固定布局适配）。
 
 ## 为什么需要新增指令（及备选方案）
 
