@@ -125,8 +125,6 @@ end
 
 lm:source_set "source_lua" {
     objdeps = "apply_lua_patch",
-    -- lprefix.h/onelua.c 用 ../lua-patch/ 引用内联补丁；-I 3rd/lua-patch 后
-    -- D/../lua-patch 恰好解析回补丁目录本身
     includes = {
         lm.luadir,
         "3rd/lua-patch",
@@ -134,9 +132,7 @@ lm:source_set "source_lua" {
     sources = {
         lm.luadir / "onelua.c",
     },
-    defines = {
-        "MAKE_LIB",
-    },
+    defines = "MAKE_LIB",
     visibility = "default",
     windows = {
         defines = "LUA_BUILD_AS_DLL",
