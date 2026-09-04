@@ -33,6 +33,21 @@ index f54c9c5..3e30097 100644
          int b = GETARG_B(i);
          change = (a <= reg && reg <= a + b);
          break;
+@@ -953,9 +954,13 @@ int luaG_traceexec (lua_State *L, const Instruction *pc) {
+   if (ci->callstatus & CIST_HOOKYIELD) {  /* hook yielded last time? */
+     ci->callstatus &= ~CIST_HOOKYIELD;  /* erase mark */
+     return 1;  /* do not call hook again (VM yielded, so it did not move) */
+   }
+-  if (!luaP_isIT(*(ci->u.l.savedpc - 1)))  /* top not being used? */
++  /* A jump is top-transparent: an optional-chain open call keeps the
++     top it set across the JMP that skips the short-circuit fill (mirrors
++     the exemption in lvm.c's debug assertion). */
++  if (!luaP_isIT(*(ci->u.l.savedpc - 1))  /* top not being used? */
++      && GET_OPCODE(*(ci->u.l.savedpc - 1)) != OP_JMP)
+     L->top.p = ci->top.p;  /* correct top */
+   if (counthook)
+     luaD_hook(L, LUA_HOOKCOUNT, -1, 0, 0);  /* call count hook */
+   if (mask & LUA_MASKLINE) {
 diff --git a/ljumptab.h b/ljumptab.h
 index 52fa6d7..3122b74 100644
 --- a/ljumptab.h
