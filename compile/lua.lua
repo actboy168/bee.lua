@@ -3,6 +3,11 @@ local lm = require "luamake"
 if lm.os == "windows" then
     lm:shared_library("lua"..lm.lua) {
         deps = "bee_utf8_crt",
+        objdeps = "apply_lua_patch",
+        includes = {
+            lm.luadir,
+            "3rd/lua-patch",
+        },
         sources = {
             lm.luadir / "onelua.c",
             lm.luadir / "linit.c",
@@ -21,9 +26,11 @@ if lm.os == "windows" then
             "bee_utf8_crt",
             "lua"..lm.lua,
         },
+        objdeps = "apply_lua_patch",
         includes = {
             ".",
             lm.luadir,
+            "3rd/lua-patch",
         },
         sources = {
             "3rd/lua-patch/bee_lua.c",
@@ -33,7 +40,12 @@ if lm.os == "windows" then
     }
     lm:executable "luac" {
         deps = "bee_utf8_crt",
-        includes = ".",
+        objdeps = "apply_lua_patch",
+        includes = {
+            ".",
+            lm.luadir,
+            "3rd/lua-patch",
+        },
         sources = {
             lm.luadir / "onelua.c",
             "3rd/lua-patch/bee_utf8_main.c",
@@ -61,7 +73,11 @@ end
 
 lm:executable "lua" {
     deps = "source_lua",
-    includes = lm.luadir,
+    objdeps = "apply_lua_patch",
+    includes = {
+        lm.luadir,
+        "3rd/lua-patch",
+    },
     sources = {
         lm.luadir / "lua.c",
         lm.luadir / "linit.c",

@@ -1,6 +1,28 @@
 name: test
 on: push
 jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+        - ubuntu-22.04
+        - ubuntu-24.04-arm
+        - windows-latest
+        - macos-14
+        - macos-15
+        - macos-26
+        - macos-15-intel
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actboy168/setup-luamake@master
+    - run: luamake -notest -sanitize
+    - run: luamake test -v
+    - run: luamake -notest -sanitize -optchain
+    - run: luamake test -v
+    - run: luamake -notest -sanitize -optchain -lua 54
+    - run: luamake test -v
   windows-x86:
     name: windows (x86)
     runs-on: windows-latest
@@ -8,14 +30,6 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actboy168/setup-luamake@master
     - run: luamake -arch x86 -notest -sanitize
-    - run: luamake test -v
-  windows-x86_64:
-    name: windows (x86_64)
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actboy168/setup-luamake@master
-    - run: luamake -arch x86_64 -notest -sanitize
     - run: luamake test -v
   windows-clang:
     name: windows (clang)
@@ -48,29 +62,6 @@ jobs:
       run: |
         ./luamake/luamake -notest
         ./luamake/luamake test -v
-  macos:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [14, 15, 26, 15-intel]
-    runs-on: macos-${{ matrix.os }}
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actboy168/setup-luamake@master
-    - run: luamake -notest -sanitize
-    - run: luamake test -v
-  linux:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [22.04, 24.04-arm]
-    runs-on: ubuntu-${{ matrix.os }}
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actboy168/setup-luamake@master
-    - run: luamake -notest -sanitize
-    - run: luamake lua test/glibc-version.lua
-    - run: luamake test -v
   linux-qemu:
     strategy:
       fail-fast: false

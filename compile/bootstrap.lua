@@ -5,6 +5,7 @@ lm:src "source_bootstrap" {
         ".",
         lm.luadir,
     },
+    objdeps = "apply_lua_patch",
     sources = {
         "bootstrap/main.cpp",
         "bootstrap/bootstrap_init.cpp",

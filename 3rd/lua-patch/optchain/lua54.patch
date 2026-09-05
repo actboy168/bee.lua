@@ -1,0 +1,289 @@
+diff --git a/lcode.c b/lcode.c
+index 3f78370..f1d29b6 100644
+--- a/lcode.c
++++ b/lcode.c
+@@ -1849,7 +1849,15 @@ void luaK_finish (FuncState *fs) {
+   Proto *p = fs->f;
+   for (i = 0; i < fs->pc; i++) {
+     Instruction *pc = &p->code[i];
+-    lua_assert(i == 0 || isOT(*(pc - 1)) == isIT(*pc));
++    /* An optional-chain call keeps an open CALL followed by a JMP that
++       skips the short-circuit fill (OP_SETTOP), and OP_SETTOP itself
++       sets the top only when reached: the actual producer of the top is
++       known only at runtime, so these two fixed-layout pairs are exempt. */
++    lua_assert(i == 0
++               || GET_OPCODE(*(pc - 1)) == OP_SETTOP
++               || (GET_OPCODE(*(pc - 1)) == OP_CALL && TESTARG_k(*(pc - 1))
++                   && GET_OPCODE(*pc) == OP_JMP)
++               || isOT(*(pc - 1)) == isIT(*pc));
+     switch (GET_OPCODE(*pc)) {
+       case OP_RETURN0: case OP_RETURN1: {
+         if (!(fs->needclose || p->is_vararg))
+diff --git a/ldebug.c b/ldebug.c
+index 0ac7fed..b30f2a2 100644
+--- a/ldebug.c
++++ b/ldebug.c
+@@ -445,7 +445,8 @@ static int findsetreg (const Proto *p, int lastpc, int reg) {
+     int a = GETARG_A(i);
+     int change;  /* true if current instruction changed 'reg' */
+     switch (op) {
+-      case OP_LOADNIL: {  /* set registers from 'a' to 'a+b' */
++      case OP_LOADNIL:
++      case OP_SETTOP: {  /* set registers from 'a' to 'a+b' */
+         int b = GETARG_B(i);
+         change = (a <= reg && reg <= a + b);
+         break;
+@@ -945,9 +946,13 @@ int luaG_traceexec (lua_State *L, const Instruction *pc) {
+   if (ci->callstatus & CIST_HOOKYIELD) {  /* hook yielded last time? */
+     ci->callstatus &= ~CIST_HOOKYIELD;  /* erase mark */
+     return 1;  /* do not call hook again (VM yielded, so it did not move) */
+   }
+-  if (!isIT(*(ci->u.l.savedpc - 1)))  /* top not being used? */
++  /* A jump is top-transparent: an optional-chain open call keeps the
++     top it set across the JMP that skips the short-circuit fill (mirrors
++     the exemption in lvm.c's debug assertion). */
++  if (!isIT(*(ci->u.l.savedpc - 1))  /* top not being used? */
++      && GET_OPCODE(*(ci->u.l.savedpc - 1)) != OP_JMP)
+     L->top.p = ci->top.p;  /* correct top */
+   if (counthook)
+     luaD_hook(L, LUA_HOOKCOUNT, -1, 0, 0);  /* call count hook */
+   if (mask & LUA_MASKLINE) {
+diff --git a/ljumptab.h b/ljumptab.h
+index 8306f25..3f59c76 100644
+--- a/ljumptab.h
++++ b/ljumptab.h
+@@ -107,6 +107,7 @@ static const void *const disptab[NUM_OPCODES] = {
+ &&L_OP_CLOSURE,
+ &&L_OP_VARARG,
+ &&L_OP_VARARGPREP,
+-&&L_OP_EXTRAARG
++&&L_OP_EXTRAARG,
++&&L_OP_SETTOP
+ 
+ };
+diff --git a/lopcodes.c b/lopcodes.c
+index c67aa22..97f715b 100644
+--- a/lopcodes.c
++++ b/lopcodes.c
+@@ -100,5 +100,6 @@ LUAI_DDEF const lu_byte luaP_opmodes[NUM_OPCODES] = {
+  ,opmode(0, 1, 0, 0, 1, iABC)		/* OP_VARARG */
+  ,opmode(0, 0, 1, 0, 1, iABC)		/* OP_VARARGPREP */
+  ,opmode(0, 0, 0, 0, 0, iAx)		/* OP_EXTRAARG */
++ ,opmode(0, 0, 0, 0, 1, iABC)		/* OP_SETTOP */
+ };
+ 
+diff --git a/lopcodes.h b/lopcodes.h
+index 46911ca..d4822d0 100644
+--- a/lopcodes.h
++++ b/lopcodes.h
+@@ -307,10 +307,11 @@ OP_VARARG,/*	A C	R[A], R[A+1], ..., R[A+C-2] = vararg		*/
+ OP_VARARGPREP,/*A	(adjust vararg parameters)			*/
+ 
+ OP_EXTRAARG/*	Ax	extra (larger) argument for previous opcode	*/
++,OP_SETTOP/*	A B	R[A], ..., R[A+B] := nil; top := A+B+1	*/
+ } OpCode;
+ 
+ 
+-#define NUM_OPCODES	((int)(OP_EXTRAARG) + 1)
++#define NUM_OPCODES	((int)(OP_SETTOP) + 1)
+ 
+ 
+ 
+diff --git a/lopnames.h b/lopnames.h
+index 965cec9..63b372a 100644
+--- a/lopnames.h
++++ b/lopnames.h
+@@ -96,6 +96,7 @@ static const char *const opnames[] = {
+   "VARARG",
+   "VARARGPREP",
+   "EXTRAARG",
++  "SETTOP",
+   NULL
+ };
+ 
+diff --git a/lparser.c b/lparser.c
+index eed008c..bbe35fa 100644
+--- a/lparser.c
++++ b/lparser.c
+@@ -37,6 +37,24 @@
+ 
+ #define hasmultret(k)		((k) == VCALL || (k) == VVARARG)
+ 
++/*
++** Patch the short-circuit path of an optional-chain call so that it
++** produces 'nresults' nil values instead of a single one. This allows
++** chains ending in a call to yield multiple results (e.g.
++** 'local a, b = f?()').
++*/
++static void luaK_setreturns_optchain (FuncState *fs, expdesc *e, int nresults) {
++  if (e->k == VCALL) {  /* open function call? */
++    int pc = e->u.info;  /* position of the call */
++    if (TESTARG_k(fs->f->code[pc])) {  /* optional-chain call (fixed layout)? */
++      /* A positive 'nresults' needs exactly that many nils; otherwise
++         (0, value discarded) B stays 0 (a single nil). */
++      if (nresults > 0)  /* fixed positive number of results? */
++        SETARG_B(fs->f->code[pc + 2], nresults - 1);  /* widen OP_SETTOP */
++    }
++  }
++}
++
+ 
+ /* because all strings are unified by the scanner, the parser
+    can use pointer equality for string equality */
+@@ -486,6 +504,7 @@ static void adjust_assign (LexState *ls, int nvars, int nexps, expdesc *e) {
+     int extra = needed + 1;  /* discount last expression itself */
+     if (extra < 0)
+       extra = 0;
++    luaK_setreturns_optchain(fs, e, extra);
+     luaK_setreturns(fs, e, extra);  /* last exp. provides the difference */
+   }
+   else {
+@@ -1105,9 +1124,29 @@ static void suffixedexp (LexState *ls, expdesc *v) {
+   /* suffixedexp ->
+        primaryexp { '.' NAME | '[' exp ']' | ':' NAME funcargs | funcargs } */
+   FuncState *fs = ls->fs;
++  int niljumps = NO_JUMP;  /* patch list of optional-chain exits (nil) */
++  int chain_base = fs->freereg;  /* result register of the chain */
+   primaryexp(ls, v);
+   for (;;) {
+     switch (ls->t.token) {
++      case '?': {  /* optional chain: '?.' '?:' '?[' '?(' */
++        int reg, nilreg;
++        luaX_next(ls);  /* consume '?' */
++        if (ls->t.token != '.' && ls->t.token != ':' &&
++            ls->t.token != '[' && ls->t.token != '(')
++          luaX_syntaxerror(ls, "unexpected symbol near '?'");
++        reg = luaK_exp2anyreg(fs, v);  /* evaluate receiver only once */
++        nilreg = fs->freereg;
++        luaK_nil(fs, nilreg, 1);  /* ensure it is nil at runtime */
++        /* Reserve the temp through luaK_reserveregs (which also grows
++           'maxstacksize') instead of a raw freereg++ that would bypass
++           luaK_checkstack and leave 'maxstacksize' stale. */
++        luaK_reserveregs(fs, 1);
++        luaK_codeABCk(fs, OP_EQ, reg, nilreg, 0, 1);  /* jump when nil */
++        luaK_concat(fs, &niljumps, luaK_jump(fs));
++        fs->freereg--;  /* release the nil slot; only used by OP_EQ */
++        break;  /* next iteration handles '.' ':' '[' '(' */
++      }
+       case '.': {  /* fieldsel */
+         fieldsel(ls, v);
+         break;
+@@ -1132,7 +1171,48 @@ static void suffixedexp (LexState *ls, expdesc *v) {
+         funcargs(ls, v);
+         break;
+       }
+-      default: return;
++      default:
++        if (niljumps != NO_JUMP) {
++          int skip, nilpc;
++          if (v->k == VCALL) {
++            /* A chain ending in a call can yield multiple results: keep
++               the call open instead of collapsing it to a single value.
++               We emit a fixed layout so that later consumers can patch
++               the short-circuit path without storing extra info in 'e':
++                 CALL base ...   (with the 'k' flag set, marking the chain)
++                 JMP  skip
++                 OP_SETTOP base 0   (fills 1 nil and fixes the stack top)
++                 skip:
++               The OP_SETTOP is always at call+2; luaK_setreturns_optchain
++               widens its B field when more nils are needed. 'e' keeps the
++               plain VCALL semantics (t/f stay NO_JUMP), so single-value
++               consumers work unchanged. */
++            int base = GETARG_A(fs->f->code[v->u.info]);  /* call base */
++            SETARG_k(fs->f->code[v->u.info], 1);  /* mark optional chain */
++            skip = luaK_jump(fs);  /* non-nil path skips the nil fill */
++            nilpc = luaK_codeABC(fs, OP_SETTOP, base, 0, 0);
++            luaK_patchtohere(fs, skip);
++            fs->freereg = base + 1;
++            luaK_patchlist(fs, niljumps, nilpc);  /* nil exits jump here */
++          }
++          else {
++            int r;
++            if (vkisindexed(v->k))
++              luaK_exp2anyreg(fs, v);  /* make it a value, not a var */
++            r = v->u.info;  /* now a VNONRELOC register */
++            if (r != chain_base) {  /* move result to the chain base register */
++              luaK_codeABC(fs, OP_MOVE, chain_base, r, 0);
++              v->u.info = chain_base;
++              v->k = VNONRELOC;
++            }
++            skip = luaK_jump(fs);  /* non-nil path skips the nil fill */
++            nilpc = luaK_codeABC(fs, OP_LOADNIL, chain_base, 0, 0);
++            luaK_patchtohere(fs, skip);
++            fs->freereg = chain_base + 1;  /* free chain temporaries */
++            luaK_patchlist(fs, niljumps, nilpc);  /* nil exits jump to LOADNIL */
++          }
++        }
++        return;
+     }
+   }
+ }
+@@ -1824,7 +1904,10 @@ static void retstat (LexState *ls) {
+     if (hasmultret(e.k)) {
+       luaK_setmultret(fs, &e);
+ #if defined(NDEBUG)
+-      if (e.k == VCALL && nret == 1 && !fs->bl->insidetbc) {  /* tail call? */
++      /* no tail call for optional-chain calls: the short-circuit path
++         needs the fixed CALL/JMP/OP_SETTOP layout */
++      if (e.k == VCALL && nret == 1 && !fs->bl->insidetbc
++          && !TESTARG_k(fs->f->code[e.u.info])) {  /* tail call? */
+         SET_OPCODE(getinstruction(fs,&e), OP_TAILCALL);
+         lua_assert(GETARG_A(getinstruction(fs,&e)) == luaY_nvarstack(fs));
+       }
+@@ -1967,4 +2050,3 @@ LClosure *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff,
+   L->top.p--;  /* remove scanner's table */
+   return cl;  /* closure is on the stack, too */
+ }
+-
+diff --git a/luac.c b/luac.c
+index 5f4a141..944ebaa 100644
+--- a/luac.c
++++ b/luac.c
+@@ -650,6 +650,9 @@ static void PrintCode(const Proto* f)
+    case OP_EXTRAARG:
+ 	printf("%d",ax);
+ 	break;
++   case OP_SETTOP:
++	printf("%d %d",a,b);
++	break;
+ #if 0
+    default:
+ 	printf("%d %d %d",a,b,c);
+diff --git a/lvm.c b/lvm.c
+index 7023a04..b6b40da 100644
+--- a/lvm.c
++++ b/lvm.c
+@@ -1179,8 +1179,11 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
+     #endif
+     lua_assert(base == ci->func.p + 1);
+     lua_assert(base <= L->top.p && L->top.p <= L->stack_last.p);
+-    /* invalidate top for instructions not expecting it */
+-    lua_assert(isIT(i) || (cast_void(L->top.p = base), 1));
++    /* invalidate top for instructions not expecting it;
++       a jump is top-transparent (an optional-chain open call may keep
++       the top it set across the jump that skips the short-circuit path) */
++    lua_assert(isIT(i) || GET_OPCODE(i) == OP_JMP
++               || (cast_void(L->top.p = base), 1));
+     vmdispatch (GET_OPCODE(i)) {
+       vmcase(OP_MOVE) {
+         StkId ra = RA(i);
+@@ -1236,6 +1239,19 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
+         } while (b--);
+         vmbreak;
+       }
++      vmcase(OP_SETTOP) {
++        /* Optional-chain short circuit: fill R[A..A+B] with nils and
++           also fix the stack top so that open instructions (OP_RETURN,
++           OP_CALL, OP_SETLIST) read exactly the nils produced here.
++           (Only the optional-chain compiler emits this instruction.) */
++        StkId ra = RA(i);
++        int b = GETARG_B(i);
++        do {
++          setnilvalue(s2v(ra++));
++        } while (b--);
++        L->top.p = RA(i) + GETARG_B(i) + 1;
++        vmbreak;
++      }
+       vmcase(OP_GETUPVAL) {
+         StkId ra = RA(i);
+         int b = GETARG_B(i);

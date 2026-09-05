@@ -1,0 +1,90 @@
+-- 将源码树整树复制到构建目录，并应用 git 补丁。
+-- 用法: apply_patch.lua <src_dir> <dst_dir> [patch...]
+--
+-- 在暂存目录里组装最终内容（整树复制 + 按序打补丁），再与 dst 逐文件
+-- 比对：只有内容变化的文件才重写（条件写，配合规则的 restat 使下游按
+-- 内容精确重编，且 mtime 永不倒退）；不在暂存内容中的 dst 文件删除。
+-- 不传补丁时退化为纯复制，不调用 git。
+-- 前提：lua 源码目录是平铺的（无子目录），故无需递归遍历与目录清理。
+local fs = require "bee.filesystem"
+local subprocess = require "bee.subprocess"
+
+local src, dst = ...
+assert(src and dst, "usage: apply_patch.lua <src_dir> <dst_dir> [patch...]")
+
+-- 暂存目录放在 dst 同级，避免被下面的过期文件清理误删
+local stage = dst .. ".stage"
+fs.remove_all(stage)
+fs.create_directories(stage)
+fs.create_directories(dst)
+
+local function read_file(path)
+    local f <close> = io.open(path, "rb")
+    if not f then
+        return nil
+    end
+    return f:read "a"
+end
+
+local function write_file(path, content)
+    local f <close> = assert(io.open(path, "wb"))
+    f:write(content)
+end
+
+local function copy_tree(from, to)
+    local frompath = fs.path(from)
+    for file in fs.pairs(frompath) do
+        if fs.is_regular_file(file) then
+            fs.copy_file(file, fs.path(to) / fs.relative(file, frompath),
+                fs.copy_options.overwrite_existing)
+        end
+    end
+end
+
+-- 1. 整树复制到暂存目录
+copy_tree(src, stage)
+
+-- 2. 按序应用补丁
+for i = 3, select("#", ...) do
+    local patch = select(i, ...)
+    local process, err = subprocess.spawn {
+        "git", "apply", "--directory=" .. stage, patch,
+        stdout = io.stdout,
+        stderr = true,
+        searchPath = true,
+    }
+    assert(process, ("git apply: failed to spawn (%s): %s"):format(tostring(err), patch))
+    local code, wait_err = process:wait()
+    if code ~= 0 then
+        local detail = process.stderr and process.stderr:read "a" or ""
+        error(("git apply failed (exit %s%s): %s\n%s"):format(
+            tostring(code), wait_err and (": " .. wait_err) or "", patch, detail))
+    end
+end
+
+-- 3. 条件写同步到 dst；keep 集即暂存内容（含补丁新建的文件）
+local keep = {}
+local stagepath = fs.path(stage)
+for file in fs.pairs(stagepath) do
+    local rel = fs.relative(file, stagepath)
+    if fs.is_regular_file(file) then
+        keep[rel:string()] = true
+        local new = assert(read_file(file:string()), "read failed: " .. file:string())
+        local target = (fs.path(dst) / rel):string()
+        if read_file(target) ~= new then
+            write_file(target, new)
+        end
+    end
+end
+
+-- 4. 删除不在暂存内容中的过期文件（平铺目录，无子目录）
+local dstpath = fs.path(dst)
+for file in fs.pairs(dstpath) do
+    if fs.is_regular_file(file) then
+        if not keep[fs.relative(file, dstpath):string()] then
+            fs.remove(file)
+        end
+    end
+end
+
+fs.remove_all(stage)
