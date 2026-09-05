@@ -6,6 +6,7 @@
 -- 内容精确重编，且 mtime 永不倒退）；不在暂存内容中的 dst 文件删除。
 -- 不传补丁时退化为纯复制，不调用 git。
 local fs = require "bee.filesystem"
+local subprocess = require "bee.subprocess"
 
 local src, dst = ...
 assert(src and dst, "usage: apply_patch.lua <src_dir> <dst_dir> [patch...]")
@@ -47,8 +48,19 @@ copy_tree(src, stage)
 -- 2. 按序应用补丁
 for i = 3, select("#", ...) do
     local patch = select(i, ...)
-    local ok = os.execute(('git apply --directory="%s" "%s"'):format(stage, patch))
-    assert(ok, "git apply failed: " .. patch)
+    local process, err = subprocess.spawn {
+        "git", "apply", "--directory=" .. stage, patch,
+        stdout = io.stdout,
+        stderr = true,
+        searchPath = true,
+    }
+    assert(process, ("git apply: failed to spawn (%s): %s"):format(tostring(err), patch))
+    local code, wait_err = process:wait()
+    if code ~= 0 then
+        local detail = process.stderr and process.stderr:read "a" or ""
+        error(("git apply failed (exit %s%s): %s\n%s"):format(
+            tostring(code), wait_err and (": " .. wait_err) or "", patch, detail))
+    end
 end
 
 -- 3. 条件写同步到 dst；keep 集即暂存内容（含补丁新建的文件）
