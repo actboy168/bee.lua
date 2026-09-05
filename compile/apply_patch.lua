@@ -5,6 +5,7 @@
 -- 比对：只有内容变化的文件才重写（条件写，配合规则的 restat 使下游按
 -- 内容精确重编，且 mtime 永不倒退）；不在暂存内容中的 dst 文件删除。
 -- 不传补丁时退化为纯复制，不调用 git。
+-- 前提：lua 源码目录是平铺的（无子目录），故无需递归遍历与目录清理。
 local fs = require "bee.filesystem"
 local subprocess = require "bee.subprocess"
 
@@ -26,18 +27,16 @@ local function read_file(path)
 end
 
 local function write_file(path, content)
-    fs.create_directories(fs.path(path):parent_path())
     local f <close> = assert(io.open(path, "wb"))
     f:write(content)
 end
 
 local function copy_tree(from, to)
     local frompath = fs.path(from)
-    for file in fs.pairs_r(frompath) do
+    for file in fs.pairs(frompath) do
         if fs.is_regular_file(file) then
-            local target = fs.path(to) / fs.relative(file, frompath)
-            fs.create_directories(target:parent_path())
-            fs.copy_file(file, target, fs.copy_options.overwrite_existing)
+            fs.copy_file(file, fs.path(to) / fs.relative(file, frompath),
+                fs.copy_options.overwrite_existing)
         end
     end
 end
@@ -66,7 +65,7 @@ end
 -- 3. 条件写同步到 dst；keep 集即暂存内容（含补丁新建的文件）
 local keep = {}
 local stagepath = fs.path(stage)
-for file in fs.pairs_r(stagepath) do
+for file in fs.pairs(stagepath) do
     local rel = fs.relative(file, stagepath)
     if fs.is_regular_file(file) then
         keep[rel:string()] = true
@@ -78,24 +77,13 @@ for file in fs.pairs_r(stagepath) do
     end
 end
 
--- 4. 删除不在暂存内容中的过期文件
+-- 4. 删除不在暂存内容中的过期文件（平铺目录，无子目录）
 local dstpath = fs.path(dst)
-local dirs = {}
-for file in fs.pairs_r(dstpath) do
+for file in fs.pairs(dstpath) do
     if fs.is_regular_file(file) then
         if not keep[fs.relative(file, dstpath):string()] then
             fs.remove(file)
         end
-    else
-        dirs[#dirs+1] = file
-    end
-end
-
--- 5. 按深度倒序删除空目录
-table.sort(dirs, function (a, b) return #a:string() > #b:string() end)
-for _, dir in ipairs(dirs) do
-    if fs.pairs(dir)() == nil then
-        fs.remove(dir)
     end
 end
 
