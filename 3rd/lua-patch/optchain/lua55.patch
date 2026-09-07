@@ -1,8 +1,35 @@
 diff --git a/lcode.c b/lcode.c
-index 4caa804..8fff883 100644
+index 4caa804..2e85b14 100644
 --- a/lcode.c
 +++ b/lcode.c
-@@ -1935,7 +1935,15 @@ void luaK_finish (FuncState *fs) {
+@@ -1172,6 +1172,26 @@ static int jumponcond (FuncState *fs, expdesc *e, int cond) {
+ }
+ 
+ 
++/*
++** Add to 'list' a jump to be taken when R[reg] is nil, keeping the
++** register intact (the receiver is reused by the following access).
++*/
++void luaK_jumpifnil (FuncState *fs, int reg, int *list) {
++  int nk = nilK(fs);
++  if (nk <= MAXARG_B) {  /* nil constant fits in an OP_EQK operand? */
++    luaK_codeABCk(fs, OP_EQK, reg, nk, 0, 1);
++  }
++  else {  /* constant index too large: compare against a nil in a register */
++    int nilreg = fs->freereg;
++    luaK_nil(fs, nilreg, 1);
++    luaK_reserveregs(fs, 1);
++    luaK_codeABCk(fs, OP_EQ, reg, nilreg, 0, 1);
++    fs->freereg--;
++  }
++  luaK_concat(fs, list, luaK_jump(fs));
++}
++
++
+ /*
+ ** Emit code to go through if 'e' is true, jump otherwise.
+ */
+@@ -1935,7 +1955,15 @@ void luaK_finish (FuncState *fs) {
      Instruction *pc = &p->code[i];
      /* avoid "not used" warnings when assert is off (for 'onelua.c') */
      (void)luaP_isOT; (void)luaP_isIT;
@@ -19,6 +46,18 @@ index 4caa804..8fff883 100644
      switch (GET_OPCODE(*pc)) {
        case OP_RETURN0: case OP_RETURN1: {
          if (!(fs->needclose || (p->flag & PF_VAHID)))
+diff --git a/lcode.h b/lcode.h
+index 09e5c80..724a41d 100644
+--- a/lcode.h
++++ b/lcode.h
+@@ -82,6 +82,7 @@ LUAI_FUNC void luaK_exp2val (FuncState *fs, expdesc *e);
+ LUAI_FUNC void luaK_self (FuncState *fs, expdesc *e, expdesc *key);
+ LUAI_FUNC void luaK_indexed (FuncState *fs, expdesc *t, expdesc *k);
+ LUAI_FUNC void luaK_goiftrue (FuncState *fs, expdesc *e);
++LUAI_FUNC void luaK_jumpifnil (FuncState *fs, int reg, int *list);
+ LUAI_FUNC void luaK_storevar (FuncState *fs, expdesc *var, expdesc *e);
+ LUAI_FUNC void luaK_setreturns (FuncState *fs, expdesc *e, int nresults);
+ LUAI_FUNC void luaK_setoneret (FuncState *fs, expdesc *e);
 diff --git a/ldebug.c b/ldebug.c
 index f54c9c5..3e30097 100644
 --- a/ldebug.c
@@ -103,7 +142,7 @@ index 0554a2e..e90d52f 100644
  };
  
 diff --git a/lparser.c b/lparser.c
-index 090e150..9c7a49c 100644
+index 090e150..99e3a21 100644
 --- a/lparser.c
 +++ b/lparser.c
 @@ -37,6 +37,27 @@
@@ -142,7 +181,7 @@ index 090e150..9c7a49c 100644
      luaK_setreturns(fs, e, extra);  /* last exp. provides the difference */
    }
    else {
-@@ -1218,9 +1240,29 @@ static void suffixedexp (LexState *ls, expdesc *v) {
+@@ -1218,9 +1240,21 @@ static void suffixedexp (LexState *ls, expdesc *v) {
    /* suffixedexp ->
         primaryexp { '.' NAME | '[' exp ']' | ':' NAME funcargs | funcargs } */
    FuncState *fs = ls->fs;
@@ -152,27 +191,19 @@ index 090e150..9c7a49c 100644
    for (;;) {
      switch (ls->t.token) {
 +      case '?': {  /* optional chain: '?.' '?:' '?[' '?(' */
-+        int reg, nilreg;
++        int reg;
 +        luaX_next(ls);  /* consume '?' */
 +        if (ls->t.token != '.' && ls->t.token != ':' &&
 +            ls->t.token != '[' && ls->t.token != '(')
 +          luaX_syntaxerror(ls, "unexpected symbol near '?'");
 +        reg = luaK_exp2anyreg(fs, v);  /* evaluate receiver only once */
-+        nilreg = fs->freereg;
-+        luaK_nil(fs, nilreg, 1);  /* ensure it is nil at runtime */
-+        /* Reserve the temp through luaK_reserveregs (which also grows
-+           'maxstacksize') instead of a raw freereg++ that would bypass
-+           luaK_checkstack and leave 'maxstacksize' stale. */
-+        luaK_reserveregs(fs, 1);
-+        luaK_codeABCk(fs, OP_EQ, reg, nilreg, 0, 1);  /* jump when nil */
-+        luaK_concat(fs, &niljumps, luaK_jump(fs));
-+        fs->freereg--;  /* release the nil slot; only used by OP_EQ */
++        luaK_jumpifnil(fs, reg, &niljumps);
 +        break;  /* next iteration handles '.' ':' '[' '(' */
 +      }
        case '.': {  /* fieldsel */
          fieldsel(ls, v);
          break;
-@@ -1245,7 +1287,48 @@ static void suffixedexp (LexState *ls, expdesc *v) {
+@@ -1245,7 +1279,48 @@ static void suffixedexp (LexState *ls, expdesc *v) {
          funcargs(ls, v);
          break;
        }
@@ -222,7 +253,7 @@ index 090e150..9c7a49c 100644
      }
    }
  }
-@@ -2036,7 +2119,10 @@ static void retstat (LexState *ls) {
+@@ -2036,7 +2111,10 @@ static void retstat (LexState *ls) {
      if (hasmultret(e.k)) {
        luaK_setmultret(fs, &e);
  #if defined(NDEBUG)
@@ -234,7 +265,7 @@ index 090e150..9c7a49c 100644
          SET_OPCODE(getinstruction(fs,&e), OP_TAILCALL);
          lua_assert(GETARG_A(getinstruction(fs,&e)) == luaY_nvarstack(fs));
        }
-@@ -2201,4 +2287,3 @@ LClosure *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff,
+@@ -2201,4 +2279,3 @@ LClosure *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff,
    L->top.p--;  /* remove scanner's table */
    return cl;  /* closure is on the stack, too */
  }

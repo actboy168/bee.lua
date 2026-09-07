@@ -199,6 +199,7 @@ local stringify; do
     end
 end
 
+local undump_fn
 local undump_script = [[
 local unpack_buf = ""
 local unpack_pos = 1
@@ -750,7 +751,6 @@ end
 
 local coverage = {}; do
     local include = {}
-    local undump
     local enable = false
 
     local function nextline(proto, abs, currentline, pc)
@@ -825,7 +825,7 @@ local coverage = {}; do
             source = f:read "a"
             f:close()
         end
-        local cl, version = undump(string.dump(assert(load(source))))
+        local cl, version = undump_fn(string.dump(assert(load(source))))
         local actives = {}
         if version >= 0x55 then
             calc_actives_55(cl.f, actives)
@@ -863,7 +863,7 @@ local coverage = {}; do
 
     function coverage.start()
         enable = true
-        undump = assert(load(undump_script))()
+        undump_fn = undump_fn or assert(load(undump_script))()
         debug.sethook(debug_hook, "l")
     end
 
@@ -1615,6 +1615,12 @@ end
 m.options = options
 m.stringify = stringify
 m.isWindowsShell = isWindowsShell
+
+function m.dump(f)
+    undump_fn = undump_fn or assert(load(undump_script))()
+    local cl = undump_fn(string.dump(f))
+    return cl.f
+end
 
 if options.coverage then
     local major, minor = _VERSION:match "Lua (%d)%.(%d)"
