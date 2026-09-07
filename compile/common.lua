@@ -22,13 +22,16 @@ local lua_patches <const> = {
 local srcdir = "3rd/lua"..lm.lua
 local dstdir = tostring(lm.luadir)
 
-local args = { srcdir, dstdir }
+-- args 会原样传给命令行（按外层工程根解析）；"@" 前缀让 luamake 把
+-- 相对路径锚定到本 make.lua 所在目录，使 bee.lua 作为子工程被 import 时
+-- 源码目录与补丁文件仍能正确定位（用法同 compile/bootstrap.lua）。
+local args = { "@" .. srcdir, dstdir }
 local inputs = {}
 for _, p in ipairs(lua_patches) do
     if not p.flag or lm[p.flag] then
         local patchfile = ("3rd/lua-patch/%s/lua%s.patch"):format(p.dir, lm.lua)
         assert(fs.exists(fs.path(lm.workdir) / patchfile), "patch not found: " .. patchfile)
-        args[#args+1] = patchfile
+        args[#args+1] = "@" .. patchfile
         inputs[#inputs+1] = patchfile
     end
 end
