@@ -39,16 +39,16 @@
 #define _CRT_SECURE_NO_WARNINGS  /* avoid warnings about ISO C functions */
 #endif
 
-#include "../lua-patch/bee_utf8_prefix.h"
+#include "bee_utf8_prefix.h"
 
 #endif			/* } */
 
-#include "../lua-patch/luai_devent.h"
+#include "luai_devent.h"
 #include <stdlib.h>
 
 #if !defined(NDEBUG)
 
-#include "../lua-patch/bee_assert.h"
+#include "bee_assert.h"
 
 #    if defined(lua_assert)
 #        undef lua_assert
@@ -65,7 +65,7 @@
 
 #if defined(_MSC_VER) && defined(BEE_FAST_SETJMP) && !defined(__SANITIZE_ADDRESS__)
 
-#include "../lua-patch/fast_setjmp.h"
+#include "fast_setjmp.h"
 
 #define LUAI_THROW(L,c) fast_longjmp((c)->b, 1)
 #define LUAI_TRY(L,c,a) if (fast_setjmp((c)->b) == 0) { a }

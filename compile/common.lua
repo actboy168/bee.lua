@@ -5,7 +5,54 @@ lm:required_version "1.6"
 lm.compile_commands = "$builddir"
 
 lm.lua = lm.lua or "55"
-lm.luadir = lm:path("3rd/lua"..lm.lua)
+lm.luadir = lm:path("$builddir/patched/lua"..lm.lua)
+
+-- 通用 Lua 补丁基础设施：构建期把官方源码整树复制到
+-- $builddir/patched/lua<ver>/，再按注册表顺序应用启用的补丁（git apply）。
+-- 无启用补丁时退化为纯复制；整树复制使 include 始终解析到补丁目录内的
+-- 文件，新增补丁无需改动构建代码。
+local fs = require "bee.filesystem"
+
+-- 补丁注册表：补丁文件约定为 3rd/lua-patch/<dir>/lua<ver>.patch；
+-- flag 是可选的命令行开关（luamake -<flag>），省略则始终启用。
+local lua_patches <const> = {
+    { flag = "optchain", dir = "optchain" },
+}
+
+local srcdir = "3rd/lua"..lm.lua
+local dstdir = tostring(lm.luadir)
+
+-- args 会原样传给命令行（按外层工程根解析）；"@" 前缀让 luamake 把
+-- 相对路径锚定到本 make.lua 所在目录，使 bee.lua 作为子工程被 import 时
+-- 源码目录与补丁文件仍能正确定位（用法同 compile/bootstrap.lua）。
+local args = { "@" .. srcdir, dstdir }
+local inputs = {}
+for _, p in ipairs(lua_patches) do
+    if not p.flag or lm[p.flag] then
+        local patchfile = ("3rd/lua-patch/%s/lua%s.patch"):format(p.dir, lm.lua)
+        assert(fs.exists(fs.path(lm.workdir) / patchfile), "patch not found: " .. patchfile)
+        args[#args+1] = "@" .. patchfile
+        inputs[#inputs+1] = patchfile
+    end
+end
+
+local outputs = {}
+local srcpath = fs.path(lm.workdir) / srcdir
+for file in fs.pairs_r(srcpath) do
+    if fs.is_regular_file(file) then
+        local rel = fs.relative(file, srcpath):string()
+        inputs[#inputs+1] = srcdir .. "/" .. rel
+        outputs[#outputs+1] = dstdir .. "/" .. rel
+    end
+end
+
+lm:runlua "apply_lua_patch" {
+    script = "compile/apply_patch.lua",
+    args = args,
+    inputs = inputs,
+    outputs = outputs,
+    restat = true,
+}
 
 local function macos_version()
     local cxx = lm.cxx or "c++17"
@@ -80,7 +127,11 @@ if lm.sanitize then
 end
 
 lm:source_set "source_lua" {
-    includes = lm.luadir,
+    objdeps = "apply_lua_patch",
+    includes = {
+        lm.luadir,
+        "3rd/lua-patch",
+    },
     sources = {
         lm.luadir / "onelua.c",
     },
@@ -114,6 +165,7 @@ lm:source_set "source_lua" {
 }
 
 lm:source_set "source_bee" {
+    objdeps = "apply_lua_patch",
     includes = lm.luadir,
     sources = "3rd/lua-seri/lua-seri.cpp",
     msvc = {
@@ -153,6 +205,7 @@ local function need(lst)
 end
 
 lm:source_set "source_bee" {
+    objdeps = "apply_lua_patch",
     includes = {
         ".",
         lm.luadir,
@@ -235,6 +288,7 @@ lm:source_set "source_bee" {
 }
 
 lm:source_set "source_bee" {
+    objdeps = "apply_lua_patch",
     includes = {
         ".",
         lm.luadir,

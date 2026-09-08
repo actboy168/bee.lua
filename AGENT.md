@@ -94,13 +94,26 @@ Lua 用户代码
 
 ### 自定义 Lua 补丁
 
-vendored 的 Lua 源码已打补丁（见 `3rd/lua-patch/`），Lua 5.4 和 5.5 均适用的补丁包括：
+vendored 的 Lua 源码有两类补丁，均位于 `3rd/lua-patch/`：
+
+**1. 始终编译的内联补丁**（Lua 5.4 和 5.5 均适用，无开关）：
 - Windows 上支持 ANSI 转义码
 - Windows 上使用 UTF-8 字符串编码
 - Windows 上使用快速 setjmp
 - 错误/resume/yield 钩子（供调试器使用）
 - Debug 模式下禁用尾调用
 - Debug 构建中启用 `lua_assert`
+
+**2. 构建期 `git apply` 补丁**（通用补丁基础设施）：
+
+构建时始终将官方 Lua 源码**整树**复制到 `$builddir/patched/lua<ver>/`，再依次应用启用的补丁（`apply_lua_patch` 目标，无条件构建；无启用补丁时退化为纯复制，不调用 git）。补丁按约定放在 `3rd/lua-patch/<name>/lua<ver>.patch`（例如 `3rd/lua-patch/optchain/lua55.patch`）。
+
+新增一个此类补丁的步骤：
+
+1. 在 `3rd/lua-patch/<name>/` 下为每个目标 Lua 版本放置 `lua<ver>.patch`（`git diff` 格式，即 `git apply` 可直接应用的补丁文件）；
+2. 在 `compile/common.lua` 的 `lua_patches` 清单中注册一行 `{ flag = "<flag>", dir = "<name>" }`。`flag` 是可选的命令行开关（默认关闭）：`luamake -<flag>` 即启用该补丁；若补丁无需开关（始终启用），可省略 `flag` 字段。
+
+补丁按清单顺序应用，后一个补丁可覆盖前一个补丁的修改。整树复制使 `#include` 始终解析到补丁目录内的文件（补丁版或原样版），新增补丁无需关心它触及哪些文件，构建代码零改动；开关切换时构建脚本会自动重写产物并清理补丁遗留文件。注意：有补丁启用时构建需要 PATH 上有 `git`。
 
 ## CI 矩阵
 

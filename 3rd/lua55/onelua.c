@@ -120,7 +120,7 @@
 // #include "linit.c"
 #endif
 
-#include "../lua-patch/bee_assert.c"
+#include "bee_assert.c"
 
 /* test library -- used only for internal development */
 #if defined(LUA_DEBUG)
