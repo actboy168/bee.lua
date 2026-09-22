@@ -14,7 +14,7 @@ description: 用 bee.async 做跨平台异步 I/O（create 实例、submit_read/
 ```lua
 local async = require "bee.async"
 
-local as <close> = assert(async.create([max_completions = 64]))   -- <=0 报 "max_completions is less than or equal to zero."
+local as <close> = assert(async.create(64))   -- create(max_completions)，默认 64；<=0 报 "max_completions is less than or equal to zero."
 
 as:associate(fd)                       -- Windows/IOCP 必需，其他平台 no-op
 as:associate_file(file)                -- 文件 I/O 前必须调用（io.open 得到的 file*）
@@ -38,12 +38,12 @@ as:submit_poll(fd, udata)                           -- 只监听可读，不消�
 缓冲区：
 
 ```lua
-local wb = assert(async.writebuf([hwm = 65536]))
+local wb = assert(async.writebuf(64 * 1024))       -- writebuf(hwm)，默认 65536
 wb:write(data)      --> true 表示缓冲 >= hwm，调用方应自行背压
 wb:buffered()       --> 当前排队字节数
 wb:close()          -- 流关闭时丢弃未发数据
 
-local rb = assert(async.readbuf(bufsize))            -- 向上取整到 2 的幂；<=0 报 "bufsize must be positive"
+local rb = assert(async.readbuf(bufsize))            -- readbuf(bufsize)，向上取整到 2 的幂；<=0 报 "bufsize must be positive"
 rb:read([n])        --> string | nil（数据不足）；n 省略取全部可用
 rb:readline([sep = "\r\n"])   --> string | nil（未找到分隔符）
 ```
@@ -63,6 +63,8 @@ end
 ## 完整示例（取自 `test_async.lua`）
 
 ```lua
+local async = require "bee.async"
+local socket = require "bee.socket"
 local as <close> = assert(async.create(64))
 
 -- 服务端/客户端都要先 associate

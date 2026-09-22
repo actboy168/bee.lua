@@ -18,7 +18,7 @@ local epfd <close> = assert(epoll.create(16))       -- max_events 必须 > 0，�
 epfd:event_add(fd, events [, userdata])             --> true | nil, err
 epfd:event_mod(fd, events [, userdata])             --> true | nil, err
 epfd:event_del(fd)                                  --> true | nil, err
-epfd:wait([timeout])                                --> iterator | nil（已 close 时）
+epfd:wait([timeout])                                --> iterator | nil, err（实例已 close 时返回 nil, "bad file descriptor"）
 epfd:close()                                        --> true | nil, err（重复 close 返回 nil）
 ```
 
@@ -49,6 +49,7 @@ epoll.EPOLLONESHOT  -- 1 << 30  一次性
 ## 用法
 
 ```lua
+local epoll = require "bee.epoll"
 local epfd <close> = assert(epoll.create(16))
 epfd:event_add(res_chan:fd(), epoll.EPOLLIN, "res")
 

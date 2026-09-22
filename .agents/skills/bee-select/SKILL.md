@@ -36,7 +36,7 @@ for obj, event in ctx:wait() do
 end
 ```
 
-只要事件标志时可以直接累加（来自 `test_socket.lua` 的 `simple_select`）：
+`event` 是**位标志**：同一轮里可能既有读也有写就绪，需要按位或把多次迭代的 `event` 累加起来（来自 `test_socket.lua` 的 `simple_select`）：
 
 ```lua
 local function simple_select(fd, mode)

@@ -22,6 +22,9 @@ time.thread()      -- 当前线程已消耗的 CPU 时间（毫秒）
 测量耗时（`test_thread:test_sleep`）：
 
 ```lua
+local time = require "bee.time"
+local thread = require "bee.thread"
+
 local t1 = time.monotonic()
 thread.sleep(1)
 local t2 = time.monotonic()

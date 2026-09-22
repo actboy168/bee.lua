@@ -26,15 +26,18 @@ box:fd()               --> lightuserdata  -- 用于 epoll/select 等可读
 ```lua
 local chan = channel.create "test"
 chan:push(1024); chan:push(1025)
-assert(chan:pop() == 1024)
-assert(chan:pop() == 1025)
-local ok = chan:pop()          -- false，通道已空
+local ok, v = chan:pop(); assert(ok == true and v == 1024)   -- pop 第一个返回值是 ok，第二个才是数据
+ok, v = chan:pop(); assert(ok == true and v == 1025)
+ok, v = chan:pop()          -- ok == false，通道已空（v 为 nil）
 channel.destroy "test"
 ```
 
 ## 用法：worker + 请求/响应
 
 ```lua
+local thread  = require "bee.thread"
+local channel = require "bee.channel"
+
 local req = channel.create "testReq"
 local res = channel.create "testRes"
 
@@ -65,6 +68,7 @@ channel.destroy "testReq"; channel.destroy "testRes"
 worker 端监听 `req:fd()`，取到 `EPOLLIN` 后循环 `pop` 直到取空（`test_channel:test_fd`）：
 
 ```lua
+local epoll = require "bee.epoll"
 local epfd <close> = epoll.create(16)
 epfd:event_add(req:fd(), epoll.EPOLLIN)
 for _, event in epfd:wait() do

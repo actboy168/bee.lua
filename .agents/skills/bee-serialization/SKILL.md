@@ -35,7 +35,11 @@ local t = {}
 for i = 1, N do t[i] = {} end
 for i = 1, N do for j = 1, N do t[i][j] = t[j] end end
 local newt = seri.unpack(seri.pack(t))
-assert(newt[i][j] == newt[j])
+for i = 1, N do
+    for j = 1, N do
+        assert(newt[i][j] == newt[j])      -- 解出来仍指向同一张表
+    end
+end
 ```
 
 ## 不支持的类型与报错文案（固定字符串，测试逐字断言）
