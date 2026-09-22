@@ -2,6 +2,8 @@
 
 本文件为 AI 编码助手在此仓库中工作时提供指引。
 
+> Lua 侧 API 与用法：索引见 [`.agents/bee-lua-api.md`](.agents/bee-lua-api.md)，每个 `bee.*` 模块一个 skill 文件位于 [`.agents/skills/`](.agents/skills/)（`bee-<module>/SKILL.md`，示例多摘自 `test/`）。
+
 ## 项目简介
 
 **bee.lua** 是一个跨平台 Lua 扩展库，为 Lua 5.4 和 5.5 提供系统级原生绑定，封装了异步 I/O、网络、子进程管理、多线程、文件监控等操作系统 API，以统一的 Lua 接口对外暴露。
