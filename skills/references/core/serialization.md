@@ -1,8 +1,3 @@
----
-name: bee-serialization
-description: 用 bee.serialization 在线程/通道间传递数据（pack/packstring/unpack 的类型限制与报错文案、引用共享保留、lightuserdata 转换）。当需要跨线程传表、或在 channel:push 前预处理复杂结构时使用。
----
-
 # bee.serialization
 
 `require "bee.serialization"`，对应 `meta/serialization.lua`、`test/test_serialization.lua`。

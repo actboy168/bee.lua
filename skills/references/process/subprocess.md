@@ -1,8 +1,3 @@
----
-name: bee-subprocess
-description: 用 bee.subprocess 启动与管理子进程（spawn 配置表、stdin/stdout/stderr 管道或重定向、env/cwd、wait/kill/is_running/detach、select 批量等待、setenv/quotearg）。当需要调外部命令、跑测试子进程或用管道做进程间通信时使用。
----
-
 # bee.subprocess
 
 `require "bee.subprocess"`，对应 `meta/subprocess.lua`、`test/test_subprocess.lua`、`test/shell.lua`。

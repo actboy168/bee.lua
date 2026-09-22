@@ -1,8 +1,3 @@
----
-name: bee-channel
-description: 用 bee.channel 做线程间通信（create/query/destroy 命名通道、box:push/pop 序列化传递、box:fd 接入 epoll/select 等待可读）。当需要多线程收发消息、或搭建 worker 请求-响应模型时使用。
----
-
 # bee.channel
 
 `require "bee.channel"`，对应 `meta/channel.lua`、`test/test_channel.lua`。
@@ -89,6 +84,6 @@ end
 
 - 通道是**全局命名**的：`channel.query` 在别的线程里靠名字找回同一个通道，因此名字要唯一且双方约定一致。
 - `create` 一个已存在的名字会 `error`；`test_reset_1` 说明 `destroy` 后可以重新 `create` 同名通道。
-- 传的数据经序列化，不能传 userdata / `thread` / 普通 Lua function（报错文案见 `bee-serialization`）。
+- 传的数据经序列化，不能传 userdata / `thread` / 普通 Lua function（报错文案见 [serialization](../core/serialization.md)）。
 - 通道内数据在 `destroy` 时被清空，不要依赖销毁后还能 `pop`。
 - 双向通信要建两个通道（req/res），单个通道是单向队列。

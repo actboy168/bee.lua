@@ -1,8 +1,3 @@
----
-name: bee-epoll
-description: 用 bee.epoll 做 epoll 风格 I/O 多路复用（create/event_add/event_mod/event_del/wait 迭代器、EPOLLIN/EPOLLOUT 等位标志、关联自定义 userdata，Windows 下由 IOCP 实现）。当需要监听多个 fd 或 channel 可读事件时使用。
----
-
 # bee.epoll
 
 `require "bee.epoll"`，对应 `meta/epoll.lua`、`test/test_epoll.lua`、`test/test_channel.lua`。

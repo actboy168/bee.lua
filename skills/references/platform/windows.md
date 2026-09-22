@@ -1,8 +1,3 @@
----
-name: bee-windows
-description: 用 bee.windows 处理 Windows 专有事项（u2a/a2u 编码转换、filemode、isatty、write_console、is_ssd、find_file_holders、process_name）。当需要控制台/ANSI 编码、TTY 判断、文件占用排查时使用。
----
-
 # bee.windows
 
 `require "bee.windows"`，对应 `meta/windows.lua`、`test/test_windows.lua`。**仅 Windows 可用**，其他平台 `require` 会失败，需自行按 `platform.os` 分支或 pcall。

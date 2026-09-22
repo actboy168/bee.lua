@@ -1,8 +1,3 @@
----
-name: bee-sys
-description: 用 bee.sys 获取可执行文件/动态库路径、解析文件完整路径、创建进程级文件锁。当需要定位自身可执行文件、防重入单实例锁或规范化路径时使用。
----
-
 # bee.sys
 
 `require "bee.sys"`，对应 `meta/sys.lua`、`test/test_sys.lua`。

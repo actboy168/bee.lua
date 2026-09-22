@@ -1,8 +1,3 @@
----
-name: bee-async
-description: 用 bee.async 做跨平台异步 I/O（create 实例、submit_read/submit_write/submit_accept/submit_connect/submit_file_read/submit_file_write/submit_poll 投递、readbuf/writebuf 缓冲区、poll/wait 返回 completion 迭代器、SUCCESS/CLOSE/ERROR/CANCEL 与 OP_* 常量，Windows 需 associate）。当需要高吞吐异步收发、非阻塞文件 I/O 或基于完成事件的事件循环时使用。
----
-
 # bee.async
 
 `require "bee.async"`，对应 `meta/async.lua`、`test/test_async.lua`。macOS 用 GCD，Windows 用 IOCP，Linux 用 io_uring/epoll。

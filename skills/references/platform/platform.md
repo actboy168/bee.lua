@@ -1,8 +1,3 @@
----
-name: bee-platform
-description: 用 bee.platform 读取当前运行平台信息（OS、架构、编译器、CRT、Debug 标志、OS 版本号）。当需要按平台分支代码、或在测试中检测平台差异时使用。
----
-
 # bee.platform
 
 平台信息模块。返回的是**普通表**（非类），无需 `<close>`。

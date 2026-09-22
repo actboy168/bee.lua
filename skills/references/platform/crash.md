@@ -1,8 +1,3 @@
----
-name: bee-crash
-description: 用 bee.crash 安装崩溃处理器、在进程崩溃时落 dump 文件（create_handler、dump 路径与 "-" 关闭落盘）。当需要捕获 native crash 现场、生成崩溃报告或想显式关闭 dump 写入时使用。
----
-
 # bee.crash
 
 `require "bee.crash"`，对应 `meta/crash.lua`、`binding/lua_crash.cpp`、`test/test.lua`。

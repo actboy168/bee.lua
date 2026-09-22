@@ -1,8 +1,3 @@
----
-name: bee-debugging
-description: 用 bee.debugging 触发断点与探测调试器（breakpoint、breakpoint_if_debugging、is_debugger_present）。当需要让调试器在指定位置中断、或按是否挂调试器切换行为时使用。
----
-
 # bee.debugging
 
 `require "bee.debugging"`，对应 `meta/debugging.lua`、`binding/lua_debugging.cpp`。底层是 `std::breakpoint()` / `std::is_debugger_present()`。

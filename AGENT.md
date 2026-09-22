@@ -2,7 +2,7 @@
 
 本文件为 AI 编码助手在此仓库中工作时提供指引。
 
-> Lua 侧 API 与用法：索引见 [`.agents/bee-lua-api.md`](.agents/bee-lua-api.md)，每个 `bee.*` 模块一个 skill 文件位于 [`.agents/skills/`](.agents/skills/)（`bee-<module>/SKILL.md`，示例多摘自 `test/`）。
+> Lua 侧 API 与用法见 [`skills/SKILL.md`](skills/SKILL.md)（模块细节在 `skills/references/`，按 core / io / concurrency / process / platform 分组，示例多摘自 `test/`）。
 
 ## 项目简介
 

@@ -1,8 +1,3 @@
----
-name: bee-filesystem
-description: 用 bee.filesystem 做路径与文件系统操作（fspath 对象、exists/copy/remove_all、pairs 目录遍历、时间与权限、符号链接）。当需要读写路径、遍历目录、批量复制删除文件时使用。
----
-
 # bee.filesystem
 
 `require "bee.filesystem"`，对应 `meta/filesystem.lua`、`test/test_filesystem.lua`。

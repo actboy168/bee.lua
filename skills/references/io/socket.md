@@ -1,8 +1,3 @@
----
-name: bee-socket
-description: 用 bee.socket 创建 TCP/UDP/Unix 套接字（create/bind/listen/accept/connect/send/recv/sendto/recvfrom、端点对象、detach 与还原、非阻塞三态返回值）。当需要网络编程或实现回显服务时使用。
----
-
 # bee.socket
 
 `require "bee.socket"`，对应 `meta/socket.lua`、`test/test_socket.lua`。

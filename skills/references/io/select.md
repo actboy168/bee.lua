@@ -1,8 +1,3 @@
----
-name: bee-select
-description: 用 bee.select 做 select 风格 I/O 多路复用（create/event_add/event_mod/event_del/wait 迭代器、SELECT_READ 与 SELECT_WRITE 位标志、关联自定义 userdata）。当需要同时等待多个 fd 可读可写时使用。
----
-
 # bee.select
 
 `require "bee.select"`，对应 `meta/select.lua`、`test/test_socket.lua`。

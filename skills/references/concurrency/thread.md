@@ -1,8 +1,3 @@
----
-name: bee-thread
-description: 用 bee.thread 创建原生线程（create 传源码字符串与参数、wait、sleep、setname、errlog、线程 id 与 preload_module，线程间不共享全局变量）。当需要并行执行 Lua 代码或搭建多线程 worker 时使用。
----
-
 # bee.thread
 
 `require "bee.thread"`，对应 `meta/thread.lua`、`test/test_thread.lua`。
@@ -50,7 +45,7 @@ assert(string.find(msg, "Test thread error.", nil, true))
 ## 注意事项
 
 - `source` 必须是**字符串源码**，不能传函数；新线程只拿到自己的环境，只能通过 `require "bee.*"` 或参数传递数据。
-- 参数与返回数据要经过 `bee.serialization`，限制见 `bee-serialization` skill（不能传 userdata、`thread`、普通 Lua function）。
+- 参数与返回数据要经过 `bee.serialization`，限制见 [serialization](../core/serialization.md)（不能传 userdata、`thread`、普通 Lua function）。
 - 线程内拿不到主线程的全局变量，测试里专门验证了 `GLOBAL == nil`。
 - 每个用例结束后应 `lt.assertEquals(thread.errlog(), nil)` 检查是否遗留线程错误（`test_*.lua` 的 `assertNotThreadError` 约定）。
 - macOS/BSD 上 `thread.sleep` 用例在 `test/test_skip.lua` 里被跳过，跨平台测试注意平台差异。

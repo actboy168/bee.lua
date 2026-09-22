@@ -1,8 +1,3 @@
----
-name: bee-time
-description: 用 bee.time 获取毫秒级时间（time 墙钟、monotonic 单调递增、thread 线程 CPU 时间）。当需要测量耗时、实现超时/退避、或在线程中计时时使用。
----
-
 # bee.time
 
 `require "bee.time"`，对应 `meta/time.lua`、`test/test_time.lua`。三个函数都返回**毫秒整数**。

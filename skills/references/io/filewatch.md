@@ -1,8 +1,3 @@
----
-name: bee-filewatch
-description: 用 bee.filewatch 监控文件系统变化（create、add 路径、set_recursive/set_follow_symlinks/set_filter、select 轮询 modify/rename 事件）。当需要实现热重载、构建监听或检测目录变更时使用。
----
-
 # bee.filewatch
 
 `require "bee.filewatch"`，对应 `meta/filewatch.lua`、`test/test_filewatch.lua`。底层：inotify / FSEvents / ReadDirectoryChangesW。
