@@ -45,6 +45,6 @@ debugging.breakpoint_if_debugging()    -- 挂调试器则中断，否则什么�
 ## 注意事项
 
 - 这是 C/C++ 层的原生断点，不是 Lua 的 `debug.sethook`；在 VS/VSCode 附加进程时会停在 native 调用栈上。
-- `breakpoint()` **不判断**是否有调试器：没有调试器附加时，断点异常交给系统的默认处理器（可能直接终止进程），因此生产代码里应优先用 `breakpoint_if_debugging()`。
+- `breakpoint()` **不判断**是否有调试器：在实现了 trap 的构建环境里（C++26 `std::breakpoint()` / MSVC / clang），没有调试器附加时断点异常会交给系统默认处理器（可能直接终止进程）；而 GCC 等无 trap 实现的分支里它只是 no-op。因此生产代码里应优先用 `breakpoint_if_debugging()`。
 - `is_debugger_present()` 也可用于按环境切换日志级别。
 - 本模块目前没有独立测试文件。
