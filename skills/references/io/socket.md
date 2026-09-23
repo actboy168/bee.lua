@@ -1,6 +1,6 @@
 # bee.socket
 
-`require "bee.socket"`，对应 `meta/socket.lua`、`test/test_socket.lua`。
+TCP / UDP / Unix 套接字。签名见 `meta/socket.lua`，行为契约见 `test/test_socket.lua`。
 
 ## 非阻塞三态返回（本模块最重要的约定）
 
@@ -10,42 +10,30 @@
 | `false` | 需等待，配合 `bee.select` / `bee.epoll` 重试 |
 | `nil, errmsg` | 失败或对端关闭 |
 
-`fd:accept()` / `fd:recv()` 的 `nil` 表示对端关闭；`fd:send()` 返回**已发送字节数**，partial write 需自行切片重试。
+- `accept()` / `recv()` 的 `nil` 表示**对端关闭**，不是错误。
+- `send()` 返回**已发送字节数**，partial write 要自己切片重试。
+- `connect()` 是非阻塞的：之后等可写再 `status()` 判断是否真的连上。
 
-## 创建与连接
+## 用法
 
 ```lua
 local socket = require "bee.socket"
 local select = require "bee.select"
 
--- 协议："tcp" | "udp" | "unix" | "tcp6" | "udp6"
-local server = assert(socket.create "tcp")
+local server = assert(socket.create "tcp")   -- "tcp"|"udp"|"unix"|"tcp6"|"udp6"
 assert(server:bind("127.0.0.1", 0))          -- 端口 0 = 系统分配
 assert(server:listen())                      -- backlog 默认 5
 local address, port = server:info "socket":value()   -- "socket" 本端 / "peer" 对端
 
 local client = assert(socket.create "tcp")
-client:connect("127.0.0.1", port)            -- 非阻塞，之后等可写再 status()
--- 等可写后：
-assert(client:status())                      -- true 表示连接建立
+client:connect("127.0.0.1", port)
+-- 等可写后：assert(client:status())
 
 local session = assert(server:accept())      -- false = 尚无连接
 session:close(); client:close(); server:close()
 ```
 
-Unix socket：`socket.create "unix"` + `fd:bind(path)`，关闭后是否自动 unlink 依平台（测试中用 `detectAutoUnlink` 探测）。
-
-## 读写
-
-```lua
-fd:recv([len])                --> string | false(等待) | nil(关闭), err
-fd:send(data)                --> n | false(等待) | nil, err
-fd:sendv(s1, s2, ...)        --> 一次系统调用向量化发送，返回总字节数
-fd:recvfrom([len])           --> data, bee.endpoint | false | nil, err
-fd:sendto(data, ep_or_addr [, port])   --> n | false | nil, err
-```
-
-UDP 示例（`test_socket:test_udp`）：
+UDP（`test_socket:test_udp`）：
 
 ```lua
 local a, b = assert(socket.create "udp"), assert(socket.create "udp")
@@ -56,34 +44,16 @@ local data, from_ep = b:recvfrom()           -- 需先等 b 可读
 assert(data == "123" and from_ep == a_ep)
 ```
 
-## 端点与其它工具
+句柄移交（`test_socket:test_dump`）：
 
 ```lua
-socket.endpoint("inet", ip, port)            -- 也有 "inet6" | "hostname" | "unix"
-ep:value()                                   -- inet/inet6 返回 ip, port；unix 返回 path, type
-socket.pair()                                --> fd1, fd2（一对已连接的 socket，测试里用于 echo）
-socket.gethostname()                         --> string
-socket.fd(handle [, no_ownership])           -- 从裸句柄包装
-```
-
-`fd:detach()` 交出裸句柄并放弃所有权，`socket.fd(h)` 可重新包装（`test_socket:test_dump`）：
-
-```lua
-local h = server:detach()
-server = socket.fd(h)
-```
-
-## 其它 fd 方法
-
-```lua
-fd:option("reuseaddr"|"sndbuf"|"rcvbuf", value)
-fd:shutdown("r"|"w")        -- 省略则双向
-fd:handle()                 --> lightuserdata
+local h = server:detach()      -- 交出裸句柄并放弃所有权
+server = socket.fd(h)          -- 再包装回来
 ```
 
 ## 常见用法模板
 
-同步等待 + 收发（来自 `test_socket.lua` 的 `simple_select`）：
+同步等待 + 收发（`test_socket.lua` 的 `simple_select`）：
 
 ```lua
 local function simple_select(fd, mode)
@@ -132,6 +102,6 @@ end
 ## 注意事项
 
 - 参数校验错误会 `error()`，文案如 `bad argument #1 to 'bee.socket.create' (invalid option 'icmp')`。
-- `socket.create` 失败返回 `nil, err`（用 `assert` 包装）。
+- Unix socket 关闭后是否自动 unlink 依平台，测试里用 `detectAutoUnlink` 探测。
 - 对端关闭后继续 `send` 不应崩溃（`test_SIGPIPE` 专门覆盖）。
-- 跨线程使用 socket 需要传句柄或让线程自己 `create`，不能共享 userdata。
+- 跨线程使用 socket 要把句柄传过去或让线程自己 `create`，不能共享 userdata。

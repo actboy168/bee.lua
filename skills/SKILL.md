@@ -5,7 +5,19 @@ description: bee.lua 运行时库指南——Lua 5.4/5.5 上的跨平台系统�
 
 # bee.lua
 
-Lua 扩展库，为 Lua 5.4 / 5.5 提供系统级原生绑定。权威签名在 `meta/*.lua`（LuaLS 注解），行为契约在 `test/test_*.lua`。
+Lua 扩展库，为 Lua 5.4 / 5.5 提供系统级原生绑定。
+
+## API 参考来源
+
+**本 skill 不维护 bee 的 API 签名表**，请直接读仓库里的权威来源：
+
+| 目的 | 来源 |
+|------|------|
+| 函数签名、参数/返回值类型、字段与常量 | `meta/<module>.lua`（LuaLS/EmmyLua 注解，带中文说明） |
+| 行为契约、错误文案、边界情况 | `test/test_<module>.lua` |
+| C++ 层实现细节 | `bee/`、`binding/lua_<module>.cpp` |
+
+`skills/references/` 下的文档只写**从 meta 里读不出来的东西**：跨模块约定、非显然语义与陷阱、可运行片段、平台差异。读 meta 拿到签名后发现行为不明确时，回来查对应文档或直接看测试。
 
 ## 快速开始
 
@@ -26,24 +38,24 @@ local conn <close> = assert(server:accept())
 
 ## 模块索引
 
-| 模块 | 文档 | 用途 |
-|------|------|------|
-| `bee.platform` | [platform](references/platform/platform.md) | 平台/编译器/架构信息（纯数据表） |
-| `bee.filesystem` | [filesystem](references/core/filesystem.md) | 路径与文件系统操作 |
-| `bee.serialization` | [serialization](references/core/serialization.md) | 序列化（线程/通道的底层） |
-| `bee.time` | [time](references/core/time.md) | 墙钟 / 单调 / 线程 CPU 时间 |
-| `bee.sys` | [sys](references/core/sys.md) | 可执行文件路径、文件锁 |
-| `bee.socket` | [socket](references/io/socket.md) | TCP/UDP/Unix socket |
-| `bee.select` | [select](references/io/select.md) | select 风格多路复用 |
-| `bee.epoll` | [epoll](references/io/epoll.md) | epoll 风格多路复用（Windows 走 IOCP） |
-| `bee.async` | [async](references/io/async.md) | 异步 I/O（IOCP / io_uring / GCD） |
-| `bee.filewatch` | [filewatch](references/io/filewatch.md) | 文件监控 |
-| `bee.thread` | [thread](references/concurrency/thread.md) | 线程 |
-| `bee.channel` | [channel](references/concurrency/channel.md) | 线程间通信 |
-| `bee.subprocess` | [subprocess](references/process/subprocess.md) | 子进程与管道 |
-| `bee.windows` | [windows](references/platform/windows.md) | Windows 专有工具 |
-| `bee.crash` | [crash](references/platform/crash.md) | 崩溃 dump |
-| `bee.debugging` | [debugging](references/platform/debugging.md) | 断点 / 调试器探测 |
+| 模块 | meta | 说明文档 | 用途 |
+|------|------|----------|------|
+| `bee.platform` | `meta/platform.lua` | [platform](references/platform/platform.md) | 平台/编译器/架构信息（纯数据表） |
+| `bee.filesystem` | `meta/filesystem.lua` | [filesystem](references/core/filesystem.md) | 路径与文件系统操作 |
+| `bee.serialization` | `meta/serialization.lua` | [serialization](references/core/serialization.md) | 序列化（线程/通道的底层） |
+| `bee.time` | `meta/time.lua` | [time](references/core/time.md) | 墙钟 / 单调 / 线程 CPU 时间 |
+| `bee.sys` | `meta/sys.lua` | [sys](references/core/sys.md) | 可执行文件路径、文件锁 |
+| `bee.socket` | `meta/socket.lua` | [socket](references/io/socket.md) | TCP/UDP/Unix socket |
+| `bee.select` | `meta/select.lua` | [select](references/io/select.md) | select 风格多路复用 |
+| `bee.epoll` | `meta/epoll.lua` | [epoll](references/io/epoll.md) | epoll 风格多路复用（Windows 走 IOCP） |
+| `bee.async` | `meta/async.lua` | [async](references/io/async.md) | 异步 I/O（IOCP / io_uring / GCD） |
+| `bee.filewatch` | `meta/filewatch.lua` | [filewatch](references/io/filewatch.md) | 文件监控 |
+| `bee.thread` | `meta/thread.lua` | [thread](references/concurrency/thread.md) | 线程 |
+| `bee.channel` | `meta/channel.lua` | [channel](references/concurrency/channel.md) | 线程间通信 |
+| `bee.subprocess` | `meta/subprocess.lua` | [subprocess](references/process/subprocess.md) | 子进程与管道 |
+| `bee.windows` | `meta/windows.lua` | [windows](references/platform/windows.md) | Windows 专有工具 |
+| `bee.crash` | `meta/crash.lua` | [crash](references/platform/crash.md) | 崩溃 dump |
+| `bee.debugging` | `meta/debugging.lua` | [debugging](references/platform/debugging.md) | 断点 / 调试器探测 |
 
 ## 跨模块约定
 

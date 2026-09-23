@@ -1,50 +1,20 @@
 # bee.epoll
 
-`require "bee.epoll"`，对应 `meta/epoll.lua`、`test/test_epoll.lua`、`test/test_channel.lua`。
+epoll 风格 I/O 多路复用（Windows 由 IOCP 实现）。签名见 `meta/epoll.lua`，行为契约见 `test/test_epoll.lua`、`test/test_channel.lua`。
 
-跨平台 epoll 风格 API，Windows 上由 IOCP 实现，因此返回错误的形式是 `nil, err`。
+## 要点
 
-## API
-
-```lua
-local epoll = require "bee.epoll"
-
-local epfd <close> = assert(epoll.create(16))       -- max_events 必须 > 0，否则 error
-epfd:event_add(fd, events [, userdata])             --> true | nil, err
-epfd:event_mod(fd, events [, userdata])             --> true | nil, err
-epfd:event_del(fd)                                  --> true | nil, err
-epfd:wait([timeout])                                --> iterator | nil, err（实例已 close 时返回 nil, "bad file descriptor"）
-epfd:close()                                        --> true | nil, err（重复 close 返回 nil）
-```
-
-- `fd` 可为 `bee.socket.fd` 或 `lightuserdata`（如 `channel:fd()`）。
-- `userdata` 是迭代回传的关联对象，默认 fd 自身。
-- `timeout` 毫秒，`-1`/省略为无限等待。
-- 重复 `event_add` 同一个 fd、或对未添加的 fd `event_mod`/`event_del` 返回 `nil`（不抛错）。
-
-## 事件常量
-
-按位定义，`test_epoll:test_enum` 锁定了取值：
-
-```lua
-epoll.EPOLLIN       -- 1 << 0   可读
-epoll.EPOLLPRI      -- 1 << 1
-epoll.EPOLLOUT      -- 1 << 2   可写
-epoll.EPOLLERR      -- 1 << 3
-epoll.EPOLLHUP      -- 1 << 4
-epoll.EPOLLRDNORM   -- 1 << 6
-epoll.EPOLLRDBAND   -- 1 << 7
-epoll.EPOLLWRNORM   -- 1 << 8
-epoll.EPOLLWRBAND   -- 1 << 9
-epoll.EPOLLMSG      -- 1 << 10
-epoll.EPOLLRDHUP    -- 1 << 13  对端关闭
-epoll.EPOLLONESHOT  -- 1 << 30  一次性
-```
+- 常量是位标志，取值被 `test_epoll:test_enum` 锁定；`EPOLLRDHUP`（对端关闭）与 `EPOLLONESHOT`（一次性）是 select 没有的。
+- `fd` 可为 `bee.socket.fd` 或 `lightuserdata`（如 `channel:fd()`）；`event_add` 的第三个参数是迭代回传的关联对象，默认 fd 自身。
+- `wait([timeout])` 返回**迭代器**，空迭代表示超时；`timeout` 毫秒、`-1`/省略为无限等待，传 `0` 即非阻塞轮询。
+- 只做就绪通知，**不消费数据**；`event_add` 到已存在的 fd、或对未注册的 fd `event_mod`/`event_del` 返回 `nil`（不抛错）。
+- `epoll.create(max_events)` 对 `<= 0` 的参数直接 `error`：`maxevents is less than or equal to zero.`。
 
 ## 用法
 
 ```lua
 local epoll = require "bee.epoll"
+
 local epfd <close> = assert(epoll.create(16))
 epfd:event_add(res_chan:fd(), epoll.EPOLLIN, "res")
 
@@ -53,7 +23,7 @@ for obj, event in epfd:wait() do
         error "unknown error"
     end
     if event & epoll.EPOLLIN ~= 0 then
-        -- 就绪通知，数据仍需自行消费
+        -- 就绪通知：数据要自己取空
         while true do
             local ok, v = res_chan:pop()
             if not ok then break end
@@ -67,7 +37,6 @@ end
 
 ## 注意事项
 
-- `epoll.create(max_events)` 对 `<= 0` 的参数直接 `error`：`maxevents is less than or equal to zero.`（测试用 `lt.assertFailed` 断言）。
-- `wait` 返回空迭代表示超时；用作非阻塞轮询时传 `0`。
-- `epoll` 只做就绪通知（水平触发语义由底层决定），不消费数据；`channel:pop()` 到空为止是标准收尾方式。
-- 需要更简单的 `SELECT_READ/SELECT_WRITE` 语义用 `bee.select`；需要一次投递一次完成事件用 `bee.async`。
+- 取到 `EPOLLIN` 后**必须把数据取空**（`channel:pop()` 到 `ok == false`），否则下一次还会立刻就绪。
+- 关闭实例前先 `event_del`，避免残留注册；实例 `close` 后 `wait` 会返回 `nil, "bad file descriptor"`。
+- 需要更简单的读/写语义用 `bee.select`；需要「一次投递一次完成事件」用 `bee.async`。

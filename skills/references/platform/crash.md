@@ -1,20 +1,14 @@
 # bee.crash
 
-`require "bee.crash"`，对应 `meta/crash.lua`、`binding/lua_crash.cpp`、`test/test.lua`。
+崩溃处理器：进程崩溃时落 dump。签名见 `meta/crash.lua`，行为契约见 `test/test.lua`（入口就在用），实现在 `bee/crash/`。
 
-## API
+## 要点
 
-```lua
-local crash = require "bee.crash"
-
-local handler <close> = crash.create_handler(dump_path)   --> handler userdata
-```
-
-- `dump_path` 是**目录**：崩溃日志写成 `<dump_path>/crash_<nanoid>.log`。
-- `dump_path` 传 `"-"` 时**关闭落盘**（崩溃时只把日志打印到控制台），测试入口就是这么用的：
+- `create_handler(dump_path)` 的 `dump_path` 是**目录**，崩溃日志写成 `<dump_path>/crash_<nanoid>.log`。
+- `dump_path` 传 `"-"` 时**关闭落盘**，只在崩溃时把日志打到控制台：
 
 ```lua
--- test/test.lua
+-- test/test.lua 的用法
 local crash = require "bee.crash"
 local _ = crash.create_handler "-"
 ```
@@ -23,7 +17,7 @@ local _ = crash.create_handler "-"
 
 ## 注意事项
 
-- 只在 Windows + MSVC（且非 address sanitizer）构建下真正生效，其他平台是 `empty_handler`，构造调用是 **no-op**（见 `bee/crash/handler.h`）。因此跨平台代码可以无条件调用。
-- 路径是 `luaL_checkstring`，必须传字符串；非 Windows 平台不会校验路径是否存在。
-- 用途是捕获 native 层崩溃（段错误、未处理异常），Lua 的 `pcall` 错误栈不在其覆盖范围内。
-- 需要在崩溃后分析时，把 `dump_path` 指向可写目录并在测试/CI 里收集该目录；不希望生成文件时用 `"-"`。
+- 只在 **Windows + MSVC**（且非 address sanitizer）构建下真正生效，其他平台是 `empty_handler`，构造调用是 **no-op**（`bee/crash/handler.h`）。因此跨平台代码可以无条件调用，但别指望在 Linux/macOS 上拿到 dump。
+- 参数是 `luaL_checkstring`，必须传字符串；非 Windows 平台不会校验路径是否存在。
+- 捕获的是 native 层崩溃（段错误、未处理异常），Lua 层的 `pcall` 错误栈不在覆盖范围。
+- 需要在崩溃后分析时，把 `dump_path` 指向可写目录并在 CI 里收集；不想生成文件就用 `"-"`。

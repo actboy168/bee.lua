@@ -38,5 +38,6 @@ Lua runtime and toolset
 
 ## Documentation
 
-Lua API reference and usage guide: see [`skills/SKILL.md`](skills/SKILL.md). AI coding agents should read it before working on `require "bee.*"` code in this repo.
+Lua API: see [`meta/`](meta) (LuaLS annotations, authoritative for signatures) and [`test/`](test) (behavior contract).
+Usage guide and conventions: see [`skills/SKILL.md`](skills/SKILL.md). AI coding agents should read it before working on `require "bee.*"` code in this repo.
 

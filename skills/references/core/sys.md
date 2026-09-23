@@ -1,19 +1,13 @@
 # bee.sys
 
-`require "bee.sys"`，对应 `meta/sys.lua`、`test/test_sys.lua`。
+系统工具：自身路径与文件锁。签名见 `meta/sys.lua`，行为契约见 `test/test_sys.lua`。
 
-## API
+## 要点
 
-```lua
-local sys = require "bee.sys"
+- `exe_path` / `dll_path` / `fullpath` 返回的是 **`bee.fspath`**，要字符串时 `:string()`；失败返回 `nil, err`。
+- `filelock(path)` 是**独占**语义：拿不到锁返回 `nil`（不是 `error`）；返回的 `file*` 既是句柄也是锁，`close()` 即解锁。
 
-sys.exe_path()        --> bee.fspath | nil, err   -- 当前可执行文件路径
-sys.dll_path()        --> bee.fspath | nil, err   -- 当前动态库(bee.dll/so)路径
-sys.fullpath(path)    --> bee.fspath | nil, err   -- 解析符号链接后的完整路径
-sys.filelock(path)    --> file* | nil, err        -- 独占文件锁；句柄即锁，close 即解锁
-```
-
-## 文件锁
+## 用法
 
 跨进程互斥（`test_sys:test_filelock_1`）：
 
@@ -22,16 +16,16 @@ local sys = require "bee.sys"
 local fs = require "bee.filesystem"
 
 local f1 = assert(sys.filelock "temp.lock")   -- 拿到锁
-assert(sys.filelock "temp.lock" == nil)       -- 同进程/其他进程再取都是 nil（不是 error）
+assert(sys.filelock "temp.lock" == nil)       -- 同进程再取也是 nil
 f1:close()                                    -- 关闭句柄 = 释放锁
 local f2 = assert(sys.filelock "temp.lock")
 f2:close()
 fs.remove "temp.lock"
 ```
 
-跨进程验证（`test_sys:test_filelock_2` 用 `shell:runlua` 起子进程）：子进程拿锁后，父进程 `sys.filelock` 返回 `nil`；子进程退出（句柄关闭）后父进程即可获取。
+跨进程验证见 `test_sys:test_filelock_2`：用 `shell:runlua` 起子进程拿锁，父进程随即返回 `nil`；子进程退出后父进程即可获取。
 
-## 用法：定位自身与路径规范化
+定位自身与路径规范化：
 
 ```lua
 local exe = sys.exe_path():string()
@@ -39,11 +33,8 @@ local dll = sys.dll_path()
 local real = sys.fullpath("some/rel/path"):string()
 ```
 
-`test/shell.lua` 里定位当前 Lua 解释器即用 `fs.absolute(fs.path(arg[i+1]))`（配合 `arg` 负数索引），可作为参考。
-
 ## 注意事项
 
-- 三个路径函数返回的是 `bee.fspath`，需要字符串时 `:string()`。
-- 失败返回 `nil, err`，不要用 `assert` 之外的方式跳过错误。
-- 文件锁是**独占**语义，同进程重复加锁同样返回 `nil`（测试明确断言），别用它做可重入锁。
-- 锁文件本身会被创建，用完自行 `fs.remove`。
+- 文件锁是**独占**的，同进程重复加锁同样返回 `nil`，别拿它当可重入锁。
+- 锁文件用完自行 `fs.remove`。
+- `test/shell.lua` 里定位当前 Lua 解释器用的是 `fs.absolute(fs.path(arg[i+1]))`（配合 `arg` 负数索引），需要类似逻辑时可以参考。

@@ -2,7 +2,7 @@
 
 本文件为 AI 编码助手在此仓库中工作时提供指引。
 
-> Lua 侧 API 与用法见 [`skills/SKILL.md`](skills/SKILL.md)（模块细节在 `skills/references/`，按 core / io / concurrency / process / platform 分组，示例多摘自 `test/`）。
+> Lua 侧 API 与用法见 [`skills/SKILL.md`](skills/SKILL.md)（模块细节在 `skills/references/`，按 core / io / concurrency / process / platform 分组，示例多摘自 `test/`）。查签名一律以 `meta/*.lua` 为准，`skills/` 只写 meta 表达不了的约定与陷阱。
 
 ## 项目简介
 

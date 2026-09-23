@@ -1,16 +1,12 @@
 # bee.time
 
-`require "bee.time"`，对应 `meta/time.lua`、`test/test_time.lua`。三个函数都返回**毫秒整数**。
+毫秒级时间。签名见 `meta/time.lua`，行为契约见 `test/test_time.lua`。三个函数都返回**毫秒整数**。
 
-## API
+## 要点
 
-```lua
-local time = require "bee.time"
-
-time.time()        -- 自 Unix 纪元(1970-01-01 UTC) 起的毫秒数（墙钟，会受系统时间调整影响）
-time.monotonic()   -- 单调递增毫秒数，测间隔用这个
-time.thread()      -- 当前线程已消耗的 CPU 时间（毫秒）
-```
+- `time.time()` 是墙钟，会被 NTP / 手动改钟影响；**测间隔一律用 `time.monotonic()`**。
+- `time.thread()` 是当前线程已消耗的 CPU 时间。
+- `time.time()` 与 `os.time() * 1000` 相差不超过 2 秒（`test_time:test_now`），但单位不同，别混用。
 
 ## 用法
 
@@ -26,8 +22,6 @@ local t2 = time.monotonic()
 assert(t2 - t1 >= 1)
 ```
 
-与 `os.time()` 的关系（`test_time:test_now`）：`os.time() * 1000` 与 `time.time()` 相差不超过 2 秒。
-
 超时轮询（`test_async.lua` 的 `wait_completion`）：
 
 ```lua
@@ -42,6 +36,5 @@ error "wait_completion timeout"
 
 ## 注意事项
 
-- 计时一律用 `monotonic()`，`time()` 可能被系统时间调整（NTP、手动改钟）拉回或跳过。
-- 单位是毫秒，不是秒；不要与 `os.time()`（秒）混用。
 - 精度/粒度依平台，`test_time:test_monotonic` 只断言 `> 0`。
+- 需要「等一段时间」用 `thread.sleep`（毫秒），不要忙等 `monotonic`。
