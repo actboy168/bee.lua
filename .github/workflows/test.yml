@@ -31,6 +31,57 @@ jobs:
     - uses: actboy168/setup-luamake@master
     - run: luamake -arch x86 -notest -sanitize
     - run: luamake test -v
+  windows-arm64:
+    name: windows (arm64)
+    runs-on: windows-11-arm
+    steps:
+    - uses: actions/checkout@v4
+    - name: Verify native ARM64 runner
+      shell: pwsh
+      run: |
+        if ($env:PROCESSOR_ARCHITECTURE -ne "ARM64") {
+          throw "Expected an ARM64 runner, got $env:PROCESSOR_ARCHITECTURE"
+        }
+    - uses: actboy168/setup-luamake@master
+    - run: luamake -arch arm64 -notest
+    - run: luamake test -v
+    - name: Verify ARM64 artifacts
+      shell: pwsh
+      run: |
+        $expectedMachine = 0xAA64
+        $peFiles = Get-ChildItem build/bin -File |
+          Where-Object { $_.Extension -in ".exe", ".dll" }
+        if (-not $peFiles) {
+          throw "No PE artifacts found in build/bin"
+        }
+        foreach ($file in $peFiles) {
+          $bytes = [IO.File]::ReadAllBytes($file.FullName)
+          $peOffset = [BitConverter]::ToInt32($bytes, 0x3c)
+          $machine = [BitConverter]::ToUInt16($bytes, $peOffset + 4)
+          if ($machine -ne $expectedMachine) {
+            throw "$($file.FullName) has PE machine 0x$($machine.ToString('X4')); expected 0xAA64"
+          }
+          Write-Host "$($file.FullName): PE machine 0xAA64"
+        }
+        $asmObjects = @(Get-ChildItem build -Recurse -Filter fast_setjmp_arm64.obj)
+        if ($asmObjects.Count -lt 1) {
+          throw "No fast_setjmp_arm64.obj artifacts found"
+        }
+        foreach ($asmObject in $asmObjects) {
+          $objectBytes = [IO.File]::ReadAllBytes($asmObject.FullName)
+          $objectMachine = [BitConverter]::ToUInt16($objectBytes, 0)
+          if ($objectMachine -ne $expectedMachine) {
+            throw "$($asmObject.FullName) has COFF machine 0x$($objectMachine.ToString('X4')); expected 0xAA64"
+          }
+          Write-Host "$($asmObject.FullName): COFF machine 0xAA64"
+        }
+    - uses: actions/upload-artifact@v4
+      with:
+        name: bee-windows-arm64
+        path: |
+          build/bin
+          build/obj/source_lua/fast_setjmp_arm64.obj
+        if-no-files-found: error
   windows-clang:
     name: windows (clang)
     runs-on: windows-latest

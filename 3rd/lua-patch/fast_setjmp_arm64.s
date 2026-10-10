@@ -1,5 +1,5 @@
     EXPORT fast_setjmp
-    EXPORT __longjmp_wrapper
+    EXPORT fast_longjmp
 
         AREA |.text|, CODE, READONLY, ALIGN=8, CODEALIGN
 
@@ -10,6 +10,10 @@ fast_setjmp
     stp x25, x26, [x0,#48]
     stp x27, x28, [x0,#64]
     stp x29, x30, [x0,#80]
+    mrs x2, fpcr
+    str w2, [x0,#96]
+    mrs x2, fpsr
+    str w2, [x0,#100]
     mov x2, sp
     str x2, [x0,#104]
     stp  d8,  d9, [x0,#112]
@@ -26,6 +30,10 @@ fast_longjmp
     ldp x25, x26, [x0,#48]
     ldp x27, x28, [x0,#64]
     ldp x29, x30, [x0,#80]
+    ldr w2, [x0,#96]
+    msr fpcr, x2
+    ldr w2, [x0,#100]
+    msr fpsr, x2
     ldr x2, [x0,#104]
     mov sp, x2
     ldp d8 , d9, [x0,#112]
