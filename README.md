@@ -35,3 +35,9 @@ Lua runtime and toolset
 * [fmtlib/fmt](https://github.com/fmtlib/fmt) Compatible with `std::format`(c++20) and `std::print`(c++23).
 * [gulrak/filesystem](https://github.com/gulrak/filesystem) Compatible with `std::filesystem`(c++17).
 * [actboy168/ltest](https://github.com/actboy168/ltest) Test framework.
+
+## Documentation
+
+Lua API: see [`meta/`](meta) (LuaLS annotations, authoritative for signatures) and [`test/`](test) (behavior contract).
+Usage guide and conventions: see [`skills/SKILL.md`](skills/SKILL.md). AI coding agents should read it before working on `require "bee.*"` code in this repo.
+

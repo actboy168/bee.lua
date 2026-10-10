@@ -5,7 +5,15 @@ lm:required_version "1.6"
 lm.compile_commands = "$builddir"
 
 lm.lua = lm.lua or "55"
-lm.luadir = lm:path("3rd/lua"..lm.lua)
+
+-- 补丁注册表：补丁文件约定为 3rd/lua-patch/<dir>/lua<ver>.patch；
+-- flag 是可选的命令行开关（luamake -<flag>），省略则始终启用。
+local lua_patches <const> = {
+    { flag = "optchain", dir = "optchain" },
+}
+
+-- 官方 Lua 源码整树复制 + 按序 git apply，实现见 compile/apply_patch.lua
+require("compile.apply_patch").setup("3rd/lua"..lm.lua, lua_patches)
 
 local function macos_version()
     local cxx = lm.cxx or "c++17"
@@ -80,7 +88,11 @@ if lm.sanitize then
 end
 
 lm:source_set "source_lua" {
-    includes = lm.luadir,
+    objdeps = "apply_lua_patch",
+    includes = {
+        lm.luadir,
+        "3rd/lua-patch",
+    },
     sources = {
         lm.luadir / "onelua.c",
     },
@@ -114,6 +126,7 @@ lm:source_set "source_lua" {
 }
 
 lm:source_set "source_bee" {
+    objdeps = "apply_lua_patch",
     includes = lm.luadir,
     sources = "3rd/lua-seri/lua-seri.cpp",
     msvc = {
@@ -153,6 +166,7 @@ local function need(lst)
 end
 
 lm:source_set "source_bee" {
+    objdeps = "apply_lua_patch",
     includes = {
         ".",
         lm.luadir,
@@ -235,6 +249,7 @@ lm:source_set "source_bee" {
 }
 
 lm:source_set "source_bee" {
+    objdeps = "apply_lua_patch",
     includes = {
         ".",
         lm.luadir,

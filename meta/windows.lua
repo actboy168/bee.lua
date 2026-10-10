@@ -50,4 +50,10 @@ end
 function windows.find_file_holders(filepath)
 end
 
+---根据 PID 获取进程名
+---@param pid integer 进程 ID
+---@return string # 进程名（如 "notepad.exe"），失败返回空字符串
+function windows.process_name(pid)
+end
+
 return windows
