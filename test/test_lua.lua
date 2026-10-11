@@ -22,6 +22,21 @@ function test_lua:test_stack_overflow_2()
     end)
 end
 
+function test_lua:test_protected_call_unwind()
+    local function fail(depth)
+        if depth == 0 then
+            error "protected call"
+        end
+        return fail(depth - 1)
+    end
+
+    for _ = 1, 64 do
+        local ok, err = pcall(fail, 32)
+        lt.assertEquals(ok, false)
+        lt.assertEquals(err:match "protected call", "protected call")
+    end
+end
+
 function test_lua:test_next()
     local t = {}
     for i = 1, 26 do
