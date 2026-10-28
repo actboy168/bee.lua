@@ -375,6 +375,25 @@ function test_subprocess:test_cwd()
     fs.remove_all(path)
 end
 
+function test_subprocess:test_cwd_stdio()
+    local path = fs.absolute "test_cwd_stdio"
+    fs.create_directories(path)
+    local process = shell:runlua([[
+        local fs = require "bee.filesystem"
+        assert(fs.path(arg[1]) == fs.current_path())
+        io.write(io.read "a")
+    ]], { "_", path:string(), cwd = path, stdin = true, stdout = true, stderr = "stdout" })
+    lt.assertIsUserdata(process)
+    lt.assertIsUserdata(process.stdin)
+    lt.assertIsUserdata(process.stdout)
+    process.stdin:write "ok"
+    process.stdin:close()
+    lt.assertEquals(process:wait(), 0)
+    lt.assertEquals(process.stdout:read "a", "ok")
+    lt.assertEquals(process:detach(), true)
+    fs.remove_all(path)
+end
+
 function test_subprocess:test_select()
     local progs = {}
     for i = 1, 10 do

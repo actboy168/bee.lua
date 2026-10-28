@@ -77,6 +77,8 @@ namespace bee::subprocess {
         bool exec(args_t& args, path_view cwd) noexcept;
 
     private:
+        bool fork_exec(args_t& args, path_view cwd) noexcept;
+
         environment env_ = nullptr;
         int fds_[3];
         pid_t pid_       = -1;

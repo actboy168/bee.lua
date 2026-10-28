@@ -1,8 +1,13 @@
+#if defined(__linux__) && !defined(_GNU_SOURCE)
+#    define _GNU_SOURCE 1
+#endif
+
 #include <bee/net/socket.h>
 #include <bee/nonstd/format.h>
 #include <bee/nonstd/unreachable.h>
 #include <bee/subprocess.h>
 #include <bee/utility/dynarray.h>
+#include <dlfcn.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -23,6 +28,22 @@ extern char** environ;
 #endif
 
 namespace bee::subprocess {
+
+    namespace {
+        using spawn_addchdir_fn = int (*)(posix_spawn_file_actions_t*, const char*);
+
+        spawn_addchdir_fn resolve_spawn_addchdir() noexcept {
+            if (void* sym = ::dlsym(RTLD_DEFAULT, "posix_spawn_file_actions_addchdir")) {
+                return reinterpret_cast<spawn_addchdir_fn>(sym);
+            }
+            if (void* sym = ::dlsym(RTLD_DEFAULT, "posix_spawn_file_actions_addchdir_np")) {
+                return reinterpret_cast<spawn_addchdir_fn>(sym);
+            }
+            return nullptr;
+        }
+
+        const spawn_addchdir_fn spawn_addchdir = resolve_spawn_addchdir();
+    }
 
     args_t::~args_t() noexcept {
         for (size_t i = 0; i < size(); ++i) {
@@ -140,21 +161,55 @@ namespace bee::subprocess {
         env_ = std::move(env);
     }
 
-#if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 101500
-// for posix_spawn_file_actions_addchdir_np
-#    define USE_POSIX_SPAWN 1
-#endif
-#if defined(__GLIBC__) && __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 29
-// for posix_spawn_file_actions_addchdir_np
-#    define USE_POSIX_SPAWN 1
-#endif
+    bool spawn::fork_exec(args_t& args, path_view cwd) noexcept {
+        pid_t pid = fork();
+        if (pid == -1) {
+            return false;
+        }
+        if (pid == 0) {
+            // if (detached_) {
+            //     setsid();
+            // }
+            for (int i = 0; i < 3; ++i) {
+                if (fds_[i] > 0) {
+                    if (dup2(fds_[i], i) == -1) {
+                        _exit(127);
+                    }
+                }
+            }
+            if (env_) {
+                environ = env_;
+            }
+            if (!cwd.empty()) {
+                if (chdir(cwd.data())) {
+                    _exit(127);
+                }
+            }
+            // if (suspended_) {
+            //     ::kill(getpid(), SIGSTOP);
+            // }
+            execvp(args[0], args.data());
+            _exit(127);
+        }
+        pid_ = pid;
+        for (int i = 0; i < 3; ++i) {
+            if (fds_[i] > 0) {
+                close(fds_[i]);
+            }
+        }
+        return true;
+    }
 
     bool spawn::exec(args_t& args, path_view cwd) noexcept {
         if (args.size() == 0) {
             return false;
         }
         args.push(nullptr);
-#if defined(USE_POSIX_SPAWN)
+
+        if (!cwd.empty() && !spawn_addchdir) {
+            return fork_exec(args, cwd);
+        }
+
         posix_spawn_file_actions_t actions;
         if (int err = posix_spawn_file_actions_init(&actions)) {
             errno = err;
@@ -162,7 +217,7 @@ namespace bee::subprocess {
         }
         char** arguments = args.data();
         if (!cwd.empty()) {
-            if (int err = posix_spawn_file_actions_addchdir_np(&actions, cwd.data())) {
+            if (int err = spawn_addchdir(&actions, cwd.data())) {
                 posix_spawn_file_actions_destroy(&actions);
                 errno = err;
                 return false;
@@ -205,44 +260,6 @@ namespace bee::subprocess {
             }
         }
         return true;
-#else
-        pid_t pid = fork();
-        if (pid == -1) {
-            return false;
-        }
-        if (pid == 0) {
-            // if (detached_) {
-            //     setsid();
-            // }
-            for (int i = 0; i < 3; ++i) {
-                if (fds_[i] > 0) {
-                    if (dup2(fds_[i], i) == -1) {
-                        _exit(127);
-                    }
-                }
-            }
-            if (env_) {
-                environ = env_;
-            }
-            if (!cwd.empty()) {
-                if (chdir(cwd.data())) {
-                    _exit(127);
-                }
-            }
-            // if (suspended_) {
-            //     ::kill(getpid(), SIGSTOP);
-            // }
-            execvp(args[0], args.data());
-            _exit(127);
-        }
-        pid_ = pid;
-        for (int i = 0; i < 3; ++i) {
-            if (fds_[i] > 0) {
-                close(fds_[i]);
-            }
-        }
-        return true;
-#endif
     }
 
     process::process(spawn& spawn) noexcept

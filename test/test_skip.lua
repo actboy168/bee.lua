@@ -29,4 +29,5 @@ end
 if shell.is_luamake then
     SKIP "subprocess.test_args"
     SKIP "subprocess.test_cwd"
+    SKIP "subprocess.test_cwd_stdio"
 end
